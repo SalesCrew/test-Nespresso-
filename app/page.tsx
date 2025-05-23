@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Calendar,
@@ -58,6 +59,8 @@ export default function DashboardPage() {
   const fullSubtitle = "Hier ist dein Überblick für heute.";
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join('')); 
   const [greeting, setGreeting] = useState("");
+
+  const router = useRouter();
 
   useEffect(() => {
     const currentHour = new Date().getHours();
@@ -264,6 +267,10 @@ export default function DashboardPage() {
     setShowMapsModal(false);
   };
 
+  const handleEinsatzStart = (assignment: any) => {
+    router.push(`/einsatz/${assignment.id}`);
+  };
+
   return (
     <>
       <section className="mb-6">
@@ -272,43 +279,51 @@ export default function DashboardPage() {
       </section>
 
       <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
-          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 relative h-[88px] z-[25]">
-            <div className="absolute top-4 left-4 flex items-center">
-                <CheckCircle2 className="mr-2 h-5 w-5" />
-              <span className="text-lg font-medium">To-Dos</span>
-            </div>
-            <div className="absolute top-1/2 -translate-y-1/2 right-4 z-[25]">
+          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 relative h-[80px] z-[25]">
+            {/* Single row with all content properly spaced */}
+            <div className="flex items-center justify-between h-full">
+              {/* Left side: Title and progress */}
+              <div className="flex flex-col justify-center h-full">
+                <div className="flex items-center mb-2">
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  <span className="text-lg font-semibold">To-Dos</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-white/90 text-xs font-medium">Erledigt {completedTodos}/{totalTodos}</span>
+                  <div className="w-24 bg-white/20 rounded-full h-1.5">
+                    <div className="bg-white h-1.5 rounded-full transition-all duration-300" style={{ width: `${completionPercentage}%` }}></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right side: Filter dropdown */}
               <div className="relative">
-                <button ref={dropdownButtonRef} className="text-white text-lg flex items-center font-medium py-1 px-3 rounded-md hover:bg-white/10 transition-colors h-[48px]" onClick={(e) => { e.stopPropagation(); setShowFilterDropdown(!showFilterDropdown);}}>
+                <button ref={dropdownButtonRef} className="text-white text-sm flex items-center font-medium py-2 px-3 rounded-md hover:bg-white/10 transition-colors min-h-[40px]" onClick={(e) => { e.stopPropagation(); setShowFilterDropdown(!showFilterDropdown);}}>
                   {todoFilter === "heute" ? (
                     "Heute"
                   ) : todoFilter === "7tage" ? (
                     <div className="flex flex-col items-center leading-tight">
-                      <span>Nächsten</span>
-                      <span className="text-sm -mt-0.5">7 Tage</span>
+                      <span className="text-xs">Nächsten</span>
+                      <span className="text-xs -mt-0.5">7 Tage</span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center leading-tight">
-                      <span>Nächsten</span>
-                      <span className="text-sm -mt-0.5">30 Tage</span>
+                      <span className="text-xs">Nächsten</span>
+                      <span className="text-xs -mt-0.5">30 Tage</span>
                     </div>
                   )}
-                  <ChevronDown className="h-5 w-5 ml-1.5" />
+                  <ChevronDown className="h-4 w-4 ml-2" />
                 </button>
                 {showFilterDropdown && (
                   <div 
                     ref={filterDropdownPopupRef}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-30">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-800 dark:hover:text-blue-100" onClick={() => { setTodoFilter("heute"); setShowFilterDropdown(false); }}>Heute</button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-800 dark:hover:text-blue-100" onClick={() => { setTodoFilter("7tage"); setShowFilterDropdown(false); }}>Nächsten 7 Tage</button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-800 dark:hover:text-blue-100" onClick={() => { setTodoFilter("30tage"); setShowFilterDropdown(false); }}>Nächsten 30 Tage</button>
-      </div>
+                    className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-30">
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("heute"); setShowFilterDropdown(false); }}>Heute</button>
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("7tage"); setShowFilterDropdown(false); }}>Nächsten 7 Tage</button>
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("30tage"); setShowFilterDropdown(false); }}>Nächsten 30 Tage</button>
+                  </div>
                 )}
               </div>
-            </div>
-            <div className="absolute bottom-4 left-4 text-white/90 text-xs">
-              <div className="flex justify-between mb-1"><span>Erledigt {completedTodos}/{totalTodos}</span></div>
-              <div className="w-40 bg-white/20 rounded-full h-1.5 mb-1"><div className="bg-white h-1.5 rounded-full" style={{ width: `${completionPercentage}%` }}></div></div>
             </div>
           </CardHeader>
           <CardContent className={`p-0 transition-all duration-300 ${expandedTodos ? "max-h-80" : "max-h-[180px]"} overflow-hidden`}>
@@ -433,9 +448,20 @@ export default function DashboardPage() {
                 const scale = isOffscreen ? 0.4 : 1 - (distanceFromCenter * 0.15); const opacity = isOffscreen ? 0 : 1 - (distanceFromCenter * 0.15); const zIndex = isOffscreen ? 0 : 10 - distanceFromCenter;
                 let leftPosition; if (visibleIndex < 0) leftPosition = '-15%'; else if (visibleIndex > 6) leftPosition = '115%'; else leftPosition = `${50 + (visibleIndex - 3) * 20}%`;
                 return (<div key={day.toISOString()} className="absolute transform transition-all duration-400 ease-in-out" style={{left: leftPosition, top: '50%', transform: `translate(-50%, -50%) scale(${scale})`, opacity: opacity, zIndex: zIndex, transition: "all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1.0)"}}>
-                  <Button variant="outline" size="lg" className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden ${isCenter ? 'border-2' : 'border'} ${!isSelected ? dynamicClasses : (hasBuddyTag ? 'border-purple-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? 'border-emerald-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? 'border-orange-500' : 'border-indigo-700')}`}
-                          style={isSelected ? (hasBuddyTag ? {background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'} : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? {background: 'linear-gradient(to bottom, rgba(16,185,129,0.8), rgba(34,197,94,0.6))'} : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? {background: 'linear-gradient(to bottom, rgba(249,115,22,0.8), rgba(234,88,12,0.6))'} : hasAssignment ? {background: 'linear-gradient(to bottom, rgba(79,70,229,0.9), rgba(79,70,229,0.55))'} : {background: 'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.85))'}) : {}}
-                          onClick={() => { const stepsToShift = Math.round((day.getTime() - currentCalendarDate.getTime()) / (1000 * 60 * 60 * 24)); navigateDays(stepsToShift); }} disabled={animating}>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden ${isCenter ? 'border-2' : 'border'} ${!isSelected ? dynamicClasses : (hasBuddyTag ? 'border-purple-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? 'border-emerald-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? 'border-orange-500' : 'border-indigo-700')}`}
+                    style={isSelected ? (
+                      hasBuddyTag ? {background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'} : 
+                      assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? {background: 'linear-gradient(to bottom, rgba(16,185,129,0.8), rgba(34,197,94,0.6))'} : 
+                      assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? {background: 'linear-gradient(to bottom, rgba(249,115,22,0.8), rgba(234,88,12,0.6))'} : 
+                      hasAssignment ? {background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'} : 
+                      {background: 'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.85))'}
+                    ) : {}}
+                    onClick={() => { const stepsToShift = Math.round((day.getTime() - currentCalendarDate.getTime()) / (1000 * 60 * 60 * 24)); navigateDays(stepsToShift); }} 
+                    disabled={animating}
+                  >
                     {isSelected ? (<div className="flex flex-col items-center w-full"><span className={`text-xs font-medium mb-1 ${hasSchulung ? 'text-gray-700' : (hasBuddyTag || hasAssignment) ? 'text-white' : 'text-gray-700'}`}>{day.toLocaleDateString('de-DE', { weekday: 'short' })}</span><span className={`text-xl font-bold ${hasSchulung ? 'text-gray-800' : (hasBuddyTag || hasAssignment) ? 'text-white' : 'text-gray-800'}`}>{day.getDate()}</span></div>) : (<><span className="text-xs font-medium mb-1">{day.toLocaleDateString('de-DE', { weekday: 'short' })}</span><span className="text-xl font-bold">{day.getDate()}</span></>)}
                   </Button></div>);})}
             </div></div></div>
@@ -473,7 +499,7 @@ export default function DashboardPage() {
                                 <Clock className="h-3 w-3 mr-1.5 opacity-90" />{assignment.time}
                               </span>
                             </Badge>
-                            <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer" style={{ height: '22px' }}>
+                            <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer" style={{ height: '22px' }} onClick={() => router.push('/einsatz')}>
                               <span className="flex items-center">Einsatz starten <ChevronRight className="h-3 w-3 ml-1 opacity-90" /></span>
                             </div>
                           </div>
@@ -533,7 +559,7 @@ export default function DashboardPage() {
                               <Clock className="h-3 w-3 mr-1.5 opacity-90" />{assignment.time}
                             </span>
                           </Badge>
-                           <div className="text-xs font-medium px-2 py-0.5 mt-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer" style={{ height: '22px' }}>
+                           <div className="text-xs font-medium px-2 py-0.5 mt-1 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer" style={{ height: '22px' }} onClick={() => router.push('/einsatz')}>
                             <span className="flex items-center">Einsatz starten <ChevronRight className="h-3 w-3 ml-1 opacity-90" /></span>
                           </div>
                         </div>

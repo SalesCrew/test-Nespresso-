@@ -97,7 +97,7 @@ Liebe Grüße, dein Nespresso Team.`
   useEffect(() => {
     if (feedbackOpen && feedbackRef.current) {
       setTimeout(() => {
-        feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        feedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 400)
     }
   }, [feedbackOpen])
@@ -728,9 +728,9 @@ Liebe Grüße, dein Nespresso Team`}
 
       {/* History Feedback Popup */}
       {selectedHistoryEntry !== null && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedHistoryEntry(null)}>
           <div className="w-full max-w-md">
-            <Card className="shadow-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
+            <Card className="shadow-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                 <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm">
                   CA KPIs <span className="text-gray-400 dark:text-gray-500">

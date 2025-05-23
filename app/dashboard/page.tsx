@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Bell,
   Calendar,
@@ -67,6 +68,7 @@ export default function PromotorDashboard() {
   // No explicit initialization needed here if directly assigning in JSX
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -1001,8 +1003,8 @@ export default function PromotorDashboard() {
                               // Orange gradient for Schulung days
                               background: 'linear-gradient(to bottom, rgba(249,115,22,0.8), rgba(234,88,12,0.6))'
                             } : hasAssignment ? {
-                              // Blue gradient for promotion days (current style)
-                              background: 'linear-gradient(to bottom, rgba(79,70,229,0.9), rgba(79,70,229,0.55))'
+                              // Blue gradient for promotion days - EXACT match to header gradient (from-blue-500 to-indigo-600)
+                              background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'
                             } : {
                               // Grey-white gradient for days with no plans
                               background: 'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.85))'
@@ -1138,6 +1140,7 @@ export default function PromotorDashboard() {
                         
                                               <div className="text-xs font-medium px-2 py-0.5 bg-orange-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
                         style={{ backgroundColor: '#f97316', height: '22px' }} // Force orange color and match badge height
+                        onClick={() => router.push('/einsatz')}
                       >
                         <span className="flex items-center">
                           Einsatz starten

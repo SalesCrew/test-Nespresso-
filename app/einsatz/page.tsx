@@ -241,7 +241,7 @@ export default function EinsatzPage() {
       // For UI demo, we can disable the card or show a message.
       setProposals([]); // Or mark as submitted
       setShowProposalSubmittedMessage(true);
-      setTimeout(() => setShowProposalSubmittedMessage(false), 8000); // Hide message after 8s
+      setTimeout(() => setShowProposalSubmittedMessage(false), 7000); // Hide message after 7s
     }
   };
 
@@ -456,6 +456,66 @@ export default function EinsatzPage() {
                 }}
               >
                 Zurück zur Übersicht
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Newcomer Date Selection Card */}
+        {isNewcomer && proposals.length > 0 && (
+          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-blue-600 dark:text-blue-400 text-center">
+                Suche dir <span className="text-blue-600 dark:text-blue-400">deinen</span> <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Buddy Tag</span> <span className="text-blue-600 dark:text-blue-400">selber aus!</span>
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400 text-center">Bitte wähle einen der vorgeschlagenen Termine für deinen nächsten Einsatz aus.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {proposals.map((proposal) => (
+                  <div
+                    key={proposal.id}
+                    className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[100px]
+                                ${selectedProposalId === proposal.id 
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-105' 
+                                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
+                    onClick={() => handleProposalSelect(proposal.id)}
+                  >
+                    <button 
+                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleInfoClick(e, proposal)}
+                      aria-label="Mehr Details"
+                    >
+                      <Info className="h-4 w-4" />
+                    </button>
+                        <div className="flex flex-col">
+      <div className="text-base font-medium text-gray-800 dark:text-gray-200">
+        {proposal.date.split(' ')[0]} {proposal.date.split(' ')[1]} {/* Day of week + Date */}
+      </div>
+      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-1.5">
+        {proposal.location}
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="relative inline-flex">
+          <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
+          <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+            <span className="flex items-center">{proposal.date.split(' ')[2]}</span>
+          </Badge>
+        </div>
+                        <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+                          <span className="flex items-center">Buddy: Cesira</span>
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button 
+                className="w-full mt-4 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                onClick={handleSubmitProposal}
+                disabled={selectedProposalId === null}
+              >
+                <Check className="mr-2 h-4 w-4" /> Auswahl bestätigen
               </Button>
             </CardContent>
           </Card>
@@ -729,68 +789,15 @@ export default function EinsatzPage() {
           </CardContent>
         </Card>
 
-        {/* Newcomer Date Selection Card */}
-        {isNewcomer && proposals.length > 0 && (
-          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-blue-600 dark:text-blue-400 text-center">
-                Suche dir <span className="text-blue-600 dark:text-blue-400">deinen</span> <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Buddy Tag</span> <span className="text-blue-600 dark:text-blue-400">selber aus!</span>
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400 text-center">Bitte wähle einen der vorgeschlagenen Termine für deinen nächsten Einsatz aus.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {proposals.map((proposal) => (
-                  <div
-                    key={proposal.id}
-                    className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[100px]
-                                ${selectedProposalId === proposal.id 
-                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-105' 
-                                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
-                    onClick={() => handleProposalSelect(proposal.id)}
-                  >
-                    <button 
-                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
-                      onClick={(e) => handleInfoClick(e, proposal)}
-                      aria-label="Mehr Details"
-                    >
-                      <Info className="h-4 w-4" />
-                    </button>
-                        <div className="flex flex-col">
-      <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-        {proposal.date.split(' ')[0]} {proposal.date.split(' ')[1]} {/* Day of week + Date */}
-      </div>
-      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-1.5">
-        {proposal.location}
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="relative inline-flex">
-          <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-          <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-            <span className="flex items-center">{proposal.date.split(' ')[2]}</span>
-          </Badge>
-        </div>
-                        <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                          <span className="flex items-center">Buddy: Cesira</span>
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Button 
-                className="w-full mt-4 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
-                onClick={handleSubmitProposal}
-                disabled={selectedProposalId === null}
-              >
-                <Check className="mr-2 h-4 w-4" /> Auswahl bestätigen
-              </Button>
-            </CardContent>
-          </Card>
-        )}
         {showProposalSubmittedMessage && (
-             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-opacity duration-300">
-                Terminauswahl erfolgreich übermittelt!
+             <div className="fixed top-4 left-4 right-4 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg z-50 transition-opacity duration-300">
+                <div className="flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 mr-3 flex-shrink-0" />
+                  <div className="text-center">
+                    <p className="font-medium text-sm">Buddy Tag erfolgreich ausgewählt und übermittelt!</p>
+                    <p className="text-xs text-green-100 mt-1">Du kannst ihn jetzt in deinem Kalender einsehen.</p>
+                  </div>
+                </div>
             </div>
         )}
 
