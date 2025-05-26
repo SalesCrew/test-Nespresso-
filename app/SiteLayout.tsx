@@ -192,7 +192,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
             <div className="flex flex-col">
               <p className="text-base font-semibold text-gray-800 dark:text-gray-200">Jan Promotor</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {pathname === "/einsatz" ? "Einsatzplanung" : pathname === "/statistiken" ? "CA KPIs" : "Dashboard"} {/* Dynamic subtitle */}
+                {pathname === "/einsatz" ? "Einsatzplanung" : pathname === "/statistiken" ? "CA KPIs" : pathname === "/profil" ? "Profil" : "Dashboard"} {/* Dynamic subtitle */}
               </p>
             </div>
           </div>

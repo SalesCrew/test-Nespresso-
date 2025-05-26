@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +41,7 @@ export default function ProfilPage() {
   const [isEditingBank, setIsEditingBank] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
+  const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
   const [editableProfile, setEditableProfile] = useState({
     email: "jan.promotor@salescrew.de",
     phone: "+49 176 12345678"
@@ -132,6 +133,50 @@ export default function ProfilPage() {
     // In a real app, this would open a file picker or upload modal
     console.log("Uploading document:", documentName)
   }
+
+  // Payroll countdown logic
+  useEffect(() => {
+    const calculatePayrollCountdown = () => {
+      const now = new Date()
+      const currentDay = now.getDate()
+      const currentMonth = now.getMonth()
+      const currentYear = now.getFullYear()
+      
+      // If today is the 15th, show payday message
+      if (currentDay === 15) {
+        setPayrollCountdown({ days: 0, hours: 0, minutes: 0, isPayday: true })
+        return
+      }
+      
+      // Calculate next payroll date (15th of current or next month)
+      let nextPayrollDate: Date
+      if (currentDay < 15) {
+        // Next payroll is 15th of current month
+        nextPayrollDate = new Date(currentYear, currentMonth, 15)
+      } else {
+        // Next payroll is 15th of next month
+        nextPayrollDate = new Date(currentYear, currentMonth + 1, 15)
+      }
+      
+      const timeDiff = nextPayrollDate.getTime() - now.getTime()
+      
+      if (timeDiff > 0) {
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+        
+        setPayrollCountdown({ days, hours, minutes, isPayday: false })
+      }
+    }
+    
+    // Calculate immediately
+    calculatePayrollCountdown()
+    
+    // Update every minute
+    const interval = setInterval(calculatePayrollCountdown, 60000)
+    
+    return () => clearInterval(interval)
+  }, [])
 
   // Mock statistics data
   const stats = {
@@ -237,9 +282,9 @@ export default function ProfilPage() {
                   onClick={handleEditToggle}
                 >
                   {isEditingContact ? (
-                    <Check className="h-3 w-3 text-green-500" />
+                    <Check className="h-1.5 w-1.5 text-green-500" />
                   ) : (
-                    <Edit2 className="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                   )}
                 </Button>
                 </CardTitle>
@@ -297,9 +342,9 @@ export default function ProfilPage() {
                     onClick={handleClothingEditToggle}
                   >
                     {isEditingClothing ? (
-                      <Check className="h-3 w-3 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                     ) : (
-                      <Edit2 className="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
                   </Button>
                 </CardTitle>
@@ -450,6 +495,84 @@ export default function ProfilPage() {
             )}
           </Card>
 
+          {/* Employment Information */}
+          <Card className="border-none shadow-lg shadow-orange-500/20 bg-white dark:bg-gray-900">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <Briefcase className="h-5 w-5 mr-2 text-orange-500" />
+                  Anstellung
+                </div>
+                {/* Payroll Countdown */}
+                <div className="text-right">
+                  {payrollCountdown.isPayday ? (
+                    <div className="text-xs font-semibold text-green-600 dark:text-green-400 flex items-center">
+                      <span className="mr-1">🎉</span>
+                      Gehalt ist auf dem Weg!
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-end space-y-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Nächstes Gehalt in
+                      </div>
+                      <div className="text-xs font-mono text-orange-500 dark:text-orange-300">
+                        {payrollCountdown.days}d {String(payrollCountdown.hours).padStart(2, '0')}h {String(payrollCountdown.minutes).padStart(2, '0')}m
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Employment Type */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Anstellungs Art
+                </label>
+                <div>
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 font-medium">
+                    geringfügig
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Weekly Hours */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Wochenstunden
+                </label>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  8
+                </p>
+              </div>
+
+              {/* Employment Status */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Status
+                </label>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  unbefristet
+                </p>
+              </div>
+
+              {/* Working Days */}
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Arbeitstage
+                </label>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="border-black text-black bg-white dark:border-gray-300 dark:text-gray-900 dark:bg-white font-medium">
+                    Mo
+                  </Badge>
+                  <Badge variant="outline" className="border-black text-black bg-white dark:border-gray-300 dark:text-gray-900 dark:bg-white font-medium">
+                    Mi
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Bank Data Information */}
           <div className={`transition-all duration-300 rounded-lg ${
             isEditingBank 
@@ -470,9 +593,9 @@ export default function ProfilPage() {
                     onClick={handleBankEditToggle}
                   >
                     {isEditingBank ? (
-                      <Check className="h-3 w-3 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                     ) : (
-                      <Edit2 className="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
                   </Button>
                 </CardTitle>
@@ -583,9 +706,9 @@ export default function ProfilPage() {
                     onClick={handlePersonalEditToggle}
                   >
                     {isEditingPersonal ? (
-                      <Check className="h-3 w-3 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                     ) : (
-                      <Edit2 className="h-3 w-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
                   </Button>
                 </CardTitle>

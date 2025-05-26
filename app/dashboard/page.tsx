@@ -56,6 +56,7 @@ export default function PromotorDashboard() {
   const [hoveredMiniCalendarDate, setHoveredMiniCalendarDate] = useState<Date | null>(null);
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
+  const [showBitteLesen, setShowBitteLesen] = useState(true);
 
   // State for legend popup
   const [showLegendPopup, setShowLegendPopup] = useState(false);
@@ -710,6 +711,64 @@ export default function PromotorDashboard() {
             </Button>
           </CardFooter>
         </Card>
+
+        {/* Bitte Lesen Card */}
+        {showBitteLesen && (
+          <div className="w-full max-w-md mx-auto mb-6">
+            <div className="relative">
+              {/* Outer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              
+              {/* Main card */}
+              <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
+                
+                {/* Header with icon */}
+                <div className="relative py-4 px-6 text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 animate-bounce">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <h3 className="text-white font-bold text-lg drop-shadow-lg">
+                    Bitte Lesen
+                  </h3>
+                  <p className="text-white/90 text-sm mt-1 drop-shadow">
+                    Wichtige Mitteilung von der Geschäftsleitung
+                  </p>
+                </div>
+                
+                {/* Content */}
+                <CardContent className="relative p-6 pt-2">
+                  <div className="text-center">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20">
+                      <div className="text-white text-sm leading-relaxed text-left">
+                        Liebe Promotoren,
+                        <br /><br />
+                        ab sofort gelten neue Richtlinien für die Zeiterfassung. Bitte stellt sicher, dass ihr eure Arbeitszeiten täglich und korrekt eintragt.
+                        <br /><br />
+                        Bei Fragen wendet euch an euren Teamleiter.
+                        <br /><br />
+                        Vielen Dank für euer Verständnis!
+                        <br /><br />
+                        Euer SalesCrew Team
+                      </div>
+                    </div>
+                    
+                    {/* Read button */}
+                    <button 
+                      onClick={() => setShowBitteLesen(false)}
+                      className="bg-white text-orange-600 font-medium py-2.5 px-5 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                    >
+                      ✓ Gelesen
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
         {/* Upcoming Events -> Anstehende Einsätze */}
         <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">

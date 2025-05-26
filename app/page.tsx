@@ -11,7 +11,7 @@ import {
   ChevronRight,
   ChevronUp,
   Clock,
-  // FileText, // Replaced by ClipboardList for quick action
+  AlertCircle, // For Bitte Lesen card
   Info,
   // MessageSquare, // Replaced by MessagesSquareIcon for quick action
   Send,
@@ -47,6 +47,8 @@ export default function DashboardPage() {
   const [hoveredMiniCalendarDate, setHoveredMiniCalendarDate] = useState<Date | null>(null);
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
+  const [showBitteLesen, setShowBitteLesen] = useState(true);
+  const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState(false);
 
   const [showLegendPopup, setShowLegendPopup] = useState(false);
   const legendIconRef = useRef<HTMLButtonElement>(null);
@@ -369,6 +371,78 @@ export default function DashboardPage() {
                   </Button>
                 </CardFooter>
               </Card>
+
+      {/* Bitte Lesen Card */}
+      {showBitteLesen && (
+        <div className="w-full max-w-md mx-auto mb-6">
+          <div className="relative">
+            {/* Outer glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+            
+            {/* Main card */}
+            <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+              {/* Animated background pattern */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
+              
+              {/* Header */}
+              {!bitteLesenConfirmed && (
+                <div className="relative py-3 px-4 text-center">
+                  <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                    Bitte Lesen
+                  </h3>
+                  <p className="text-white/90 text-sm mt-1 drop-shadow">
+                    Wichtige Mitteilung von der Geschäftsleitung
+                  </p>
+                </div>
+              )}
+              
+              {/* Content */}
+              <CardContent className={`relative ${bitteLesenConfirmed ? 'p-0' : 'p-4 pt-0'}`}>
+                <div className="text-center">
+                  {!bitteLesenConfirmed ? (
+                    <>
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20">
+                        <div className="text-white text-sm leading-relaxed text-left">
+                          Liebe Promotoren,
+                          <br /><br />
+                          ab sofort gelten neue Richtlinien für die Zeiterfassung. Bitte stellt sicher, dass ihr eure Arbeitszeiten täglich und korrekt eintragt.
+                          <br /><br />
+                          Bei Fragen wendet euch an euren Teamleiter.
+                          <br /><br />
+                          Vielen Dank für euer Verständnis!
+                          <br /><br />
+                          Euer SalesCrew Team
+                        </div>
+                      </div>
+                      
+                      {/* Read button */}
+                      <button 
+                        onClick={() => {
+                          setBitteLesenConfirmed(true);
+                          setTimeout(() => setShowBitteLesen(false), 7000);
+                        }}
+                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                      >
+                        ✓ Gelesen
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-center h-[140px] w-full px-4">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                        <div className="text-white">
+                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Lesen!</div>
+                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 flex flex-row justify-between items-center">
