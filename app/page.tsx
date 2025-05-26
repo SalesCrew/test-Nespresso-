@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import OnboardingModal from "@/components/OnboardingModal";
 import {
   Bell,
   Calendar,
@@ -49,6 +50,8 @@ export default function DashboardPage() {
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showBitteLesen, setShowBitteLesen] = useState(true);
   const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showTodoSpotlight, setShowTodoSpotlight] = useState(false);
 
   const [showLegendPopup, setShowLegendPopup] = useState(false);
   const legendIconRef = useRef<HTMLButtonElement>(null);
@@ -273,6 +276,17 @@ export default function DashboardPage() {
     router.push(`/einsatz/${assignment.id}`);
   };
 
+  const handleOnboardingComplete = (data: any) => {
+    console.log("Onboarding completed with data:", data);
+    setShowOnboarding(false);
+    // Show spotlight on To-Do list
+    setShowTodoSpotlight(true);
+    setTimeout(() => {
+      setShowTodoSpotlight(false);
+    }, 3000);
+    // Here you would typically save the data to your backend
+  };
+
   return (
     <>
       <section className="mb-6">
@@ -280,7 +294,7 @@ export default function DashboardPage() {
         <p className="text-gray-600 dark:text-gray-400">{animatedSubtitle}</p>
       </section>
 
-      <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
+      <Card className={`mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900 transition-all duration-300 ${showTodoSpotlight ? 'relative z-50 shadow-2xl shadow-purple-500/50' : ''}`} style={showTodoSpotlight ? { animation: 'shake 0.5s ease-in-out infinite' } : {}}>
           <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 relative h-[80px] z-[25]">
             {/* Single row with all content properly spaced */}
             <div className="flex items-center justify-between h-full">
@@ -662,26 +676,16 @@ export default function DashboardPage() {
             </Card>
 
       <h2 className="text-lg font-semibold mb-3">Schnellzugriff</h2>
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-850 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:scale-105">
-            <ClipboardList className="h-9 w-9 text-gray-600 dark:text-gray-400" />
-          </div>
-          <span className="text-xs mt-2 text-gray-700 dark:text-gray-300 text-center">Schulungs-<br />unterlagen</span>
-                </div>
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-850 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:scale-105">
-            <VideoIcon className="h-9 w-9 text-gray-600 dark:text-gray-400" />
-                </div>
-          <span className="text-xs mt-2 text-gray-700 dark:text-gray-300">Videos</span>
-                </div>
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-850 rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer transform hover:scale-105">
-            <MessagesSquareIcon className="h-9 w-9 text-gray-600 dark:text-gray-400" />
-          </div>
-          <span className="text-xs mt-2 text-gray-700 dark:text-gray-300">Chat</span>
-        </div>
-          </div>
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <Card className="border-none shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 h-20 flex flex-col items-center justify-center cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <ClipboardList className="h-6 w-6 text-white mb-1" />
+          <h3 className="text-white font-semibold text-xs">Schulungsunterlagen</h3>
+        </Card>
+        <Card className="border-none shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 h-20 flex flex-col items-center justify-center cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <VideoIcon className="h-6 w-6 text-white mb-1" />
+          <h3 className="text-white font-semibold text-xs">Videos</h3>
+        </Card>
+      </div>
 
       <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
           <CardHeader className="p-4"><CardTitle className="text-lg">Wochenstatus</CardTitle><CardDescription>Deine Aktivitäten diese Woche</CardDescription></CardHeader>
@@ -715,6 +719,28 @@ export default function DashboardPage() {
         </>
       )}
        <div className={`fixed inset-0 z-20 ${showFilterDropdown ? 'block' : 'hidden'}`} onClick={() => setShowFilterDropdown(false)}></div>
+
+      {/* Todo Spotlight Overlay */}
+      {showTodoSpotlight && (
+        <div className="fixed inset-0 bg-black/70 z-40 pointer-events-none" />
+      )}
+
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+        onClose={() => setShowOnboarding(false)}
+      />
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0) rotate(0deg); }
+          25% { transform: translateX(-1px) rotate(-0.5deg); }
+          50% { transform: translateX(1px) rotate(0.5deg); }
+          75% { transform: translateX(-0.5px) rotate(-0.25deg); }
+        }
+      `}</style>
     </>
   );
 }
