@@ -285,7 +285,7 @@ export default function DashboardPage() {
               {/* Left side: Title and progress */}
               <div className="flex flex-col justify-center h-full">
                 <div className="flex items-center mb-2">
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                <CheckCircle2 className="mr-2 h-5 w-5" />
                   <span className="text-lg font-semibold">To-Dos</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                     <div className="bg-white h-1.5 rounded-full transition-all duration-300" style={{ width: `${completionPercentage}%` }}></div>
                   </div>
                 </div>
-              </div>
+            </div>
               
               {/* Right side: Filter dropdown */}
               <div className="relative">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                     <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("heute"); setShowFilterDropdown(false); }}>Heute</button>
                     <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("7tage"); setShowFilterDropdown(false); }}>Nächsten 7 Tage</button>
                     <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("30tage"); setShowFilterDropdown(false); }}>Nächsten 30 Tage</button>
-                  </div>
+      </div>
                 )}
               </div>
             </div>
