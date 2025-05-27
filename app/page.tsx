@@ -21,7 +21,7 @@ import {
   ArrowRight,
   MapPin, // For assignment location
   // Film, // Replaced by VideoIcon for quick action
-  ClipboardList, // For Schulungsunterlagen quick action
+  GraduationCap, // For combined Schulungen & Videos quick action
   Video as VideoIcon, // For Videos quick action
   MessagesSquare as MessagesSquareIcon, // For Chat quick action
   Briefcase, // For "Anstehende Einsätze" card title icon
@@ -196,6 +196,11 @@ export default function DashboardPage() {
     { id: 1, title: "Mediamarkt, Seiersberg", location: "Wien, Mariahilferstraße", time: "10:00 - 18:00", date: new Date(), type: "promotion" },
     { id: 2, title: "Mediamarkt, Klagenfurt", location: "Klagenfurt, Völkermarkter Straße", time: "09:00 - 17:30", date: new Date(new Date().setDate(new Date().getDate() + 1)), type: "buddy" },
     { id: 3, title: "Android Pro Schulung", location: "Online Meetingraum", time: "13:00 - 17:00", date: new Date(new Date().setDate(new Date().getDate() + 3)), type: "schulung" },
+    { id: 4, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 5)), type: "krankenstand" },
+    { id: 5, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 6)), type: "krankenstand" },
+    { id: 6, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 8)), type: "urlaub" },
+    { id: 8, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 9)), type: "urlaub" },
+    { id: 9, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 10)), type: "urlaub" },
     { id: 7, title: "Newcomer Schulung", location: "Online Meetingraum", time: "14:00 - 18:00", date: new Date(new Date().setDate(new Date().getDate() + 20)), type: "schulung" },
   ]);
 
@@ -494,6 +499,7 @@ export default function DashboardPage() {
                             {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "buddy") && (<div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></div>)}
                             {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") && (<div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500"></div>)}
                             {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") && (<div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"></div>)}
+                            {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "krankenstand") && (<div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-red-500 to-red-600"></div>)}
                           </div></>) : ''}
                         </button>)})}
                   </div>
@@ -513,6 +519,7 @@ export default function DashboardPage() {
                   <li className="flex items-center"><div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-purple-500/50 bg-gradient-to-br from-purple-500/60 to-pink-500/60 flex-shrink-0 shadow-sm"></div><span className="text-gray-700 dark:text-gray-300">Buddy Tag</span></li>
                   <li className="flex items-center"><div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-orange-500/50 bg-gradient-to-br from-orange-500/60 to-amber-500/60 flex-shrink-0 shadow-sm"></div><span className="text-gray-700 dark:text-gray-300">Schulung</span></li>
                   <li className="flex items-center"><div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-emerald-500/50 bg-gradient-to-br from-emerald-500/60 to-green-500/60 flex-shrink-0 shadow-sm"></div><span className="text-gray-700 dark:text-gray-300">Urlaub</span></li>
+                  <li className="flex items-center"><div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-red-500/50 bg-gradient-to-br from-red-500/60 to-red-600/60 flex-shrink-0 shadow-sm"></div><span className="text-gray-700 dark:text-gray-300">Krankenstand</span></li>
                   <li className="flex items-center"><div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-indigo-400/50 bg-indigo-100 dark:bg-indigo-800/50 flex-shrink-0 shadow-sm"></div><span className="text-gray-700 dark:text-gray-300">Heute (ohne Einsatz)</span></li>
                 </ul>
               </div>
@@ -529,6 +536,7 @@ export default function DashboardPage() {
                 if (isSelected) dynamicClasses = 'text-black border-indigo-700';
                 else if (hasBuddyTag) { dynamicClasses = 'border-purple-500'; if (isToday) dynamicClasses += ' bg-purple-100 dark:bg-purple-800/50'; else dynamicClasses += ' hover:bg-purple-50 dark:hover:bg-purple-900/50'; }
                 else if (assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub")) { dynamicClasses = 'border-emerald-500'; if (isToday) dynamicClasses += ' bg-emerald-50 dark:bg-emerald-900/30'; else dynamicClasses += ' hover:bg-emerald-50 dark:hover:bg-emerald-900/20';}
+                else if (assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "krankenstand")) { dynamicClasses = 'border-red-500'; if (isToday) dynamicClasses += ' bg-red-50 dark:bg-red-900/30'; else dynamicClasses += ' hover:bg-red-50 dark:hover:bg-red-900/20';}
                 else if (assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung")) { dynamicClasses = 'border-orange-500'; if (isToday) dynamicClasses += ' bg-orange-50 dark:bg-orange-900/30'; else dynamicClasses += ' hover:bg-orange-50 dark:hover:bg-orange-900/20';}
                 else if (hasAssignment) { dynamicClasses = 'border-blue-500'; if (isToday) dynamicClasses += ' bg-indigo-100 dark:bg-indigo-800/50'; else dynamicClasses += ' hover:bg-indigo-50 dark:hover:bg-indigo-900/50';}
                 else if (isToday) dynamicClasses = 'bg-indigo-100 dark:bg-indigo-800/50 border-indigo-400';
@@ -539,10 +547,11 @@ export default function DashboardPage() {
                   <Button 
                     variant="outline" 
                     size="lg" 
-                    className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden ${isCenter ? 'border-2' : 'border'} ${!isSelected ? dynamicClasses : (hasBuddyTag ? 'border-purple-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? 'border-emerald-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? 'border-orange-500' : 'border-indigo-700')}`}
+                    className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden ${isCenter ? 'border-2' : 'border'} ${!isSelected ? dynamicClasses : (hasBuddyTag ? 'border-purple-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? 'border-emerald-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "krankenstand") ? 'border-red-500' : assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? 'border-orange-500' : 'border-indigo-700')}`}
                     style={isSelected ? (
                       hasBuddyTag ? {background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'} : 
                       assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") ? {background: 'linear-gradient(to bottom, rgba(16,185,129,0.8), rgba(34,197,94,0.6))'} : 
+                      assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "krankenstand") ? {background: 'linear-gradient(to bottom, rgba(239,68,68,0.8), rgba(220,38,38,0.6))'} : 
                       assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "schulung") ? {background: 'linear-gradient(to bottom, rgba(249,115,22,0.8), rgba(234,88,12,0.6))'} : 
                       hasAssignment ? {background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'} : 
                       {background: 'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.85))'}
@@ -559,7 +568,35 @@ export default function DashboardPage() {
             </div>
             <div className="h-[90px] min-h-[90px]">
               {(() => {
-                const dailyAssignmentsFiltered = assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type !== "urlaub");
+                const dailyAssignmentsFiltered = assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type !== "urlaub" && a.type !== "krankenstand");
+                
+                // Check for Urlaub or Krankenstand days and show their containers
+                const urlaubDay = assignments.find(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "urlaub");
+                const krankenstandDay = assignments.find(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "krankenstand");
+                
+                if (urlaubDay) {
+                  return (
+                    <div className="h-full p-3 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-900/20 flex items-center justify-center">
+                      <div className="text-center flex flex-col items-center">
+                        <div className="text-2xl mb-1">🏖️</div>
+                        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Urlaub</p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Genieße deine freie Zeit!</p>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                if (krankenstandDay) {
+                  return (
+                    <div className="h-full p-3 rounded-md border border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/20 flex items-center justify-center">
+                      <div className="text-center flex flex-col items-center">
+                        <div className="text-2xl mb-1">🤒</div>
+                        <p className="text-sm font-medium text-red-700 dark:text-red-300">Krankenstand</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">Gute Besserung!</p>
+                      </div>
+                    </div>
+                  );
+                }
 
                 if (dailyAssignmentsFiltered.length > 0) {
                   const assignment = dailyAssignmentsFiltered[0]; // Show only the first one
@@ -657,33 +694,27 @@ export default function DashboardPage() {
                   return null; // Fallback for other types if not handled explicitly
                 } else {
                   // No promotion, schulung, or buddy assignments for this day.
-                  // Check if the day was an Urlaub day; if so, show nothing. Otherwise, show "Keine Termine".
-                  const isUrlaubDay = assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "urlaub");
-                  if (!isUrlaubDay) {
-                    return (
-                      <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                          <Calendar className="h-4 w-4 mr-2 opacity-70" />Keine Termine für diesen Tag geplant.
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null; // It's an Urlaub day, show nothing here.
+                  // Show "Keine Termine" message.
+                  return (
+                    <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 opacity-70" />Keine Termine für diesen Tag geplant.
+                      </p>
+                    </div>
+                  );
                 }
               })()}
                 </div>
               </CardContent>
             </Card>
 
-      <h2 className="text-lg font-semibold mb-3">Schnellzugriff</h2>
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Card className="border-none shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 h-20 flex flex-col items-center justify-center cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300">
-          <ClipboardList className="h-6 w-6 text-white mb-1" />
-          <h3 className="text-white font-semibold text-xs">Schulungsunterlagen</h3>
-        </Card>
-        <Card className="border-none shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 h-20 flex flex-col items-center justify-center cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300">
-          <VideoIcon className="h-6 w-6 text-white mb-1" />
-          <h3 className="text-white font-semibold text-xs">Videos</h3>
+      <div className="mb-6">
+        <Card 
+          className="border-none shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-purple-500/30 bg-gradient-to-r from-blue-500 from-0% via-indigo-600 via-35% via-purple-500 via-65% to-pink-500 to-100% h-20 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300"
+          onClick={() => router.push('/schulungen-videos')}
+        >
+          <GraduationCap className="h-6 w-6 text-white mb-1" />
+          <h3 className="text-white font-semibold text-xs">Schulungen & Videos</h3>
         </Card>
       </div>
 
