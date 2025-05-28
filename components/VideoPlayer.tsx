@@ -44,7 +44,6 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
   const [watchedSegments, setWatchedSegments] = useState<Set<number>>(new Set())
   const [lastWatchedTime, setLastWatchedTime] = useState(0)
   const [liked, setLiked] = useState<boolean | null>(null)
-  const [question, setQuestion] = useState("")
   const [likeCount, setLikeCount] = useState(42) // Mock data
   const [dislikeCount, setDislikeCount] = useState(3) // Mock data
   const [showPlayAnimation, setShowPlayAnimation] = useState(false)
@@ -52,6 +51,11 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
   const videoRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLDivElement>(null)
   const controlsTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Simulate video progress and track watched segments
   useEffect(() => {
@@ -192,18 +196,8 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
     }
   }
 
-  // Handle question submission
-  const handleQuestionSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (question.trim()) {
-      console.log("Question submitted:", question)
-      // Here you would send the question to your backend
-      setQuestion("")
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950" style={{ marginTop: '-15px' }}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm rounded-lg">
         <div className="flex h-14 items-center justify-between px-4 mx-auto max-w-2xl">
@@ -443,32 +437,6 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
                 >
                   <ArrowRight className="h-5 w-5" />
                 </button>
-              </div>
-
-              {/* Questions Section */}
-              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">
-                    Fragen zum Video
-                  </h3>
-                  <form onSubmit={handleQuestionSubmit} className="space-y-3">
-                    <textarea
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      placeholder="Haben Sie Fragen zu diesem Video? Schreiben Sie uns..."
-                      className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                    />
-                    <button
-                      type="submit"
-                      disabled={!question.trim()}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Send className="h-4 w-4" />
-                      <span>Frage senden</span>
-                    </button>
-                  </form>
-                </div>
               </div>
             </div>
           )}

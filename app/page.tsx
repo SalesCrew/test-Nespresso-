@@ -695,13 +695,13 @@ export default function DashboardPage() {
                 } else {
                   // No promotion, schulung, or buddy assignments for this day.
                   // Show "Keine Termine" message.
-                  return (
-                    <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 opacity-70" />Keine Termine für diesen Tag geplant.
-                      </p>
-                    </div>
-                  );
+                    return (
+                      <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                          <Calendar className="h-4 w-4 mr-2 opacity-70" />Keine Termine für diesen Tag geplant.
+                        </p>
+                      </div>
+                    );
                 }
               })()}
                 </div>
@@ -716,7 +716,7 @@ export default function DashboardPage() {
           <GraduationCap className="h-6 w-6 text-white mb-1" />
           <h3 className="text-white font-semibold text-xs">Schulungen & Videos</h3>
         </Card>
-      </div>
+          </div>
 
       <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
           <CardHeader className="p-4"><CardTitle className="text-lg">Wochenstatus</CardTitle><CardDescription>Deine Aktivitäten diese Woche</CardDescription></CardHeader>

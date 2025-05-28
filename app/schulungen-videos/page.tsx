@@ -16,15 +16,83 @@ import {
   XIcon
 } from "lucide-react"
 import VideoPlayer from "@/components/VideoPlayer"
+import PDFReader from "@/components/PDFReader"
+import Quiz from "@/components/Quiz"
 
 export default function SchulungenVideosPage() {
   const [activeTab, setActiveTab] = useState("schulungen")
   const [selectedSchulung, setSelectedSchulung] = useState<any>(null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  const [showPDFReader, setShowPDFReader] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
+  const [currentTrainingStep, setCurrentTrainingStep] = useState(1)
+  const [trainingStartTime, setTrainingStartTime] = useState<number | null>(null)
   
   const fullSubtitle = "Erweitere dein Wissen und werde der beste Promotor!"
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join(''))
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Load state from localStorage on component mount
+  useEffect(() => {
+    const savedVideoPlayer = localStorage.getItem('showVideoPlayer')
+    const savedPDFReader = localStorage.getItem('showPDFReader')
+    const savedQuiz = localStorage.getItem('showQuiz')
+    const savedSchulung = localStorage.getItem('selectedSchulung')
+    const savedStep = localStorage.getItem('currentTrainingStep')
+    const savedStartTime = localStorage.getItem('trainingStartTime')
+    
+    if (savedVideoPlayer === 'true') {
+      setShowVideoPlayer(true)
+    }
+    if (savedPDFReader === 'true') {
+      setShowPDFReader(true)
+    }
+    if (savedQuiz === 'true') {
+      setShowQuiz(true)
+    }
+    if (savedSchulung) {
+      setSelectedSchulung(JSON.parse(savedSchulung))
+    }
+    if (savedStep) {
+      setCurrentTrainingStep(parseInt(savedStep))
+    }
+    if (savedStartTime) {
+      setTrainingStartTime(parseInt(savedStartTime))
+    }
+  }, [])
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('showVideoPlayer', showVideoPlayer.toString())
+  }, [showVideoPlayer])
+
+  useEffect(() => {
+    localStorage.setItem('showPDFReader', showPDFReader.toString())
+  }, [showPDFReader])
+
+  useEffect(() => {
+    localStorage.setItem('showQuiz', showQuiz.toString())
+  }, [showQuiz])
+
+  useEffect(() => {
+    if (selectedSchulung) {
+      localStorage.setItem('selectedSchulung', JSON.stringify(selectedSchulung))
+    } else {
+      localStorage.removeItem('selectedSchulung')
+    }
+  }, [selectedSchulung])
+
+  useEffect(() => {
+    localStorage.setItem('currentTrainingStep', currentTrainingStep.toString())
+  }, [currentTrainingStep])
+
+  useEffect(() => {
+    if (trainingStartTime) {
+      localStorage.setItem('trainingStartTime', trainingStartTime.toString())
+    } else {
+      localStorage.removeItem('trainingStartTime')
+    }
+  }, [trainingStartTime])
 
   useEffect(() => {
     setAnimatedSubtitle(fullSubtitle.split('').map(() => '\u00A0').join(''))
@@ -322,16 +390,91 @@ export default function SchulungenVideosPage() {
         currentStep={1}
         totalSteps={3}
         stepType="Schulungsvideo"
-        onBack={() => setShowVideoPlayer(false)}
+        onBack={() => {
+          setShowVideoPlayer(false)
+          setCurrentTrainingStep(1)
+          // Clear localStorage
+          localStorage.removeItem('showVideoPlayer')
+          localStorage.removeItem('currentTrainingStep')
+        }}
         onPause={(progress, watchedPercentage) => {
           console.log(`Video paused at ${progress}% with ${watchedPercentage}% watched`)
-          // Here you would save the progress to your database
           setShowVideoPlayer(false)
+          // Keep localStorage for resuming
         }}
         onNextStep={() => {
-          console.log("Moving to next step in Schulung")
-          // Here you would navigate to the next part of the Schulung
+          console.log("Moving to PDF reader")
           setShowVideoPlayer(false)
+          setShowPDFReader(true)
+          setCurrentTrainingStep(2)
+        }}
+      />
+    )
+  }
+
+  // Show PDF reader if activated
+  if (showPDFReader) {
+    return (
+      <PDFReader
+        pdfTitle="Produktpräsentation - Schulungsunterlagen"
+        pdfDescription="Detaillierte Unterlagen zur Produktpräsentation mit praktischen Tipps und Beispielen"
+        currentStep={2}
+        totalSteps={3}
+        stepType="Dokument"
+        onBack={() => {
+          setShowPDFReader(false)
+          setShowVideoPlayer(true)
+          setCurrentTrainingStep(1)
+        }}
+        onPause={(progress, readPercentage) => {
+          console.log(`PDF paused at ${progress}% with ${readPercentage}% read`)
+          setShowPDFReader(false)
+          // Keep localStorage for resuming
+        }}
+        onNextStep={() => {
+          console.log("Moving to quiz")
+          setShowPDFReader(false)
+          setShowQuiz(true)
+          setCurrentTrainingStep(3)
+        }}
+      />
+    )
+  }
+
+  // Show quiz if activated
+  if (showQuiz) {
+    return (
+      <Quiz
+        quizTitle="Produktpräsentation - Abschlusstest"
+        quizDescription="Testen Sie Ihr Wissen über die Produktpräsentation"
+        currentStep={3}
+        totalSteps={3}
+        stepType="Quiz"
+        trainingStartTime={trainingStartTime}
+        onBack={() => {
+          setShowQuiz(false)
+          setShowPDFReader(true)
+          setCurrentTrainingStep(2)
+        }}
+        onPause={(progress, completedPercentage) => {
+          console.log(`Quiz paused at ${progress}% with ${completedPercentage}% completed`)
+          setShowQuiz(false)
+          // Keep localStorage for resuming
+        }}
+        onComplete={() => {
+          console.log("Training completed successfully!")
+          // Clear all training state
+          setShowQuiz(false)
+          setSelectedSchulung(null)
+          setCurrentTrainingStep(1)
+          setTrainingStartTime(null)
+          // Clear localStorage
+          localStorage.removeItem('showVideoPlayer')
+          localStorage.removeItem('showPDFReader')
+          localStorage.removeItem('showQuiz')
+          localStorage.removeItem('selectedSchulung')
+          localStorage.removeItem('currentTrainingStep')
+          localStorage.removeItem('trainingStartTime')
         }}
       />
     )
@@ -533,6 +676,7 @@ export default function SchulungenVideosPage() {
                   onClick={() => {
                     setShowVideoPlayer(true)
                     setSelectedSchulung(null)
+                    setTrainingStartTime(Date.now())
                   }}
                   className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2.5 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
