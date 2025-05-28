@@ -377,6 +377,38 @@ export default function PromotorDashboard() {
     }
   };
 
+  // Add state for progress bar animations
+  const [progressBarsVisible, setProgressBarsVisible] = useState(false);
+  const progressBarsRef = useRef<HTMLDivElement>(null);
+
+  // Add Intersection Observer for progress bars
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setProgressBarsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.3, // Trigger when 30% of the element is visible
+        rootMargin: '0px 0px -50px 0px' // Trigger slightly before fully visible
+      }
+    );
+
+    const currentRef = progressBarsRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 pb-20">
       {/* Header */}
@@ -1294,7 +1326,7 @@ export default function PromotorDashboard() {
         </div>
 
         {/* Weekly Stats */}
-        <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
+        <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900" ref={progressBarsRef}>
           <CardHeader className="p-4">
             <CardTitle className="text-lg">Wochenstatus</CardTitle>
             <CardDescription>Deine Aktivitäten diese Woche</CardDescription>
@@ -1308,8 +1340,8 @@ export default function PromotorDashboard() {
                 </div>
                 <div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" 
-                    style={{ width: '60%' }}
+                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" 
+                    style={{ width: progressBarsVisible ? '60%' : '0%' }}
                   ></div>
                 </div>
               </div>
@@ -1320,8 +1352,8 @@ export default function PromotorDashboard() {
                 </div>
                 <div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" 
-                    style={{ width: '58%' }}
+                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-200" 
+                    style={{ width: progressBarsVisible ? '58%' : '0%' }}
                   ></div>
                 </div>
               </div>
@@ -1332,8 +1364,8 @@ export default function PromotorDashboard() {
                 </div>
                 <div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" 
-                    style={{ width: '50%' }}
+                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-400" 
+                    style={{ width: progressBarsVisible ? '50%' : '0%' }}
                   ></div>
                 </div>
               </div>

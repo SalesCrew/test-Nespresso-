@@ -680,66 +680,53 @@ export default function SchulungenVideosPage() {
         <div className="space-y-6">
           {/* Search Bar */}
           <div className="relative max-w-md mx-auto">
-            {isAIMode ? (
-              // AI Mode - Always show gradient border and fill
-              <div className="relative p-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg shadow-purple-500/25">
-                <div className="relative bg-white dark:bg-gray-900 rounded-full overflow-hidden">
+            <div className={`relative p-0.5 rounded-full ${
+              isAIMode 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25' 
+                : 'bg-transparent'
+            }`}>
+              <div className="relative bg-white dark:bg-gray-900 rounded-full overflow-hidden">
+                {isAIMode && (
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20"></div>
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <Search className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Erkläre das gewünschte Video"
-                    className="relative w-full pl-10 pr-16 py-3 bg-transparent rounded-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-200 z-10"
-                  />
-                  
-                  {/* Eddie AI Icon */}
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
-                    <button
-                      onClick={() => setIsAIMode(!isAIMode)}
-                      className="p-2 rounded-full hover:bg-white/20 transition-colors duration-200 focus:outline-none relative z-20"
-                    >
-                      <img
-                        src="/icons/robot 1.svg"
-                        alt="Eddie KI Assistant"
-                        className="h-5 w-5 brightness-0 saturate-100 invert(25%) sepia(15%) saturate(2498%) hue-rotate(316deg) brightness(99%) contrast(97%)"
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Normal Mode - No effects at all
-              <>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                )}
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                   <Search className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Suche nach Videonamen"
-                  className="w-full pl-10 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-200 shadow-md"
+                  placeholder={isAIMode ? "Erkläre das gewünschte Video" : "Suche nach Videonamen"}
+                  className={`relative w-full pl-10 pr-16 py-3 rounded-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-200 z-10 border ${
+                    isAIMode 
+                      ? 'bg-transparent border-transparent' 
+                      : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-md'
+                  }`}
                 />
                 
                 {/* Eddie AI Icon */}
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
                   <button
                     onClick={() => setIsAIMode(!isAIMode)}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none"
+                    className={`p-2 rounded-full transition-colors duration-200 focus:outline-none ${
+                      isAIMode 
+                        ? 'hover:bg-white/20' 
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
                   >
                     <img
                       src="/icons/robot 1.svg"
                       alt="Eddie KI Assistant"
-                      className="h-5 w-5 opacity-60 hover:opacity-80 transition-opacity duration-200"
+                      className={`h-5 w-5 transition-opacity duration-200 ${
+                        isAIMode 
+                          ? 'brightness-0 saturate-100 invert(25%) sepia(15%) saturate(2498%) hue-rotate(316deg) brightness(99%) contrast(97%)' 
+                          : 'opacity-60 hover:opacity-80'
+                      }`}
                     />
                   </button>
                 </div>
-              </>
-            )}
+              </div>
+            </div>
           </div>
 
           {/* Videos List */}

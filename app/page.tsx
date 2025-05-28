@@ -65,6 +65,10 @@ export default function DashboardPage() {
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join('')); 
   const [greeting, setGreeting] = useState("");
 
+  // Add state for progress bar animations
+  const [progressBarsVisible, setProgressBarsVisible] = useState(false);
+  const progressBarsRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -291,6 +295,33 @@ export default function DashboardPage() {
     }, 3000);
     // Here you would typically save the data to your backend
   };
+
+  // Add Intersection Observer for progress bars
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setProgressBarsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.3, // Trigger when 30% of the element is visible
+        rootMargin: '0px 0px -50px 0px' // Trigger slightly before fully visible
+      }
+    );
+
+    if (progressBarsRef.current) {
+      observer.observe(progressBarsRef.current);
+    }
+
+    return () => {
+      if (progressBarsRef.current) {
+        observer.unobserve(progressBarsRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -718,13 +749,13 @@ export default function DashboardPage() {
         </Card>
           </div>
 
-      <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
+      <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900" ref={progressBarsRef}>
           <CardHeader className="p-4"><CardTitle className="text-lg">Wochenstatus</CardTitle><CardDescription>Deine Aktivitäten diese Woche</CardDescription></CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="space-y-4">
-              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Arbeitsstunden</span><span className="text-sm font-medium">24/40</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" style={{ width: '60%' }}></div></div></div>
-              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Erledigte Aufgaben</span><span className="text-sm font-medium">7/12</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" style={{ width: '58%' }}></div></div></div>
-              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Schulungen</span><span className="text-sm font-medium">1/2</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full" style={{ width: '50%' }}></div></div></div>
+              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Arbeitsstunden</span><span className="text-sm font-medium">24/40</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" style={{ width: progressBarsVisible ? '60%' : '0%' }}></div></div></div>
+              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Erledigte Aufgaben</span><span className="text-sm font-medium">7/12</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-200" style={{ width: progressBarsVisible ? '58%' : '0%' }}></div></div></div>
+              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Schulungen</span><span className="text-sm font-medium">1/2</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-400" style={{ width: progressBarsVisible ? '50%' : '0%' }}></div></div></div>
                     </div>
                   </CardContent>
                 </Card>
