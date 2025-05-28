@@ -276,17 +276,20 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
               {/* YouTube-style Play/Pause Animation */}
               {showPlayAnimation && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="animate-ping absolute w-16 h-16 bg-gray-500/30 rounded-full"></div>
                   <div 
-                    className="relative w-16 h-16 bg-gray-500/60 rounded-full flex items-center justify-center shadow-xl"
+                    className="relative"
                     style={{
                       animation: 'pulseOnce 1.2s ease-out forwards'
                     }}
                   >
                     {isPlaying ? (
-                      <Play className="h-7 w-7 text-white ml-0.5" />
+                      <svg className="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      </svg>
                     ) : (
-                      <Pause className="h-7 w-7 text-white" />
+                      <svg className="h-12 w-12 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
                     )}
                   </div>
                 </div>
@@ -335,7 +338,15 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
                       onClick={togglePlay}
                       className="text-white rounded-full p-1.5"
                     >
-                      {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                      {isPlaying ? (
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
+                      ) : (
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      )}
                     </button>
                     
                     <button

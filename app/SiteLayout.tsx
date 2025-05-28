@@ -42,6 +42,9 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Training session detection
+  const [isInTrainingSession, setIsInTrainingSession] = useState(false);
+
   // Determine activeTab based on pathname
   useEffect(() => {
     if (pathname === "/") {
@@ -140,6 +143,31 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       darkModeMediaQuery.removeEventListener('change', (e) => updateColorMode(e.matches));
     };
   }, []);
+
+  // Check for active training session
+  useEffect(() => {
+    const checkTrainingSession = () => {
+      const showVideoPlayer = localStorage.getItem('showVideoPlayer') === 'true'
+      const showPDFReader = localStorage.getItem('showPDFReader') === 'true'
+      const showQuiz = localStorage.getItem('showQuiz') === 'true'
+      
+      setIsInTrainingSession(showVideoPlayer || showPDFReader || showQuiz)
+    }
+
+    // Check on mount
+    checkTrainingSession()
+
+    // Listen for localStorage changes
+    window.addEventListener('storage', checkTrainingSession)
+    
+    // Also check periodically in case localStorage is updated from the same tab
+    const interval = setInterval(checkTrainingSession, 500)
+
+    return () => {
+      window.removeEventListener('storage', checkTrainingSession)
+      clearInterval(interval)
+    }
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -249,21 +277,23 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       </main>
 
       {/* KI Assistant Floating Button */}
-      <button 
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
-        onClick={() => {
-          setChatOpen(true);
-          setIsSpinning(true);
-          setTimeout(() => setIsSpinning(false), 1000); // Reset after animation completes
-        }}
-      >
-        <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
-        <img
-          src="/icons/robot 1.svg"
-          alt="KI Assistant"
-          className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
-        />
-      </button>
+      {!isInTrainingSession && (
+        <button 
+          className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
+          onClick={() => {
+            setChatOpen(true);
+            setIsSpinning(true);
+            setTimeout(() => setIsSpinning(false), 1000); // Reset after animation completes
+          }}
+        >
+          <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
+          <img
+            src="/icons/robot 1.svg"
+            alt="KI Assistant"
+            className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
+          />
+        </button>
+      )}
 
       {/* KI Assistant Chat Interface */}
       {chatOpen && (
@@ -341,66 +371,68 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       )}
 
       {/* Shared Persistent Footer Menu */}
-      <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 w-auto px-3 py-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-full z-30 shadow-[0_35px_65px_-15px_rgba(0,0,0,0.25)] overflow-hidden transition-transform duration-300 ease-in-out ${
-        isFooterVisible ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]' // 100% + bottom-4 (1rem)
-      }`}>
-        <div className="relative flex items-center justify-around space-x-2 h-12">
-          <div
-            className="absolute bg-blue-500 rounded-full shadow-lg"
-            style={indicatorStyle}
-          ></div>
-          <Button
-            ref={el => { footerButtonRefs.current[0] = el; }}
-            variant="outline"
-            size="icon"
-            className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "home" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
-            style={{ backgroundColor: 'transparent' }}
-            onClick={() => handleNavigation("/")}
-          >
-            <Home className="h-6 w-6" />
-          </Button>
-          <Button
-            ref={el => { footerButtonRefs.current[1] = el; }}
-            variant="outline"
-            size="icon"
-            className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "einsatz" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
-            style={{ backgroundColor: 'transparent' }}
-            onClick={() => handleNavigation("/einsatz")}
-          >
-            <Briefcase className="h-6 w-6" />
-          </Button>
-          <Button
-            ref={el => { footerButtonRefs.current[2] = el; }}
-            variant="outline"
-            size="icon"
-            className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "chats" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
-            style={{ backgroundColor: 'transparent' }}
-            onClick={() => handleNavigation("/chats")}
-          >
-            <MessagesSquare className="h-6 w-6" />
-          </Button>
-          <Button
-            ref={el => { footerButtonRefs.current[3] = el; }}
-            variant="outline"
-            size="icon"
-            className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "kpis" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
-            style={{ backgroundColor: 'transparent' }}
-            onClick={() => handleNavigation("/statistiken")}
-          >
-            <BarChart2 className="h-6 w-6" />
-          </Button>
-          <Button
-            ref={el => { footerButtonRefs.current[4] = el; }}
-            variant="outline"
-            size="icon"
-            className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "profil" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
-            style={{ backgroundColor: 'transparent' }}
-            onClick={() => handleNavigation("/profil")}
-          >
-            <User className="h-6 w-6" />
-          </Button>
+      {!isInTrainingSession && (
+        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 w-auto px-3 py-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-full z-30 shadow-[0_35px_65px_-15px_rgba(0,0,0,0.25)] overflow-hidden transition-transform duration-300 ease-in-out ${
+          isFooterVisible ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]' // 100% + bottom-4 (1rem)
+        }`}>
+          <div className="relative flex items-center justify-around space-x-2 h-12">
+            <div
+              className="absolute bg-blue-500 rounded-full shadow-lg"
+              style={indicatorStyle}
+            ></div>
+            <Button
+              ref={el => { footerButtonRefs.current[0] = el; }}
+              variant="outline"
+              size="icon"
+              className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "home" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
+              onClick={() => handleNavigation("/")}
+            >
+              <Home className="h-6 w-6" />
+            </Button>
+            <Button
+              ref={el => { footerButtonRefs.current[1] = el; }}
+              variant="outline"
+              size="icon"
+              className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "einsatz" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
+              onClick={() => handleNavigation("/einsatz")}
+            >
+              <Briefcase className="h-6 w-6" />
+            </Button>
+            <Button
+              ref={el => { footerButtonRefs.current[2] = el; }}
+              variant="outline"
+              size="icon"
+              className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "chats" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
+              onClick={() => handleNavigation("/chats")}
+            >
+              <MessagesSquare className="h-6 w-6" />
+            </Button>
+            <Button
+              ref={el => { footerButtonRefs.current[3] = el; }}
+              variant="outline"
+              size="icon"
+              className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "kpis" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
+              onClick={() => handleNavigation("/statistiken")}
+            >
+              <BarChart2 className="h-6 w-6" />
+            </Button>
+            <Button
+              ref={el => { footerButtonRefs.current[4] = el; }}
+              variant="outline"
+              size="icon"
+              className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "profil" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
+              style={{ backgroundColor: 'transparent' }}
+              onClick={() => handleNavigation("/profil")}
+            >
+              <User className="h-6 w-6" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 
