@@ -13,7 +13,11 @@ import {
   HelpCircle,
   Clock,
   Play,
-  XIcon
+  XIcon,
+  Search,
+  ThumbsUp,
+  ThumbsDown,
+  Eye
 } from "lucide-react"
 import VideoPlayer from "@/components/VideoPlayer"
 import PDFReader from "@/components/PDFReader"
@@ -27,6 +31,10 @@ export default function SchulungenVideosPage() {
   const [showQuiz, setShowQuiz] = useState(false)
   const [currentTrainingStep, setCurrentTrainingStep] = useState(1)
   const [trainingStartTime, setTrainingStartTime] = useState<number | null>(null)
+  
+  // Videos section state
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isAIMode, setIsAIMode] = useState(false)
   
   const fullSubtitle = "Erweitere dein Wissen und werde der beste Promotor!"
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join(''))
@@ -200,6 +208,65 @@ export default function SchulungenVideosPage() {
       }
     }
   ]
+
+  // Mock videos data
+  const videos = [
+    {
+      id: 3,
+      title: "Produktpräsentation Masterclass",
+      thumbnail: "/api/placeholder/400/225",
+      likes: 48,
+      dislikes: 3,
+      views: 56,
+      duration: "15:22",
+      uploadDate: "vor 3 Tagen"
+    },
+    {
+      id: 5,
+      title: "Digitale Tools für Promotoren",
+      thumbnail: "/api/placeholder/400/225",
+      likes: 29,
+      dislikes: 4,
+      views: 41,
+      duration: "7:56",
+      uploadDate: "vor 4 Tagen"
+    },
+    {
+      id: 4,
+      title: "Teamwork und Kommunikation",
+      thumbnail: "/api/placeholder/400/225",
+      likes: 38,
+      dislikes: 1,
+      views: 52,
+      duration: "10:18",
+      uploadDate: "vor 1 Woche"
+    },
+    {
+      id: 1,
+      title: "Verkaufstechniken für Anfänger",
+      thumbnail: "/api/placeholder/400/225", // 16:9 aspect ratio
+      likes: 42,
+      dislikes: 2,
+      views: 58,
+      duration: "12:34",
+      uploadDate: "vor 2 Wochen"
+    },
+    {
+      id: 2,
+      title: "Kundenbetreuung und Service Excellence",
+      thumbnail: "/api/placeholder/400/225",
+      likes: 31,
+      dislikes: 1,
+      views: 45,
+      duration: "8:45",
+      uploadDate: "vor 1 Monat"
+    }
+  ]
+
+  // Filter videos based on search query
+  const filteredVideos = videos.filter(video =>
+    video.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -484,13 +551,28 @@ export default function SchulungenVideosPage() {
     <>
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-          Schulungen & Videos
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          {animatedSubtitle}
-        </p>
+      <div className="space-y-2 relative">
+        {/* Invisible space reservation - renders full content to establish container height */}
+        <div className="opacity-0 pointer-events-none">
+          <h1 className="text-2xl font-bold tracking-tight">
+            Schulungen & Videos
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Erweitere dein Wissen und werde der beste Promotor!
+          </p>
+        </div>
+        
+        {/* Actual visible content - positioned absolutely over the invisible content */}
+        <div className="absolute top-0 left-0 right-0">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+              Schulungen & Videos
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              {animatedSubtitle}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -534,7 +616,7 @@ export default function SchulungenVideosPage() {
               }`} />
               <span className={`transition-all duration-200 ${
                 activeTab === "videos" 
-                  ? "text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-purple-600" 
+                  ? "text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500" 
                   : "text-gray-600 dark:text-gray-400"
               }`}>Videos</span>
             </div>
@@ -595,15 +677,142 @@ export default function SchulungenVideosPage() {
       )}
 
       {activeTab === "videos" && (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Videos kommen bald
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Hier werden bald Lernvideos verfügbar sein
-            </p>
+        <div className="space-y-6">
+          {/* Search Bar */}
+          <div className="relative max-w-md mx-auto">
+            {isAIMode ? (
+              // AI Mode - Always show gradient border and fill
+              <div className="relative p-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg shadow-purple-500/25">
+                <div className="relative bg-white dark:bg-gray-900 rounded-full overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20"></div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <Search className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Erkläre das gewünschte Video"
+                    className="relative w-full pl-10 pr-16 py-3 bg-transparent rounded-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-200 z-10"
+                  />
+                  
+                  {/* Eddie AI Icon */}
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center z-20">
+                    <button
+                      onClick={() => setIsAIMode(!isAIMode)}
+                      className="p-2 rounded-full hover:bg-white/20 transition-colors duration-200 focus:outline-none relative z-20"
+                    >
+                      <img
+                        src="/icons/robot 1.svg"
+                        alt="Eddie KI Assistant"
+                        className="h-5 w-5 brightness-0 saturate-100 invert(25%) sepia(15%) saturate(2498%) hue-rotate(316deg) brightness(99%) contrast(97%)"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Normal Mode - No effects at all
+              <>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Suche nach Videonamen"
+                  className="w-full pl-10 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none transition-all duration-200 shadow-md"
+                />
+                
+                {/* Eddie AI Icon */}
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <button
+                    onClick={() => setIsAIMode(!isAIMode)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none"
+                  >
+                    <img
+                      src="/icons/robot 1.svg"
+                      alt="Eddie KI Assistant"
+                      className="h-5 w-5 opacity-60 hover:opacity-80 transition-opacity duration-200"
+                    />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Videos List */}
+          <div className="space-y-4">
+            {filteredVideos.length > 0 ? (
+              filteredVideos.map((video) => (
+                <div key={video.id} className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                  {/* Video Thumbnail */}
+                  <div className="relative aspect-video bg-gray-200 dark:bg-gray-700">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Duration Badge */}
+                    <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+                    {/* Play Button Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity duration-200">
+                      <svg className="h-12 w-12 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Video Info */}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    
+                    {/* Stats Row */}
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center space-x-4">
+                        {/* Views */}
+                        <div className="flex items-center space-x-1">
+                          <Eye className="h-4 w-4" />
+                          <span>{video.views.toLocaleString()}</span>
+                        </div>
+                        
+                        {/* Likes */}
+                        <div className="flex items-center space-x-1">
+                          <ThumbsUp className="h-4 w-4" />
+                          <span>{video.likes}</span>
+                        </div>
+                        
+                        {/* Dislikes */}
+                        <div className="flex items-center space-x-1">
+                          <ThumbsDown className="h-4 w-4" />
+                          <span>{video.dislikes}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Upload Date */}
+                      <span className="text-xs">
+                        {video.uploadDate}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Keine Videos gefunden
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Versuchen Sie einen anderen Suchbegriff
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

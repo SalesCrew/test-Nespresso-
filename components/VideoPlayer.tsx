@@ -18,7 +18,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Send,
-  ArrowRight
+  ArrowRight,
+  Eye
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -46,6 +47,7 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
   const [liked, setLiked] = useState<boolean | null>(null)
   const [likeCount, setLikeCount] = useState(42) // Mock data
   const [dislikeCount, setDislikeCount] = useState(3) // Mock data
+  const [viewCount, setViewCount] = useState(1247) // Mock data
   const [showPlayAnimation, setShowPlayAnimation] = useState(false)
   
   const videoRef = useRef<HTMLDivElement>(null)
@@ -409,30 +411,41 @@ export default function VideoPlayer({ videoTitle, videoDescription, currentStep,
 
               {/* Like/Dislike and Next Step Row */}
               <div className="flex items-center justify-between">
-                {/* Like/Dislike Icons (Left) */}
-                <div className="flex items-center space-x-4">
+                {/* Engagement Metrics (Left) */}
+                <div className="flex items-center space-x-1 bg-gray-50 dark:bg-gray-800 rounded-full px-3 py-2">
+                  {/* Views */}
+                  <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">{viewCount.toLocaleString()}</span>
+                  </div>
+                  
+                  {/* Separator */}
+                  <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-2"></div>
+                  
+                  {/* Likes */}
                   <button
                     onClick={handleLike}
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors ${
+                    className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-all duration-200 ${
                       liked === true 
-                        ? 'text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                        ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' 
+                        : 'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
                     }`}
                   >
-                    <ThumbsUp className="h-4 w-4" />
-                    <span className="text-sm font-medium">{likeCount}</span>
+                    <ThumbsUp className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">{likeCount}</span>
                   </button>
                   
+                  {/* Dislikes */}
                   <button
                     onClick={handleDislike}
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors ${
+                    className={`flex items-center space-x-1 px-2 py-1 rounded-full transition-all duration-200 ${
                       liked === false 
-                        ? 'text-red-600 dark:text-red-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+                        ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20' 
+                        : 'text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                     }`}
                   >
-                    <ThumbsDown className="h-4 w-4" />
-                    <span className="text-sm font-medium">{dislikeCount}</span>
+                    <ThumbsDown className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">{dislikeCount}</span>
                   </button>
                 </div>
 

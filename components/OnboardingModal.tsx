@@ -180,19 +180,19 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="Vorname"
                 value={formData.firstName}
                 onChange={(e) => updateFormData("firstName", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Nachname"
                 value={formData.lastName}
                 onChange={(e) => updateFormData("lastName", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Titel (optional)"
                 value={formData.title}
                 onChange={(e) => updateFormData("title", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
@@ -210,20 +210,20 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="Adresse"
                 value={formData.address}
                 onChange={(e) => updateFormData("address", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   placeholder="PLZ"
                   value={formData.postalCode}
                   onChange={(e) => updateFormData("postalCode", e.target.value)}
-                  className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                  className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
                 />
                 <Input
                   placeholder="Ort"
                   value={formData.city}
                   onChange={(e) => updateFormData("city", e.target.value)}
-                  className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                  className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
                 />
               </div>
             </div>
@@ -243,14 +243,14 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => updateFormData("phone", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="E-Mail"
                 type="email"
                 value={formData.email}
                 onChange={(e) => updateFormData("email", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
@@ -268,19 +268,19 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="SV-Nummer"
                 value={formData.socialSecurityNumber}
                 onChange={(e) => updateFormData("socialSecurityNumber", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Geburtsdatum (TT.MM.JJJJ)"
                 value={formData.birthDate}
                 onChange={(e) => updateFormData("birthDate", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Staatsbürgerschaft"
                 value={formData.citizenship}
                 onChange={(e) => updateFormData("citizenship", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               
               {shouldShowWorkPermit() && (
@@ -392,14 +392,14 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="Kleidergröße (z.B. S, M, L, XL oder 38, 40, 42...)"
                 value={formData.clothingSize}
                 onChange={(e) => updateFormData("clothingSize", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Körpergröße (in cm)"
                 type="number"
                 value={formData.height}
                 onChange={(e) => updateFormData("height", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
@@ -417,19 +417,19 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="Höchste abgeschlossene Schulausbildung"
                 value={formData.education}
                 onChange={(e) => updateFormData("education", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Zusatzqualifikationen (optional)"
                 value={formData.qualifications}
                 onChange={(e) => updateFormData("qualifications", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
                 placeholder="Derzeitige Beschäftigung (optional)"
                 value={formData.currentJob}
                 onChange={(e) => updateFormData("currentJob", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 placeholder="Bevorzugte Einsatz Region (z.B. Wien, Graz, Linz...)"
                 value={formData.preferredRegion}
                 onChange={(e) => updateFormData("preferredRegion", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
@@ -539,7 +539,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 type="number"
                 value={formData.hoursPerWeek}
                 onChange={(e) => updateFormData("hoursPerWeek", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800"
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
           </div>
