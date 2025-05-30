@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
+  // Add navigation state for CA KPIs vs Mystery Shop
+  const [activeSection, setActiveSection] = useState<"ca-kpis" | "mystery-shop">("ca-kpis")
+  
   const [timeFrame, setTimeFrame] = useState<"30days" | "6months" | "alltime">("30days")
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const feedbackRef = useRef<HTMLDivElement>(null)
@@ -16,6 +19,20 @@ export default function StatistikenPage() {
   const [selectedHistoryEntry, setSelectedHistoryEntry] = useState<number | null>(null)
   const [showNewFeedback, setShowNewFeedback] = useState(true)
   const [feedbackRead, setFeedbackRead] = useState(false)
+
+  // Mystery Shop specific state
+  const [mysteryTimeFrame, setMysteryTimeFrame] = useState<"30days" | "6months" | "alltime">("30days")
+  const [mysteryFeedbackOpen, setMysteryFeedbackOpen] = useState(false)
+  const mysteryFeedbackRef = useRef<HTMLDivElement>(null)
+  const [mysteryHistoryExpanded, setMysteryHistoryExpanded] = useState(false)
+  const [mysteryHistoryPage, setMysteryHistoryPage] = useState(0)
+  const [mysteryShowInfoContent, setMysteryShowInfoContent] = useState(false)
+  const [mysterySelectedHistoryEntry, setMysterySelectedHistoryEntry] = useState<number | null>(null)
+  const [mysteryShowNewFeedback, setMysteryShowNewFeedback] = useState(true)
+  const [mysteryFeedbackRead, setMysteryFeedbackRead] = useState(false)
+  
+  // Premium popup state
+  const [showPremiumPopup, setShowPremiumPopup] = useState(false)
   
   // Feedback texts for history entries
   const feedbackTexts = [
@@ -102,6 +119,15 @@ Liebe Grüße, dein Nespresso Team.`
     }
   }, [feedbackOpen])
 
+  // Auto-scroll when mystery feedback is opened
+  useEffect(() => {
+    if (mysteryFeedbackOpen && mysteryFeedbackRef.current) {
+      setTimeout(() => {
+        mysteryFeedbackRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 400)
+    }
+  }, [mysteryFeedbackOpen])
+
   // Auto-hide info content after 7 seconds
   useEffect(() => {
     if (showInfoContent) {
@@ -113,6 +139,17 @@ Liebe Grüße, dein Nespresso Team.`
     }
   }, [showInfoContent])
 
+  // Auto-hide mystery info content after 7 seconds
+  useEffect(() => {
+    if (mysteryShowInfoContent) {
+      const timer = setTimeout(() => {
+        setMysteryShowInfoContent(false)
+      }, 7000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [mysteryShowInfoContent])
+
   // Hide feedback card 5 seconds after being read
   useEffect(() => {
     if (feedbackRead) {
@@ -123,6 +160,17 @@ Liebe Grüße, dein Nespresso Team.`
       return () => clearTimeout(timer)
     }
   }, [feedbackRead])
+
+  // Hide mystery feedback card 5 seconds after being read
+  useEffect(() => {
+    if (mysteryFeedbackRead) {
+      const timer = setTimeout(() => {
+        setMysteryShowNewFeedback(false)
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [mysteryFeedbackRead])
   
   const toggleFeedback = () => {
     setFeedbackOpen(!feedbackOpen)
@@ -156,10 +204,49 @@ Liebe Grüße, dein Nespresso Team.`
     
     return data
   })
+
+  // Generate mystery shop mock data
+  const [mysteryHistoryData] = useState(() => {
+    const data = []
+    const today = new Date()
+    
+    for (let i = 0; i < 20; i++) {
+      const date = new Date(today)
+      date.setMonth(today.getMonth() - i)
+      
+      // Generate random mystery shop percentages (typically high scores)
+      const percentage = (85 + Math.random() * 15).toFixed(0) // 85-100%
+      
+      data.push({
+        date,
+        percentage: parseInt(percentage)
+      })
+    }
+    
+    return data
+  })
+
+  // Mystery Shop feedback text
+  const mysteryFeedbackText = `Liebe Nicole,
+
+wir haben vor kurzem ein Mystery Shopping Ergebnis von dir erhalten. Es freut mich sehr dir mitteilen zu dürfen, dass du ein Ergebnis von 96% erzielen konntest und wir dir somit die volle Prämie in Höhe von 100€ ausbezahlen dürfen. (Nach Abschluss der MS Welle)
+
+Ich habe dem Ergebnis nichts weiter hinzuzufügen. Wirklich super Arbeit!
+
+Besonders hervorheben möchte ich den Kommentar des Mystery Shoppers bei Frage 55 im Fragebogen was ihm denn besonders gut gefallen hat – nämlich dein Fokus auf die VL Maschinen. 😊
+
+Anbei der Bogen.
+
+Liebe Grüße,
+Mario`
   
   const currentPageData = historyData.slice(historyPage * entriesPerPage, (historyPage + 1) * entriesPerPage)
   
   const totalPages = Math.ceil(historyData.length / entriesPerPage)
+
+  // Mystery Shop pagination data
+  const mysteryCurrentPageData = mysteryHistoryData.slice(mysteryHistoryPage * entriesPerPage, (mysteryHistoryPage + 1) * entriesPerPage)
+  const mysteryTotalPages = Math.ceil(mysteryHistoryData.length / entriesPerPage)
   
   const navigateHistoryNext = () => {
     if (historyPage < totalPages - 1) {
@@ -170,6 +257,67 @@ Liebe Grüße, dein Nespresso Team.`
   const navigateHistoryPrev = () => {
     if (historyPage > 0) {
       setHistoryPage(historyPage - 1)
+    }
+  }
+
+  // Mystery Shop navigation functions
+  const navigateMysteryHistoryNext = () => {
+    if (mysteryHistoryPage < mysteryTotalPages - 1) {
+      setMysteryHistoryPage(mysteryHistoryPage + 1)
+    }
+  }
+  
+  const navigateMysteryHistoryPrev = () => {
+    if (mysteryHistoryPage > 0) {
+      setMysteryHistoryPage(mysteryHistoryPage - 1)
+    }
+  }
+
+  // Calculate Mystery Shop statistics
+  const calculateMysteryStatsData = () => {
+    // Calculate averages for all time
+    const allTimeAvg = mysteryHistoryData.reduce((sum, entry) => sum + entry.percentage, 0) / mysteryHistoryData.length
+
+    // Get current month (most recent entry) and comparison months
+    const currentMonth = mysteryHistoryData[0] // Most recent
+    const lastMonth = mysteryHistoryData[1] // Previous month  
+    const sixMonthsAgo = mysteryHistoryData[6] // 6 months ago
+
+    // Calculate averages for last 6 months
+    const last6MonthsData = mysteryHistoryData.slice(0, 6)
+    const sixMonthsAvg = last6MonthsData.reduce((sum, entry) => sum + entry.percentage, 0) / last6MonthsData.length
+
+    // Helper to calculate percentage change
+    const calcPercentChange = (current: number, previous: number) => {
+      const change = ((current - previous) / previous) * 100
+      return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`
+    }
+
+    // Helper to calculate optimal difference (90% is considered optimal)
+    const calcOptimalDiff = (value: number, optimal: number = 90) => {
+      const diff = value - optimal
+      return diff >= 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`
+    }
+
+    return {
+      "30days": {
+        percentage: { 
+          value: currentMonth.percentage, 
+          changePercent: calcPercentChange(currentMonth.percentage, lastMonth.percentage)
+        }
+      },
+      "6months": {
+        percentage: { 
+          value: sixMonthsAvg, 
+          changePercent: calcPercentChange(currentMonth.percentage, sixMonthsAgo.percentage)
+        }
+      },
+      "alltime": {
+        percentage: { 
+          value: allTimeAvg, 
+          changePercent: calcOptimalDiff(allTimeAvg)
+        }
+      }
     }
   }
 
@@ -254,6 +402,33 @@ Liebe Grüße, dein Nespresso Team.`
   }
 
   const statsData = calculateStatsData()
+  const mysteryStatsData = calculateMysteryStatsData()
+
+  // Calculate total earned premiums from Mystery Shop history
+  const calculateTotalPremiums = () => {
+    return mysteryHistoryData.reduce((total, entry) => {
+      if (entry.percentage >= 95) return total + 100 // 100€ for 95-100%
+      if (entry.percentage >= 90) return total + 50  // 50€ for 90-94%
+      return total // 0€ for below 90%
+    }, 0)
+  }
+
+  const totalPremiums = calculateTotalPremiums()
+
+  // Get premium breakdown for popup
+  const getPremiumBreakdown = () => {
+    return mysteryHistoryData
+      .map((entry, index) => ({
+        date: entry.date,
+        percentage: entry.percentage,
+        premium: entry.percentage >= 95 ? 100 : entry.percentage >= 90 ? 50 : 0,
+        tier: entry.percentage >= 95 ? "Exzellent" : entry.percentage >= 90 ? "Sehr gut" : null
+      }))
+      .filter(entry => entry.premium > 0)
+      .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort by date descending
+  }
+
+  const premiumBreakdown = getPremiumBreakdown()
 
   // Helper function to determine color based on value
   const getColorForMcEt = (value: number) => {
@@ -278,6 +453,25 @@ Liebe Grüße, dein Nespresso Team.`
   const getStyleForColor = (colorClass: string) => {
     if (colorClass === "custom-orange") {
       return { color: "#FD7E14" }
+    }
+    return {}
+  }
+
+  // Helper function to determine color based on Mystery Shop percentage
+  const getColorForMysteryShop = (value: number) => {
+    if (value >= 95) return "custom-gold" // 95-100%: Gold/shiny (100€ premium)
+    if (value >= 90) return "text-green-600 dark:text-green-400" // 90-94%: Green (50€ premium)
+    if (value >= 80) return "custom-orange" // 80-89%: Orange (no premium)
+    return "text-red-600 dark:text-red-400" // <80%: Red (bad result)
+  }
+
+  // Helper function to get style for Mystery Shop colors including gold
+  const getStyleForMysteryShopColor = (colorClass: string) => {
+    if (colorClass === "custom-orange") {
+      return { color: "#FD7E14" }
+    }
+    if (colorClass === "custom-gold") {
+      return {}
     }
     return {}
   }
@@ -347,6 +541,44 @@ Liebe Grüße, dein Nespresso Team.`
         </div>
       </section>
 
+      {/* Navigation Menu */}
+      <div className="mb-6">
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 max-w-sm mx-auto relative">
+          {/* Sliding indicator */}
+          <div 
+            className={`absolute top-1 bottom-1 bg-white dark:bg-gray-700 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+              activeSection === "ca-kpis" 
+                ? "left-1 right-1/2 mr-0.5" 
+                : "left-1/2 right-1 ml-0.5"
+            }`}
+          />
+          
+          <button
+            onClick={() => setActiveSection("ca-kpis")}
+            className="relative flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10"
+          >
+            <span className={`transition-all duration-200 ${
+              activeSection === "ca-kpis" 
+                ? "bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent" 
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            }`}>CA KPIs</span>
+          </button>
+          <button
+            onClick={() => setActiveSection("mystery-shop")}
+            className="relative flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10"
+          >
+            <span className={`transition-all duration-200 ${
+              activeSection === "mystery-shop" 
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" 
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            }`}>Mystery Shop</span>
+          </button>
+        </div>
+      </div>
+
+      {/* CA KPIs Section */}
+      {activeSection === "ca-kpis" && (
+        <>
       <div className="flex flex-col items-center mb-12">
         <div className="relative w-full max-w-md">
           <Card className="w-full shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden relative z-10">
@@ -500,7 +732,13 @@ Liebe Grüße, dein Nespresso Team.`
               <CardContent className="p-4">
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
-                    <p>{getFeedbackText(selectedHistoryEntry || 0)}</p>
+                        <div className="space-y-3">
+                          {getFeedbackText(selectedHistoryEntry || 0).split('\n\n').map((paragraph, index) => (
+                            <p key={index} className="leading-relaxed">
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -755,9 +993,465 @@ Liebe Grüße, dein Nespresso Team`}
             </Card>
           </div>
         </div>
+          )}
+        </>
       )}
 
-      {/* Additional stats components will be added here later */}
+      {/* Mystery Shop Section */}
+      {activeSection === "mystery-shop" && (
+        <>
+          <div className="flex flex-col items-center mb-12">
+            <div className="relative w-full max-w-md">
+              <Card className="w-full shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden relative z-10">
+                {/* Header with blue gradient */}
+                <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                  <h3 className="text-center font-medium text-white flex items-center justify-center">
+                    <BarChart2 className="h-4 w-4 mr-2" />
+                    {mysteryTimeFrame === "30days" ? "Letzte 30 Tage" : 
+                     mysteryTimeFrame === "6months" ? "Letzte 6 Monate" : "Gesamt"}
+                  </h3>
+                </div>
+                
+                <CardContent className="p-0">
+                  {/* Statistics section with navigation arrows on sides */}
+                  <div className="relative p-3 bg-gradient-to-b from-transparent to-gray-50 dark:to-gray-800/20">
+                    {!mysteryShowInfoContent ? (
+                      <>
+                        {/* Info button - positioned in top-left corner */}
+                        <button 
+                          onClick={() => setMysteryShowInfoContent(true)}
+                          className="absolute left-2 top-2 p-1 opacity-40 hover:opacity-80 transition-opacity z-10"
+                        >
+                          <Info className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                        </button>
+
+                        {/* Left arrow */}
+                        <button 
+                          onClick={() => {
+                            if (mysteryTimeFrame === "30days") setMysteryTimeFrame("alltime")
+                            else if (mysteryTimeFrame === "6months") setMysteryTimeFrame("30days")
+                            else setMysteryTimeFrame("6months")
+                          }}
+                          className="absolute left-1 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </button>
+
+                        <div className="space-y-1 mx-8">
+                          {/* Mystery Shop Percentage */}
+                          <div className="text-center py-2">
+                            <div className="flex flex-col items-center justify-center space-y-1">
+                              <div className="text-sm text-gray-500 dark:text-gray-400">Mystery Shop</div>
+                              <div className="flex items-center justify-center">
+                                <div 
+                                  className={`font-semibold text-xl ${
+                                    getColorForMysteryShop(mysteryStatsData[mysteryTimeFrame].percentage.value) === "custom-gold" 
+                                      ? 'bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent'
+                                      : getColorForMysteryShop(mysteryStatsData[mysteryTimeFrame].percentage.value) !== "custom-orange" 
+                                        ? getColorForMysteryShop(mysteryStatsData[mysteryTimeFrame].percentage.value) 
+                                        : ""
+                                  }`}
+                                  style={{marginRight: '6px', ...getStyleForMysteryShopColor(getColorForMysteryShop(mysteryStatsData[mysteryTimeFrame].percentage.value))}}
+                                >
+                                  {mysteryStatsData[mysteryTimeFrame].percentage.value.toFixed(1)}%
+                                </div>
+                                <div className={`text-xs rounded-full px-1.5 py-0.5 ${
+                                  mysteryStatsData[mysteryTimeFrame].percentage.changePercent.startsWith('+') 
+                                    ? 'bg-green-600/30 dark:bg-green-500/30 text-green-800 dark:text-green-200' 
+                                    : 'bg-red-600/30 dark:bg-red-500/30 text-red-800 dark:text-red-200'
+                                }`}>
+                                  {mysteryStatsData[mysteryTimeFrame].percentage.changePercent}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right arrow */}
+                        <button 
+                          onClick={() => {
+                            if (mysteryTimeFrame === "30days") setMysteryTimeFrame("6months")
+                            else if (mysteryTimeFrame === "6months") setMysteryTimeFrame("alltime")
+                            else setMysteryTimeFrame("30days")
+                          }}
+                          className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      /* Info content displayed centered in the card */
+                      <div className="flex items-center justify-center h-[100px] px-3">
+                        <div className="text-center max-w-full">
+                          <h4 className="font-semibold text-sm mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            {mysteryTimeFrame === "30days" ? "Letzter Monat" : 
+                             mysteryTimeFrame === "6months" ? "Letzte 6 Monate" : "Gesamter Zeitraum"}
+                          </h4>
+                          <p className="text-xs text-gray-700 dark:text-gray-200 mb-2 leading-tight">
+                            Zeigt deine Mystery Shopping Bewertungen. Die Pillen zeigen die Veränderung zum Vergleichszeitraum.
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
+                            <span className="text-green-600 dark:text-green-400 font-medium">Grün</span> = Verbesserung, <span className="text-red-600 dark:text-red-400 font-medium">Rot</span> = Verschlechterung
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Mystery Shop Feedback dropdown that peeks from behind the card - only visible when feedback is closed */}
+              <div 
+                className={`absolute left-1/2 transform -translate-x-1/2 -bottom-[1.65rem] z-0 flex justify-center w-full transition-all duration-500 ${
+                  mysteryFeedbackOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+              >
+                <div 
+                  className="bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 cursor-pointer w-52 text-center filter drop-shadow-md"
+                  onClick={() => setMysteryFeedbackOpen(!mysteryFeedbackOpen)}
+                >
+                  <button className="flex items-center justify-center w-full">
+                    <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent text-xs font-medium opacity-75">letztes feedback</span>
+                    <ChevronDown className="h-3.5 w-3.5 ml-1 text-indigo-500 transform translate-y-[1px] opacity-75" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mystery Shop Feedback Card */}
+            <div 
+              className={`w-full max-w-[calc(100%-18px)] mt-1 transition-all duration-500 origin-top ${
+                mysteryFeedbackOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 absolute pointer-events-none'
+              }`}
+              ref={mysteryFeedbackRef}
+              style={{ 
+                transformOrigin: 'top center',
+                maxHeight: mysteryFeedbackOpen ? '1000px' : '0px',
+                marginTop: mysteryFeedbackOpen ? '4px' : '0px'
+              }}
+            >
+              <div className="relative">
+                <Card className="shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
+                  <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800">
+                    <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm text-center">
+                      Mystery Shop <span className="text-gray-400 dark:text-gray-500">Feedback</span>
+                    </h3>
+                  </div>
+                  
+                  <CardContent className="p-4">
+                    <ScrollArea className="h-[280px] pr-4">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
+                        <div className="space-y-3">
+                          {mysteryFeedbackText.split('\n\n').map((paragraph, index) => (
+                            <p key={index} className="leading-relaxed">
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+                
+                {/* Schließen button peeking from behind the card */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-[1.65rem] z-0 flex justify-center w-full">
+                  <div 
+                    className="bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 cursor-pointer w-52 text-center filter drop-shadow-md"
+                    onClick={() => setMysteryFeedbackOpen(!mysteryFeedbackOpen)}
+                  >
+                    <button className="flex items-center justify-center w-full">
+                      <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent text-xs font-medium opacity-75">schließen</span>
+                      <ChevronUp className="h-3.5 w-3.5 ml-1 text-indigo-500 transform translate-y-[1px] opacity-75" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Card - Same styling as Schulungen & Videos button */}
+          <div className="w-full max-w-md mx-auto mb-6">
+            <Card 
+              className="border-none shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-purple-500/30 bg-gradient-to-r from-blue-500 from-0% via-indigo-600 via-35% via-purple-500 via-65% to-pink-500 to-100% h-20 flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-all duration-300"
+              onClick={() => setShowPremiumPopup(true)}
+            >
+              <div className="flex items-center space-x-2 text-white">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span className="font-bold text-lg">{totalPremiums}€</span>
+              </div>
+              <h3 className="text-white font-semibold text-xs">Erarbeitete Prämien</h3>
+            </Card>
+          </div>
+
+          {/* Mystery Shop History Section */}
+          <div className="w-full max-w-md mx-auto mb-8">
+            <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+              {/* Purple gradient header */}
+              <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+                <h3 className="text-center font-medium text-white flex items-center justify-center">
+                  <History className="h-4 w-4 mr-2" />
+                  Mystery Shop Verlauf ({mysteryHistoryData.length})
+                </h3>
+              </div>
+              
+              <CardContent className="p-0">
+                <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {mysteryCurrentPageData.map((entry, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex items-center p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ${
+                        !mysteryHistoryExpanded && index > 4 ? 
+                          (index === 4 ? 'opacity-50' : 'hidden') : ''
+                      }`}
+                      onClick={() => setMysterySelectedHistoryEntry(mysterySelectedHistoryEntry === index ? null : index)}
+                    >
+                      <div className="flex-shrink-0 w-24">
+                        <div className="flex items-center">
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {entry.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 flex justify-end ml-4">
+                        <div className={`text-sm font-medium ${
+                          getColorForMysteryShop(entry.percentage) === "custom-gold" 
+                            ? 'bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent'
+                            : getColorForMysteryShop(entry.percentage) !== "custom-orange" 
+                              ? getColorForMysteryShop(entry.percentage) 
+                              : ""
+                        }`}
+                        style={getStyleForMysteryShopColor(getColorForMysteryShop(entry.percentage))}>
+                          {entry.percentage}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Blurred overlay for collapsed state */}
+                  {!mysteryHistoryExpanded && mysteryCurrentPageData.length > 5 && (
+                    <div className="relative">
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Footer with Show more/less button and navigation */}
+                <div className="p-2 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center justify-between">
+                    {/* Left navigation arrow - only show if not on first page */}
+                    <div className="w-20">
+                      {mysteryHistoryPage > 0 && (
+                        <button 
+                          onClick={() => navigateMysteryHistoryPrev()}
+                          className="flex items-center text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5 mr-1 text-purple-500" />
+                          <span>Neuer</span>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Show more/less button */}
+                    <button 
+                      onClick={() => setMysteryHistoryExpanded(!mysteryHistoryExpanded)}
+                      className="flex items-center justify-center text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                    >
+                      {mysteryHistoryExpanded ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-1 text-purple-500" />
+                          Schließen
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-1 text-purple-500" />
+                          Show More
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* Right navigation arrow - only show if not on last page */}
+                    <div className="w-20 text-right">
+                      {mysteryHistoryPage < mysteryTotalPages - 1 && (
+                        <button 
+                          onClick={() => navigateMysteryHistoryNext()}
+                          className="flex items-center justify-end text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                        >
+                          <span>Älter</span>
+                          <ArrowRight className="h-3.5 w-3.5 ml-1 text-purple-500" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Mystery Shop History Feedback Popup */}
+          {mysterySelectedHistoryEntry !== null && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setMysterySelectedHistoryEntry(null)}>
+              <div className="w-full max-w-md">
+                <Card className="shadow-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm">
+                      Mystery Shop <span className="text-gray-400 dark:text-gray-500">
+                        {mysteryCurrentPageData[mysterySelectedHistoryEntry]?.date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                      </span>
+                    </h3>
+                    <button 
+                      onClick={() => setMysterySelectedHistoryEntry(null)}
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                    >
+                      <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </div>
+                  
+                  <CardContent className="p-4">
+                    <ScrollArea className="h-[280px] pr-4">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed whitespace-pre-line">
+                        {mysteryFeedbackText}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Premium Breakdown Popup */}
+      {showPremiumPopup && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowPremiumPopup(false)}></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-lg max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 text-white p-6 pb-12">
+              {/* Close button */}
+              <button 
+                onClick={() => setShowPremiumPopup(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              {/* Header content */}
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold mb-1">Deine Prämien</h2>
+                <p className="text-white/90 text-sm">Aufschlüsselung aller verdienten Mystery Shop Prämien</p>
+              </div>
+              
+              {/* Total amount - overlapping the divider */}
+              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+                <div className="bg-white dark:bg-gray-900 rounded-full px-5 py-2.5 shadow-lg border-4 border-white dark:border-gray-900">
+                  <div className="text-center">
+                    <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {totalPremiums}€
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      Gesamt verdient
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 pt-12 max-h-[55vh] overflow-y-auto">
+              {premiumBreakdown.length > 0 ? (
+                <div className="space-y-3">
+                  {premiumBreakdown.map((entry, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <div className="flex items-center space-x-4">
+                        {/* Premium tier indicator */}
+                        <div className={`w-3 h-3 rounded-full ${
+                          entry.premium === 100 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-lg shadow-yellow-400/30' : 'bg-gradient-to-r from-green-400 to-green-500 shadow-lg shadow-green-400/30'
+                        }`}></div>
+                        
+                        {/* Date and details */}
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                            {entry.date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                          </div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                              entry.premium === 100 
+                                ? 'bg-gradient-to-r from-[#E0AA3E]/40 via-[#F0D96A]/40 to-[#E0AA3E]/40 text-yellow-800 dark:text-yellow-300' 
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            }`}>
+                              {entry.tier}
+                            </span>
+                            <span className={`text-xs font-bold ${
+                              entry.percentage >= 95 
+                                ? 'bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent'
+                                : entry.percentage >= 90 
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : entry.percentage >= 80 
+                                    ? 'text-orange-500'
+                                    : 'text-red-600 dark:text-red-400'
+                            }`}>
+                              {entry.percentage}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Premium amount */}
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${
+                          entry.premium === 100 
+                            ? 'bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent' 
+                            : 'text-green-600 dark:text-green-400'
+                        }`}>
+                          +{entry.premium}€
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Noch keine Prämien verdient
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Erreiche mindestens 90% in einem Mystery Shop um deine erste Prämie zu verdienen!
+                  </p>
+                </div>
+              )}
+              
+              {/* Footer info */}
+              {premiumBreakdown.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-center space-x-6 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-green-500 rounded-full"></div>
+                      <span>90-94%: 50€</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full"></div>
+                      <span>95-100%: 100€</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 } 
