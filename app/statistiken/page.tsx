@@ -1090,8 +1090,11 @@ Liebe Grüße, dein Nespresso Team`}
                           <p className="text-xs text-gray-700 dark:text-gray-200 mb-2 leading-tight">
                             Zeigt deine Mystery Shopping Bewertungen. Die Pillen zeigen die Veränderung zum Vergleichszeitraum.
                           </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
+                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight mb-2">
                             <span className="text-green-600 dark:text-green-400 font-medium">Grün</span> = Verbesserung, <span className="text-red-600 dark:text-red-400 font-medium">Rot</span> = Verschlechterung
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
+                            <span className="text-red-600 dark:text-red-400 font-medium">&lt;90%</span> = Keine Prämie, <span className="text-green-600 dark:text-green-400 font-medium">90-94%</span> = 50€ Prämie, <span className="text-yellow-600 dark:text-yellow-400 font-medium">95-100%</span> = 100€ Prämie
                           </p>
                         </div>
                       </div>
