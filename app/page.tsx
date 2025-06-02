@@ -404,7 +404,7 @@ export default function DashboardPage() {
   };
 
   const handleEinsatzStart = (assignment: any) => {
-    router.push(`/einsatz/${assignment.id}`);
+    router.push("/einsatz");
   };
 
   const handleOnboardingComplete = (data: any) => {
@@ -1174,6 +1174,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
                           onClick={() => handleEinsatzStart(assignment)}
+                          style={{ marginTop: '5px' }}
                         >
                           <span className="flex items-center">
                             Einsatz starten
@@ -1213,6 +1214,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col items-end h-full py-1 justify-end space-y-0">
                       <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
                         onClick={() => handleEinsatzStart(assignment)}
+                        style={{ marginTop: '5px' }}
                       >
                         <span className="flex items-center">
                           Einsatz starten
