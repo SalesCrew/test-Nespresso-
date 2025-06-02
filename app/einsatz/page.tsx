@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import {
   Calendar,
   CheckCircle2,
@@ -35,6 +36,12 @@ import {
   MoreHorizontal,
   AlertCircle,
   SlidersHorizontal,
+  ShoppingCart,
+  Minus,
+  Box,
+  Truck,
+  RotateCcw,
+  GraduationCap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -85,6 +92,7 @@ const newcomerProposalsMock = [
 ];
 
 export default function EinsatzPage() {
+  const router = useRouter();
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -118,7 +126,117 @@ export default function EinsatzPage() {
   const [isWaitingForEmergencyConfirmation, setIsWaitingForEmergencyConfirmation] = useState(false);
   const [isEmergencyConfirmed, setIsEmergencyConfirmed] = useState(false);
 
-  // No longer needed as we removed the cursor animation
+  // For equipment ordering
+  const [showEquipmentCard, setShowEquipmentCard] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
+  const [equipmentQuantity, setEquipmentQuantity] = useState(1);
+  const [equipmentOrderStep, setEquipmentOrderStep] = useState<"list" | "confirm">("list");
+
+  // For rotating calendar
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(new Date());
+  const [animating, setAnimating] = useState(false);
+  const [showMiniCalendar, setShowMiniCalendar] = useState(false);
+  const [miniCalendarDisplayMonth, setMiniCalendarDisplayMonth] = useState(new Date());
+  const miniCalendarButtonRef = useRef<HTMLButtonElement>(null);
+  const miniCalendarPopupRef = useRef<HTMLDivElement>(null);
+  const [hoveredMiniCalendarDate, setHoveredMiniCalendarDate] = useState<Date | null>(null);
+  const [showLegendPopup, setShowLegendPopup] = useState(false);
+  const legendIconRef = useRef<HTMLButtonElement>(null);
+  const legendPopupRef = useRef<HTMLDivElement>(null);
+
+  // Mock equipment data
+  const equipmentItems = [
+    { id: 1, name: "Samsung Smartphones", description: "Dummy-Geräte für Präsentation", image: "/placeholder-phone.jpg" },
+    { id: 2, name: "Tablet Ständer", description: "Display-Ständer für Tablets", image: "/placeholder-stand.jpg" },
+    { id: 3, name: "Werbeflyer", description: "Produktinformationen", image: "/placeholder-flyer.jpg" },
+    { id: 4, name: "Netzteile", description: "Ladegeräte für Vorführung", image: "/placeholder-charger.jpg" },
+    { id: 5, name: "Bluetooth Kopfhörer", description: "Demonstration Audio-Features", image: "/placeholder-headphones.jpg" },
+    { id: 6, name: "Displayreiniger", description: "Reinigungsset für Geräte", image: "/placeholder-cleaner.jpg" },
+  ];
+
+  // Helper functions for calendar
+  const getCalendarDays = () => {
+    const days = [];
+    const startDay = new Date(currentCalendarDate);
+    startDay.setDate(currentCalendarDate.getDate() - 4);
+    for (let i = 0; i < 9; i++) {
+      const day = new Date(startDay);
+      day.setDate(startDay.getDate() + i);
+      days.push(day);
+    }
+    return days;
+  };
+
+  const navigateDays = (steps: number) => {
+    if (animating || steps === 0) return;
+    setAnimating(true);
+    setTimeout(() => {
+      const newCurrentDate = new Date(currentCalendarDate);
+      newCurrentDate.setDate(currentCalendarDate.getDate() + steps);
+      setCurrentCalendarDate(newCurrentDate);
+      setSelectedCalendarDate(newCurrentDate);
+      setTimeout(() => setAnimating(false), 400);
+    }, 50);
+  };
+
+  const formatDateRange = (startDate: Date, endDate: Date): string => {
+    const startMonth = startDate.toLocaleDateString('de-DE', { month: 'short' });
+    const endMonth = endDate.toLocaleDateString('de-DE', { month: 'short' });
+    const startDay = startDate.getDate();
+    const endDay = endDate.getDate();
+    if (startMonth === endMonth) {
+      return `${startMonth}, ${String(startDay).padStart(2, '0')} - ${String(endDay).padStart(2, '0')}`;
+    }
+    return `${startMonth} ${String(startDay).padStart(2, '0')} - ${endMonth} ${String(endDay).padStart(2, '0')}`;
+  };
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = [];
+    let startingDayOfWeek = firstDayOfMonth.getDay();
+    startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      daysInMonth.push(null);
+    }
+    for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+      daysInMonth.push(new Date(year, month, i));
+    }
+    return daysInMonth;
+  };
+
+  const navigateMiniCalendarMonth = (direction: number) => {
+    setMiniCalendarDisplayMonth(prev => {
+      const newMonth = new Date(prev);
+      newMonth.setMonth(prev.getMonth() + direction);
+      return newMonth;
+    });
+  };
+
+  // Effect for mini calendar outside click
+  useEffect(() => {
+    const handleClickOutsideMiniCalendar = (event: MouseEvent) => {
+      if (showMiniCalendar && miniCalendarButtonRef.current && !miniCalendarButtonRef.current.contains(event.target as Node) && miniCalendarPopupRef.current && !miniCalendarPopupRef.current.contains(event.target as Node)) {
+        setShowMiniCalendar(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideMiniCalendar);
+    return () => document.removeEventListener('mousedown', handleClickOutsideMiniCalendar);
+  }, [showMiniCalendar]);
+
+  // Effect for legend popup outside click
+  useEffect(() => {
+    const handleClickOutsideLegend = (event: MouseEvent) => {
+      if (showLegendPopup && legendIconRef.current && !legendIconRef.current.contains(event.target as Node) && legendPopupRef.current && !legendPopupRef.current.contains(event.target as Node)) {
+        setShowLegendPopup(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideLegend);
+    return () => document.removeEventListener('mousedown', handleClickOutsideLegend);
+  }, [showLegendPopup]);
 
   // Maps Modal Logic (copied from dashboard)
   const handleAddressClick = (address: string) => {
@@ -145,6 +263,10 @@ export default function EinsatzPage() {
     const encodedAddress = encodeURIComponent(selectedAddress);
     window.open(`maps://maps.apple.com/?q=${encodedAddress}`, '_blank');
     setShowMapsModal(false);
+  };
+
+  const handleEinsatzStart = (assignment: any) => {
+    router.push(`/einsatz/${assignment.id}`);
   };
 
   // New Timer Logic
@@ -789,6 +911,134 @@ export default function EinsatzPage() {
           </CardContent>
         </Card>
 
+        {/* Equipment Ordering Card */}
+        <Card className="mb-6 border-gray-200 dark:border-gray-700 shadow-md overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4">
+            <CardTitle className="text-lg flex items-center">
+              <Box className="mr-2 h-5 w-5" />
+              Equipment bestellen
+            </CardTitle>
+            <CardDescription className="text-green-100">
+              Bestelle Artikel für deinen nächsten Einsatz
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-4">
+            {equipmentOrderStep === "list" ? (
+              <div className="space-y-3">
+                {equipmentItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/70 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setSelectedEquipment(item);
+                      setEquipmentOrderStep("confirm");
+                    }}
+                  >
+                    {/* Placeholder image container */}
+                    <div className="w-12 h-12 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Package className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    
+                    {/* Item details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {item.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {item.description}
+                      </p>
+                    </div>
+                    
+                    {/* Arrow indicator */}
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Selected item display */}
+                <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-200 to-green-300 dark:from-green-700 dark:to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {selectedEquipment?.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {selectedEquipment?.description}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Quantity selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Anzahl
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEquipmentQuantity(Math.max(1, equipmentQuantity - 1))}
+                      disabled={equipmentQuantity <= 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-lg font-medium w-8 text-center">
+                      {equipmentQuantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setEquipmentQuantity(equipmentQuantity + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex space-x-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setEquipmentOrderStep("list");
+                      setSelectedEquipment(null);
+                      setEquipmentQuantity(1);
+                    }}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Zurück
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                    onClick={() => {
+                      // Handle order submission here
+                      console.log(`Ordered ${equipmentQuantity}x ${selectedEquipment?.name}`);
+                      // Reset to list view
+                      setEquipmentOrderStep("list");
+                      setSelectedEquipment(null);
+                      setEquipmentQuantity(1);
+                    }}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Bestellen
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Anstehende Einsätze with Rotating Calendar - REMOVED (belongs only on main dashboard) */}
+
+        {/* Quick Actions - REMOVED (belongs only on main dashboard) */}
+
         {showProposalSubmittedMessage && (
              <div className="fixed top-4 left-4 right-4 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg z-50 transition-opacity duration-300">
                 <div className="flex items-center justify-center">
@@ -829,7 +1079,8 @@ export default function EinsatzPage() {
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer mt-1 flex items-center"
                   onClick={() => handleAddressClick(selectedProposal.location)}
                 >
-                  <MapPin className="h-4 w-4 mr-1.5 text-blue-500" /> Teststraße 123, 12345 Berlin
+                  <MapPin className="h-4 w-4 mr-1.5 text-blue-500" />
+                  {selectedProposal.location}
                 </p>
               </div>
               
@@ -981,6 +1232,7 @@ export default function EinsatzPage() {
                     onClick={() => {
                       const newValue = Math.max(1, sickDays + value);
                       setSickDays(newValue);
+                      setAdjustmentValue(0);
                       setShowSickAdjustModal(false);
                     }}
                   >
