@@ -24,7 +24,7 @@ import {
   GraduationCap, // For combined Schulungen & Videos quick action
   Video as VideoIcon, // For Videos quick action
   MessagesSquare as MessagesSquareIcon, // For Chat quick action
-  Briefcase, // For "Anstehende Einsätze" card title icon
+  Briefcase, // For "Terminkalender" card title icon
   History, // For To-Dos history
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
   const [showTodoSpotlight, setShowTodoSpotlight] = useState(false);
+  const [selectedAssignmentType, setSelectedAssignmentType] = useState<string>("promotion");
 
   const [showLegendPopup, setShowLegendPopup] = useState(false);
   const legendIconRef = useRef<HTMLButtonElement>(null);
@@ -320,9 +321,12 @@ export default function DashboardPage() {
 
   const [assignments, setAssignments] = useState([
     { id: 1, title: "Mediamarkt, Seiersberg", location: "Wien, Mariahilferstraße", time: "10:00 - 18:00", date: new Date(), type: "promotion" },
+    { id: 10, title: "Produktschulung Smartphones", location: "Online Meetingraum", time: "19:00 - 20:30", date: new Date(), type: "schulung" },
     { id: 2, title: "Mediamarkt, Klagenfurt", location: "Klagenfurt, Völkermarkter Straße", time: "09:00 - 17:30", date: new Date(new Date().setDate(new Date().getDate() + 1)), type: "buddy" },
+    { id: 11, title: "Verkaufstechniken Basics", location: "Online Meetingraum", time: "18:30 - 20:00", date: new Date(new Date().setDate(new Date().getDate() + 1)), type: "schulung" },
     { id: 3, title: "Android Pro Schulung", location: "Online Meetingraum", time: "13:00 - 17:00", date: new Date(new Date().setDate(new Date().getDate() + 3)), type: "schulung" },
     { id: 4, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 5)), type: "krankenstand" },
+    { id: 12, title: "Mediamarkt, Graz", location: "Graz, Annenstraße", time: "10:00 - 18:00", date: new Date(new Date().setDate(new Date().getDate() + 5)), type: "promotion" },
     { id: 5, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 6)), type: "krankenstand" },
     { id: 6, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 8)), type: "urlaub" },
     { id: 8, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 9)), type: "urlaub" },
@@ -407,6 +411,20 @@ export default function DashboardPage() {
     router.push("/einsatz");
   };
 
+  // Get highest priority assignment type for a given day
+  const getHighestPriorityAssignmentType = (date: Date) => {
+    const dayAssignments = assignments.filter(a => a.date.toDateString() === date.toDateString());
+    
+    // Priority order: krankenstand/urlaub first, then promotion/buddy, then schulung
+    if (dayAssignments.some(a => a.type === "krankenstand")) return "krankenstand";
+    if (dayAssignments.some(a => a.type === "urlaub")) return "urlaub";
+    if (dayAssignments.some(a => a.type === "promotion")) return "promotion";
+    if (dayAssignments.some(a => a.type === "buddy")) return "buddy";
+    if (dayAssignments.some(a => a.type === "schulung")) return "schulung";
+    
+    return "promotion"; // fallback
+  };
+
   const handleOnboardingComplete = (data: any) => {
     console.log("Onboarding completed with data:", data);
     setShowOnboarding(false);
@@ -417,6 +435,11 @@ export default function DashboardPage() {
     }, 3000);
     // Here you would typically save the data to your backend
   };
+
+  // Set initial assignment type based on current date
+  useEffect(() => {
+    setSelectedAssignmentType(getHighestPriorityAssignmentType(selectedCalendarDate));
+  }, []);
 
   // Add Intersection Observer for progress bars
   useEffect(() => {
@@ -782,7 +805,7 @@ export default function DashboardPage() {
         <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 flex flex-row justify-between items-center">
           <CardTitle className="text-lg flex items-center">
             <Calendar className="mr-2 h-5 w-5" />
-            Anstehende Einsätze
+                            Terminkalender
           </CardTitle>
           <div className="relative">
             <button 
@@ -870,6 +893,7 @@ export default function DashboardPage() {
                             
                             setShowMiniCalendar(false);
                             setHoveredMiniCalendarDate(null);
+                            setSelectedAssignmentType(getHighestPriorityAssignmentType(newDate));
                           }
                         }}
                       >
@@ -889,6 +913,9 @@ export default function DashboardPage() {
                               )}
                               {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "urlaub") && (
                                 <div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"></div>
+                              )}
+                              {assignments.some(a => a.date.toDateString() === day.toDateString() && a.type === "krankenstand") && (
+                                <div className="h-1 w-2/5 rounded-full bg-gradient-to-r from-red-500 to-red-600"></div>
                               )}
                             </div>
                           </>
@@ -965,10 +992,40 @@ export default function DashboardPage() {
                   const hasBuddyTag = assignments.some(a => 
                     a.date.toDateString() === day.toDateString() && a.type === "buddy"
                   );
+                  const hasKrankenstand = assignments.some(a => 
+                    a.date.toDateString() === day.toDateString() && a.type === "krankenstand"
+                  );
+                  const hasUrlaub = assignments.some(a => 
+                    a.date.toDateString() === day.toDateString() && a.type === "urlaub"
+                  );
+                  const hasSchulung = assignments.some(a => 
+                    a.date.toDateString() === day.toDateString() && a.type === "schulung"
+                  );
                   
                   let dynamicClasses = '';
                   if (isSelected) {
                     dynamicClasses = 'text-black border-indigo-700';
+                  } else if (hasKrankenstand) {
+                    dynamicClasses = 'border-red-500';
+                    if (isToday) {
+                      dynamicClasses += ' bg-red-100 dark:bg-red-800/50';
+                    } else {
+                      dynamicClasses += ' hover:bg-red-50 dark:hover:bg-red-900/50';
+                    }
+                  } else if (hasUrlaub) {
+                    dynamicClasses = 'border-green-500';
+                    if (isToday) {
+                      dynamicClasses += ' bg-green-100 dark:bg-green-800/50';
+                    } else {
+                      dynamicClasses += ' hover:bg-green-50 dark:hover:bg-green-900/50';
+                    }
+                  } else if (hasSchulung) {
+                    dynamicClasses = 'border-orange-500';
+                    if (isToday) {
+                      dynamicClasses += ' bg-orange-100 dark:bg-orange-800/50';
+                    } else {
+                      dynamicClasses += ' hover:bg-orange-50 dark:hover:bg-orange-900/50';
+                    }
                   } else if (hasBuddyTag) {
                     dynamicClasses = 'border-purple-500';
                     if (isToday) {
@@ -1018,28 +1075,35 @@ export default function DashboardPage() {
                       <button
                         className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden
                           ${isCenter ? 'border-2' : 'border'}
-                          ${!isSelected ? dynamicClasses : (hasBuddyTag ? 'border-purple-500' : hasAssignment ? 'border-indigo-700' : 'border-indigo-700')}
+                          ${!isSelected ? dynamicClasses : (hasKrankenstand ? 'border-red-500' : hasUrlaub ? 'border-green-500' : hasSchulung ? 'border-orange-500' : hasBuddyTag ? 'border-purple-500' : hasAssignment ? 'border-indigo-700' : 'border-indigo-700')}
                           bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow
                         `}
                         style={isSelected ? 
-                          (hasBuddyTag ? {
+                          (hasKrankenstand ? {
+                            background: 'linear-gradient(to bottom, rgba(239,68,68,0.9), rgba(185,28,28,0.8))'
+                          } : hasUrlaub ? {
+                            background: 'linear-gradient(to bottom, rgba(34,197,94,0.9), rgba(21,128,61,0.8))'
+                          } : hasSchulung ? {
+                            background: 'linear-gradient(to bottom, rgba(249,115,22,0.9), rgba(194,65,12,0.8))'
+                          } : hasBuddyTag ? {
                             background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'
                           } : hasAssignment ? {
                             background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'
                           } : {}) 
                         : {}}
-                        onClick={() => {
-                          const stepsToShift = Math.round((day.getTime() - currentCalendarDate.getTime()) / (1000 * 60 * 60 * 24));
-                          navigateDays(stepsToShift);
-                        }}
+                                onClick={() => {
+          const stepsToShift = Math.round((day.getTime() - currentCalendarDate.getTime()) / (1000 * 60 * 60 * 24));
+          navigateDays(stepsToShift);
+          setSelectedAssignmentType(getHighestPriorityAssignmentType(day));
+        }}
                         disabled={animating}
                       >
                         {isSelected ? (
                           <div className="flex flex-col items-center w-full">
-                            <span className={`text-xs font-medium mb-1 ${hasBuddyTag || hasAssignment ? 'text-white' : 'text-gray-700'}`}>
+                            <span className={`text-xs font-medium mb-1 ${hasKrankenstand || hasUrlaub || hasSchulung || hasBuddyTag || hasAssignment ? 'text-white' : 'text-gray-700'}`}>
                               {day.toLocaleDateString('de-DE', { weekday: 'short' })}
                             </span>
-                            <span className={`text-xl font-bold ${hasBuddyTag || hasAssignment ? 'text-white' : 'text-gray-800'}`}>
+                            <span className={`text-xl font-bold ${hasKrankenstand || hasUrlaub || hasSchulung || hasBuddyTag || hasAssignment ? 'text-white' : 'text-gray-800'}`}>
                               {day.getDate()}
                             </span>
                           </div>
@@ -1061,28 +1125,115 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex justify-center items-center space-x-12 mb-1 -mt-1">
-            <button 
-              className="text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full p-2"
-              onClick={() => navigateDays(-1)}
-              disabled={animating}
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <button 
-              className="text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full p-2"
-              onClick={() => navigateDays(1)}
-              disabled={animating}
-            >
-              <ArrowRight className="h-6 w-6" />
-            </button>
+          {/* Assignment Type Tabs */}
+          <div className="mb-3 -mt-1">
+            <div className={`flex justify-between bg-gray-100 dark:bg-gray-800 rounded-lg p-1 relative ${
+              assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) 
+                ? 'opacity-40' : ''
+            }`}>
+              {/* Sliding indicator */}
+              <div 
+                className="absolute top-1 bottom-1 bg-white dark:bg-gray-700 rounded-md shadow-sm transition-all duration-300 ease-in-out"
+                                  style={{
+                    width: selectedAssignmentType === "buddy" ? 'calc(25% - 4px)' : 'calc(33.333% - 8px)',
+                    left: selectedAssignmentType === "promotion" ? '4px' : 
+                          selectedAssignmentType === "schulung" ? '53%' : 
+                          'calc(100% - 25% - 2px)',
+                    transform: selectedAssignmentType === "schulung" ? 'translateX(-50%)' : 'translateX(0)'
+                  }}
+              />
+              <button
+                onClick={() => {
+                  const promotionAssignments = assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion");
+                  if (promotionAssignments.length > 0) setSelectedAssignmentType("promotion");
+                }}
+                disabled={assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length === 0}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center relative z-10 ${
+                  selectedAssignmentType === "promotion"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0
+                    ? "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    : "text-gray-400 dark:text-gray-600 opacity-30 cursor-not-allowed"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full mr-2 ${
+                  assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0
+                    ? "bg-blue-500"
+                    : "bg-gray-300 dark:bg-gray-600"
+                }`}></div>
+                Promotion
+                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0 && selectedAssignmentType !== "promotion" && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">
+                      {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length}
+                    </span>
+                  </div>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  const schulungAssignments = assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung");
+                  if (schulungAssignments.length > 0) setSelectedAssignmentType("schulung");
+                }}
+                disabled={assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length === 0}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center relative z-10 ${
+                  selectedAssignmentType === "schulung"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0
+                    ? "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    : "text-gray-400 dark:text-gray-600 opacity-30 cursor-not-allowed"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full mr-2 ${
+                  assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0
+                    ? "bg-orange-500"
+                    : "bg-gray-300 dark:bg-gray-600"
+                }`}></div>
+                Schulung
+                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0 && selectedAssignmentType !== "schulung" && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">
+                      {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length}
+                    </span>
+                  </div>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  const buddyAssignments = assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy");
+                  if (buddyAssignments.length > 0) setSelectedAssignmentType("buddy");
+                }}
+                disabled={assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length === 0}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center relative z-10 ${
+                  selectedAssignmentType === "buddy"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length > 0
+                    ? "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    : "text-gray-400 dark:text-gray-600 opacity-30 cursor-not-allowed"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full mr-2 ${
+                  assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length > 0
+                    ? "bg-purple-500"
+                    : "bg-gray-300 dark:bg-gray-600"
+                }`}></div>
+                Buddy
+                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length > 0 && selectedAssignmentType !== "buddy" && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">
+                      {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length}
+                    </span>
+                  </div>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Assignment display for selected day */}
           <div className="h-[90px] min-h-[90px]">
             {assignments
               .filter(a => a.date.toDateString() === selectedCalendarDate.toDateString())
+              .filter(a => a.type === selectedAssignmentType)
               .slice(0, 1)
               .map((assignment) => {
                 if (assignment.type === "urlaub") {
@@ -1162,7 +1313,7 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end h-full py-1 justify-center space-y-0.5">
+                      <div className="flex flex-col items-end h-full py-1 justify-center space-y-1">
                         <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
                           <span className="flex items-center">Buddy: Cesira</span>
                         </div>
@@ -1172,15 +1323,16 @@ export default function DashboardPage() {
                             {assignment.time}
                           </span>
                         </div>
-                        <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
-                          onClick={() => handleEinsatzStart(assignment)}
-                          style={{ marginTop: '5px' }}
-                        >
-                          <span className="flex items-center">
-                            Einsatz starten
-                            <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
-                          </span>
-                        </div>
+                        {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && (
+                          <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
+                            onClick={() => handleEinsatzStart(assignment)}
+                          >
+                            <span className="flex items-center">
+                              Einsatz starten
+                              <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -1212,20 +1364,22 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end h-full py-1 justify-end space-y-0">
-                      <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
-                        onClick={() => handleEinsatzStart(assignment)}
-                        style={{ marginTop: '5px' }}
-                      >
-                        <span className="flex items-center">
-                          Einsatz starten
-                          <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
-                        </span>
-                      </div>
+                                              {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && (
+                          <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
+                            onClick={() => handleEinsatzStart(assignment)}
+                            style={{ marginTop: '5px' }}
+                          >
+                            <span className="flex items-center">
+                              Einsatz starten
+                              <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </div>
                 );
               })}
-            {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString()).length === 0 && (
+            {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString()).filter(a => a.type === selectedAssignmentType).length === 0 && (
               <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                   <Calendar className="h-4 w-4 mr-2 opacity-70" />

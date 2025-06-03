@@ -34,6 +34,12 @@ export default function StatistikenPage() {
   // Premium popup state
   const [showPremiumPopup, setShowPremiumPopup] = useState(false)
   
+  // Sales challenge state
+  const [challengeCompleted, setChallengeCompleted] = useState(false)
+  const [challengeCongratulationsRead, setChallengeCongratulationsRead] = useState(false)
+  const [challengeCardDismissed, setChallengeCardDismissed] = useState(false)
+  const [showChallengePrizes, setShowChallengePrizes] = useState(false)
+  
   // Feedback texts for history entries
   const feedbackTexts = [
     // For newest month - use existing feedback
@@ -171,6 +177,32 @@ Liebe Grüße, dein Nespresso Team.`
       return () => clearTimeout(timer)
     }
   }, [mysteryFeedbackRead])
+
+  // Auto-hide challenge prizes popup when clicking outside
+  useEffect(() => {
+    const handleClickOutsideChallengePrizes = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.challenge-prizes-popup') && !target.closest('.challenge-info-button')) {
+        setShowChallengePrizes(false)
+      }
+    }
+
+    if (showChallengePrizes) {
+      document.addEventListener('mousedown', handleClickOutsideChallengePrizes)
+      return () => document.removeEventListener('mousedown', handleClickOutsideChallengePrizes)
+    }
+  }, [showChallengePrizes])
+
+  // Handle challenge card dismissal after 5 seconds
+  useEffect(() => {
+    if (challengeCongratulationsRead) {
+      const timer = setTimeout(() => {
+        setChallengeCardDismissed(true)
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [challengeCongratulationsRead])
   
   const toggleFeedback = () => {
     setFeedbackOpen(!feedbackOpen)
@@ -849,6 +881,322 @@ Liebe Grüße, dein Nespresso Team`}
         </div>
       )}
 
+      {/* Sales Challenge Card */}
+      <div className="w-full max-w-md mx-auto mb-6">
+        {!challengeCompleted && !challengeCardDismissed ? (
+          <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
+            {/* Challenge gradient header */}
+            <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 text-white rounded-t-lg relative">
+              {/* Info icon */}
+              <button 
+                onClick={() => setShowChallengePrizes(!showChallengePrizes)}
+                className="challenge-info-button absolute left-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Info className="h-4 w-4 text-white/80 hover:text-white" />
+              </button>
+              
+              <h3 className="text-center font-medium text-white flex items-center justify-center">
+                <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+                </svg>
+                Sales Challenge
+              </h3>
+              <div className="text-center text-xs text-white/90 mt-1">
+                <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                  Endet in 12 Tagen
+                </span>
+              </div>
+              
+              {/* Prizes popup */}
+              {showChallengePrizes && (
+                <div className="challenge-prizes-popup absolute top-full left-4 mt-2 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 w-64 z-[60]">
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 text-sm text-center">
+                    🏆 Preise & Belohnungen
+                  </h4>
+                  <div className="space-y-2.5">
+                    {/* 1st Place */}
+                    <div className="flex items-center justify-between p-2 rounded-lg" style={{background: 'linear-gradient(to right, rgba(238, 179, 75, 0.1), rgba(255, 237, 153, 0.1))'}}>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)'}}>
+                          <span className="text-white font-bold text-xs">1</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">1. Platz</span>
+                      </div>
+                                             <span className="font-bold text-sm bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent">150€</span>
+                    </div>
+                    
+                    {/* 2nd Place */}
+                    <div className="flex items-center justify-between p-2 rounded-lg" style={{background: 'linear-gradient(to right, rgba(222, 223, 225, 0.15), rgba(236, 238, 237, 0.15))'}}>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{background: 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)'}}>
+                          <span className="text-white font-bold text-xs">2</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">2. Platz</span>
+                      </div>
+                      <span className="font-bold text-sm" style={{color: '#BCBDC1'}}>100€</span>
+                    </div>
+                    
+                    {/* 3rd Place */}
+                    <div className="flex items-center justify-between p-2 rounded-lg" style={{background: 'linear-gradient(to right, rgba(189, 150, 93, 0.1), rgba(222, 191, 147, 0.1))'}}>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{background: 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)'}}>
+                          <span className="text-white font-bold text-xs">3</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">3. Platz</span>
+                      </div>
+                      <span className="font-bold text-sm" style={{color: '#BD965D'}}>50€</span>
+                    </div>
+                    
+                                         {/* 4th-10th Place */}
+                     <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                       <div className="flex items-center space-x-2">
+                         <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded flex items-center justify-center">
+                           <span className="text-white font-bold text-xs">4+</span>
+                         </div>
+                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">4.-10. Platz</span>
+                       </div>
+                       <span className="font-bold text-sm text-blue-600 dark:text-blue-400">20€</span>
+                     </div>
+                    
+                    {/* Below 10th */}
+                    <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg opacity-60">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gray-400 rounded flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">11+</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Ab 11. Platz</span>
+                      </div>
+                      <span className="font-medium text-sm text-gray-500 dark:text-gray-400">0€</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      Preise werden nach Challenge-Ende ausgezahlt
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <CardContent className="p-4">
+              {/* Top 3 Podium */}
+              <div className="mb-4">
+                <div className="flex items-end justify-center space-x-2 mb-3">
+                  {/* 2nd Place */}
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-1 shadow-md" style={{background: 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)'}}>
+                      <span className="text-white font-bold text-sm">2</span>
+                    </div>
+                    <div className="w-12 h-8 rounded-t-md flex items-center justify-center" style={{background: 'linear-gradient(to top, #BCBDC1, #ECEEED)'}}>
+                      <span className="text-xs font-bold text-gray-600">47</span>
+                    </div>
+                  </div>
+                  
+                  {/* 1st Place */}
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-lg flex items-center justify-center mb-1 shadow-lg transform scale-110 -translate-y-1" style={{background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)'}}>
+                      <svg className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 16L3 12L5.5 10L8 12L10 8L12 12L14 8L16 12L18.5 10L21 12L19 16H5ZM7 18H17C17.55 18 18 18.45 18 19C18 19.55 17.55 20 17 20H7C6.45 20 6 19.55 6 19C6 18.45 6.45 18 7 18Z"/>
+                      </svg>
+                    </div>
+                    <div className="w-14 h-12 rounded-t-md flex items-center justify-center" style={{background: 'linear-gradient(to top, #FCD33D, #FFED99)'}}>
+                      <span className="text-sm font-bold" style={{color: '#8B6914'}}>63</span>
+                    </div>
+                  </div>
+                  
+                  {/* 3rd Place */}
+                  <div className="text-center">
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-1 shadow-md" style={{background: 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)'}}>
+                      <span className="text-white font-bold text-sm">3</span>
+                    </div>
+                    <div className="w-12 h-6 rounded-t-md flex items-center justify-center" style={{background: 'linear-gradient(to top, #99774A, #DEBF93)'}}>
+                      <span className="text-xs font-bold text-amber-100">41</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Rank labels */}
+                <div className="flex justify-center space-x-8 text-xs text-gray-500 dark:text-gray-400">
+                  <span>2nd</span>
+                  <span className="text-yellow-600 dark:text-yellow-500 font-semibold">1st</span>
+                  <span>3rd</span>
+                </div>
+              </div>
+              
+              {/* Current User Rank */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {(() => {
+                      const currentRank: number = 7;
+                      return (
+                        <div 
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                          style={{
+                            background: currentRank === 1 
+                              ? 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)'
+                              : currentRank === 2 
+                                ? 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)'
+                                : currentRank === 3 
+                                  ? 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)'
+                                  : 'linear-gradient(135deg, rgb(59 130 246), rgb(99 102 241))'
+                          }}
+                        >
+                          <span className="text-white font-bold text-sm">{currentRank}</span>
+                        </div>
+                      );
+                    })()}
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        Dein Rang
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        +2 seit letzter Woche
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      28
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      VL Verkäufe
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Challenge Progress */}
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <span>Bis Platz 3:</span>
+                  <span className="font-semibold">13 VL Verkäufe</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500" 
+                    style={{ width: '68%' }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <span>Nächste Belohnung:</span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">100€ Gutschein</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+                ) : challengeCompleted && !challengeCardDismissed ? (
+          !challengeCongratulationsRead ? (
+            /* Congratulations Card */
+            <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
+              {/* Congratulations gradient header */}
+              <div className="py-4 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 text-white rounded-t-lg">
+                <h3 className="text-center font-bold text-white flex items-center justify-center text-lg">
+                  <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 16L3 12L5.5 10L8 12L10 8L12 12L14 8L16 12L18.5 10L21 12L19 16H5ZM7 18H17C17.55 18 18 18.45 18 19C18 19.55 17.55 20 17 20H7C6.45 20 6 19.55 6 19C6 18.45 6.45 18 7 18Z"/>
+                  </svg>
+                  Herzlichen Glückwunsch!
+                </h3>
+                <div className="text-center text-sm text-white/90 mt-1">
+                  Sales Challenge beendet
+                </div>
+              </div>
+              
+              <CardContent className="p-6">
+                {/* Final Placement */}
+                <div className="text-center mb-6">
+                  <div className="mx-auto mb-3 w-30 h-36">
+                    <svg className="w-full h-full" viewBox="0 0 100 120" fill="none">
+                      <defs>
+                        <linearGradient id="bronzeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#BD965D"/>
+                          <stop offset="25%" stopColor="#99774A"/>
+                          <stop offset="75%" stopColor="#DEBF93"/>
+                          <stop offset="100%" stopColor="#AC9071"/>
+                        </linearGradient>
+                      </defs>
+                      
+                      {/* Medal Ribbons */}
+                      <path d="M30 5 L35 45 L50 40 L65 45 L70 5 Z" fill="url(#bronzeGradient)" stroke="#AC9071" strokeWidth="1"/>
+                      
+                      {/* Medal Circle */}
+                      <circle cx="50" cy="70" r="25" fill="url(#bronzeGradient)" stroke="#99774A" strokeWidth="2"/>
+                      
+                      {/* Inner Circle */}
+                      <circle cx="50" cy="70" r="18" fill="rgba(222, 191, 147, 0.3)" stroke="#DEBF93" strokeWidth="1"/>
+                      
+                      {/* Number */}
+                      <text x="50" y="77" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">3</text>
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    3. Platz erreicht!
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    Du hast mit 45 VL Verkäufen einen fantastischen 3. Platz erreicht!
+                  </p>
+                </div>
+                
+                {/* Reward Section */}
+                <div className="rounded-lg p-4 border mb-4" style={{
+                  background: 'linear-gradient(to right, rgba(189, 150, 93, 0.1), rgba(222, 191, 147, 0.1))',
+                  borderColor: 'rgba(189, 150, 93, 0.3)'
+                }}>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold mb-1" style={{color: '#BD965D'}}>
+                      100€ Gutschein
+                    </div>
+                    <p className="text-sm" style={{color: 'rgba(189, 150, 93, 0.8)'}}>
+                      Deine wohlverdiente Belohnung wird in den nächsten Tagen verarbeitet
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Confirmation Button */}
+                <button 
+                  onClick={() => setChallengeCongratulationsRead(true)}
+                  className="w-full bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-indigo-700 hover:via-purple-600 hover:to-pink-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  ✓ Verstanden
+                </button>
+              </CardContent>
+            </Card>
+          ) : (
+            /* Collapsed Confirmation Card */
+            <Card className="w-full border border-green-200 dark:border-green-700 shadow-sm bg-green-50 dark:bg-green-900/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-green-800 dark:text-green-200 text-sm">
+                      Sales Challenge Gratulation gelesen
+                    </div>
+                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      To-Do als erledigt markiert
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        ) : null}
+      </div>
+      
+      {/* Temporary Test Button */}
+      <div className="w-full max-w-md mx-auto mb-4">
+        <button 
+          onClick={() => setChallengeCompleted(!challengeCompleted)}
+          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
+        >
+          🧪 TEST: Toggle Challenge {challengeCompleted ? 'Active' : 'Complete'}
+        </button>
+      </div>
+
       {/* History Section */}
       <div className="w-full max-w-md mx-auto mb-8">
         <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -1005,11 +1353,11 @@ Liebe Grüße, dein Nespresso Team`}
               <Card className="w-full shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden relative z-10">
                 {/* Header with blue gradient */}
                 <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-                  <h3 className="text-center font-medium text-white flex items-center justify-center">
-                    <BarChart2 className="h-4 w-4 mr-2" />
-                    {mysteryTimeFrame === "30days" ? "Letzte 30 Tage" : 
-                     mysteryTimeFrame === "6months" ? "Letzte 6 Monate" : "Gesamt"}
-                  </h3>
+                                  <h3 className="text-center font-medium text-white flex items-center justify-center">
+                  <BarChart2 className="h-4 w-4 mr-2" />
+                  {mysteryTimeFrame === "30days" ? "Letzter Mystery Shop" : 
+                   mysteryTimeFrame === "6months" ? "Letzte 6 Mystery Shops" : "Gesamt"}
+                </h3>
                 </div>
                 
                 <CardContent className="p-0">
@@ -1084,17 +1432,19 @@ Liebe Grüße, dein Nespresso Team`}
                       <div className="flex items-center justify-center h-[100px] px-3">
                         <div className="text-center max-w-full">
                           <h4 className="font-semibold text-sm mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            {mysteryTimeFrame === "30days" ? "Letzter Monat" : 
-                             mysteryTimeFrame === "6months" ? "Letzte 6 Monate" : "Gesamter Zeitraum"}
+                            {mysteryTimeFrame === "30days" ? "Letzter Mystery Shop" : 
+                             mysteryTimeFrame === "6months" ? "Letzte 6 Mystery Shops" : "Gesamter Zeitraum"}
                           </h4>
                           <p className="text-xs text-gray-700 dark:text-gray-200 mb-2 leading-tight">
-                            Zeigt deine Mystery Shopping Bewertungen. Die Pillen zeigen die Veränderung zum Vergleichszeitraum.
+                            {mysteryTimeFrame === "30days" ? "Vergleich: Neuester vs. Zweitneuester Shop." : 
+                             mysteryTimeFrame === "6months" ? "Durchschnitt der letzten 6 Shops. Vergleich: Neuester vs. 6. Shop." : 
+                             "Mystery Shop Bewertungen. Pillen zeigen Veränderung zum Vergleichszeitraum."}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight mb-2">
-                            <span className="text-green-600 dark:text-green-400 font-medium">Grün</span> = Verbesserung, <span className="text-red-600 dark:text-red-400 font-medium">Rot</span> = Verschlechterung
+                            <span className="text-green-600 dark:text-green-400 font-medium">Grün</span> = +, <span className="text-red-600 dark:text-red-400 font-medium">Rot</span> = -
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-300 leading-tight">
-                            <span className="text-red-600 dark:text-red-400 font-medium">&lt;90%</span> = Keine Prämie, <span className="text-green-600 dark:text-green-400 font-medium">90-94%</span> = 50€ Prämie, <span className="text-yellow-600 dark:text-yellow-400 font-medium">95-100%</span> = 100€ Prämie
+                            <span className="text-red-600 dark:text-red-400 font-medium">&lt;90%</span> = 0€, <span className="text-green-600 dark:text-green-400 font-medium">90-94%</span> = 50€, <span className="text-yellow-600 dark:text-yellow-400 font-medium">95-100%</span> = 100€
                           </p>
                         </div>
                       </div>
