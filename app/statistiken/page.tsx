@@ -212,6 +212,10 @@ Liebe Grüße, dein Nespresso Team.`
     setFeedbackRead(true)
   }
 
+  const handleMysteryFeedbackRead = () => {
+    setMysteryFeedbackRead(true)
+  }
+
   // Generate mock history data - only once when component mounts
   const [historyData] = useState(() => {
     const data = []
@@ -1521,6 +1525,79 @@ Liebe Grüße, dein Nespresso Team`}
               </div>
             </div>
           </div>
+
+          {/* Mystery Shop Feedback Notification Card */}
+          {mysteryShowNewFeedback && (
+            <div className="w-full max-w-md mx-auto mb-6">
+              <div className="relative">
+                {/* Outer glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+                
+                {/* Main card */}
+                <Card className="relative bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500 border-0 shadow-xl overflow-hidden">
+                  {/* Animated background pattern */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-blue-500/20 to-indigo-500/20 animate-pulse"></div>
+                  
+                  {/* Header with icon */}
+                  {!mysteryFeedbackRead && (
+                    <div className="relative py-4 px-6 text-center">
+                      <div className="flex items-center justify-center mb-2">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 animate-bounce">
+                          <Eye className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="text-white font-bold text-lg drop-shadow-lg">
+                        Neues Mystery Shop Feedback!
+                      </h3>
+                      <p className="text-white/90 text-sm mt-1 drop-shadow">
+                        Du hast ein neues Mystery Shop Feedback erhalten
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Content */}
+                  <CardContent className="relative p-6 pt-2">
+                    <div className="text-center">
+                      {!mysteryFeedbackRead ? (
+                        <>
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20">
+                            <div className="text-white text-xs leading-relaxed text-left whitespace-pre-line">
+{mysteryFeedbackText}
+                            </div>
+                          </div>
+                          
+                          {/* Read button */}
+                          <button 
+                            onClick={handleMysteryFeedbackRead}
+                            className="bg-white text-blue-600 font-medium py-2.5 px-5 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                          >
+                            ✓ Gelesen
+                          </button>
+                        </>
+                      ) : (
+                        /* Confirmation message when feedback is read */
+                        <div className="py-4">
+                          <div className="flex items-center justify-center mb-2">
+                            <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                          <p className="text-white font-medium text-sm drop-shadow">
+                            Feedback wurde dem Verlauf hinzugefügt
+                          </p>
+                          <p className="text-white/80 text-xs mt-1">
+                            Du kannst es jederzeit in deinem Verlauf einsehen
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
 
           {/* Premium Card - Same styling as Schulungen & Videos button */}
           <div className="w-full max-w-md mx-auto mb-6">

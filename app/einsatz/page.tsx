@@ -925,7 +925,7 @@ export default function EinsatzPage() {
           
           <CardContent className="p-4">
             {equipmentOrderStep === "list" ? (
-              <div className="space-y-3">
+              <div className="space-y-3 h-64 overflow-y-auto">
                 {equipmentItems.map((item) => (
                   <div
                     key={item.id}
@@ -977,7 +977,7 @@ export default function EinsatzPage() {
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Anzahl
                   </label>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center space-x-6">
                     <Button
                       variant="outline"
                       size="icon"
@@ -987,9 +987,13 @@ export default function EinsatzPage() {
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="text-lg font-medium w-8 text-center">
-                      {equipmentQuantity}
-                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={equipmentQuantity}
+                      onChange={(e) => setEquipmentQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="text-lg font-medium w-16 text-center bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <Button
                       variant="outline"
                       size="icon"

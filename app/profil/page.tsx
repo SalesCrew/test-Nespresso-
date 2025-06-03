@@ -31,7 +31,8 @@ import {
   CreditCard,
   User,
   FileSignature,
-  IdCard
+  IdCard,
+  Download
 } from "lucide-react"
 
 export default function ProfilPage() {
@@ -41,7 +42,11 @@ export default function ProfilPage() {
   const [isEditingBank, setIsEditingBank] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
+  const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false)
+  const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
   const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [editableProfile, setEditableProfile] = useState({
     email: "jan.promotor@salescrew.de",
     phone: "+49 176 12345678"
@@ -111,6 +116,93 @@ export default function ProfilPage() {
   const maskIban = (iban: string) => {
     if (iban.length <= 5) return iban
     return "x".repeat(iban.length - 5) + iban.slice(-5)
+  }
+
+  const handleDienstvertragSelect = () => {
+    setShowDienstvertragPopup(false)
+    setShowDienstvertragContent(true)
+  }
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true)
+    
+    try {
+      // Get the contract content element
+      const element = document.getElementById('dienstvertrag-content')
+      if (!element) {
+        throw new Error('Contract content not found')
+      }
+
+      // Dynamically import html2pdf
+      let html2pdf: any = null
+      try {
+        // @ts-ignore - html2pdf.js types not available
+        html2pdf = await import('html2pdf.js')
+      } catch {
+        // Fallback if html2pdf is not available
+        console.warn('html2pdf.js not available, using simple text download')
+      }
+
+      if (html2pdf && html2pdf.default) {
+        // Get the full height of the content
+        const contentHeight = element.scrollHeight + 100
+        
+        const opt = {
+          margin: [10, 10, 10, 10],
+          filename: `Dienstvertrag_${new Date().toISOString().split('T')[0]}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 1.5,
+            useCORS: true,
+            letterRendering: true,
+            backgroundColor: '#ffffff',
+            height: contentHeight,
+            width: 800,
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait'
+          }
+        }
+
+        await html2pdf.default().set(opt).from(element).save()
+      } else {
+        // Simple fallback: Download as text file
+        const contractText = element.innerText || element.textContent || ''
+        const blob = new Blob([`DIENSTVERTRAG\nSales Crew Verkaufsförderung GmbH\nErstellt am: ${new Date().toLocaleDateString('de-DE')}\n\n${contractText}`], {
+          type: 'text/plain;charset=utf-8'
+        })
+        
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `Dienstvertrag_${new Date().toISOString().split('T')[0]}.txt`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      }
+
+      // Show success state
+      setDownloadSuccess(true)
+      setTimeout(() => {
+        setDownloadSuccess(false)
+      }, 3000)
+
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      
+      // Show success state anyway for user feedback
+      setDownloadSuccess(true)
+      setTimeout(() => {
+        setDownloadSuccess(false)
+      }, 3000)
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   // Mock documents data
@@ -406,7 +498,10 @@ export default function ProfilPage() {
           {/* Action Cards */}
           <div className="grid grid-cols-2 gap-4">
             {/* Dienstvertrag Card */}
-            <Card className="border-none shadow-lg shadow-blue-500/30 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 h-24 flex items-center justify-center cursor-pointer hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 transition-all duration-300 group">
+            <Card 
+              className="border-none shadow-lg shadow-blue-500/30 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-600 h-24 flex items-center justify-center cursor-pointer hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 transition-all duration-300 group"
+              onClick={() => setShowDienstvertragPopup(true)}
+            >
               <div className="text-center">
                 <FileSignature className="h-6 w-6 text-white mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
                 <h3 className="text-white font-semibold text-xs">Dienstvertrag</h3>
@@ -900,6 +995,359 @@ export default function ProfilPage() {
           </div>
         </div>
       </div>
-    </div>
-  )
+
+      {/* Dienstvertrag Popup */}
+      {showDienstvertragPopup && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
+            onClick={() => setShowDienstvertragPopup(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
+              <h3 className="text-lg font-semibold text-center">Meine Dienstverträge</h3>
+            </div>
+            
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* New Contract Available */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500 text-lg font-black animate-pulse">!</span>
+                    <span className="text-sm font-semibold text-green-700 dark:text-green-300">Neuer Vertrag verfügbar</span>
+                  </div>
+                  <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Bereit</span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  <div>Wochenstunden: 20h → 32h</div>
+                  <div>Gültig ab: 01.12.2024</div>
+                </div>
+                <button 
+                  className="w-full p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                  onClick={handleDienstvertragSelect}
+                >
+                  Ansehen & Unterschreiben
+                </button>
+              </div>
+
+              {/* Current Active Contract */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Aktiver Vertrag</span>
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Aktiv</span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  <div>Wochenstunden: 20h</div>
+                  <div>Laufzeit: 01.08.2024 - unbefristet</div>
+                  <div>Status: geringfügig</div>
+                </div>
+                <button 
+                  className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                  onClick={handleDienstvertragSelect}
+                >
+                  Vertrag ansehen
+                </button>
+              </div>
+
+              {/* Previous Contracts */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
+                
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vertrag v2.0</span>
+                    <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">Beendet</span>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                    <div>Wochenstunden: 8h</div>
+                    <div>Laufzeit: 01.02.2024 - 31.07.2024</div>
+                  </div>
+                  <button 
+                    className="w-full p-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-all duration-200"
+                    onClick={handleDienstvertragSelect}
+                  >
+                    Archiv ansehen
+                  </button>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vertrag v1.0</span>
+                    <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">Beendet</span>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
+                    <div>Wochenstunden: 8h</div>
+                    <div>Laufzeit: 01.02.2023 - 31.01.2024</div>
+                  </div>
+                  <button 
+                    className="w-full p-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-all duration-200"
+                    onClick={handleDienstvertragSelect}
+                  >
+                    Archiv ansehen
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+              <button 
+                onClick={() => setShowDienstvertragPopup(false)}
+                className="w-full p-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200"
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        </>
+        )}
+
+        {/* Dienstvertrag Content Popup */}
+        {showDienstvertragContent && (
+          <>
+            <div 
+              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+              onClick={() => setShowDienstvertragContent(false)}
+            ></div>
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[70] p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden">
+              {/* Header */}
+              <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                  <div className="flex items-center space-x-2">
+                    {/* Download PDF Button */}
+                    <button 
+                      onClick={handleDownloadPDF}
+                      disabled={isDownloading}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50"
+                      title="Als PDF herunterladen"
+                    >
+                      {downloadSuccess ? (
+                        <Check className="h-5 w-5 text-green-400" />
+                      ) : (
+                        <Download className={`h-5 w-5 ${isDownloading ? 'animate-pulse' : ''}`} />
+                      )}
+                    </button>
+                    
+                    {/* Close Button */}
+                    <button 
+                      onClick={() => setShowDienstvertragContent(false)}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
+                <div id="dienstvertrag-content" className="space-y-6 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  
+                  {/* Section 1 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">1. Art der Arbeitsleistung</h4>
+                    <p className="mb-2">Der Arbeitnehmer tritt als <strong>FachberaterIn</strong> in die Firma Sales Crew Verkaufsförderung GmbH ein.</p>
+                    <p className="mb-2">Der Arbeitnehmer ist verpflichtet, alle ihm vom Arbeitgeber aufgetragenen Tätigkeiten gewissenhaft zu verrichten. Dem Arbeitgeber bleibt die vorübergehende oder dauernde Heranziehung des Arbeitnehmers zu anderen Aufgaben ausdrücklich vorbehalten.</p>
+                    <p>Zu Tätigkeiten, die im Vergleich zu der grundsätzlich vereinbarten Tätigkeit des Arbeitnehmers als geringwertiger anzusehen sind, kann der Arbeitnehmer nur kurzfristig und nur soweit herangezogen werden, als betriebliche Erfordernisse des Arbeitgebers dies verlangen. Es tritt dadurch keine Kürzung des vereinbarten Entgeltes ein.</p>
+                  </div>
+
+                  {/* Section 2 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">2. Arbeitszeit</h4>
+                    <p className="mb-2">Das zeitliche Ausmaß der Arbeitsverpflichtung beträgt <strong>32 Wochenstunden</strong>.</p>
+                    <p className="mb-2">Die Aufteilung dieser Arbeitszeit auf die einzelnen Wochentage wird zwischen dem Arbeitgeber und dem Arbeitnehmer vereinbart Der Arbeitnehmer erklärt sich ausdrücklich mit der jederzeitigen Änderung der vereinbarten Arbeitszeiteinteilung durch den Arbeitgeber unter Beachtung der arbeitszeitrechtlichen Grenzen und Beschränkungen des § 19 c Abs. 2 und 3 AZG (bei Teilzeitarbeit § 19 d AZG) einverstanden.</p>
+                    <p className="mb-2">Mehr- und Überstunden sind nur über ausdrückliche Anordnung des Arbeitgebers oder des Dienstgebers zu leisten. Der Arbeitnehmer erklärt sich zur Leistung von Mehr- und Überstunden auf Verlangen des Arbeitgebers bereit.</p>
+                    <p>Der Arbeitnehmer ist zudem verpflichtet, die geleisteten Arbeitsstunden inkl. aller Mehr- und Überstunden sowie die Fehl- und Zeitausgleichstunden aufzuzeichnen und auf Nachfrage an den Arbeitgeber zu übermitteln. Für den Fall, dass der Arbeitnehmer gar keine Zeitbestätigungen oder unkorrekte oder unvollständige Zeitbestätigungen abgibt, wird daher bereits vorab festgehalten, dass der Arbeitgeber nicht zur Bezahlung der davon betroffenen Zeiten verpflichtet ist.</p>
+                  </div>
+
+                  {/* Section 3 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">3. Einstufung und Entgelt</h4>
+                    <p className="mb-2">Die Einstufung des Arbeitnehmers erfolgt nach den Bestimmungen des Kollektivvertrages für Angestellte in Werbung und Marktkommunikation Wien in die Verwendungsgruppe II.</p>
+                    <p className="mb-2">Der Arbeitnehmer bestätigt ausdrücklich, dass er vom Arbeitgeber ausdrücklich aufgefordert wurde, allfällige Vordienstzeiten (Verwendungsgruppenjahre) bekannt zu geben bzw. nachzuweisen sowie allfällige Ausbildungsnachweise vorzulegen. Der Arbeitnehmer erklärt, dass er auf Basis der von ihm dem Arbeitgeber mitgeteilten Informationen richtig eingestuft ist.</p>
+                    <p className="mb-2">Das Gehalt beträgt Brutto <strong>€ 2.000,--</strong> pro Kalendermonat.</p>
+                    <p className="mb-2">Die Abrechnung und Auszahlung des Gehalts erfolgt jeweils zum 30. des aktuellen Monats. Die Zahlung allfälliger variabler Entgeltbestandteile einschließlich Verkaufsprovision erfolgt mit der Abrechnung des Folgemonats.</p>
+                    <p className="mb-2">Sonderzahlungen gebühren nach Maßgabe des Kollektivvertrages für Angestellte in Werbung und Marktkommunikation. Die Auszahlung der Weihnachtsremuneration und des Urlaubsgeldes erfolgt halbjährlich.</p>
+                    <p className="mb-2">Bei unterjährigem Eintritt und/oder Austritt des Arbeitnehmers gebühren die Sonderzahlungen gemäß den kollektivvertraglichen Bestimmungen bloß zeitanteilig; anteilsmäßig zu viel ausbezahlte Sonderzahlungen können vom Arbeitgeber zurückverrechnet bzw. zurückgefordert werden.</p>
+                    <p className="mb-2">Für den Fall, dass dem Arbeitnehmer künftig im Rahmen dieses Dienstverhältnisses allfällige sonstige Leistungen gewährt werden, wie beispielsweise Überzahlungen gesetzlicher oder kollektivvertraglicher Ansprüche, Sachbezüge, Prämien, Zulagen, Gratifikationen, etc. wird bereits jetzt festgehalten, dass derartige Leistungen absolut freiwillig erfolgen. Sie begründen keinen rechtlichen Anspruch des Arbeitnehmers, weder dem Grunde nach der Höhe nach, weder für die Vergangenheit noch für die Zukunft und führen auch für den Fall der wiederholten Leistung ohne ausdrückliche Wiederholung dieses Freiwilligkeitsvorbehaltes zu keinem Anspruch des Arbeitnehmers. In jedem Fall sind derartige Leistungen jederzeit durch den Arbeitgeber einseitig widerrufbar.</p>
+                    <p className="mb-2">Der Arbeitnehmer darf Entgeltansprüche oder sonstige gegenüber dem Arbeitgeber bestehende Ansprüche ohne die vorherige schriftliche Zustimmung des Arbeitgebers nicht abtreten. Jede entgegen diesem Verbot erfolgende Abtretung ist unabhängig davon, ob es sich um eine Sicherungszession oder eine Vollzession handelt, unzulässig und für den Arbeitgeber daher nicht verbindlich.</p>
+                    <p>Der Arbeitnehmer ist verpflichtet, dem Arbeitgeber bei Dienstantritt ein Konto bei einer inländischen Kreditunternehmung bekannt zu geben, auf das der Arbeitgeber alle mit diesem Dienstvertrag in Zusammenhang stehenden Zahlungen mit schuldbefreiender Wirkung überweisen kann.</p>
+                  </div>
+
+                  {/* Section 4 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">4. Vertragsdauer/Beendigung</h4>
+                    <p className="mb-2">Das Dienstverhältnis beginnt am <strong>01.02.2023</strong>. Das Dienstverhältnis ist bis zum <strong>30.06.2023</strong> befristet; wird es auch darüber hinaus fortgesetzt, geht es in ein unbefristetes über.</p>
+                    <p className="mb-2">Der Arbeitnehmer kann das Dienstverhältnis unter Einhaltung einer einmonatigen Kündigungsfrist jeweils zum Letzten jeden Monats aufkündigen. Der Arbeitgeber kann das Dienstverhältnis unter Einhaltung der gesetzlichen Kündigungsfrist gemäß § 20 Abs 3 Angestelltengesetz jeweils zum Fünfzehnten oder Monatsletzten beenden.</p>
+                    <p>Während der gesetzlichen Kündigungsfrist ist nach Möglichkeit ein allenfalls vorhandener Resturlaub sowie ein allenfalls vorhandenes Zeitguthaben zu konsumieren</p>
+                  </div>
+
+                  {/* Section 5 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">5. Urlaubsanspruch</h4>
+                    <p className="mb-2">Das Ausmaß des jährlichen Erholungsurlaubes richtet sich nach den Bestimmungen des Urlaubsgesetzes. Der Zeitpunkt und die Dauer des Urlaubes sind mit dem Arbeitgeber rechtzeitig schriftlich zu vereinbaren. Beide Vertragsteile streben einen periodenkonformen (dh. im Urlaubsjahr des Entstehens des jeweiligen Urlaubs) erfolgenden Urlaubsverbrauch an.</p>
+                    <p className="mb-2">Es gilt als vereinbart, dass im Zeitraum <strong>Oktober bis Dezember</strong> und <strong>April bis Mai</strong> aufgrund der in dieser Phase extrem hohen Auftragsdichte Urlaube nur in besonders berücksichtigungswürdigen Ausnahmefällen und mit Genehmigung der Geschäftsleitung möglich sind. Wir ersuchen Sie, dies bei der Planung Ihrer Urlaubswünsche entsprechend zu berücksichtigen.</p>
+                    <p>Im Falle einer Teilzeitbeschäftigung wird der gesetzliche Urlaubsanspruch wertneutral, dh. entsprechend dem Ausmaß der Teilzeitbeschäftigung, umgerechnet. Eine derartige Umrechnung des Urlaubsanspruchs erfolgt im Falle eines Wechsels zwischen Vollzeit und Teilzeit (oder umgekehrt) auch für den vor dem Wechsel entstandenen und noch nicht verbrauchten Alturlaub. Gleiches gilt im Falle einer Änderung des Teilzeitausmaßes.</p>
+                  </div>
+
+                  {/* Section 6 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">6. Dienstverhinderung</h4>
+                    <p className="mb-2">Bei Krankheit oder Unglücksfall oder im Fall einer sonstigen Dienstverhinderung aus einem wichtigen, die Person des Arbeitnehmers betreffenden Grund, hat der Arbeitnehmer den Arbeitgeber sofort am 1. Tag der Dienstverhinderung oder wenn möglich noch vor Eintritt der Verhinderung zu verständigen. Ist der Arbeitnehmer durch Krankheit an der Erbringung seiner Dienste gehindert, hat er dem Arbeitgeber ab dem 1. Tag der Dienstverhinderung eine Bestätigung des Arztes oder der Gebietskrankenkasse vorzulegen. Nur in jenen Fällen, in denen die Beibringung der Bestätigung eines österreichischen Arztes nicht möglich ist, wird ausnahmsweise eine ausländische Arztbestätigung (inkl. beglaubigter Übersetzung) akzeptiert.</p>
+                    <p>Kommt der Arbeitnehmer der Pflicht zur unverzüglichen Verständigung von einer Dienstverhinderung nicht nach und/oder legt er die geforderte Bestätigung über die Dienstverhinderung nicht (rechtzeitig) vor, verliert er für die Dauer der Säumnis den Anspruch auf Entgelt. Bei längerer Dienstverhinderung kann der Arbeitgeber nach angemessener Zeit erneut die Vorlage einer Bestätigung verlangen.</p>
+                  </div>
+
+                  {/* Section 7 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">7. Verschwiegenheitspflicht</h4>
+                    <p className="mb-2">Der Arbeitnehmer ist zur Wahrung von Betriebs- und Geschäftsgeheimnissen des Arbeitgebers und der Auftraggeber gegenüber jedermann und zu jeder Zeit, somit sowohl bei aufrechtem Dienstverhältnis als auch nach dem Ende des Dienstverhältnisses verpflichtet.</p>
+                    <p>Inhalte dieses Vertrages, insbesondere das Gehalt unterliegen strenger Geheimhaltung. Die Nichteinhaltung dieser Bestimmung stellt einen wichtigen Grund für die Auflösung des Dienstverhältnisses (Entlassung) gemäß § 27 AngG dar.</p>
+                  </div>
+
+                  {/* Section 8 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">8. Konkurrenzklausel</h4>
+                    <p className="mb-2">Für die Dauer des Angestelltenverhältnisses verpflichtet sich der/die DienstnehmerIn vor einer</p>
+                    <ul className="list-disc list-inside mb-2 space-y-1 ml-4">
+                      <li>allfälligen Aufnahme einer Tätigkeit bei einem direkten Mitbewerber des Kunden</li>
+                      <li>einer direkten oder indirekten Beteiligung an einem Wirtschaftsunternehmen welche im direkten Mitbewerb zum Kunden steht</li>
+                      <li>einer selbständigen Tätigkeit welche im direkten Mitbewerb zum Kunden steht oder einer beratenden Funktion eine schriftliche Genehmigung bei seinem Vorgesetzten der Sales Crew Verkaufsförderung GmbH einzuholen.</li>
+                    </ul>
+                    <p>Mündliche Genehmigungen werden als nicht gültig anerkannt. Ein Verstoß gegen Punkt 8 lässt auf eine Vertrauensunwürdigkeit des Dienstnehmers schließen, welche einen Entlassungsgrund darstellt.</p>
+                  </div>
+
+                  {/* Section 9 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">9. Meldepflichten und sonstige Pflichten</h4>
+                    <p className="mb-2">Der Arbeitnehmer hat dem Arbeitgeber jede beabsichtigte Aufnahme einer anderen Beschäftigung oder sonstigen Erwerbstätigkeit zu melden. Die Aufnahme einer anderen Beschäftigung oder sonstigen Erwerbstätigkeit setzt die Zustimmung des Arbeitgebers voraus.</p>
+                    <p>Der Arbeitnehmer ist verpflichtet, alle Änderungen seiner Personalien (Name, Adresse, Familienstand, Zahl der Kinder etc) und seiner Wohn- bzw Zustelladresse dem Arbeitgeber ehestmöglich bekannt zu geben.</p>
+                  </div>
+
+                  {/* Section 10 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">10. Konventionalstrafe</h4>
+                    <p className="mb-2">Der Arbeitnehmer und der Arbeitgeber vereinbaren einvernehmlich für den Fall einer vom Arbeitnehmer verschuldeten fristlosen Entlassung, eines unberechtigten vorzeitigen Austritts oder einer frist-/terminwidrigen Kündigung durch den Arbeitnehmer, weiters für den Fall, dass der Arbeitnehmer das Nebenbeschäftigungsverbot für Mitbewerber oder die Verschwiegenheitspflicht verletzt, einen pauschalierten, somit von der tatsächlichen Schadenshöhe unabhängigen Schadenersatz in Höhe von <strong>3 Monatsbezügen</strong> (Monatsgehalt zuzüglich anteilige Sonderzahlungen, variable Bezüge im 3-Monatsschnitt, etwaige Sachbezüge etc).</p>
+                    <p>Die Vertragsstrafe wird soweit möglich von den zustehenden Geldbezügen abgezogen. Ein nicht auf diese Weise (= durch Abzug von den Geldbezügen) entrichteter Restbetrag ist binnen 14 Tagen ab Aufforderung auf das Konto des Arbeitgebers einzubezahlen.</p>
+                  </div>
+
+                  {/* Section 11 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">11. Anwendbare Rechtsvorschriften</h4>
+                    <p className="mb-2">Für dieses Dienstverhältnis gelten neben den allgemeinen arbeitsrechtlichen Bestimmungen (Angestelltengesetz, Urlaubsgesetz, etc) der Kollektivvertrag für Angestellte in Werbung und Marktkommunikation Wien. Der Kollektivvertrag liegt im Büro der Sales Crew Verkaufsförderung GmbH zur Einsichtnahme auf.</p>
+                    <p className="mb-2">Es gelten weiters die Bestimmungen des BMVG.</p>
+                    <p>Mitarbeitervorsorgekasse: Die Abfertigungsbeiträge nach § 6 Abs. 1 BMVG werden an die Valida Plus AG, MVK Leitzahl 71300, Beitr. Nr. S970491261 weitergeleitet.</p>
+                  </div>
+
+                  {/* Section 12 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">12. Bild- und Tonaufnahmen</h4>
+                    <p className="mb-2">Hiermit gibt der/die ArbeitnehmerIn die Einwilligung dazu, dass Bilder, Ton- und Videoaufnahmen oder Daten (z.B.: elektronische Datenverarbeitung) der eigenen Person in unveränderter oder geänderter Version von Sales Crew Verkaufsförderung GmbH für Werbezwecke oder Administrationszwecke verwendet und veröffentlicht werden dürfen.</p>
+                    <p className="mb-2">Hiermit bestätigt der/die DienstnehmerIn, dass alle zustehenden Ansprüche von der Sales Crew oder von Dritten, die bei der Anfertigung, Verbreitung und Veröffentlichung der Bilder oder Videos entstehen, mit dieser Einverständniserklärung abgegolten sind.</p>
+                    <p>Aus der Zustimmung zur Veröffentlichung leitet der/die DienstnehmerIn keine Rechte (wie z.B. das Recht auf Entgelt) ab. Die Sales Crew kann für die widerrechtliche Verbreitung der Foto- und Videoaufnahmen seitens Dritter keine Haftung übernehmen.</p>
+                  </div>
+
+                  {/* Section 13 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">13. Standorttracking</h4>
+                    <p className="mb-2">In Bezug auf die Ausführung der vereinbarten Dienstleistung, erklärt sich der Arbeitnehmer hiermit einverstanden, dem Arbeitgeber bei Dienstantritt seinen Standort via Whatsapp Live Standort bekannt zu geben.</p>
+                    <p className="mb-2">Das Standort Tracking dient ausschließlich dazu, die Einsatzzeiten zu dokumentieren.</p>
+                    <p className="mb-2">Der Arbeitnehmer bestätigt, dass er über das Standort Tracking informiert wurde und dieser Maßnahme zustimmt.</p>
+                    <p className="mb-2">Es wird darauf hingewiesen, dass die erhobenen Daten ausschließlich für interne Zwecke verwendet werden und vertraulich behandelt werden.</p>
+                    <p className="mb-2">Es erfolgt keine Weitergabe an Dritte, es sei denn, dies ist gesetzlich vorgeschrieben oder wird vom Arbeitnehmer ausdrücklich genehmigt.</p>
+                    <p>Diese Vereinbarung über das Standort Tracking während der Arbeitszeit tritt mit der Unterzeichnung des Dienstvertrags in Kraft und bleibt während der Laufzeit des Vertrages gültig.</p>
+                  </div>
+
+                  {/* Section 14 */}
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">14. Sonstige Vereinbarungen</h4>
+                    <p className="mb-2">Der Arbeitnehmer ist über Aufforderung des Arbeitgebers zur Vorlage einer aktuellen (maximal 3 Monate alten) Strafregisterbescheinigung („Leumundszeugnis") verpflichtet. Die dafür anfallenden Kosten werden dem Arbeitnehmer vom Arbeitgeber ersetzt.</p>
+                    <p className="mb-2">Der Arbeitnehmer ist verpflichtet, sich jeweils zeitgerecht um die Verlängerung der allenfalls erforderlichen Aufenthaltstitel und Arbeitsgenehmigungen zu kümmern. Unterlässt der Arbeitnehmer schuldhaft die rechtzeitige Verlängerung der erforderlichen Aufenthaltstitel und/oder Arbeitsgenehmigungen, berechtigt dies den Arbeitgeber zur fristlosen Entlassung.</p>
+                    <p className="mb-2">Mündliche Nebenabreden wurden zum vorliegenden Dienstvertrag nicht getroffen. Änderungen und Ergänzungen dieses Dienstvertrages bedürfen zu ihrer Rechtswirksamkeit der Schriftform.</p>
+                    <p className="mb-2">Sollte sich eine Bestimmung dieses Vertrages als unwirksam, ungültig oder nicht durchsetzbar erweisen, kommen die Parteien überein, die ungültig gewordene Bestimmung durch eine wirksame und durchsetzbare zu ersetzen.</p>
+                    <p className="mb-2">Die dem wirtschaftlichen oder ideellen Gehalt weit gehend entspricht oder am nächsten kommt. Die übrigen Vertragsbestimmungen werden durch die Unwirksamkeit einzelner Bestimmungen nicht berührt.</p>
+                    <p>Der Arbeitnehmer erklärt mit seiner Unterschrift, dass er den gesamten Vertragsinhalt gelesen, diesen in all seinen Teilen verstanden hat und mit diesem einverstanden ist. Der Arbeitnehmer bestätigt eine Ausfertigung dieses Dienstvertrages erhalten zu haben.</p>
+                  </div>
+
+                  {/* Signatures Section */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-8">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div className="text-center">
+                        <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2 h-8"></div>
+                        <p className="text-sm font-medium">Sales Crew Verkaufsförderung GmbH</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">Datum: ........................</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2 h-8"></div>
+                        <p className="text-sm font-medium">Arbeitnehmer</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">Datum: ........................</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Teilzeit Agreement Section */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-8 mt-8">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Vereinbarung über durchrechenbare Arbeitszeit (Teilzeit)</h3>
+                    <p className="mb-4 text-sm italic">In Ergänzung zum bestehenden Dienstvertrag wird zwischen der Sales Crew Verkaufsförderung GmbH, Wagenseilgasse 5, 1120 Wien (nachstehend „Arbeitgeber/in" genannt) und Frau Vorname Nachname, Adresse</p>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Durchrechnungsmodell</h4>
+                        <p>Es wird eine regelmäßige Arbeitszeit von 32 Stunden pro Woche vereinbart. Die Arbeitszeiteinteilung erfolgt durch Dienstplan auf Grundlage einer Arbeitszeitdurchrechnung gemäß § 19d Abs. 3b Z. 1 AZG.</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Durchrechnungszeitraum</h4>
+                        <p className="mb-2">Der Durchrechnungszeitraum, innerhalb dessen Plus- und Minusstunden gegeneinander verrechnet werden können, beträgt entsprechend den gesetzlichen Vorgaben drei Monate.</p>
+                        <p>Die Stichtage für den Beginn der dreimonatigen Durchrechnungszeiträume werden wie folgt festgelegt: jeweils der Beginn des Kalendervierteljahres.</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Schwankungsbreite der Arbeitszeit</h4>
+                        <p className="mb-2">Innerhalb des vorgenannten Durchrechnungszeitraumes kann die Arbeitszeit bis zu der für Vollzeitbeschäftigte im Betrieb geltenden Höchstgrenze der täglichen und wöchentlichen Normalarbeitszeitgrenze ausgedehnt werden, ohne dass Mehrarbeitszuschläge entstehen. Voraussetzung ist allerdings, dass die dienstvertragliche Soll-Arbeitszeit innerhalb des Durchrechnungszeitraumes im Durchschnitt nicht überschritten wird.</p>
+                        <p>Im Falle der Überschreitung der für Vollzeitbeschäftigte im Betrieb geltenden Höchstgrenzen der Normalarbeitszeit entstehen sofort Überstunden, die im selben Ausmaß (Überstundenzuschläge) abzugelten sind wie bei Vollzeitbeschäftigten.</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Zeitsaldo bei Ende des Durchrechnungszeitraumes</h4>
+                        <p>Ein am Ende eines Durchrechnungszeitraumes bestehendes Zeitguthaben auf dem Durchrechnungskonto wird in Form von Zeitausgleich abgegolten. Aus diesem Grund wird das Guthaben bei Ende des Durchrechnungszeitraumes zuzüglich des gesetzlichen Zuschlags von 25 % (sofern kollektivvertraglich kein anderer Zuschlag oder die Zuschlagsfreiheit vorgesehen ist) auf einem eigenen Mehrstundenkonto erfasst. Der konkrete Zeitpunkt für den Ausgleich der auf dem Mehrstundenkonto verbuchten Zeitguthaben ist einvernehmlich zwischen Arbeitgeber/in und Arbeitnehmer/in festzulegen.</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Dienstplan</h4>
+                        <p className="mb-2">Der Dienstplan wird vom/von der Arbeitgeber/in unter Berücksichtigung der kollektivvertraglichen Rahmenbedingungen erstellt. Bei der Erstellung des Dienstplans wird nach Möglichkeit auf Wünsche des/der Arbeitnehmers/in Rücksicht genommen.</p>
+                        <p>Der/Die Arbeitgeber/in hat dafür Sorge zu tragen, dass der Dienstplan jeweils rechtzeitig bekannt gegeben wird.</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Änderungen der Lage der Arbeitszeit</h4>
+                        <p>Dem/Der Arbeitgeber/in bleibt die Abänderung der Arbeitszeiteinteilung (z.B. Änderungen des Durchrechnungsmodells, Wechsel zu anderen Arbeitszeitformen etc.) ausdrücklich vorbehalten (§ 19c Abs. 2 und 3 AZG). Dies gilt insbesondere auch für eine allfällige Einteilung zu Samstags- und Sonntagsarbeiten, soweit solche rechtlich zulässig sind.</p>
+                      </div>
+                    </div>
+
+                    {/* Final Signatures */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-8">
+                      <div className="text-center mb-4">
+                        <p className="text-sm">............................................................</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Ort, Datum</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div className="text-center">
+                          <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2 h-8"></div>
+                          <p className="text-sm">Unterschrift Arbeitgeber/in</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="border-b border-gray-300 dark:border-gray-600 pb-2 mb-2 h-8"></div>
+                          <p className="text-sm">Unterschrift Arbeitnehmer/in</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    )
 } 

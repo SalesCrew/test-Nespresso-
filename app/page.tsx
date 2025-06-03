@@ -989,6 +989,9 @@ export default function DashboardPage() {
                   const isOffscreen = visibleIndex < 0 || visibleIndex > 6;
                   
                   const hasAssignment = assignments.some(a => a.date.toDateString() === day.toDateString());
+                  const hasPromotion = assignments.some(a => 
+                    a.date.toDateString() === day.toDateString() && a.type === "promotion"
+                  );
                   const hasBuddyTag = assignments.some(a => 
                     a.date.toDateString() === day.toDateString() && a.type === "buddy"
                   );
@@ -1005,6 +1008,22 @@ export default function DashboardPage() {
                   let dynamicClasses = '';
                   if (isSelected) {
                     dynamicClasses = 'text-black border-indigo-700';
+                  } else if (hasPromotion) {
+                    // Promotion has highest visual priority - always show blue gradient
+                    dynamicClasses = 'border-blue-500';
+                    if (isToday) {
+                      dynamicClasses += ' bg-indigo-100 dark:bg-indigo-800/50';
+                    } else {
+                      dynamicClasses += ' hover:bg-indigo-50 dark:hover:bg-indigo-900/50';
+                    }
+                  } else if (hasBuddyTag) {
+                    // Buddy tag has second highest visual priority - also work-related
+                    dynamicClasses = 'border-purple-500';
+                    if (isToday) {
+                      dynamicClasses += ' bg-purple-100 dark:bg-purple-800/50';
+                    } else {
+                      dynamicClasses += ' hover:bg-purple-50 dark:hover:bg-purple-900/50';
+                    }
                   } else if (hasKrankenstand) {
                     dynamicClasses = 'border-red-500';
                     if (isToday) {
@@ -1025,13 +1044,6 @@ export default function DashboardPage() {
                       dynamicClasses += ' bg-orange-100 dark:bg-orange-800/50';
                     } else {
                       dynamicClasses += ' hover:bg-orange-50 dark:hover:bg-orange-900/50';
-                    }
-                  } else if (hasBuddyTag) {
-                    dynamicClasses = 'border-purple-500';
-                    if (isToday) {
-                      dynamicClasses += ' bg-purple-100 dark:bg-purple-800/50';
-                    } else {
-                      dynamicClasses += ' hover:bg-purple-50 dark:hover:bg-purple-900/50';
                     }
                   } else if (hasAssignment) {
                     dynamicClasses = 'border-blue-500';
@@ -1075,18 +1087,20 @@ export default function DashboardPage() {
                       <button
                         className={`flex flex-col h-auto py-2 px-4 w-16 items-center justify-center overflow-hidden
                           ${isCenter ? 'border-2' : 'border'}
-                          ${!isSelected ? dynamicClasses : (hasKrankenstand ? 'border-red-500' : hasUrlaub ? 'border-green-500' : hasSchulung ? 'border-orange-500' : hasBuddyTag ? 'border-purple-500' : hasAssignment ? 'border-indigo-700' : 'border-indigo-700')}
+                          ${!isSelected ? dynamicClasses : (hasPromotion ? 'border-indigo-700' : hasBuddyTag ? 'border-purple-500' : hasKrankenstand ? 'border-red-500' : hasUrlaub ? 'border-green-500' : hasSchulung ? 'border-orange-500' : hasAssignment ? 'border-indigo-700' : 'border-indigo-700')}
                           bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow
                         `}
                         style={isSelected ? 
-                          (hasKrankenstand ? {
+                          (hasPromotion ? {
+                            background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'
+                          } : hasBuddyTag ? {
+                            background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'
+                          } : hasKrankenstand ? {
                             background: 'linear-gradient(to bottom, rgba(239,68,68,0.9), rgba(185,28,28,0.8))'
                           } : hasUrlaub ? {
                             background: 'linear-gradient(to bottom, rgba(34,197,94,0.9), rgba(21,128,61,0.8))'
                           } : hasSchulung ? {
                             background: 'linear-gradient(to bottom, rgba(249,115,22,0.9), rgba(194,65,12,0.8))'
-                          } : hasBuddyTag ? {
-                            background: 'linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(219,39,119,0.55))'
                           } : hasAssignment ? {
                             background: 'linear-gradient(to bottom, rgb(59,130,246), rgb(79,70,229))'
                           } : {}) 
@@ -1164,7 +1178,7 @@ export default function DashboardPage() {
                 Promotion
                 {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0 && selectedAssignmentType !== "promotion" && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
+                    <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length}
                     </span>
                   </div>
@@ -1192,7 +1206,7 @@ export default function DashboardPage() {
                 Schulung
                 {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0 && selectedAssignmentType !== "schulung" && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
+                    <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length}
                     </span>
                   </div>
@@ -1220,7 +1234,7 @@ export default function DashboardPage() {
                 Buddy
                 {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length > 0 && selectedAssignmentType !== "buddy" && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">
+                    <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length}
                     </span>
                   </div>
