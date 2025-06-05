@@ -934,7 +934,7 @@ Mario`
                           <strong className="text-amber-800 dark:text-amber-300"> Exzellenz-Bonus von 200€</strong>.
                         </p>
                       </div>
-                    </div>
+                        </div>
                   </div>
                 </ScrollArea>
               </CardContent>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import {
   Calendar,
   CheckCircle2,
+  Loader2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -91,6 +92,23 @@ const newcomerProposalsMock = [
   { id: 5, date: "Fr 16.06.2023 13:00-19:00", location: "O2 Shop Zehlendorf", description: "Accessory Sales" },
 ];
 
+// Mock data for assignment selection
+const assignmentSelectionMock = [
+  { id: 1, date: "Mo 19.06.2023", time: "10:00-16:00", location: "MediaMarkt Berlin Mitte", description: "Samsung Galaxy Promotion" },
+  { id: 2, date: "Di 20.06.2023", time: "12:00-18:00", location: "Saturn Alexanderplatz", description: "iPhone Sales Event" },
+  { id: 3, date: "Mi 21.06.2023", time: "09:00-15:00", location: "Telekom Store Potsdamer Platz", description: "5G Router Demo" },
+  { id: 4, date: "Do 22.06.2023", time: "11:00-17:00", location: "Vodafone Shop Friedrichshain", description: "Contract Consultation Day" },
+  { id: 5, date: "Fr 23.06.2023", time: "13:00-19:00", location: "O2 Store Prenzlauer Berg", description: "Accessory Showcase" },
+  { id: 6, date: "Sa 24.06.2023", time: "10:00-16:00", location: "MediaMarkt Steglitz", description: "Weekend Special Event" },
+];
+
+// Mock data for replacement assignments
+const replacementAssignmentsMock = [
+  { id: 101, date: "So 25.06.2023", time: "11:00-17:00", location: "Telekom Shop Charlottenburg", description: "Sunday Special Promotion" },
+  { id: 102, date: "Mo 26.06.2023", time: "14:00-20:00", location: "MediaMarkt Tempelhof", description: "Evening Electronics Event" },
+  { id: 103, date: "Di 27.06.2023", time: "10:00-16:00", location: "Saturn Spandau", description: "Tuesday Tech Showcase" },
+];
+
 export default function EinsatzPage() {
   const router = useRouter();
   const [showMapsModal, setShowMapsModal] = useState(false);
@@ -122,7 +140,20 @@ export default function EinsatzPage() {
   const [isNewcomer, setIsNewcomer] = useState(true); // Simulate newcomer status
   const [proposals, setProposals] = useState(newcomerProposalsMock);
   const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
-  const [showProposalSubmittedMessage, setShowProposalSubmittedMessage] = useState(false);
+  const [showProposalConfirmation, setShowProposalConfirmation] = useState(false);
+
+  // For assignment selection
+  const [assignments, setAssignments] = useState(assignmentSelectionMock);
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
+  const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
+  const [isAssignmentCollapsed, setIsAssignmentCollapsed] = useState(false);
+  const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
+  const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
+  const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
+  const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [hasAvailableAssignments, setHasAvailableAssignments] = useState(true);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -365,7 +396,7 @@ export default function EinsatzPage() {
         setShowEarlyStartModal(true);
       } else {
         // Normal start
-        handleStartEinsatz();
+      handleStartEinsatz();
       }
     }
   };
@@ -413,8 +444,100 @@ export default function EinsatzPage() {
       // Here, you'd typically send this to a backend.
       // For UI demo, we can disable the card or show a message.
       setProposals([]); // Or mark as submitted
-      setShowProposalSubmittedMessage(true);
-      setTimeout(() => setShowProposalSubmittedMessage(false), 7000); // Hide message after 7s
+      setShowProposalConfirmation(true);
+      setTimeout(() => {
+        setShowProposalConfirmation(false);
+        setIsNewcomer(false);
+        setSelectedProposalId(null);
+      }, 7000); // Hide message after 7s and reset state
+    }
+  };
+
+  const handleAssignmentSelect = (id: number) => {
+    setSelectedAssignmentIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(assignmentId => assignmentId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSubmitAssignment = () => {
+    if (selectedAssignmentIds.length > 0) {
+      console.log("Submitted assignment IDs:", selectedAssignmentIds);
+      // Set all selected assignments to pending status
+      const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
+      selectedAssignmentIds.forEach(id => {
+        newStatuses[id] = 'pending';
+      });
+      setAssignmentStatuses(newStatuses);
+      setIsAssignmentCollapsed(true);
+    }
+  };
+
+  // Temp test function for assignment statuses
+  const handleTestAssignmentStatus = (status: 'confirmed' | 'declined') => {
+    const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
+    selectedAssignmentIds.forEach(id => {
+      newStatuses[id] = status;
+    });
+    setAssignmentStatuses(newStatuses);
+  };
+
+  // Temp test function for mixed assignment statuses (some declined, some confirmed)
+  const handleTestMixedAssignmentStatus = () => {
+    const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
+    selectedAssignmentIds.forEach((id, index) => {
+      // Make the first assignment declined and the rest confirmed
+      newStatuses[id] = index === 0 ? 'declined' : 'confirmed';
+    });
+    setAssignmentStatuses(newStatuses);
+  };
+
+  const handleAssignmentInfoClick = (e: React.MouseEvent, assignment: typeof assignmentSelectionMock[0]) => {
+    e.stopPropagation(); // Prevent triggering the parent card onClick
+    setSelectedAssignment(assignment);
+    setShowDetailsModal(true);
+  };
+
+  const handleReplacementSelect = (id: number) => {
+    const maxReplacements = selectedAssignmentIds.filter(assignmentId => assignmentStatuses[assignmentId] === 'declined').length;
+    
+    setSelectedReplacementIds(prev => {
+      if (prev.includes(id)) {
+        // If already selected, remove it
+        return prev.filter(assignmentId => assignmentId !== id);
+      } else if (prev.length < maxReplacements) {
+        // If not selected and under limit, add it
+        return [...prev, id];
+      } else {
+        // If at limit, don't add
+        return prev;
+      }
+    });
+  };
+
+  const handleSubmitReplacement = () => {
+    if (selectedReplacementIds.length > 0) {
+      // Set replacement assignments as confirmed and keep existing confirmed assignments
+      const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {...assignmentStatuses};
+      selectedReplacementIds.forEach(id => {
+        newStatuses[id] = 'confirmed';
+      });
+      setAssignmentStatuses(newStatuses);
+      
+      // Update selected assignment IDs to include confirmed originals + confirmed replacements
+      setSelectedAssignmentIds(prev => [
+        ...prev.filter(id => assignmentStatuses[id] === 'confirmed'),
+        ...selectedReplacementIds
+      ]);
+      
+      // Clear replacement-specific states
+      setSelectedReplacementIds([]);
+      setReplacementStatuses({});
+      setShowReplacementAssignments(false);
+      
+      // Update assignments data to include replacements
+      setAssignments([...assignments, ...replacementAssignmentsMock]);
     }
   };
 
@@ -535,7 +658,7 @@ export default function EinsatzPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Bestätige hier den Beginn deines Einsatzes.</p>
               </div>
             )}
-                          {/* Sick status - Show instead of swipe if user is sick */}
+            {/* Sick status - Show instead of swipe if user is sick */}
               {isAssignmentForToday && isSickConfirmed && (
               <div className="mt-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-700 flex items-center">
                 <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
@@ -665,7 +788,8 @@ export default function EinsatzPage() {
         )}
 
         {/* Newcomer Date Selection Card */}
-        {isNewcomer && proposals.length > 0 && (
+        {!showProposalConfirmation ? (
+          isNewcomer && proposals.length > 0 ? (
           <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
             <CardHeader>
               <CardTitle className="text-blue-600 dark:text-blue-400 text-center">
@@ -722,7 +846,308 @@ export default function EinsatzPage() {
               </Button>
             </CardContent>
           </Card>
+          ) : null
+        ) : (
+          <div className="w-full max-w-md mx-auto mb-6">
+            <div className="relative">
+              {/* Outer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-purple-500 to-pink-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              
+              {/* Main card */}
+              <Card className="relative bg-gradient-to-r from-purple-400 via-purple-500 to-pink-500 border-0 shadow-xl overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-purple-500/20 to-pink-500/20 animate-pulse"></div>
+                
+                {/* Content */}
+                <CardContent className="relative p-0">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center h-[140px] w-full px-4">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                        <div className="text-white">
+                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Auswählen!</div>
+                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
+
+        {/* Assignment Selection Card */}
+        {showAssignmentConfirmation ? (
+          <div className="w-full max-w-md mx-auto mb-6">
+            <div className="relative">
+              {/* Outer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              
+              {/* Main card */}
+              <Card className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 border-0 shadow-xl overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-blue-500/20 to-indigo-500/20 animate-pulse"></div>
+                
+                {/* Content */}
+                <CardContent className="relative p-0">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center h-[140px] w-full px-4">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                        <div className="text-white">
+                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Auswählen!</div>
+                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : hasAvailableAssignments ? (
+          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
+            {!isAssignmentCollapsed ? (
+            <>
+              <CardHeader>
+                <CardTitle className="text-gray-600 dark:text-gray-400 text-center">
+                  Suche dir <span className="text-gray-600 dark:text-gray-400">deinen</span> <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">nächsten Einsatz</span> <span className="text-gray-600 dark:text-gray-400">selber aus!</span>
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400 text-center">Wähle einen verfügbaren Einsatz für die kommenden Tage aus.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4">
+                  {assignments.slice(0, 6).map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[80px]
+                                  ${selectedAssignmentIds.includes(assignment.id) 
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-105 z-10' 
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm z-0'}`}
+                      onClick={() => handleAssignmentSelect(assignment.id)}
+                    >
+                      <button 
+                        className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleAssignmentInfoClick(e, assignment)}
+                        aria-label="Mehr Details"
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                      <div className="flex flex-col">
+                        <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
+                          {assignment.date}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            {assignment.location}
+                          </div>
+                          <div className="relative inline-flex">
+                            <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
+                            <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
+                              <span className="flex items-center">{assignment.time}</span>
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button 
+                  className="w-full mt-4 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                  onClick={handleSubmitAssignment}
+                  disabled={selectedAssignmentIds.length === 0}
+                >
+                  <Check className="mr-2 h-4 w-4" /> Auswahl bestätigen
+                </Button>
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-blue-600 dark:text-blue-400 text-center text-lg">
+                  <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Einsatz-Anfragen</span>
+                </CardTitle>
+                <CardDescription className="text-gray-600 dark:text-gray-400 text-center text-sm">
+                  {selectedAssignmentIds.every(id => assignmentStatuses[id] === 'declined') 
+                    ? "Leider war jemand schneller als du, suche dir bitte einen Ersatztermin aus."
+                    : selectedAssignmentIds.some(id => assignmentStatuses[id] === 'declined')
+                    ? `Einige deiner Einsätze wurden abgelehnt. Suche dir bitte ${selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} Ersatztermin${selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length > 1 ? 'e' : ''} aus.`
+                    : selectedAssignmentIds.every(id => assignmentStatuses[id] === 'confirmed')
+                    ? "Deine Einsätze wurden bestätigt und sind jetzt in deinem Kalender sichtbar. Drücke 'Verstanden' um diese Aufgabe als erledigt zu markieren."
+                    : "Du bist in der Warteschlange für diese Termine. Sobald sie vom Nespresso Team bestätigt sind, werden sie in deinem Kalender erscheinen."
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  {selectedAssignmentIds.length > 0 && selectedAssignmentIds.map((assignmentId) => {
+                    // Look in both original and replacement assignments
+                    let assignment = assignments.find(a => a.id === assignmentId);
+                    if (!assignment) {
+                      assignment = replacementAssignmentsMock.find(a => a.id === assignmentId);
+                    }
+                    const status = assignmentStatuses[assignmentId] || 'pending';
+                    if (!assignment) return null;
+                    
+                    return (
+                      <div key={assignmentId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {assignment.date}
+                            </div>
+                            <Badge className="text-xs px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 rounded-full text-[10px]">
+                              {assignment.time}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {assignment.location}
+                          </div>
+                        </div>
+                        <div className="flex items-center ml-3">
+                          {status === 'pending' && (
+                            <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
+                          )}
+                          {status === 'confirmed' && (
+                            <Check className="h-4 w-4 text-green-500" />
+                          )}
+                          {status === 'declined' && (
+                            <X className="h-4 w-4 text-red-500" />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Replacement Assignment Selection - Integrated */}
+                {selectedAssignmentIds.some(id => assignmentStatuses[id] === 'declined') && (
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Ersatztermine auswählen</span>
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Wähle {selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} Ersatztermin{selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length > 1 ? 'e' : ''} aus ({selectedReplacementIds.length}/{selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} ausgewählt)
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {replacementAssignmentsMock.map((assignment) => {
+                        const maxReplacements = selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length;
+                        const isSelected = selectedReplacementIds.includes(assignment.id);
+                        const isDisabled = !isSelected && selectedReplacementIds.length >= maxReplacements;
+                        
+                        return (
+                        <div
+                          key={assignment.id}
+                          className={`p-2.5 border rounded-lg transition-all relative min-h-[80px]
+                                      ${isSelected 
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-[1.02] z-10 cursor-pointer' 
+                                        : isDisabled
+                                        ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 opacity-50 cursor-not-allowed z-0'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm z-0 cursor-pointer'}`}
+                          onClick={() => !isDisabled && handleReplacementSelect(assignment.id)}
+                        >
+                          <button 
+                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleAssignmentInfoClick(e, assignment)}
+                            aria-label="Mehr Details"
+                          >
+                            <Info className="h-4 w-4" />
+                          </button>
+                          <div className="flex flex-col">
+                            <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
+                              {assignment.date}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {assignment.location}
+                              </div>
+                              <div className="relative inline-flex">
+                                <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
+                                <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
+                                  <span className="flex items-center">{assignment.time}</span>
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm"
+                      onClick={handleSubmitReplacement}
+                      disabled={selectedReplacementIds.length === 0}
+                    >
+                      <Check className="mr-2 h-3 w-3" /> Auswahl bestätigen
+                    </Button>
+                  </div>
+                )}
+                
+
+                
+                {/* Show "Verstanden" button when all assignments are confirmed */}
+                {selectedAssignmentIds.every(id => assignmentStatuses[id] === 'confirmed') && (
+                  <Button 
+                    className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+                    onClick={() => {
+                      setShowAssignmentConfirmation(true);
+                      setTimeout(() => {
+                        setShowAssignmentConfirmation(false);
+                        setIsAssignmentCollapsed(false);
+                        setSelectedAssignmentIds([]);
+                        setAssignmentStatuses({});
+                        setSelectedReplacementIds([]);
+                        setReplacementStatuses({});
+                        setShowReplacementAssignments(false);
+                        setHasAvailableAssignments(false);
+                      }, 7000);
+                    }}
+                  >
+                    <Check className="mr-2 h-4 w-4" /> Verstanden
+                  </Button>
+                )}
+                
+                {/* Temp testing buttons */}
+                {selectedReplacementIds.length === 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-xs"
+                        onClick={() => handleTestAssignmentStatus('confirmed')}
+                      >
+                        Test: Bestätigt
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-xs"
+                        onClick={() => handleTestAssignmentStatus('declined')}
+                      >
+                        Test: Abgelehnt
+                      </Button>
+                    </div>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={handleTestMixedAssignmentStatus}
+                    >
+                      Test: Nur eines von mehreren abgelehnt
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </>
+          )}
+          </Card>
+        ) : null}
+
+
 
         {/* Health Status Card - Always show this card */}
         <Card className="mb-6 border-gray-200 dark:border-gray-700 shadow-md overflow-hidden">
@@ -770,7 +1195,7 @@ export default function EinsatzPage() {
                 <div className="flex items-center mb-3 justify-center">
                   <Thermometer className="h-5 w-5 text-red-600 mr-2" />
                   <h3 className="text-sm font-medium text-red-600 dark:text-red-400">Krankenstand-Center</h3>
-                </div>
+                  </div>
                 
                 <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3 mb-3">
                   <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
@@ -779,8 +1204,8 @@ export default function EinsatzPage() {
                       <div>Mo-Do 7:30-17:00</div>
                       <div>Fr 7:30-14:00</div>
                       <div>Sa 9:00-12:00</div>
-                    </div>
-                  </div>
+                        </div>
+                            </div>
                   <a 
                     href="tel:+43699141630" 
                     className="flex items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-rose-100 dark:border-rose-800/50 mb-1.5 hover:bg-rose-50 dark:hover:bg-gray-700 transition-colors"
@@ -790,8 +1215,8 @@ export default function EinsatzPage() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                     Nachdem du angerufen hast, drücke den Button, um einen Krankenstand zu beantragen.
                   </p>
-                </div>
-                
+                            </div>
+                            
                 {isSickConfirmed ? (
                   <div className="space-y-3">
                     <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
@@ -799,42 +1224,42 @@ export default function EinsatzPage() {
                         <div className="relative mr-2">
                           <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
                           <CheckCircle2 className="h-4 w-4 relative" />
-                        </div>
+                            </div>
                         <span>Krankenstand bestätigt</span>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                     
-                    <Button 
+                        <Button 
                       onClick={() => setShowDoctorNoteUpload(true)}
                       className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
-                    >
+                        >
                       <FileText className="h-4 w-4 mr-1.5" />
                       Krankenbestätigung hinzufügen
-                    </Button>
+                        </Button>
                     
 
-                  </div>
+        </div>
                 ) : !isWaitingForSickConfirmation ? (
-                  <button 
+        <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
                     onClick={() => setIsWaitingForSickConfirmation(true)}
-                  >
+        >
                     <Thermometer className="h-4 w-4 mr-1.5" />
                     Krankenstand anfordern
-                  </button>
+        </button>
                 ) : (
                   <div className="space-y-3">
                     <div className="w-full py-2 px-3 bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                      <div className="flex items-center">
+                            <div className="flex items-center">
                         <span>Warten auf Bestätigung</span>
                         <span className="ml-1.5 flex">
                           <span className="animate-bounce mx-0.5 delay-0">.</span>
                           <span className="animate-bounce mx-0.5 delay-100">.</span>
                           <span className="animate-bounce mx-0.5 delay-200">.</span>
                         </span>
+                              </div>
                       </div>
-                    </div>
-                    
+                      
 
                   </div>
                 )}
@@ -1035,20 +1460,10 @@ export default function EinsatzPage() {
 
         {/* Quick Actions - REMOVED (belongs only on main dashboard) */}
 
-        {showProposalSubmittedMessage && (
-             <div className="fixed top-4 left-4 right-4 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg z-50 transition-opacity duration-300">
-                <div className="flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 mr-3 flex-shrink-0" />
-                  <div className="text-center">
-                    <p className="font-medium text-sm">Buddy Tag erfolgreich ausgewählt und übermittelt!</p>
-                    <p className="text-xs text-green-100 mt-1">Du kannst ihn jetzt in deinem Kalender einsehen.</p>
-                  </div>
-                </div>
-            </div>
-        )}
+
 
       {/* Details Modal */}
-      {showDetailsModal && selectedProposal && (
+      {showDetailsModal && (selectedProposal || selectedAssignment) && (
         <>
           <div 
             className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
@@ -1060,32 +1475,41 @@ export default function EinsatzPage() {
               <h3 className="text-lg font-medium flex items-center">
                 <Briefcase className="h-5 w-5 mr-2" /> Einsatz Details
               </h3>
-              <p className="text-sm text-blue-100 mt-1">Mo 12.06.2023 <span className="relative inline-flex ml-1">
+              <p className="text-sm text-blue-100 mt-1">
+                {selectedProposal ? selectedProposal.date.split(' ')[0] + ' ' + selectedProposal.date.split(' ')[1] : selectedAssignment?.date} 
+                <span className="relative inline-flex ml-1">
                 <div className="absolute inset-0 bg-white dark:bg-white opacity-15 rounded-full"></div>
-                <span className="relative px-2 py-0.5 rounded-full">10:00-16:00</span>
-              </span></p>
+                  <span className="relative px-2 py-0.5 rounded-full">
+                    {selectedProposal ? selectedProposal.date.split(' ')[2] : selectedAssignment?.time}
+                  </span>
+                </span>
+              </p>
             </div>
             
             {/* Content section */}
             <div className="p-4 space-y-4">
               {/* Market name */}
               <div className="mb-1">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedProposal.location}</h4>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {selectedProposal ? selectedProposal.location : selectedAssignment?.location}
+                </h4>
                 <p 
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer mt-1 flex items-center"
-                  onClick={() => handleAddressClick(selectedProposal.location)}
+                  onClick={() => handleAddressClick(selectedProposal ? selectedProposal.location : selectedAssignment?.location || '')}
                 >
                   <MapPin className="h-4 w-4 mr-1.5 text-blue-500" />
-                  {selectedProposal.location}
+                  {selectedProposal ? selectedProposal.location : selectedAssignment?.location}
                 </p>
               </div>
               
-              {/* Buddy pill */}
+              {/* Buddy pill - only show for proposals */}
+              {selectedProposal && (
               <div className="flex items-center mt-3">
                 <Badge className="text-xs font-medium px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-md whitespace-nowrap rounded-full">
                   <span className="flex items-center">Buddy: Cesira</span>
                 </Badge>
               </div>
+              )}
             </div>
             
             {/* Footer */}
@@ -1126,7 +1550,7 @@ export default function EinsatzPage() {
                 <p className="text-red-100 text-sm">Füge deine ärztliche Krankenbestätigung hinzu</p>
               </div>
             </div>
-
+            
             {/* Content */}
             <div className="p-6">
               {!doctorNoteUploaded ? (
@@ -1136,7 +1560,7 @@ export default function EinsatzPage() {
                   </p>
                   
                   <div className="flex flex-col space-y-3">
-                    <Button 
+              <Button 
                       onClick={() => setDoctorNoteUploaded(true)}
                       className="w-full py-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center"
                     >
@@ -1146,12 +1570,12 @@ export default function EinsatzPage() {
                     
                     <Button 
                       onClick={() => setDoctorNoteUploaded(true)}
-                      variant="outline"
+                variant="outline"
                       className="w-full py-3 border-rose-200 dark:border-rose-700 text-red-600 dark:text-red-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-medium rounded-lg shadow-md transition-all flex items-center justify-center"
-                    >
+              >
                       <Image className="h-5 w-5 mr-2" />
                       Aus Galerie wählen
-                    </Button>
+              </Button>
                   </div>
                 </div>
               ) : (
@@ -1167,12 +1591,12 @@ export default function EinsatzPage() {
                       Deine Krankenbestätigung wurde erfolgreich übermittelt.
                     </p>
                   </div>
-                  <Button 
+              <Button 
                     onClick={() => setShowDoctorNoteUpload(false)}
                     className="w-full py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
                   >
                     Schließen
-                  </Button>
+              </Button>
                 </div>
               )}
             </div>
@@ -1190,12 +1614,12 @@ export default function EinsatzPage() {
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md overflow-hidden">
             {/* Header */}
             <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
-              <button 
+                  <button 
                 onClick={() => setShowEarlyStartModal(false)}
                 className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <X className="h-5 w-5" />
-              </button>
+                  </button>
               
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
@@ -1218,8 +1642,8 @@ export default function EinsatzPage() {
                   placeholder="Bitte gib einen Grund für den frühen Start an..."
                   className="w-full min-h-[100px] resize-none border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-              </div>
-              
+                </div>
+                
               <div className="flex space-x-3">
                 <Button 
                   variant="outline"
@@ -1251,12 +1675,12 @@ export default function EinsatzPage() {
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md overflow-hidden">
             {/* Header with red gradient */}
             <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-rose-600 text-white p-6">
-              <button 
+                  <button
                 onClick={() => setShowEarlyEndModal(false)}
                 className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <X className="h-5 w-5" />
-              </button>
+                  </button>
               
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
@@ -1266,7 +1690,7 @@ export default function EinsatzPage() {
                 <p className="text-red-100 text-sm">Du beendest {minutesEarlyEnd} Minuten vor der geplanten Zeit</p>
               </div>
             </div>
-
+            
             {/* Content */}
             <div className="p-6">
               <div className="mb-4">
