@@ -346,8 +346,8 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                 type="text"
                 value={chatInput} 
                 onChange={(e) => setChatInput(e.target.value)} 
-                placeholder="Schreiben Sie eine Nachricht..." 
-                className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                placeholder="Frag Eddie egal was..." 
+                className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 placeholder:text-xs"
                 style={{ 
                   border: 'none', 
                   boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 

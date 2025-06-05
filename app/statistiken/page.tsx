@@ -853,7 +853,7 @@ Mario`
               onClick={toggleFeedback}
             >
               <button className="flex items-center justify-center w-full">
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">letztes feedback</span>
+                <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Potential Analyse</span>
                 <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
               </button>
             </div>
@@ -876,20 +876,65 @@ Mario`
             <Card className="shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
               <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800">
                 <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm text-center">
-                  CA KPIs <span className="text-gray-400 dark:text-gray-500">Mai 2023</span>
+                  Potential Analyse <span className="text-gray-400 dark:text-gray-500">CA KPIs</span>
                 </h3>
               </div>
               
               <CardContent className="p-4">
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
-                        <div className="space-y-3">
-                          {getFeedbackText(selectedHistoryEntry || 0).split('\n\n').map((paragraph, index) => (
-                            <p key={index} className="leading-relaxed">
-                              {paragraph}
-                            </p>
-                          ))}
-                        </div>
+                    <div className="space-y-4">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                        <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2 flex items-center">
+                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                          </svg>
+                          💰 Prämien-Potenzial
+                        </h4>
+                        <p className="text-sm text-green-700 dark:text-green-200 leading-relaxed">
+                          Bei deinem aktuellen <strong>MC/ET-Wert von {statsData[timeFrame].mcet.value.toFixed(1)}</strong> hast du bereits eine solide Basis. 
+                          Wenn du deinen <strong>TMA-Anteil im nächsten Monat auf 90%</strong> verbesserst, kannst du dir eine 
+                          <strong className="text-green-800 dark:text-green-300"> zusätzliche Prämie von 100€</strong> sichern.
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center">
+                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z"/>
+                          </svg>
+                          📈 Verbesserungs-Tipps
+                        </h4>
+                        <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            <span><strong>VL Share:</strong> Fokus auf Vertuo-Linien kann weitere 50€ Bonus bringen</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            <span><strong>TMA-Optimierung:</strong> Regelmäßige Kundenbindungsaktivitäten steigern den Anteil</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            <span><strong>MC/ET-Steigerung:</strong> Gezieltes Cross-Selling kann den Wert um 1-2 Punkte verbessern</span>
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-700">
+                        <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center">
+                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+                          </svg>
+                          🎯 Nächstes Ziel
+                        </h4>
+                        <p className="text-sm text-amber-700 dark:text-amber-200 leading-relaxed">
+                          Erreiche in den nächsten 30 Tagen einen <strong>kombinierten Score von 85%</strong> 
+                          (MC/ET + TMA + VL Share) und qualifiziere dich für den 
+                          <strong className="text-amber-800 dark:text-amber-300"> Exzellenz-Bonus von 200€</strong>.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -1584,7 +1629,7 @@ Liebe Grüße, dein Nespresso Team`}
                   onClick={() => setMysteryFeedbackOpen(!mysteryFeedbackOpen)}
                 >
                   <button className="flex items-center justify-center w-full">
-                    <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent text-xs font-medium opacity-75">letztes feedback</span>
+                    <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent text-xs font-medium opacity-75">Potential Analyse</span>
                     <ChevronDown className="h-3.5 w-3.5 ml-1 text-indigo-500 transform translate-y-[1px] opacity-75" />
                   </button>
                 </div>
@@ -1607,19 +1652,71 @@ Liebe Grüße, dein Nespresso Team`}
                 <Card className="shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
                   <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800">
                     <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm text-center">
-                      Mystery Shop <span className="text-gray-400 dark:text-gray-500">Feedback</span>
+                      Potential Analyse <span className="text-gray-400 dark:text-gray-500">Mystery Shop</span>
                     </h3>
                   </div>
                   
                   <CardContent className="p-4">
                     <ScrollArea className="h-[280px] pr-4">
                       <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
-                        <div className="space-y-3">
-                          {mysteryFeedbackText.split('\n\n').map((paragraph, index) => (
-                            <p key={index} className="leading-relaxed">
-                              {paragraph}
+                        <div className="space-y-4">
+                          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                            <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-2 flex items-center">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                              </svg>
+                              💎 Mystery Shop Prämien-System
+                            </h4>
+                            <div className="text-sm text-purple-700 dark:text-purple-200 space-y-2">
+                              <p><strong>95-100%:</strong> <span className="text-green-600 dark:text-green-400 font-semibold">100€ Prämie</span></p>
+                              <p><strong>90-94%:</strong> <span className="text-blue-600 dark:text-blue-400 font-semibold">50€ Prämie</span></p>
+                              <p><strong>Unter 90%:</strong> <span className="text-gray-600 dark:text-gray-400">Keine Prämie</span></p>
+                              <p className="mt-3 font-medium">
+                                Dein aktueller Score: <strong className="text-purple-800 dark:text-purple-300">{mysteryStatsData[timeFrame].percentage.value.toFixed(1)}%</strong>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-4 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                            <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z"/>
+                              </svg>
+                              📋 Verbesserungs-Bereiche
+                            </h4>
+                            <ul className="text-sm text-emerald-700 dark:text-emerald-200 space-y-2">
+                              <li className="flex items-start">
+                                <span className="text-emerald-500 mr-2">•</span>
+                                <span><strong>Begrüßung:</strong> Herzlicher erster Eindruck (15 Punkte)</span>
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-emerald-500 mr-2">•</span>
+                                <span><strong>Produktwissen:</strong> Umfassende Kaffeekompetenz (20 Punkte)</span>
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-emerald-500 mr-2">•</span>
+                                <span><strong>VL-Fokus:</strong> Vertuo-Linien aktiv bewerben (15 Punkte)</span>
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-emerald-500 mr-2">•</span>
+                                <span><strong>Abschluss:</strong> Professionelle Verabschiedung (10 Punkte)</span>
+                              </li>
+                            </ul>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                            <h4 className="font-semibold text-orange-800 dark:text-orange-300 mb-2 flex items-center">
+                              <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+                              </svg>
+                              🎯 Nächste Mystery Shop Welle
+                            </h4>
+                            <p className="text-sm text-orange-700 dark:text-orange-200 leading-relaxed">
+                              Eine Verbesserung um <strong>nur 3-5%</strong> könnte dir in der nächsten Welle 
+                              eine <strong className="text-orange-800 dark:text-orange-300">höhere Prämien-Stufe</strong> sichern. 
+                              Konzentriere dich auf die Grundlagen und wiederhole die Schulungsvideos.
                             </p>
-                          ))}
+                          </div>
                         </div>
                       </div>
                     </ScrollArea>

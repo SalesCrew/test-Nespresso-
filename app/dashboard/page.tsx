@@ -1447,8 +1447,8 @@ export default function PromotorDashboard() {
               <Input
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Schreiben Sie eine Nachricht..."
-                className="w-full pr-12 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-full shadow-md chat-input"
+                placeholder="Frag Eddie egal was..."
+                className="w-full pr-12 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-full shadow-md chat-input placeholder:text-xs"
               />
               <Button 
                 type="submit" 
