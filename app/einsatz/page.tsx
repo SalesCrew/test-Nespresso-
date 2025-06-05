@@ -63,7 +63,7 @@ const assignmentsMock = [
     id: 101,
     title: "Samsung Galaxy S24 Launch Event",
     location: "Saturn Alexanderplatz, Berlin",
-    time: "10:00 - 16:15", // Shift ends at 4:15 PM for today
+    time: "15:00 - 16:15", // Shift ends at 4:15 PM for today
     date: new Date(), // Assignment is for today
     type: "promotion",
     details: "Presentation and sales support for the new Samsung Galaxy S24 series. Focus on key selling points and customer engagement."
@@ -107,22 +107,29 @@ export default function EinsatzPage() {
 
   const [lastCompletedAssignmentDate, setLastCompletedAssignmentDate] = useState<Date | null>(null);
 
+  // Early start functionality
+  const [showEarlyStartModal, setShowEarlyStartModal] = useState(false);
+  const [earlyStartReason, setEarlyStartReason] = useState("");
+  const [minutesEarly, setMinutesEarly] = useState(0);
+
+  // Active einsatz functionality
+  const [abweichendePauseSubmitted, setAbweichendePauseSubmitted] = useState(false);
+  const [showEarlyEndModal, setShowEarlyEndModal] = useState(false);
+  const [earlyEndReason, setEarlyEndReason] = useState("");
+  const [minutesEarlyEnd, setMinutesEarlyEnd] = useState(0);
+
   // For newcomer proposals
   const [isNewcomer, setIsNewcomer] = useState(true); // Simulate newcomer status
   const [proposals, setProposals] = useState(newcomerProposalsMock);
   const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
   const [showProposalSubmittedMessage, setShowProposalSubmittedMessage] = useState(false);
 
-  // For sickness reporting
+  // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
-  const [sickReportStep, setSickReportStep] = useState<"initial" | "days" | "complete">("initial");
-  const [sickDays, setSickDays] = useState<number>(1);
-  const [isSick, setIsSick] = useState(false);
+  const [isWaitingForSickConfirmation, setIsWaitingForSickConfirmation] = useState(false);
+  const [isSickConfirmed, setIsSickConfirmed] = useState(false);
+  const [showDoctorNoteUpload, setShowDoctorNoteUpload] = useState(false);
   const [doctorNoteUploaded, setDoctorNoteUploaded] = useState(false);
-  const [showSickAdjustModal, setShowSickAdjustModal] = useState(false);
-  const [adjustmentMode, setAdjustmentMode] = useState<"add" | "subtract">("add");
-  const [adjustmentValue, setAdjustmentValue] = useState(0);
-  const [showEndSickLeaveModal, setShowEndSickLeaveModal] = useState(false);
   const [isWaitingForEmergencyConfirmation, setIsWaitingForEmergencyConfirmation] = useState(false);
   const [isEmergencyConfirmed, setIsEmergencyConfirmed] = useState(false);
 
@@ -345,10 +352,54 @@ export default function EinsatzPage() {
   };
 
   const handleSwipeStart = () => {
-    // This will call the original handleStartEinsatz
-    // and also update the UI of the swiper if needed.
     if (!isSwiped) {
+      // Check if this is an early start (15+ minutes before 10:00)
+      const now = new Date();
+      const today = new Date();
+      const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0, 0); // 15:00 (3:00 PM)
+      const timeDiffMinutes = (startTime.getTime() - now.getTime()) / (1000 * 60);
+      
+      if (timeDiffMinutes >= 15) {
+        // Early start - show modal for reason
+        setMinutesEarly(Math.round(timeDiffMinutes));
+        setShowEarlyStartModal(true);
+      } else {
+        // Normal start
+        handleStartEinsatz();
+      }
+    }
+  };
+
+  const handleEarlyStartSubmit = () => {
+    if (earlyStartReason.trim()) {
+      setShowEarlyStartModal(false);
+      setEarlyStartReason("");
       handleStartEinsatz();
+    }
+  };
+
+  const handleAbweichendePause = () => {
+    setAbweichendePauseSubmitted(true);
+    setTimeout(() => setAbweichendePauseSubmitted(false), 3000); // Reset after 3 seconds
+  };
+
+  const handleEarlyEnd = () => {
+    // Calculate how many minutes early (before 16:15)
+    const now = new Date();
+    const today = new Date();
+    const endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 15, 0); // 16:15
+    const timeDiffMinutes = (endTime.getTime() - now.getTime()) / (1000 * 60);
+    
+    setMinutesEarlyEnd(Math.round(timeDiffMinutes));
+    setShowEarlyEndModal(true);
+  };
+
+  const handleEarlyEndSubmit = () => {
+    if (earlyEndReason.trim()) {
+      setShowEarlyEndModal(false);
+      setEarlyEndReason("");
+      setEinsatzStatus("completed");
+      setLastCompletedAssignmentDate(new Date());
     }
   };
 
@@ -458,8 +509,8 @@ export default function EinsatzPage() {
               <MapPin className="h-4 w-4 mr-1.5 text-blue-500" /> {displayedAssignment.location}
             </div>
             
-            {/* Swipe to Start Einsatz - only if assignment is for today, status is idle, and not sick or in emergency */}
-            {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !isSick && !isEmergencyConfirmed && (
+            {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
+                          {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !isSickConfirmed && !isEmergencyConfirmed && (
               <div className="mt-4">
                 <div 
                   className="relative w-full h-14 bg-gray-100 dark:bg-gray-800 rounded-full p-1 cursor-pointer select-none flex items-center justify-center shadow-inner"
@@ -484,10 +535,10 @@ export default function EinsatzPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Bestätige hier den Beginn deines Einsatzes.</p>
               </div>
             )}
-            {/* Sick status - Show instead of swipe if user is sick */}
-            {isAssignmentForToday && isSick && (
-              <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 flex items-center">
-                <Thermometer className="h-5 w-5 text-red-500 mr-3 ml-0.5 flex-shrink-0" />
+                          {/* Sick status - Show instead of swipe if user is sick */}
+              {isAssignmentForToday && isSickConfirmed && (
+              <div className="mt-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-700 flex items-center">
+                <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-red-700 dark:text-red-400">Im Krankenstand</p>
                   <p className="text-xs text-red-600/80 dark:text-red-300/80 mt-0.5">
@@ -546,6 +597,36 @@ export default function EinsatzPage() {
             <CardContent className="text-center">
               <div className="text-5xl font-bold my-4 text-gray-800 dark:text-gray-100">{formatTime(remainingTime)}</div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Verbleibende Zeit. Dein Einsatz wird erfasst.</p>
+              
+              {/* Action buttons */}
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleAbweichendePause}
+                  disabled={abweichendePauseSubmitted}
+                  className={`w-full py-2.5 transition-all duration-200 ${
+                    abweichendePauseSubmitted 
+                      ? "bg-green-500 hover:bg-green-500 text-white" 
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
+                  }`}
+                >
+                  {abweichendePauseSubmitted ? (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Gemeldet
+                    </>
+                  ) : (
+                    "Abweichende Pause"
+                  )}
+                </Button>
+                
+                <Button 
+                  onClick={handleEarlyEnd}
+                  variant="outline"
+                  className="w-full py-2.5 border-rose-200 dark:border-rose-700 text-red-600 dark:text-red-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                >
+                  Einsatz frühzeitig beenden
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -649,7 +730,7 @@ export default function EinsatzPage() {
             <button 
               className={`flex-1 py-2.5 px-4 text-sm font-medium transition-colors relative ${
                 activeTab === "krankheit" 
-                  ? "text-red-600 dark:text-red-400 bg-gradient-to-t from-red-50/50 to-transparent dark:from-red-900/10 dark:to-transparent" 
+                  ? "text-red-600 dark:text-red-400 bg-gradient-to-t from-rose-50/50 to-transparent dark:from-rose-900/10 dark:to-transparent" 
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
               onClick={() => setActiveTab("krankheit")}
@@ -657,12 +738,12 @@ export default function EinsatzPage() {
               <div className="flex items-center justify-center">
                 <Thermometer className="h-4 w-4 mr-2 ml-0.5" />
                 Krankheit
-                {isSick && (
-                  <span className="ml-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                {isSickConfirmed && (
+                  <span className="ml-1.5 w-2 h-2 bg-red-600 rounded-full"></span>
                 )}
               </div>
               {activeTab === "krankheit" && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 via-red-600 to-rose-600"></div>
               )}
             </button>
             <button 
@@ -683,172 +764,78 @@ export default function EinsatzPage() {
             </button>
           </div>
           
-          <CardContent className={`p-4 ${activeTab === "krankheit" ? "bg-gradient-to-b from-red-50/60 to-white dark:from-red-900/10 dark:to-transparent" : "bg-gradient-to-b from-orange-50/60 to-white dark:from-orange-900/10 dark:to-transparent"}`}>
+          <CardContent className={`p-4 ${activeTab === "krankheit" ? "bg-gradient-to-b from-rose-50/60 to-white dark:from-rose-900/10 dark:to-transparent" : "bg-gradient-to-b from-orange-50/60 to-white dark:from-orange-900/10 dark:to-transparent"}`}>
             {activeTab === "krankheit" && (
-              <div className="space-y-4">
-                {/* Initial state - Not sick */}
-                {!isSick && sickReportStep === "initial" && (
-                  <div className="text-center">
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">Melde dich krank, wenn du aus gesundheitlichen Gründen nicht arbeiten kannst.</p>
+              <div className="bg-white/80 dark:bg-gray-900/30 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center mb-3 justify-center">
+                  <Thermometer className="h-5 w-5 text-red-600 mr-2" />
+                  <h3 className="text-sm font-medium text-red-600 dark:text-red-400">Krankenstand-Center</h3>
+                </div>
+                
+                <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3 mb-3">
+                  <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
+                    <p className="mb-2 text-sm whitespace-nowrap">Bei Krankheit ruf bitte diese Nummer an:</p>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      <div>Mo-Do 7:30-17:00</div>
+                      <div>Fr 7:30-14:00</div>
+                      <div>Sa 9:00-12:00</div>
+                    </div>
+                  </div>
+                  <a 
+                    href="tel:+43699141630" 
+                    className="flex items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-rose-100 dark:border-rose-800/50 mb-1.5 hover:bg-rose-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <span className="font-medium text-base text-red-600 dark:text-red-400">+43 699 141 630</span>
+                  </a>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Nachdem du angerufen hast, drücke den Button, um einen Krankenstand zu beantragen.
+                  </p>
+                </div>
+                
+                {isSickConfirmed ? (
+                  <div className="space-y-3">
+                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                      <div className="flex items-center">
+                        <div className="relative mr-2">
+                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
+                          <CheckCircle2 className="h-4 w-4 relative" />
+                        </div>
+                        <span>Krankenstand bestätigt</span>
+                      </div>
+                    </div>
+                    
                     <Button 
-                      onClick={() => setSickReportStep("days")}
-                      className="bg-red-500 hover:bg-red-600 text-white shadow-md rounded-lg py-2.5 px-5 transition-all font-medium"
+                      onClick={() => setShowDoctorNoteUpload(true)}
+                      className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
                     >
-                      <Thermometer className="mr-2 ml-0.5 h-4 w-4" />
-                      Krankmeldung erstellen
+                      <FileText className="h-4 w-4 mr-1.5" />
+                      Krankenbestätigung hinzufügen
                     </Button>
+                    
+
                   </div>
-                )}
-                
-                {/* Step: Enter expected sick days */}
-                {!isSick && sickReportStep === "days" && (
-                  <div className="bg-white/80 dark:bg-gray-900/30 rounded-xl p-5 shadow-md">
-                    <h3 className="text-base font-medium mb-4 text-gray-700 dark:text-gray-300 text-center">Voraussichtliche Krankheitstage</h3>
-                    <div className="space-y-4">
-                      <div className="space-y-5 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <div className="text-center text-2xl font-semibold py-3 rounded-lg text-red-600 dark:text-red-300 border border-red-100 dark:border-red-800/30 bg-gradient-to-r from-red-50 to-white dark:from-red-900/20 dark:to-gray-900/20">
-                          {sickDays} {sickDays === 1 ? 'Tag' : 'Tage'}
-                        </div>
-                        
-                        <div className="px-2 pt-2">
-                          {/* Custom slider component - simplified */}
-                          <div className="relative py-3">
-                            {/* Track background with more subtle gradient */}
-                            <div className="h-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-full shadow-inner">
-                              {/* Filled portion with glassy look */}
-                              <div 
-                                className="absolute h-2 bg-gradient-to-r from-red-400 to-red-500 rounded-full backdrop-blur-sm" 
-                                style={{ 
-                                  width: `${(sickDays / 30) * 100}%`,
-                                  boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.3)'
-                                }}
-                              ></div>
-                            </div>
-                            
-                            {/* Hidden range input for functionality */}
-                            <input 
-                              type="range" 
-                              min="1" 
-                              max="30" 
-                              value={sickDays}
-                              onChange={(e) => setSickDays(parseInt(e.target.value))}
-                              className="absolute top-0 left-0 w-full h-10 opacity-0 cursor-pointer z-10"
-                            />
-                            
-                            {/* Slider thumb/handle - improved styling */}
-                            <div 
-                              className="absolute h-7 w-7 bg-white dark:bg-gray-100 rounded-full shadow-lg transform -translate-x-1/2 transition-transform duration-100 ease-out cursor-grab active:cursor-grabbing active:scale-105 focus:outline-none" 
-                              style={{ 
-                                left: `${(sickDays / 30) * 100}%`, 
-                                top: '0.25rem',
-                                border: '2px solid rgba(239, 68, 68, 0.6)',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.1), 0 0 0 4px rgba(239, 68, 68, 0.1)' 
-                              }}
-                            >
-                              {/* Inner dot for handle */}
-                              <div className="absolute inset-0 m-1 rounded-full bg-gradient-to-br from-red-400 to-red-500 opacity-80"></div>
-                            </div>
-                            
-                            {/* Simplified labels with flex justify-between */}
-                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-3 px-1">
-                              <span>1 Tag</span>
-                              <span>30 Tage</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex justify-between pt-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setSickReportStep("initial")}
-                          className="rounded-lg py-2.5 px-4 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 shadow-sm transition-colors font-medium"
-                        >
-                          Zurück
-                        </Button>
-                        <Button 
-                          onClick={() => {
-                            setIsSick(true);
-                            setSickReportStep("complete");
-                          }}
-                          className="rounded-lg py-2.5 px-5 bg-red-500 hover:bg-red-600 text-white shadow-md transition-all font-medium"
-                        >
-                          Absenden
-                        </Button>
+                ) : !isWaitingForSickConfirmation ? (
+                  <button 
+                    className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
+                    onClick={() => setIsWaitingForSickConfirmation(true)}
+                  >
+                    <Thermometer className="h-4 w-4 mr-1.5" />
+                    Krankenstand anfordern
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="w-full py-2 px-3 bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                      <div className="flex items-center">
+                        <span>Warten auf Bestätigung</span>
+                        <span className="ml-1.5 flex">
+                          <span className="animate-bounce mx-0.5 delay-0">.</span>
+                          <span className="animate-bounce mx-0.5 delay-100">.</span>
+                          <span className="animate-bounce mx-0.5 delay-200">.</span>
+                        </span>
                       </div>
                     </div>
-                  </div>
-                )}
-                
-                {/* Sick state - After submission */}
-                {isSick && (
-                  <div>
-                    <div className="bg-white/80 dark:bg-gray-900/30 rounded-lg p-4 shadow-md">
-                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3.5 mb-4 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-100/50 to-transparent dark:from-red-900/20 dark:to-transparent"></div>
-        <Thermometer className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 relative z-10" />
-        <div className="relative z-10 text-center">
-          <h3 className="font-medium text-red-700 dark:text-red-400">Du bist im Krankenstand</h3>
-          <p className="text-sm text-red-600/80 dark:text-red-300/80">Voraussichtlich: {sickDays} {sickDays === 1 ? 'Tag' : 'Tage'}</p>
-        </div>
-        <button 
-          className="ml-3 p-1.5 text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-300 bg-white/80 dark:bg-gray-800/50 rounded-full relative z-10 shadow-sm"
-          onClick={() => setShowSickAdjustModal(true)}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-        </button>
-                      </div>
-                      
-                      {/* Upload doctor's note section */}
-                      <div className="rounded-lg p-4 shadow-sm relative overflow-hidden bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-                        <div className="absolute inset-0 bg-gradient-to-b from-green-100/50 to-transparent dark:from-green-900/20 dark:to-transparent"></div>
-                                              <div className="text-sm font-medium mb-3 flex items-center justify-center relative z-10">
-                        <span className="text-green-700 dark:text-green-300">Krankenbestätigung</span>
-                        {doctorNoteUploaded && (
-                          <Badge className="bg-green-500 text-white text-xs px-2 py-0.5 ml-2">Hochgeladen</Badge>
-                        )}
-                        </div>
-                        
-                        {!doctorNoteUploaded ? (
-                          <div className="flex justify-center space-x-3 relative z-10">
-                            <Button 
-                              variant="outline"
-                              className="border-green-200 dark:border-green-700 bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/30 shadow-sm"
-                              onClick={() => setDoctorNoteUploaded(true)}
-                            >
-                              <Camera className="h-4 w-4 mr-2" />
-                              Kamera
-                            </Button>
-                            <Button 
-                              variant="outline"
-                              className="border-green-200 dark:border-green-700 bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/30 shadow-sm"
-                              onClick={() => setDoctorNoteUploaded(true)}
-                            >
-                              <Image className="h-4 w-4 mr-2" />
-                              Galerie
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="text-center py-3 px-4 text-sm text-green-600 dark:text-green-400 bg-white/80 dark:bg-gray-800/50 rounded-md border border-green-200 dark:border-green-700 relative z-10">
-                            <div className="flex items-center">
-                              <div className="relative mr-3 ml-3">
-                                <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                                <CheckCircle2 className="h-5 w-5 relative" />
-                              </div>
-                              <span>Krankenbestätigung erfolgreich übermittelt</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Action to end sick leave */}
-                      <Button 
-                        variant="outline" 
-                        className="w-full mt-4 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-                        onClick={() => setShowEndSickLeaveModal(true)}
-                      >
-                        Krankenstand beenden
-                      </Button>
-                    </div>
+                    
+
                   </div>
                 )}
               </div>
@@ -862,9 +849,14 @@ export default function EinsatzPage() {
                 </div>
                 
                 <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 mb-3">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    Im Notfall ruf bitte diese Nummer an:
-                  </p>
+                  <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
+                    <p className="mb-2">Im Notfall ruf bitte diese Nummer an:</p>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      <div>Mo-Do 7:30-17:00</div>
+                      <div>Fr 7:30-14:00</div>
+                      <div>Sa 9:00-12:00</div>
+                    </div>
+                  </div>
                   <a 
                     href="tel:+43699141630" 
                     className="flex items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-orange-100 dark:border-orange-800/50 mb-1.5 hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors"
@@ -1109,149 +1101,203 @@ export default function EinsatzPage() {
         </>
       )}
 
-      {/* End Sick Leave Confirmation Modal */}
-      {showEndSickLeaveModal && (
+      {/* Doctor Note Upload Modal */}
+      {showDoctorNoteUpload && (
         <>
           <div 
-            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
-            onClick={() => setShowEndSickLeaveModal(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" 
+            onClick={() => setShowDoctorNoteUpload(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[70] p-5 w-80">
-            <h3 className="text-base font-medium mb-3 text-gray-900 dark:text-gray-100 text-center">Krankenstand beenden</h3>
-            
-            <div className="bg-gray-50/50 dark:bg-gray-800/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
-                Bist du sicher, dass du ab heute wieder arbeiten kannst?
-              </p>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md overflow-hidden">
+            {/* Header with red gradient */}
+            <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-rose-600 text-white p-6">
+              <button 
+                onClick={() => setShowDoctorNoteUpload(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <h2 className="text-xl font-bold mb-1">Krankenbestätigung</h2>
+                <p className="text-red-100 text-sm">Füge deine ärztliche Krankenbestätigung hinzu</p>
+              </div>
             </div>
-            
-            <div className="flex space-x-3">
-              <Button 
-                className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
-                variant="outline"
-                onClick={() => setShowEndSickLeaveModal(false)}
-              >
-                Abbrechen
-              </Button>
-              <Button 
-                className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white shadow-md"
-                onClick={() => {
-                  setIsSick(false);
-                  setSickReportStep("initial");
-                  setDoctorNoteUploaded(false);
-                  setSickDays(1);
-                  setShowEndSickLeaveModal(false);
-                }}
-              >
-                Bestätigen
-              </Button>
+
+            {/* Content */}
+            <div className="p-6">
+              {!doctorNoteUploaded ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-4">
+                    Wähle eine Option, um deine Krankenbestätigung hinzuzufügen:
+                  </p>
+                  
+                  <div className="flex flex-col space-y-3">
+                    <Button 
+                      onClick={() => setDoctorNoteUploaded(true)}
+                      className="w-full py-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center"
+                    >
+                      <Camera className="h-5 w-5 mr-2" />
+                      Mit Kamera aufnehmen
+                    </Button>
+                    
+                    <Button 
+                      onClick={() => setDoctorNoteUploaded(true)}
+                      variant="outline"
+                      className="w-full py-3 border-rose-200 dark:border-rose-700 text-red-600 dark:text-red-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-medium rounded-lg shadow-md transition-all flex items-center justify-center"
+                    >
+                      <Image className="h-5 w-5 mr-2" />
+                      Aus Galerie wählen
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+                      Erfolgreich hochgeladen
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Deine Krankenbestätigung wurde erfolgreich übermittelt.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setShowDoctorNoteUpload(false)}
+                    className="w-full py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                  >
+                    Schließen
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </>
       )}
 
-      {/* Sick Days Adjustment Modal */}
-      {showSickAdjustModal && (
+      {/* Early Start Reason Modal */}
+      {showEarlyStartModal && (
         <>
           <div 
-            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
-            onClick={() => setShowSickAdjustModal(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" 
+            onClick={() => setShowEarlyStartModal(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[70] p-5 w-80">
-            <h3 className="text-base font-medium mb-5 text-gray-900 dark:text-gray-100 text-center">Krankheitstage anpassen</h3>
-            
-            {/* Manual adjustment section */}
-            <div className="mb-6">
-              <div className="flex items-center mb-4">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Ursprüngliche Tage: </div>
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-200 ml-1">{sickDays} Tage</div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
+              <button 
+                onClick={() => setShowEarlyStartModal(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  <Clock className="h-6 w-6" />
+                </div>
+                <h2 className="text-xl font-bold mb-1">Früher Start</h2>
+                <p className="text-blue-100 text-sm">Du startest {minutesEarly} Minuten vor der geplanten Zeit</p>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Grund für den frühen Start
+                </label>
+                <Textarea
+                  value={earlyStartReason}
+                  onChange={(e) => setEarlyStartReason(e.target.value)}
+                  placeholder="Bitte gib einen Grund für den frühen Start an..."
+                  className="w-full min-h-[100px] resize-none border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
               
-              <div className="flex items-center space-x-3">
-                <div className="flex-1 h-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm flex items-center">
-                  <button 
-                    className="w-10 h-full relative flex items-center justify-center"
-                    onClick={() => setAdjustmentMode("subtract")}
-                  >
-                    {adjustmentMode === "subtract" && (
-                      <span className="absolute inset-0 bg-green-50 dark:bg-green-900/30"></span>
-                    )}
-                    <span className={`relative text-sm font-medium z-10 ${
-                      adjustmentMode === "subtract" 
-                        ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}>−</span>
-                  </button>
-                  <Input 
-                    type="number"
-                    min="1" 
-                    value={adjustmentValue || ""}
-                    onChange={(e) => setAdjustmentValue(parseInt(e.target.value) || 0)}
-                    placeholder="Zahl in Tagen"
-                    className="flex-1 h-full border-0 bg-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-xs placeholder:text-gray-400/60 placeholder:font-light"
-                  />
-                  <button 
-                    className="w-10 h-full relative flex items-center justify-center"
-                    onClick={() => setAdjustmentMode("add")}
-                  >
-                    {adjustmentMode === "add" && (
-                      <span className="absolute inset-0 bg-red-50 dark:bg-red-900/30"></span>
-                    )}
-                    <span className={`relative text-sm font-medium z-10 ${
-                      adjustmentMode === "add" 
-                        ? "text-red-600 dark:text-red-400" 
-                        : "text-gray-500 dark:text-gray-400"
-                    }`}>+</span>
-                  </button>
-                </div>
-                
-                <button 
-                  className="w-10 h-10 p-0 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm flex-shrink-0"
-                  onClick={() => {
-                    const newValue = adjustmentMode === "add" 
-                      ? sickDays + adjustmentValue
-                      : Math.max(1, sickDays - adjustmentValue);
-                    setSickDays(newValue);
-                    setAdjustmentValue(0);
-                    setShowSickAdjustModal(false);
-                  }}
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowEarlyStartModal(false)}
+                  className="flex-1 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <Check className="h-5 w-5" />
-                </button>
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleEarlyStartSubmit}
+                  disabled={!earlyStartReason.trim()}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Einsatz starten
+                </Button>
               </div>
             </div>
-            
-            {/* Quick pills section */}
-            <div>
-              <h4 className="text-xs font-medium mb-3 text-gray-700 dark:text-gray-300 text-center">Schnellauswahl</h4>
-              <div className="flex justify-between mb-6 space-x-1.5">
-                {([-3, -2, -1, 1, 2, 3] as number[]).map((value) => (
-                  <button
-                    key={value}
-                    className={`h-8 px-2 rounded-md text-xs font-medium transition-colors flex-1 ${
-                      value < 0 
-                        ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-100 dark:border-green-800/30" 
-                        : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-100 dark:border-red-800/30"
-                    }`}
-                    onClick={() => {
-                      const newValue = Math.max(1, sickDays + value);
-                      setSickDays(newValue);
-                      setAdjustmentValue(0);
-                      setShowSickAdjustModal(false);
-                    }}
-                  >
-                    {value > 0 ? `+${value}` : value}
-                  </button>
-                ))}
+          </div>
+        </>
+      )}
+
+      {/* Early End Reason Modal */}
+      {showEarlyEndModal && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" 
+            onClick={() => setShowEarlyEndModal(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md overflow-hidden">
+            {/* Header with red gradient */}
+            <div className="relative bg-gradient-to-r from-red-500 via-red-600 to-rose-600 text-white p-6">
+              <button 
+                onClick={() => setShowEarlyEndModal(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  <StopCircle className="h-6 w-6" />
+                </div>
+                <h2 className="text-xl font-bold mb-1">Früher Abschluss</h2>
+                <p className="text-red-100 text-sm">Du beendest {minutesEarlyEnd} Minuten vor der geplanten Zeit</p>
               </div>
             </div>
-            
-            <button 
-              onClick={() => setShowSickAdjustModal(false)}
-              className="w-full p-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              Schließen
-            </button>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Grund für das frühe Ende
+                </label>
+                <Textarea
+                  value={earlyEndReason}
+                  onChange={(e) => setEarlyEndReason(e.target.value)}
+                  placeholder="Bitte gib einen Grund für das frühe Ende an..."
+                  className="w-full min-h-[100px] resize-none border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowEarlyEndModal(false)}
+                  className="flex-1 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleEarlyEndSubmit}
+                  disabled={!earlyEndReason.trim()}
+                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  Einsatz beenden
+                </Button>
+              </div>
+            </div>
           </div>
         </>
       )}

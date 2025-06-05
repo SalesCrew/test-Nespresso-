@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -39,6 +39,18 @@ export default function StatistikenPage() {
   const [challengeCongratulationsRead, setChallengeCongratulationsRead] = useState(false)
   const [challengeCardDismissed, setChallengeCardDismissed] = useState(false)
   const [showChallengePrizes, setShowChallengePrizes] = useState(false)
+  
+  // Leaderboard state
+  const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [leaderboardCategory, setLeaderboardCategory] = useState<"mcet" | "tma" | "vlshare">("mcet")
+  
+  // Reset scroll to top when changing leaderboard category
+  useEffect(() => {
+    const leaderboardContainer = document.querySelector('.leaderboard-scroll-container')
+    if (leaderboardContainer) {
+      leaderboardContainer.scrollTop = 0
+    }
+  }, [leaderboardCategory])
   
   // Feedback texts for history entries
   const feedbackTexts = [
@@ -261,6 +273,102 @@ Liebe Grüße, dein Nespresso Team.`
     
     return data
   })
+
+  // Generate leaderboard data - 60 users with realistic values
+  const [leaderboardData] = useState(() => {
+    const data = []
+    
+    // Generate 60 users with random but realistic scores
+    for (let i = 0; i < 60; i++) {
+      const userId = i + 1
+      
+      // Generate random scores for each category
+      const mcet = parseFloat((Math.random() * 8.5 + 0.5).toFixed(1)) // 0.5-9.0
+      const tma = Math.floor(Math.random() * 60 + 40) // 40-100%
+      const vlShare = Math.floor(Math.random() * 35) // 0-35%
+      
+      data.push({
+        id: userId,
+        mcet: mcet,
+        tma: tma,
+        vlshare: vlShare
+      })
+    }
+    
+    return data
+  })
+
+  // Get sorted leaderboard for the selected category
+  const getSortedLeaderboard = () => {
+    let sortedData = [...leaderboardData]
+    
+    // Sort by selected category (highest to lowest)
+    if (leaderboardCategory === "mcet") {
+      sortedData.sort((a, b) => b.mcet - a.mcet)
+    } else if (leaderboardCategory === "tma") {
+      sortedData.sort((a, b) => b.tma - a.tma)
+    } else if (leaderboardCategory === "vlshare") {
+      sortedData.sort((a, b) => b.vlshare - a.vlshare)
+    }
+    
+    // Add rank and isCurrentUser based on position
+    return sortedData.map((user, index) => ({
+      ...user,
+      rank: index + 1,
+      name: index + 1 === getCurrentUserRank() ? "Ich" : null,
+      isCurrentUser: index + 1 === getCurrentUserRank()
+    }))
+  }
+
+  // Get current user's rank for the selected category
+  const getCurrentUserRank = () => {
+    // User has specific scores: MC/ET: 4.2, TMA: 72%, VL Share: 15%
+    const userScores = { mcet: 4.2, tma: 72, vlshare: 15 }
+    
+    let rank = 1
+    leaderboardData.forEach(user => {
+      if (leaderboardCategory === "mcet" && user.mcet > userScores.mcet) rank++
+      else if (leaderboardCategory === "tma" && user.tma > userScores.tma) rank++
+      else if (leaderboardCategory === "vlshare" && user.vlshare > userScores.vlshare) rank++
+    })
+    
+    return rank
+  }
+
+  // Helper functions to get colors based on score values (same as CA KPIs)
+  const getScoreColorClass = (category: "mcet" | "tma" | "vlshare", value: number) => {
+    if (category === "mcet") {
+      if (value >= 4.5) return "text-green-600 dark:text-green-400"
+      if (value >= 4.0) return "text-[#FD7E14] dark:text-[#FD7E14]"
+      return "text-red-600 dark:text-red-400"
+    } else if (category === "tma") {
+      if (value >= 75) return "text-green-600 dark:text-green-400"
+      if (value >= 65) return "text-[#FD7E14] dark:text-[#FD7E14]"
+      return "text-red-600 dark:text-red-400"
+    } else if (category === "vlshare") {
+      if (value >= 10) return "text-green-600 dark:text-green-400"
+      if (value >= 6) return "text-[#FD7E14] dark:text-[#FD7E14]"
+      return "text-red-600 dark:text-red-400"
+    }
+    return "text-gray-600 dark:text-gray-400"
+  }
+
+  const getScoreBackgroundClass = (category: "mcet" | "tma" | "vlshare", value: number) => {
+    if (category === "mcet") {
+      if (value >= 4.5) return "bg-gradient-to-r from-green-50/30 to-emerald-50/30 dark:from-green-900/5 dark:to-emerald-900/5 hover:from-green-50/50 hover:to-emerald-50/50"
+      if (value >= 4.0) return "bg-gradient-to-r from-[#FD7E14]/[0.03] to-[#FD7E14]/[0.03] dark:from-[#FD7E14]/5 dark:to-[#FD7E14]/5 hover:from-[#FD7E14]/[0.06] hover:to-[#FD7E14]/[0.06]"
+      return "bg-gradient-to-r from-red-50/50 to-red-100/50 dark:from-red-900/10 dark:to-red-800/10 hover:from-red-50/70 hover:to-red-100/70"
+    } else if (category === "tma") {
+      if (value >= 75) return "bg-gradient-to-r from-green-50/30 to-emerald-50/30 dark:from-green-900/5 dark:to-emerald-900/5 hover:from-green-50/50 hover:to-emerald-50/50"
+      if (value >= 65) return "bg-gradient-to-r from-[#FD7E14]/[0.03] to-[#FD7E14]/[0.03] dark:from-[#FD7E14]/5 dark:to-[#FD7E14]/5 hover:from-[#FD7E14]/[0.06] hover:to-[#FD7E14]/[0.06]"
+      return "bg-gradient-to-r from-red-50/50 to-red-100/50 dark:from-red-900/10 dark:to-red-800/10 hover:from-red-50/70 hover:to-red-100/70"
+    } else if (category === "vlshare") {
+      if (value >= 10) return "bg-gradient-to-r from-green-50/30 to-emerald-50/30 dark:from-green-900/5 dark:to-emerald-900/5 hover:from-green-50/50 hover:to-emerald-50/50"
+      if (value >= 6) return "bg-gradient-to-r from-[#FD7E14]/[0.03] to-[#FD7E14]/[0.03] dark:from-[#FD7E14]/5 dark:to-[#FD7E14]/5 hover:from-[#FD7E14]/[0.06] hover:to-[#FD7E14]/[0.06]"
+      return "bg-gradient-to-r from-red-50/50 to-red-100/50 dark:from-red-900/10 dark:to-red-800/10 hover:from-red-50/70 hover:to-red-100/70"
+    }
+    return "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+  }
 
   // Mystery Shop feedback text
   const mysteryFeedbackText = `Liebe Nicole,
@@ -619,11 +727,18 @@ Mario`
         <div className="relative w-full max-w-md">
           <Card className="w-full shadow-md dark:shadow-slate-900/30 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden relative z-10">
             {/* Header with purple gradient */}
-            <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 text-white relative">
               <h3 className="text-center font-medium text-white flex items-center justify-center">
                 <BarChart2 className="h-4 w-4 mr-2" />
                 {timeFrameLabels[timeFrame]}
               </h3>
+              {/* Leaderboard icon */}
+              <button 
+                onClick={() => setShowLeaderboard(true)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <Trophy className="h-4 w-4 text-white/80 hover:text-white" />
+              </button>
             </div>
             
             <CardContent className="p-0">
@@ -830,8 +945,9 @@ Mario`
                 <div className="text-center">
                   {!feedbackRead ? (
                     <>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20">
-                        <div className="text-white text-xs leading-relaxed text-left whitespace-pre-line">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20 relative">
+                        <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                        <div className="text-white text-xs leading-relaxed text-left whitespace-pre-line relative">
 {`Liebe Ulrike,
 
 ich darf dir heute deine Mai KPIs zukommen lassen.
@@ -1878,6 +1994,199 @@ Liebe Grüße, dein Nespresso Team`}
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Leaderboard Popup */}
+      {showLeaderboard && (
+        <>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowLeaderboard(false)}></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-lg max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 pb-8">
+              {/* Close button */}
+              <button 
+                onClick={() => setShowLeaderboard(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              {/* Header content */}
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  <Trophy className="h-8 w-8" />
+                </div>
+                <h2 className="text-2xl font-bold mb-1">Leaderboard</h2>
+                <p className="text-white/90 text-sm">Vergleiche deine Performance mit anderen</p>
+              </div>
+            </div>
+            
+            {/* Menu Navigation */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="relative flex space-x-2 bg-gray-50 dark:bg-gray-800/50 p-1.5 rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+                {/* Sliding Background Indicator */}
+                <div 
+                  className={`absolute top-1.5 bottom-1.5 bg-white dark:bg-gray-700 shadow-sm border border-gray-200/50 dark:border-gray-600/50 rounded-lg transition-all duration-300 ease-in-out ${
+                    leaderboardCategory === "mcet" 
+                      ? "left-1.5 right-[calc(66.66%+0.25rem)]" 
+                      : leaderboardCategory === "tma"
+                        ? "left-[calc(33.33%+0.25rem)] right-[calc(33.33%+0.25rem)]"
+                        : "left-[calc(66.66%+0.25rem)] right-1.5"
+                  }`}
+                />
+                
+                <button
+                  onClick={() => setLeaderboardCategory("mcet")}
+                  className={`flex-1 rounded-lg transition-all duration-300 font-medium text-sm relative z-10 py-2 px-3 ${
+                    leaderboardCategory === "mcet" 
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent" 
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
+                >
+                  MC/ET
+                </button>
+                <button
+                  onClick={() => setLeaderboardCategory("tma")}
+                  className={`flex-1 rounded-lg transition-all duration-300 font-medium text-sm relative z-10 py-2 px-3 ${
+                    leaderboardCategory === "tma" 
+                      ? "bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent" 
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
+                >
+                  TMA
+                </button>
+                <button
+                  onClick={() => setLeaderboardCategory("vlshare")}
+                  className={`flex-1 rounded-lg transition-all duration-300 font-medium text-sm relative z-10 py-2 px-3 ${
+                    leaderboardCategory === "vlshare" 
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" 
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}
+                >
+                  VL Share
+                </button>
+              </div>
+            </div>
+            
+            {/* Leaderboard Content */}
+            <div className="max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-purple-500/50 hover:scrollbar-thumb-purple-500 leaderboard-scroll-container">
+              <div className="space-y-1 p-4">
+                                 {getSortedLeaderboard().map((user, index) => {
+                   const currentValue = leaderboardCategory === "mcet" ? user.mcet : leaderboardCategory === "tma" ? user.tma : user.vlshare
+                   
+                   return (
+                   <div 
+                     key={user.rank} 
+                     className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
+                       user.isCurrentUser 
+                         ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700"
+                         : user.rank === 1
+                           ? "bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-900/25 dark:to-amber-900/25 hover:from-yellow-200 hover:to-amber-200"
+                           : user.rank === 2
+                             ? "bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-700/30 dark:to-slate-700/30 hover:from-gray-200 hover:to-slate-200"
+                             : user.rank === 3
+                               ? "bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 hover:from-amber-200 hover:to-orange-200"
+                               : getScoreBackgroundClass(leaderboardCategory, currentValue)
+                     }`}
+                   >
+                    {/* Rank and Name */}
+                    <div className="flex items-center space-x-3">
+                      {/* Rank badge */}
+                      <div 
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
+                          user.rank === 1 
+                            ? 'text-white' 
+                            : user.rank === 2 
+                              ? 'text-white'
+                              : user.rank === 3 
+                                ? 'text-white'
+                                : user.isCurrentUser
+                                  ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                        }`}
+                        style={{
+                          background: user.rank === 1 
+                            ? 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)'
+                            : user.rank === 2 
+                              ? 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)'
+                              : user.rank === 3 
+                                ? 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)'
+                                : user.isCurrentUser
+                                  ? undefined
+                                  : undefined
+                        }}
+                      >
+                        {user.rank}
+                      </div>
+                      
+                      {/* Name */}
+                      <div className={`font-medium flex items-center space-x-1 ${
+                        user.isCurrentUser 
+                          ? "text-blue-600 dark:text-blue-400 font-semibold" 
+                          : "text-gray-600 dark:text-gray-400"
+                      }`}>
+                        {user.isCurrentUser ? (
+                          <>
+                            <User className="h-4 w-4" />
+                            <span>Ich</span>
+                          </>
+                        ) : (
+                          <User className={`h-4 w-4 ${
+                            user.rank === 1 
+                              ? "text-[#E0AA3E]"
+                              : user.rank === 2
+                                ? "text-gray-500 dark:text-gray-400"
+                                : user.rank === 3
+                                  ? "text-[#BD965D]"
+                                  : "text-gray-400 dark:text-gray-500"
+                          }`} />
+                        )}
+                      </div>
+                    </div>
+                    
+                                         {/* Score */}
+                     <div className={`font-bold text-lg ${
+                       user.isCurrentUser 
+                         ? "text-blue-600 dark:text-blue-400" 
+                         : user.rank === 1
+                           ? "bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent"
+                           : user.rank === 2
+                             ? "bg-gradient-to-r from-gray-500 via-gray-400 to-slate-500 bg-clip-text text-transparent"
+                             : user.rank === 3
+                               ? "bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 bg-clip-text text-transparent"
+                               : getScoreColorClass(leaderboardCategory, currentValue)
+                     }`}>
+                       {leaderboardCategory === "mcet" 
+                         ? user.mcet.toFixed(1)
+                         : leaderboardCategory === "tma"
+                           ? `${user.tma}%`
+                           : `${user.vlshare}%`
+                       }
+                     </div>
+                  </div>
+                                    )
+                })}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <div className="text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {leaderboardCategory === "mcet" 
+                    ? "MC/ET = Verkäufe von Kaffeemaschinen pro Einsatztag"
+                    : leaderboardCategory === "tma"
+                      ? "TMA = Anteil der Verkäufe mit zusätzlicher Beratung"
+                      : "VL Share = Anteil der Vertuo-Linie Verkäufe"
+                  }
+                </p>
+                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                   Deine Position: <span className="font-medium text-blue-600 dark:text-blue-400">#{getCurrentUserRank()}</span>
+                 </p>
+              </div>
             </div>
           </div>
         </>
