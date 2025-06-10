@@ -48,10 +48,87 @@ export default function AdminDashboard() {
   const [activePromotionsViewMode, setActivePromotionsViewMode] = useState<'list' | 'cards'>('list');
   const [activePromotionsSearch, setActivePromotionsSearch] = useState('');
   const [showOffeneAnfragenModal, setShowOffeneAnfragenModal] = useState(false);
+  const [showActivePromotorenModal, setShowActivePromotorenModal] = useState(false);
+  const [activePromotorenSearch, setActivePromotorenSearch] = useState('');
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [showKpiView, setShowKpiView] = useState(true); // true for CA KPIs, false for Mystery Shop
   const textContainerRef = useRef<HTMLDivElement>(null);
+
+  // CA KPI data - company averages
+  const companyKpis = {
+    mcet: { value: 4.3, change: "+0.2", changePercent: "+4.9%" },
+    tma: { value: 78.5, change: "+1.8", changePercent: "+2.3%" },
+    vlShare: { value: 18.2, change: "-0.4", changePercent: "-2.1%" }
+  };
+
+  // Helper functions for CA KPI colors (same rules as in statistics page)
+  const getKpiColor = (category: "mcet" | "tma" | "vlshare", value: number) => {
+    if (category === "mcet") {
+      if (value >= 4.5) return "text-green-600";
+      if (value >= 4.0) return "text-[#FD7E14]";
+      return "text-red-600";
+    } else if (category === "tma") {
+      if (value >= 75) return "text-green-600";
+      if (value >= 65) return "text-[#FD7E14]";
+      return "text-red-600";
+    } else if (category === "vlshare") {
+      if (value >= 10) return "text-green-600";
+      if (value >= 6) return "text-[#FD7E14]";
+      return "text-red-600";
+    }
+    return "text-gray-600";
+  };
+
+  const getPillColorKpi = (changePercent: string) => {
+    const isPositive = changePercent.startsWith('+');
+    return isPositive 
+      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+
+  // Mystery Shop data
+  const mysteryShopData = {
+    value: 92.4,
+    change: "+1.2%"
+  };
+
+  // Helper function for Mystery Shop colors (same rules as in statistics page)
+  const getMysteryShopColor = (value: number) => {
+    if (value >= 95) return "custom-gold"; // 95-100%: Gold/shiny (100€ premium)
+    if (value >= 90) return "text-green-600"; // 90-94%: Green (50€ premium)
+    if (value >= 80) return "text-[#FD7E14]"; // 80-89%: Orange (no premium)
+    return "text-red-600"; // <80%: Red (bad result)
+  };
+
+  const getMysteryShopStyle = (colorClass: string) => {
+    if (colorClass === "custom-gold") {
+      return {
+        background: 'linear-gradient(to right, #E0AA3E, #F0D96A, #E0AA3E)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text'
+      };
+    }
+    return {};
+  };
+
+  const getPillColorMystery = (changePercent: string) => {
+    const isPositive = changePercent.startsWith('+');
+    return isPositive 
+      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+
+  // Toggle between CA KPIs and Mystery Shop every 7 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowKpiView(prev => !prev);
+    }, 7000);
+
+    return () => clearInterval(interval);
+  }, []);
   
   const fullEddieText = `Guten Tag! Hier ist ein Überblick über die wichtigsten Aufgaben für heute:
 
@@ -75,6 +152,70 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   const pendingRequests = [
     { id: 1, market: "Billa Plus Graz", address: "Herrengasse 10", plz: "8010", city: "Graz", promotor: "Lisa Müller", requestDate: "2024-01-15", planStart: "09:00", planEnd: "17:00", product: "Vertuo" },
     { id: 2, market: "Spar Wien", address: "Kärntner Straße 25", plz: "1010", city: "Wien", promotor: "Max Weber", requestDate: "2024-01-14", planStart: "10:30", planEnd: "18:30", product: "Original" }
+  ];
+
+  // Mock data for active promotors
+  const activePromotors = [
+    { id: 1, name: "Jan Müller", phone: "+43 664 123 4567", email: "jan.mueller@nespresso.at", location: "Wien", status: "aktiv", rating: 4.8, totalEinsaetze: 127 },
+    { id: 2, name: "Sarah Schmidt", phone: "+43 664 234 5678", email: "sarah.schmidt@nespresso.at", location: "Graz", status: "aktiv", rating: 4.9, totalEinsaetze: 98 },
+    { id: 3, name: "Michael Weber", phone: "+43 664 345 6789", email: "michael.weber@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 156 },
+    { id: 4, name: "Lisa König", phone: "+43 664 456 7890", email: "lisa.koenig@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.6, totalEinsaetze: 89 },
+    { id: 5, name: "Thomas Bauer", phone: "+43 664 567 8901", email: "thomas.bauer@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 134 },
+    { id: 6, name: "Anna Steiner", phone: "+43 664 678 9012", email: "anna.steiner@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.5, totalEinsaetze: 67 },
+    { id: 7, name: "Peter Huber", phone: "+43 664 789 0123", email: "peter.huber@nespresso.at", location: "Villach", status: "aktiv", rating: 4.7, totalEinsaetze: 112 },
+    { id: 8, name: "Markus Fischer", phone: "+43 664 890 1234", email: "markus.fischer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 143 },
+    { id: 9, name: "Julia Wagner", phone: "+43 664 901 2345", email: "julia.wagner@nespresso.at", location: "Graz", status: "aktiv", rating: 4.6, totalEinsaetze: 78 },
+    { id: 10, name: "Robert Klein", phone: "+43 664 012 3456", email: "robert.klein@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 167 },
+    { id: 11, name: "Elena Hofer", phone: "+43 664 123 4568", email: "elena.hofer@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 91 },
+    { id: 12, name: "David Moser", phone: "+43 664 234 5679", email: "david.moser@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.5, totalEinsaetze: 105 },
+    { id: 13, name: "Sophie Wimmer", phone: "+43 664 345 6780", email: "sophie.wimmer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 128 },
+    { id: 14, name: "Martin Gruber", phone: "+43 664 456 7891", email: "martin.gruber@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.6, totalEinsaetze: 87 },
+    { id: 15, name: "Christina Pichler", phone: "+43 664 567 8902", email: "christina.pichler@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 119 },
+    { id: 16, name: "Alexander Steiner", phone: "+43 664 678 9013", email: "alexander.steiner@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 145 },
+    { id: 17, name: "Petra Maier", phone: "+43 664 789 0124", email: "petra.maier@nespresso.at", location: "Wien", status: "aktiv", rating: 4.5, totalEinsaetze: 73 },
+    { id: 18, name: "Stefan Berger", phone: "+43 664 890 1235", email: "stefan.berger@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 132 },
+    { id: 19, name: "Nicole Huber", phone: "+43 664 901 2346", email: "nicole.huber@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.6, totalEinsaetze: 96 },
+    { id: 20, name: "Thomas Lechner", phone: "+43 664 012 3457", email: "thomas.lechner@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.7, totalEinsaetze: 111 },
+    { id: 21, name: "Sabine Wolf", phone: "+43 664 123 4569", email: "sabine.wolf@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.9, totalEinsaetze: 158 },
+    { id: 22, name: "Daniel Kraus", phone: "+43 664 234 5680", email: "daniel.kraus@nespresso.at", location: "Villach", status: "aktiv", rating: 4.6, totalEinsaetze: 84 },
+    { id: 23, name: "Andrea Fuchs", phone: "+43 664 345 6781", email: "andrea.fuchs@nespresso.at", location: "Graz", status: "aktiv", rating: 4.8, totalEinsaetze: 137 },
+    { id: 24, name: "Manuel Bauer", phone: "+43 664 456 7892", email: "manuel.bauer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.7, totalEinsaetze: 102 },
+    { id: 25, name: "Vanessa Köhler", phone: "+43 664 567 8903", email: "vanessa.koehler@nespresso.at", location: "Linz", status: "aktiv", rating: 4.5, totalEinsaetze: 79 },
+    { id: 26, name: "Florian Reiter", phone: "+43 664 678 9014", email: "florian.reiter@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.8, totalEinsaetze: 124 },
+    { id: 27, name: "Lisa Mayer", phone: "+43 664 789 0125", email: "lisa.mayer@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.6, totalEinsaetze: 93 },
+    { id: 28, name: "Maximilian Huber", phone: "+43 664 890 1236", email: "max.huber@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 149 },
+    { id: 29, name: "Katharina Braun", phone: "+43 664 901 2347", email: "katharina.braun@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 116 },
+    { id: 30, name: "Wolfgang Schwarz", phone: "+43 664 012 3458", email: "wolfgang.schwarz@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.5, totalEinsaetze: 88 },
+    { id: 31, name: "Melanie Weiß", phone: "+43 664 123 4570", email: "melanie.weiss@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 133 },
+    { id: 32, name: "Patrick Grün", phone: "+43 664 234 5681", email: "patrick.gruen@nespresso.at", location: "Linz", status: "aktiv", rating: 4.6, totalEinsaetze: 107 },
+    { id: 33, name: "Sandra Rot", phone: "+43 664 345 6782", email: "sandra.rot@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 125 },
+    { id: 34, name: "Benjamin Blau", phone: "+43 664 456 7893", email: "benjamin.blau@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.9, totalEinsaetze: 162 },
+    { id: 35, name: "Jessica Gelb", phone: "+43 664 567 8904", email: "jessica.gelb@nespresso.at", location: "Wien", status: "aktiv", rating: 4.5, totalEinsaetze: 71 },
+    { id: 36, name: "Kevin Lila", phone: "+43 664 678 9015", email: "kevin.lila@nespresso.at", location: "Graz", status: "aktiv", rating: 4.8, totalEinsaetze: 139 },
+    { id: 37, name: "Michelle Orange", phone: "+43 664 789 0126", email: "michelle.orange@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.6, totalEinsaetze: 95 },
+    { id: 38, name: "Dominik Rosa", phone: "+43 664 890 1237", email: "dominik.rosa@nespresso.at", location: "Villach", status: "aktiv", rating: 4.7, totalEinsaetze: 118 },
+    { id: 39, name: "Stephanie Grau", phone: "+43 664 901 2348", email: "stephanie.grau@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 142 },
+    { id: 40, name: "Philip Türkis", phone: "+43 664 012 3459", email: "philip.tuerkis@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.5, totalEinsaetze: 86 },
+    { id: 41, name: "Carina Mint", phone: "+43 664 123 4571", email: "carina.mint@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.9, totalEinsaetze: 154 },
+    { id: 42, name: "Oliver Beige", phone: "+43 664 234 5682", email: "oliver.beige@nespresso.at", location: "Wien", status: "aktiv", rating: 4.6, totalEinsaetze: 103 },
+    { id: 43, name: "Tanja Braun", phone: "+43 664 345 6783", email: "tanja.braun@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 121 },
+    { id: 44, name: "Marco Silber", phone: "+43 664 456 7894", email: "marco.silber@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.8, totalEinsaetze: 135 },
+    { id: 45, name: "Franziska Gold", phone: "+43 664 567 8905", email: "franziska.gold@nespresso.at", location: "Villach", status: "aktiv", rating: 4.5, totalEinsaetze: 77 },
+    { id: 46, name: "Tobias Kupfer", phone: "+43 664 678 9016", email: "tobias.kupfer@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 146 },
+    { id: 47, name: "Nadine Bronze", phone: "+43 664 789 0127", email: "nadine.bronze@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.6, totalEinsaetze: 99 },
+    { id: 48, name: "Lukas Platin", phone: "+43 664 890 1238", email: "lukas.platin@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.7, totalEinsaetze: 113 },
+    { id: 49, name: "Simone Kristall", phone: "+43 664 901 2349", email: "simone.kristall@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 167 },
+    { id: 50, name: "Fabian Perl", phone: "+43 664 012 3460", email: "fabian.perl@nespresso.at", location: "Graz", status: "aktiv", rating: 4.5, totalEinsaetze: 82 },
+    { id: 51, name: "Verena Diamant", phone: "+43 664 123 4572", email: "verena.diamant@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.8, totalEinsaetze: 129 },
+    { id: 52, name: "Christian Rubin", phone: "+43 664 234 5683", email: "christian.rubin@nespresso.at", location: "Villach", status: "aktiv", rating: 4.6, totalEinsaetze: 108 },
+    { id: 53, name: "Isabella Saphir", phone: "+43 664 345 6784", email: "isabella.saphir@nespresso.at", location: "Linz", status: "aktiv", rating: 4.7, totalEinsaetze: 122 },
+    { id: 54, name: "Sebastian Smaragd", phone: "+43 664 456 7895", email: "sebastian.smaragd@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.8, totalEinsaetze: 148 },
+    { id: 55, name: "Larisa Topas", phone: "+43 664 567 8906", email: "larisa.topas@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.5, totalEinsaetze: 75 },
+    { id: 56, name: "Moritz Opal", phone: "+43 664 678 9017", email: "moritz.opal@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 156 },
+    { id: 57, name: "Celina Jade", phone: "+43 664 789 0128", email: "celina.jade@nespresso.at", location: "Graz", status: "aktiv", rating: 4.6, totalEinsaetze: 94 },
+    { id: 58, name: "Leon Achat", phone: "+43 664 890 1239", email: "leon.achat@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.7, totalEinsaetze: 117 },
+    { id: 59, name: "Amelie Quarz", phone: "+43 664 901 2350", email: "amelie.quarz@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 141 },
+    { id: 60, name: "Jonas Onyx", phone: "+43 664 012 3461", email: "jonas.onyx@nespresso.at", location: "Linz", status: "aktiv", rating: 4.5, totalEinsaetze: 83 }
   ];
 
   // Mock data for today's Einsätze with actual start/end times
@@ -596,15 +737,15 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           {/* Status Indicators */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card 
-              className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+              className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200 h-20 w-full"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(34, 197, 94, 0.003) 50%, rgba(21, 128, 61, 0.005) 100%)',
                 boxShadow: '0 4px 20px -2px rgba(21, 128, 61, 0.06), 0 2px 8px -1px rgba(34, 197, 94, 0.04), 0 8px 32px -4px rgba(21, 128, 61, 0.03)'
               }}
               onClick={() => setShowActivePromotionsModal(true)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
+              <CardContent className="p-4 h-full">
+                <div className="flex items-center space-x-3 h-full">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                   </div>
@@ -617,15 +758,15 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             </Card>
 
             <Card 
-              className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+              className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200 h-20 w-full"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(251, 146, 60, 0.003) 50%, rgba(234, 88, 12, 0.005) 100%)',
                 boxShadow: '0 4px 20px -2px rgba(234, 88, 12, 0.06), 0 2px 8px -1px rgba(251, 146, 60, 0.04), 0 8px 32px -4px rgba(234, 88, 12, 0.03)'
               }}
               onClick={() => setShowOffeneAnfragenModal(true)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
+              <CardContent className="p-4 h-full">
+                <div className="flex items-center space-x-3 h-full">
                   <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                     <AlertCircle className="h-5 w-5 text-orange-600" />
                   </div>
@@ -638,19 +779,20 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             </Card>
 
             <Card 
-              className="border-0"
+              className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200 h-20 w-full"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(59, 130, 246, 0.003) 50%, rgba(29, 78, 216, 0.005) 100%)',
                 boxShadow: '0 4px 20px -2px rgba(29, 78, 216, 0.06), 0 2px 8px -1px rgba(59, 130, 246, 0.04), 0 8px 32px -4px rgba(29, 78, 216, 0.03)'
               }}
+              onClick={() => setShowActivePromotorenModal(true)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
+              <CardContent className="p-4 h-full">
+                <div className="flex items-center space-x-3 h-full">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                     <Users className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-gray-900">12</p>
+                    <p className="text-2xl font-semibold text-gray-900">{activePromotors.length}</p>
                     <p className="text-xs text-gray-500">Aktive Promotoren</p>
                   </div>
                 </div>
@@ -658,20 +800,79 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             </Card>
 
             <Card 
-              className="border-0"
+              className="border-0 h-20 w-full"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(168, 85, 247, 0.003) 50%, rgba(126, 34, 206, 0.005) 100%)',
                 boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
               }}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-3">
+              <CardContent className="p-4 h-full">
+                <div className="flex items-center space-x-3 h-full">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-semibold text-gray-900">+15%</p>
-                    <p className="text-xs text-gray-500">Wochenwachstum</p>
+                  <div className="flex-1">
+                    {showKpiView ? (
+                      // CA KPIs View - Compact 3-column layout
+                      <div className="w-full">
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          {/* MC/ET Column */}
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-medium text-gray-600">MC/ET</span>
+                            <span className={`text-sm font-semibold ${getKpiColor("mcet", companyKpis.mcet.value)}`}>
+                              {companyKpis.mcet.value}
+                            </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.mcet.changePercent)}`}>
+                              {companyKpis.mcet.changePercent}
+                            </span>
+                          </div>
+                          {/* TMA Column */}
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-medium text-gray-600">TMA</span>
+                            <span className={`text-sm font-semibold ${getKpiColor("tma", companyKpis.tma.value)}`}>
+                              {companyKpis.tma.value}%
+                            </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.tma.changePercent)}`}>
+                              {companyKpis.tma.changePercent}
+                            </span>
+                          </div>
+                          {/* VL Share Column */}
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-medium text-gray-600">VL Share</span>
+                            <span className={`text-sm font-semibold ${getKpiColor("vlshare", companyKpis.vlShare.value)}`}>
+                              {companyKpis.vlShare.value}%
+                            </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.vlShare.changePercent)}`}>
+                              {companyKpis.vlShare.changePercent}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Mystery Shop View
+                      <div className="flex flex-col items-start space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span 
+                            className={`text-2xl font-semibold ${
+                              getMysteryShopColor(mysteryShopData.value) !== "custom-gold" && 
+                              getMysteryShopColor(mysteryShopData.value) !== "text-[#FD7E14]" 
+                                ? getMysteryShopColor(mysteryShopData.value) 
+                                : ""
+                            }`}
+                            style={{
+                              ...getMysteryShopStyle(getMysteryShopColor(mysteryShopData.value)),
+                              ...(getMysteryShopColor(mysteryShopData.value) === "text-[#FD7E14]" ? { color: "#FD7E14" } : {})
+                            }}
+                          >
+                            {mysteryShopData.value}%
+                          </span>
+                          <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none ${getPillColorMystery(mysteryShopData.change)}`}>
+                            {mysteryShopData.change}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">Mystery Shop Ø</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -1096,6 +1297,93 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Active Promotoren Modal */}
+      {showActivePromotorenModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card 
+            className="w-full max-w-6xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, rgba(59, 130, 246, 0.003) 50%, rgba(29, 78, 216, 0.005) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(29, 78, 216, 0.06), 0 2px 8px -1px rgba(59, 130, 246, 0.04), 0 8px 32px -4px rgba(29, 78, 216, 0.03)'
+            }}
+          >
+            <CardHeader className="pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-gray-900">Aktive Promotoren</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">
+                      {activePromotors.length} aktive Teammitglieder
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    placeholder="Promotor suchen..."
+                    value={activePromotorenSearch}
+                    onChange={(e) => setActivePromotorenSearch(e.target.value)}
+                    className="px-3 py-1.5 text-sm border-0 bg-white/60 rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
+                    style={{ opacity: 0.7 }}
+                  />
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowActivePromotorenModal(false)}
+                      className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent 
+              className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
+              style={{ 
+                backdropFilter: 'none',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              <div className="grid grid-cols-4 gap-4">
+                {activePromotors
+                  .filter(promotor => promotor.name.toLowerCase().includes(activePromotorenSearch.toLowerCase()))
+                  .map((promotor) => (
+                  <div 
+                    key={promotor.id} 
+                    className="p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-gradient-to-br from-blue-50/20 to-white/60"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">{promotor.name}</h4>
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs text-gray-600">{promotor.phone}</p>
+                        <p className="text-xs text-gray-600 truncate">{promotor.email}</p>
+                        <p className="text-xs text-gray-600">{promotor.location}</p>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-xs text-yellow-600">★</span>
+                          <span className="text-xs text-gray-600">{promotor.rating}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
