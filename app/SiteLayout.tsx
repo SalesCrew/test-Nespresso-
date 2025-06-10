@@ -386,7 +386,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "home" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/")}
+              onClick={() => handleNavigation("/dashboard")}
             >
               <Home className="h-6 w-6" />
             </Button>

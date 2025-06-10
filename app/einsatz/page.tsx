@@ -1717,7 +1717,7 @@ export default function EinsatzPage() {
                   onClick={handleEarlyEndSubmit}
                   disabled={!earlyEndReason.trim()}
                   className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
+            >
                   Einsatz beenden
                 </Button>
               </div>

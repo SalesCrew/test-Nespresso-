@@ -21,13 +21,13 @@ import {
   X
 } from "lucide-react"
 
-interface OnboardingModalProps {
+interface SimpleOnboardingModalProps {
   isOpen: boolean
   onComplete: (data: any) => void
   onClose?: () => void
 }
 
-export default function OnboardingModal({ isOpen, onComplete, onClose }: OnboardingModalProps) {
+export default function SimpleOnboardingModal({ isOpen, onComplete, onClose }: SimpleOnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
   const [formData, setFormData] = useState({
@@ -36,53 +36,49 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
     lastName: "",
     title: "",
     
-    // Step 2: Gender
-    gender: "",
-    pronouns: "",
-    
-    // Step 3: Address
+    // Step 2: Address
     address: "",
     postalCode: "",
     city: "",
     
-    // Step 4: Contact
+    // Step 3: Contact
     phone: "",
     email: "",
     
-    // Step 5: Registration Data
+    // Step 4: Registration Data
     socialSecurityNumber: "",
     birthDate: "",
     citizenship: "",
     workPermit: null as boolean | null,
     
-    // Step 6: Car
+    // Step 5: Car
     drivingLicense: null as boolean | null,
     carAvailable: null as boolean | null,
     willingToDrive: null as boolean | null,
     
-    // Step 7: Body & Clothing
+    // Step 6: Body & Clothing
     clothingSize: "",
     height: "",
     
-    // Step 8: Education
+    // Step 7: Education
     education: "",
     qualifications: "",
     currentJob: "",
     
-    // Step 9: Spontaneity
+    // Step 8: Spontaneity
     spontaneity: "",
     
-    // Step 10: Region
+    // Step 9: Region
     preferredRegion: "",
     
-    // Step 11: Working Days
+    // Step 10: Working Days
     workingDays: [] as string[],
     
-    // Step 12: Hours
+    // Step 11: Hours
     hoursPerWeek: ""
   })
 
-  const totalSteps = 12
+  const totalSteps = 11
   const progress = (currentStep / totalSteps) * 100
 
   const isNonSchengenCountry = (citizenship: string) => {
@@ -103,8 +99,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   }
 
   const handleNext = () => {
-    if (currentStep === 5 && shouldShowWorkPermit() && formData.workPermit === null) {
-      // Stay on step 5 until work permit is answered
+    if (currentStep === 4 && shouldShowWorkPermit() && formData.workPermit === null) {
+      // Stay on step 4 until work permit is answered
       return
     }
     
@@ -114,7 +110,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       setIsCompleted(true)
       setTimeout(() => {
         onComplete(formData)
-      }, 5000) // Show animation for 5 seconds before completing
+      }, 2000) // Show simple completion message for 2 seconds
     }
   }
 
@@ -142,33 +138,28 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       case 1:
         return formData.firstName && formData.lastName
       case 2:
-        if (formData.gender === "divers") {
-          return formData.gender && formData.pronouns
-        }
-        return formData.gender
-      case 3:
         return formData.address && formData.postalCode && formData.city
-      case 4:
+      case 3:
         return formData.phone && formData.email
-      case 5:
+      case 4:
         const basicData = formData.socialSecurityNumber && formData.birthDate && formData.citizenship
         if (shouldShowWorkPermit()) {
           return basicData && formData.workPermit !== null
         }
         return basicData
-      case 6:
+      case 5:
         return formData.drivingLicense !== null && formData.carAvailable !== null && formData.willingToDrive !== null
-      case 7:
+      case 6:
         return formData.clothingSize && formData.height
-      case 8:
+      case 7:
         return formData.education
-      case 9:
+      case 8:
         return formData.spontaneity
-      case 10:
+      case 9:
         return formData.preferredRegion
-      case 11:
+      case 10:
         return formData.workingDays.length > 0
-      case 12:
+      case 11:
         return formData.hoursPerWeek
       default:
         return true
@@ -211,67 +202,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
-              <User className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Geschlecht</h2>
-            </div>
-            <div className="space-y-4">
-              <p className="text-sm font-medium mb-3">Wie möchtest du angesprochen werden?</p>
-              <div className="grid grid-cols-1 gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => updateFormData("gender", "männlich")}
-                  className={`w-full ${
-                    formData.gender === "männlich" 
-                      ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500" 
-                      : "hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
-                  }`}
-                >
-                  Männlich
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => updateFormData("gender", "weiblich")}
-                  className={`w-full ${
-                    formData.gender === "weiblich" 
-                      ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500" 
-                      : "hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
-                  }`}
-                >
-                  Weiblich
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => updateFormData("gender", "divers")}
-                  className={`w-full ${
-                    formData.gender === "divers" 
-                      ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500" 
-                      : "hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20"
-                  }`}
-                >
-                  Divers
-                </Button>
-              </div>
-              
-              {formData.gender === "divers" && (
-                <div className="mt-4">
-                  <Input
-                    placeholder="Pronomen (z.B. sie/ihr, er/ihn, they/them)"
-                    value={formData.pronouns}
-                    onChange={(e) => updateFormData("pronouns", e.target.value)}
-                    className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )
-
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center mb-6">
               <MapPin className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Adresse</h2>
+              <h2 className="text-xl font-semibold">Wo wohnst du?</h2>
             </div>
             <div className="space-y-4">
               <Input
@@ -280,7 +212,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 onChange={(e) => updateFormData("address", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Input
                   placeholder="PLZ"
                   value={formData.postalCode}
@@ -288,7 +220,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
                 />
                 <Input
-                  placeholder="Ort"
+                  placeholder="Stadt"
                   value={formData.city}
                   onChange={(e) => updateFormData("city", e.target.value)}
                   className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
@@ -298,17 +230,16 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
               <Phone className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Kontaktdaten</h2>
+              <h2 className="text-xl font-semibold">Wie erreichen wir dich?</h2>
             </div>
             <div className="space-y-4">
               <Input
                 placeholder="Telefonnummer"
-                type="tel"
                 value={formData.phone}
                 onChange={(e) => updateFormData("phone", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
@@ -324,16 +255,16 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
               <FileText className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Anmeldungsdaten</h2>
+              <h2 className="text-xl font-semibold">Zur Anmeldung</h2>
             </div>
             <div className="space-y-4">
               <Input
-                placeholder="SV-Nummer"
+                placeholder="Sozialversicherungsnummer"
                 value={formData.socialSecurityNumber}
                 onChange={(e) => updateFormData("socialSecurityNumber", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
@@ -352,20 +283,28 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               />
               
               {shouldShowWorkPermit() && (
-                <div className="mt-6">
-                  <p className="text-sm font-medium mb-3">Arbeitsbewilligung vorhanden?</p>
-                  <div className="flex gap-3">
+                <div>
+                  <p className="text-sm font-medium mb-3">Hast du eine gültige Arbeitserlaubnis für Österreich?</p>
+                  <div className="grid grid-cols-2 gap-3">
                     <Button
-                      variant={formData.workPermit === true ? "default" : "outline"}
+                      variant="outline"
                       onClick={() => updateFormData("workPermit", true)}
-                      className="flex-1"
+                      className={`${
+                        formData.workPermit === true 
+                          ? "bg-green-500 hover:bg-green-600 text-white border-green-500" 
+                          : "hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/20"
+                      }`}
                     >
                       Ja
                     </Button>
                     <Button
-                      variant={formData.workPermit === false ? "default" : "outline"}
+                      variant="outline"
                       onClick={() => updateFormData("workPermit", false)}
-                      className="flex-1"
+                      className={`${
+                        formData.workPermit === false 
+                          ? "bg-red-500 hover:bg-red-600 text-white border-red-500" 
+                          : "hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/20"
+                      }`}
                     >
                       Nein
                     </Button>
@@ -376,29 +315,36 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 6:
+      case 5:
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center mb-6">
               <Car className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Auto</h2>
+              <h2 className="text-xl font-semibold">Auto & Mobilität</h2>
             </div>
-            
             <div className="space-y-6">
               <div>
-                <p className="text-sm font-medium mb-3">Führerschein vorhanden?</p>
-                <div className="flex gap-3">
+                <p className="text-sm font-medium mb-3">Hast du einen Führerschein?</p>
+                <div className="grid grid-cols-2 gap-3">
                   <Button
-                    variant={formData.drivingLicense === true ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("drivingLicense", true)}
-                    className="flex-1"
+                    className={`${
+                      formData.drivingLicense === true 
+                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500" 
+                        : "hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/20"
+                    }`}
                   >
                     Ja
                   </Button>
                   <Button
-                    variant={formData.drivingLicense === false ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("drivingLicense", false)}
-                    className="flex-1"
+                    className={`${
+                      formData.drivingLicense === false 
+                        ? "bg-red-500 hover:bg-red-600 text-white border-red-500" 
+                        : "hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/20"
+                    }`}
                   >
                     Nein
                   </Button>
@@ -406,19 +352,27 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               </div>
 
               <div>
-                <p className="text-sm font-medium mb-3">Auto vorhanden?</p>
-                <div className="flex gap-3">
+                <p className="text-sm font-medium mb-3">Steht dir ein Auto zur Verfügung?</p>
+                <div className="grid grid-cols-2 gap-3">
                   <Button
-                    variant={formData.carAvailable === true ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("carAvailable", true)}
-                    className="flex-1"
+                    className={`${
+                      formData.carAvailable === true 
+                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500" 
+                        : "hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/20"
+                    }`}
                   >
                     Ja
                   </Button>
                   <Button
-                    variant={formData.carAvailable === false ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("carAvailable", false)}
-                    className="flex-1"
+                    className={`${
+                      formData.carAvailable === false 
+                        ? "bg-red-500 hover:bg-red-600 text-white border-red-500" 
+                        : "hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/20"
+                    }`}
                   >
                     Nein
                   </Button>
@@ -426,19 +380,27 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               </div>
 
               <div>
-                <p className="text-sm font-medium mb-3">Bereitschaft zu fahren?</p>
-                <div className="flex gap-3">
+                <p className="text-sm font-medium mb-3">Bist du bereit, zu Einsätzen zu fahren?</p>
+                <div className="grid grid-cols-2 gap-3">
                   <Button
-                    variant={formData.willingToDrive === true ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("willingToDrive", true)}
-                    className="flex-1"
+                    className={`${
+                      formData.willingToDrive === true 
+                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500" 
+                        : "hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/20"
+                    }`}
                   >
                     Ja
                   </Button>
                   <Button
-                    variant={formData.willingToDrive === false ? "default" : "outline"}
+                    variant="outline"
                     onClick={() => updateFormData("willingToDrive", false)}
-                    className="flex-1"
+                    className={`${
+                      formData.willingToDrive === false 
+                        ? "bg-red-500 hover:bg-red-600 text-white border-red-500" 
+                        : "hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/20"
+                    }`}
                   >
                     Nein
                   </Button>
@@ -448,25 +410,54 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 7:
+      case 6:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
               <Ruler className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Körper und Kleidungsgröße</h2>
+              <h2 className="text-xl font-semibold">Körper & Kleidung</h2>
             </div>
             <div className="space-y-4">
               <Input
-                placeholder="Kleidergröße (z.B. S, M, L, XL oder 38, 40, 42...)"
+                placeholder="Kleidergröße (z.B. M, L, XL)"
                 value={formData.clothingSize}
                 onChange={(e) => updateFormData("clothingSize", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
-                placeholder="Körpergröße (in cm)"
-                type="number"
+                placeholder="Körpergröße in cm"
                 value={formData.height}
                 onChange={(e) => updateFormData("height", e.target.value)}
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
+              />
+            </div>
+          </div>
+        )
+
+      case 7:
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center mb-6">
+              <GraduationCap className="h-6 w-6 text-blue-500 mr-3" />
+              <h2 className="text-xl font-semibold">Bildung & Erfahrung</h2>
+            </div>
+            <div className="space-y-4">
+              <Input
+                placeholder="Höchste Ausbildung"
+                value={formData.education}
+                onChange={(e) => updateFormData("education", e.target.value)}
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
+              />
+              <Input
+                placeholder="Weitere Qualifikationen (optional)"
+                value={formData.qualifications}
+                onChange={(e) => updateFormData("qualifications", e.target.value)}
+                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
+              />
+              <Input
+                placeholder="Aktueller Job/Beruf (optional)"
+                value={formData.currentJob}
+                onChange={(e) => updateFormData("currentJob", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
             </div>
@@ -477,66 +468,47 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
-              <GraduationCap className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Schulische Ausbildung</h2>
-            </div>
-            <div className="space-y-4">
-              <Input
-                placeholder="Höchste abgeschlossene Schulausbildung"
-                value={formData.education}
-                onChange={(e) => updateFormData("education", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
-              <Input
-                placeholder="Zusatzqualifikationen (optional)"
-                value={formData.qualifications}
-                onChange={(e) => updateFormData("qualifications", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
-              <Input
-                placeholder="Derzeitige Beschäftigung (optional)"
-                value={formData.currentJob}
-                onChange={(e) => updateFormData("currentJob", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
-            </div>
-          </div>
-        )
-
-      case 9:
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center mb-6">
               <Clock className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Spontanität</h2>
+              <h2 className="text-xl font-semibold">Spontaneität</h2>
             </div>
             <div className="space-y-4">
-              <p className="text-sm font-medium mb-3">Wie oft kannst du spontan für Einsätze einspringen?</p>
-              <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium mb-3">Wie spontan kannst du Einsätze übernehmen?</p>
+              <div className="grid grid-cols-1 gap-3">
                 <Button
-                  variant={formData.spontaneity === "oft" ? "default" : "outline"}
-                  onClick={() => updateFormData("spontaneity", "oft")}
+                  variant="outline"
+                  onClick={() => updateFormData("spontaneity", "sehr")}
                   className={`w-full ${
-                    formData.spontaneity === "oft" 
+                    formData.spontaneity === "sehr" 
                       ? "bg-green-500 hover:bg-green-600 text-white border-green-500" 
                       : "hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/20"
                   }`}
                 >
-                  Oft
+                  Sehr spontan (gleicher Tag)
                 </Button>
                 <Button
-                  variant={formData.spontaneity === "selten" ? "default" : "outline"}
-                  onClick={() => updateFormData("spontaneity", "selten")}
+                  variant="outline"
+                  onClick={() => updateFormData("spontaneity", "mittel")}
                   className={`w-full ${
-                    formData.spontaneity === "selten" 
+                    formData.spontaneity === "mittel" 
+                      ? "bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500" 
+                      : "hover:bg-yellow-50 hover:border-yellow-200 dark:hover:bg-yellow-900/20"
+                  }`}
+                >
+                  Mittel (1-2 Tage Vorlauf)
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => updateFormData("spontaneity", "wenig")}
+                  className={`w-full ${
+                    formData.spontaneity === "wenig" 
                       ? "bg-orange-500 hover:bg-orange-600 text-white border-orange-500" 
                       : "hover:bg-orange-50 hover:border-orange-200 dark:hover:bg-orange-900/20"
                   }`}
                 >
-                  Selten
+                  Wenig (1 Woche Vorlauf)
                 </Button>
                 <Button
-                  variant={formData.spontaneity === "nie" ? "default" : "outline"}
+                  variant="outline"
                   onClick={() => updateFormData("spontaneity", "nie")}
                   className={`w-full ${
                     formData.spontaneity === "nie" 
@@ -551,7 +523,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 10:
+      case 9:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
@@ -569,7 +541,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 11:
+      case 10:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
@@ -594,7 +566,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
-      case 12:
+      case 11:
         return (
           <div className="space-y-4">
             <div className="flex items-center mb-6">
@@ -623,25 +595,27 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Dark overlay */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" 
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       
       {/* Modal */}
-              <Card 
-          className="relative w-full max-w-md mx-4 border-none shadow-2xl bg-white dark:bg-gray-900"
-          onClick={(e) => e.stopPropagation()}
-        >
-
+      <Card className="relative w-full max-w-md mx-4 border-none shadow-2xl bg-white dark:bg-gray-900">
+        {/* Close Button */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 p-1 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+          >
+            <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          </button>
+        )}
+        
         {isCompleted ? (
-          /* Completion Animation */
+          /* Simple Completion Message */
           <div className="p-8 text-center">
             <div className="mb-6">
-              {/* Animated checkmark */}
-              <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
                 <svg 
-                  className="w-10 h-10 text-white animate-pulse" 
+                  className="w-10 h-10 text-white" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -657,22 +631,11 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
             </div>
             
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 animate-fade-in">
-                Du bist einen Schritt näher dem Team beizutreten! 🎉
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Bewerbung eingereicht! 🎉
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 animate-fade-in-delay">
-                Das Team meldet sich bei dir, sobald alle Daten ausgewertet wurden.
-              </p>
-              
-              {/* Loading dots */}
-              <div className="flex justify-center space-x-2 mt-6">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
-              
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                Vielen Dank für dein Interesse!
+              <p className="text-gray-600 dark:text-gray-400">
+                Vielen Dank für dein Interesse. Wir melden uns bald bei dir!
               </p>
             </div>
           </div>
@@ -682,7 +645,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
             <CardHeader className="pb-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Willkommen bei SalesCrew</CardTitle>
+                  <CardTitle className="text-lg">Werde Promotor</CardTitle>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {currentStep}/{totalSteps}
                   </span>
@@ -716,22 +679,6 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </>
         )}
       </Card>
-      
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-        
-        .animate-fade-in-delay {
-          animation: fade-in 0.6s ease-out 0.3s both;
-        }
-      `}</style>
     </div>
   )
 } 
