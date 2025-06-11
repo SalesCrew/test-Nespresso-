@@ -23,6 +23,14 @@ import {
   Menu,
   LayoutList,
   LayoutGrid,
+  Trophy,
+  MessageCircle,
+  UserPlus,
+  CheckSquare,
+  Check,
+  Wand2,
+  Sparkles,
+  Edit3,
 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +38,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -55,13 +64,372 @@ export default function AdminDashboard() {
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [showKpiView, setShowKpiView] = useState(true); // true for CA KPIs, false for Mystery Shop
   const textContainerRef = useRef<HTMLDivElement>(null);
+  
+  // KPI Popup state
+  const [showKpiPopup, setShowKpiPopup] = useState(false);
+  const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
+  
+  // Promotor Selection states
+  const [showPromotorSelection, setShowPromotorSelection] = useState(false);
+  const [selectedPromotors, setSelectedPromotors] = useState<string[]>([]);
+  const [activeRegionFilter, setActiveRegionFilter] = useState<string>("all");
+  const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
+  const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
+  
+  // Message enhancement states
+  const [messageText, setMessageText] = useState("");
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  
+  // Scheduling states
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
+  const [scheduledMessages, setScheduledMessages] = useState(() => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    const getNextWeekday = (day: number) => {
+      const date = new Date(today);
+      const diff = (day + 7 - date.getDay()) % 7;
+      date.setDate(date.getDate() + (diff === 0 ? 7 : diff));
+      return date;
+    };
+    
+    return [
+      { id: 1, preview: "Wichtiger Termin morgen um 9:00 Uhr...", fullText: "Wichtiger Termin morgen um 9:00 Uhr in der Zentrale. Bitte pünktlich erscheinen.", time: "09:00", date: "Morgen", dateISO: tomorrow.toISOString().split('T')[0], recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber", "Jan Müller"] },
+      { id: 2, preview: "Neue Produktschulung verfügbar...", fullText: "Neue Produktschulung verfügbar für alle Mitarbeiter. Online-Zugang ist freigeschaltet.", time: "14:30", date: "Heute", dateISO: today.toISOString().split('T')[0], recipients: "5 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer", "Maria Huber", "David Klein"] },
+      { id: 3, preview: "Bitte Arbeitszeiten bestätigen...", fullText: "Bitte Arbeitszeiten für diese Woche bis Freitag bestätigen.", time: "16:00", date: "Freitag", dateISO: getNextWeekday(5).toISOString().split('T')[0], recipients: "Region Nord", promotors: ["Emma Wagner", "Paul Berger"] },
+      { id: 4, preview: "Verkaufszahlen für diese Woche...", fullText: "Verkaufszahlen für diese Woche sind sehr gut ausgefallen.", time: "10:00", date: "Montag", dateISO: getNextWeekday(1).toISOString().split('T')[0], recipients: "Team Leads", promotors: ["Julia Mayer", "Felix Gruber", "Sophie Reiter"] },
+      { id: 5, preview: "Neue Sicherheitsrichtlinien beachten...", fullText: "Neue Sicherheitsrichtlinien beachten und umsetzen.", time: "13:00", date: "Dienstag", dateISO: getNextWeekday(2).toISOString().split('T')[0], recipients: "Alle", promotors: ["Max Köhler", "Lena Fuchs", "Klaus Müller", "Sandra Hofer"] },
+      { id: 6, preview: "Monatliche Teambesprech­ung...", fullText: "Monatliche Teambesprechung findet wie geplant statt.", time: "15:30", date: "Mittwoch", dateISO: getNextWeekday(3).toISOString().split('T')[0], recipients: "8 Promotoren", promotors: ["Martin Schneider", "Nina Weiss", "Patrick Schwarz", "Andrea Roth", "Florian Braun", "Jessica Grün", "Daniel Gelb", "Sabrina Blau"] }
+    ];
+  });
+  
+  // Message detail popup states
+  const [showMessageDetail, setShowMessageDetail] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
+  const [editedMessageText, setEditedMessageText] = useState("");
+  const [editedDate, setEditedDate] = useState("");
+  const [editedTime, setEditedTime] = useState("");
 
-  // CA KPI data - company averages
-  const companyKpis = {
-    mcet: { value: 4.3, change: "+0.2", changePercent: "+4.9%" },
-    tma: { value: 78.5, change: "+1.8", changePercent: "+2.3%" },
-    vlShare: { value: 18.2, change: "-0.4", changePercent: "-2.1%" }
+  // Function to select all filtered promotors
+  const selectAllFiltered = () => {
+    const allPromotors = [
+      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+      { name: "Michael Weber", region: "steiermark" },
+      { name: "Jan Müller", region: "salzburg" },
+      { name: "Lisa König", region: "wien-noe-bgl" },
+      { name: "Anna Bauer", region: "oberoesterreich" },
+      { name: "Tom Fischer", region: "tirol" },
+      { name: "Maria Huber", region: "steiermark" },
+      { name: "David Klein", region: "vorarlberg" },
+      { name: "Emma Wagner", region: "kaernten" },
+      { name: "Paul Berger", region: "wien-noe-bgl" },
+      { name: "Julia Mayer", region: "salzburg" },
+      { name: "Felix Gruber", region: "oberoesterreich" },
+      { name: "Sophie Reiter", region: "steiermark" },
+      { name: "Max Köhler", region: "tirol" },
+      { name: "Lena Fuchs", region: "vorarlberg" },
+      { name: "Klaus Müller", region: "wien-noe-bgl" },
+      { name: "Sandra Hofer", region: "steiermark" },
+      { name: "Martin Schneider", region: "salzburg" },
+      { name: "Nina Weiss", region: "oberoesterreich" },
+      { name: "Patrick Schwarz", region: "tirol" },
+      { name: "Andrea Roth", region: "vorarlberg" },
+      { name: "Florian Braun", region: "kaernten" },
+      { name: "Jessica Grün", region: "wien-noe-bgl" },
+      { name: "Daniel Gelb", region: "steiermark" },
+      { name: "Sabrina Blau", region: "salzburg" },
+      { name: "Thomas Orange", region: "oberoesterreich" },
+      { name: "Melanie Violett", region: "tirol" },
+      { name: "Christian Rosa", region: "vorarlberg" },
+      { name: "Vanessa Grau", region: "kaernten" },
+      { name: "Marco Silber", region: "wien-noe-bgl" },
+      { name: "Tanja Gold", region: "steiermark" },
+      { name: "Oliver Bronze", region: "salzburg" },
+      { name: "Carina Kupfer", region: "oberoesterreich" },
+      { name: "Lukas Platin", region: "tirol" },
+      { name: "Stephanie Kristall", region: "vorarlberg" },
+      { name: "Benjamin Diamant", region: "kaernten" },
+      { name: "Michelle Rubin", region: "wien-noe-bgl" },
+      { name: "Tobias Saphir", region: "steiermark" },
+      { name: "Nadine Smaragd", region: "salzburg" },
+      { name: "Kevin Topas", region: "oberoesterreich" },
+      { name: "Franziska Opal", region: "tirol" },
+      { name: "Dominik Achat", region: "vorarlberg" },
+      { name: "Simone Jade", region: "kaernten" },
+      { name: "Philip Onyx", region: "wien-noe-bgl" },
+      { name: "Verena Quarz", region: "steiermark" },
+      { name: "Fabian Marmor", region: "salzburg" },
+      { name: "Isabella Granit", region: "oberoesterreich" },
+      { name: "Maximilian Schiefer", region: "tirol" },
+      { name: "Katharina Basalt", region: "vorarlberg" },
+      { name: "Wolfgang Kalk", region: "kaernten" },
+      { name: "Elena Ton", region: "wien-noe-bgl" },
+      { name: "Robert Sand", region: "steiermark" },
+      { name: "Nicole Lehm", region: "salzburg" },
+      { name: "Stefan Kies", region: "oberoesterreich" },
+      { name: "Petra Fels", region: "tirol" },
+      { name: "Alexander Stein", region: "vorarlberg" },
+      { name: "Christina Berg", region: "kaernten" },
+      { name: "Manuel Tal", region: "wien-noe-bgl" },
+      { name: "Andrea Bach", region: "steiermark" },
+      { name: "Daniel See", region: "salzburg" },
+      { name: "Sabine Meer", region: "oberoesterreich" },
+      { name: "Thomas Ozean", region: "tirol" }
+    ];
+
+         const filteredNames = allPromotors
+       .filter(promotor => 
+         (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+         promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+       )
+       .map(promotor => promotor.name);
+     
+     // Check if we should deselect (if all filtered items are currently selected and match last selection)
+     const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
+     const matchesLastSelection = lastSelectedByIcon.length > 0 && 
+       filteredNames.every(name => lastSelectedByIcon.includes(name)) &&
+       lastSelectedByIcon.every(name => filteredNames.includes(name));
+     
+     if (allFilteredSelected && matchesLastSelection) {
+       // Deselect the ones that were selected by this icon
+       setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
+       setLastSelectedByIcon([]);
+     } else {
+       // Select all filtered
+       setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
+       setLastSelectedByIcon(filteredNames);
+     }
+      };
+
+  // Function to enhance message with AI
+  const enhanceMessage = async () => {
+    if (!messageText.trim() || isEnhancing) return;
+    
+    setIsEnhancing(true);
+    
+    try {
+      // Simulate API call to ChatGPT for text enhancement
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock enhanced text (in real implementation, this would be the ChatGPT response)
+      const enhancedText = messageText
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split('. ')
+        .map(sentence => sentence.charAt(0).toUpperCase() + sentence.slice(1))
+        .join('. ');
+      
+      setMessageText(enhancedText);
+    } catch (error) {
+      console.error('Error enhancing text:', error);
+    } finally {
+      setIsEnhancing(false);
+    }
   };
+
+  // Function to handle message scheduling
+  const handleScheduleMessage = () => {
+    if (!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0) return;
+    
+    // Create new scheduled message
+    const newMessage = {
+      id: Date.now(), // Simple ID generation
+      preview: messageText.substring(0, 50) + (messageText.length > 50 ? "..." : ""),
+      fullText: messageText,
+      time: scheduleTime,
+      date: new Date(scheduleDate).toLocaleDateString('de-DE', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'short' 
+      }),
+      dateISO: scheduleDate, // Store original date for sorting
+      recipients: selectedPromotors.length === 1 
+        ? selectedPromotors[0] 
+        : `${selectedPromotors.length} Promotoren`,
+      promotors: [...selectedPromotors]
+    };
+    
+    // Add to scheduled messages
+    setScheduledMessages(prev => [...prev, newMessage]);
+    
+    // Reset form
+    setMessageText("");
+    setScheduleDate("");
+    setScheduleTime("");
+    setShowScheduleModal(false);
+  };
+
+  // Function to handle message detail view
+  const handleMessageClick = (message: any) => {
+    setSelectedMessage(message);
+    setEditedMessageText(message.fullText);
+    setEditedDate(message.dateISO || message.date); // Use ISO date for editing
+    setEditedTime(message.time);
+    setIsEditingMessage(false);
+    setShowMessageDetail(true);
+  };
+
+  // Function to save edited message
+  const handleSaveMessage = () => {
+    if (!selectedMessage || !editedMessageText.trim()) return;
+    
+    setScheduledMessages(prev => 
+      prev.map(msg => 
+        msg.id === selectedMessage.id 
+          ? { 
+              ...msg, 
+              fullText: editedMessageText,
+              preview: editedMessageText.substring(0, 50) + (editedMessageText.length > 50 ? "..." : ""),
+              date: new Date(editedDate).toLocaleDateString('de-DE', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'short' 
+              }),
+              dateISO: editedDate,
+              time: editedTime
+            }
+          : msg
+      )
+    );
+    
+    setIsEditingMessage(false);
+    setShowMessageDetail(false);
+  };
+  
+  // Region gradient helper
+  const getRegionGradient = (region: string) => {
+    switch (region) {
+      case "wien-noe-bgl":
+        return "bg-gradient-to-r from-rose-100 to-transparent";
+      case "steiermark":
+        return "bg-gradient-to-r from-green-100 to-transparent";
+      case "salzburg":
+        return "bg-gradient-to-r from-sky-100 to-transparent";
+      case "oberoesterreich":
+        return "bg-gradient-to-r from-yellow-100 to-transparent";
+      case "tirol":
+        return "bg-gradient-to-r from-purple-100 to-transparent";
+      case "vorarlberg":
+        return "bg-gradient-to-r from-orange-100 to-transparent";
+      case "kaernten":
+        return "bg-gradient-to-r from-teal-100 to-transparent";
+      default:
+        return "bg-gray-100/70";
+    }
+  };
+
+  // Region border helper
+  const getRegionBorder = (region: string) => {
+    switch (region) {
+      case "wien-noe-bgl":
+        return "border-rose-200";
+      case "steiermark":
+        return "border-green-200";
+      case "salzburg":
+        return "border-sky-200";
+      case "oberoesterreich":
+        return "border-yellow-200";
+      case "tirol":
+        return "border-purple-200";
+      case "vorarlberg":
+        return "border-orange-200";
+      case "kaernten":
+        return "border-teal-200";
+      default:
+        return "border-gray-200";
+    }
+  };
+
+  // Get promotor region
+  const getPromotorRegion = (promotorName: string) => {
+    const allPromotors = [
+      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+      { name: "Michael Weber", region: "steiermark" },
+      { name: "Jan Müller", region: "salzburg" },
+      { name: "Lisa König", region: "wien-noe-bgl" },
+      { name: "Anna Bauer", region: "oberoesterreich" },
+      { name: "Tom Fischer", region: "tirol" },
+      { name: "Maria Huber", region: "steiermark" },
+      { name: "David Klein", region: "vorarlberg" },
+      { name: "Emma Wagner", region: "kaernten" },
+      { name: "Paul Berger", region: "wien-noe-bgl" },
+      { name: "Julia Mayer", region: "salzburg" },
+      { name: "Felix Gruber", region: "oberoesterreich" },
+      { name: "Sophie Reiter", region: "steiermark" },
+      { name: "Max Köhler", region: "tirol" },
+      { name: "Lena Fuchs", region: "vorarlberg" },
+      { name: "Klaus Müller", region: "wien-noe-bgl" },
+      { name: "Sandra Hofer", region: "steiermark" },
+      { name: "Martin Schneider", region: "salzburg" },
+      { name: "Nina Weiss", region: "oberoesterreich" },
+      { name: "Patrick Schwarz", region: "tirol" },
+      { name: "Andrea Roth", region: "vorarlberg" },
+      { name: "Florian Braun", region: "kaernten" },
+      { name: "Jessica Grün", region: "wien-noe-bgl" },
+      { name: "Daniel Gelb", region: "steiermark" },
+      { name: "Sabrina Blau", region: "salzburg" },
+      { name: "Thomas Orange", region: "oberoesterreich" },
+      { name: "Melanie Violett", region: "tirol" },
+      { name: "Christian Rosa", region: "vorarlberg" },
+      { name: "Vanessa Grau", region: "kaernten" },
+      { name: "Marco Silber", region: "wien-noe-bgl" },
+      { name: "Tanja Gold", region: "steiermark" },
+      { name: "Oliver Bronze", region: "salzburg" },
+      { name: "Carina Kupfer", region: "oberoesterreich" },
+      { name: "Lukas Platin", region: "tirol" },
+      { name: "Stephanie Kristall", region: "vorarlberg" },
+      { name: "Benjamin Diamant", region: "kaernten" },
+      { name: "Michelle Rubin", region: "wien-noe-bgl" },
+      { name: "Tobias Saphir", region: "steiermark" },
+      { name: "Nadine Smaragd", region: "salzburg" },
+      { name: "Kevin Topas", region: "oberoesterreich" },
+      { name: "Franziska Opal", region: "tirol" },
+      { name: "Dominik Achat", region: "vorarlberg" },
+      { name: "Simone Jade", region: "kaernten" },
+      { name: "Philip Onyx", region: "wien-noe-bgl" },
+      { name: "Verena Quarz", region: "steiermark" },
+      { name: "Fabian Marmor", region: "salzburg" },
+      { name: "Isabella Granit", region: "oberoesterreich" },
+      { name: "Maximilian Schiefer", region: "tirol" },
+      { name: "Katharina Basalt", region: "vorarlberg" },
+      { name: "Wolfgang Kalk", region: "kaernten" },
+      { name: "Elena Ton", region: "wien-noe-bgl" },
+      { name: "Robert Sand", region: "steiermark" },
+      { name: "Nicole Lehm", region: "salzburg" },
+      { name: "Stefan Kies", region: "oberoesterreich" },
+      { name: "Petra Fels", region: "tirol" },
+      { name: "Alexander Stein", region: "vorarlberg" },
+      { name: "Christina Berg", region: "kaernten" },
+      { name: "Manuel Tal", region: "wien-noe-bgl" },
+      { name: "Andrea Bach", region: "steiermark" },
+      { name: "Daniel See", region: "salzburg" },
+      { name: "Sabine Meer", region: "oberoesterreich" },
+      { name: "Thomas Ozean", region: "tirol" }
+    ];
+    
+    const promotor = allPromotors.find(p => p.name === promotorName);
+    return promotor?.region || "default";
+  };
+
+  // Get region pill colors - matching promotor selection popup styling
+  const getRegionPillColors = (region: string) => {
+    return `${getRegionGradient(region)} ${getRegionBorder(region)} text-gray-700`;
+  };
+  
+  // Eddie Chat Assistant states (cloned from SiteLayout)
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { role: "ai", content: "Hallo! Wie kann ich Ihnen heute helfen?" },
+  ]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+
 
   // Helper functions for CA KPI colors (same rules as in statistics page)
   const getKpiColor = (category: "mcet" | "tma" | "vlshare", value: number) => {
@@ -82,16 +450,17 @@ export default function AdminDashboard() {
   };
 
   const getPillColorKpi = (changePercent: string) => {
+    // For CA KPIs, being above optimal is good, so positive = green, negative = red
     const isPositive = changePercent.startsWith('+');
     return isPositive 
       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   };
 
-  // Mystery Shop data
+  // Mystery Shop data - use all-time average
   const mysteryShopData = {
-    value: 92.4,
-    change: "+1.2%"
+    value: 88.7, // All-time average from mysteryShopStatsData
+    change: "+3.1%" // All-time change from mysteryShopStatsData
   };
 
   // Helper function for Mystery Shop colors (same rules as in statistics page)
@@ -115,6 +484,197 @@ export default function AdminDashboard() {
   };
 
   const getPillColorMystery = (changePercent: string) => {
+    const isPositive = changePercent.startsWith('+');
+    return isPositive 
+      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+  };
+
+  // Generate mock history data for CA KPIs (similar to statistics page)
+  const [historyData] = useState(() => {
+    const data = []
+    const today = new Date()
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(today)
+      date.setMonth(today.getMonth() - i)
+      
+      // Generate random values within appropriate ranges
+      const mcet = (3.6 + Math.random() * 1.5).toFixed(1)
+      const tma = (60 + Math.random() * 25).toFixed(0)
+      const vl = (5 + Math.random() * 20).toFixed(0)
+      
+      data.push({
+        date,
+        mcet: parseFloat(mcet),
+        tma: parseInt(tma),
+        vl: parseInt(vl),
+        month: date.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
+      })
+    }
+    
+    return data.reverse() // Show oldest to newest for chart
+  })
+
+  // Calculate CA KPI statistics (similar to statistics page)
+  const calculateMysteryShopStatsData = () => {
+    // Mock Mystery Shop data with realistic percentages and change indicators
+    const baseData = {
+      "30days": { value: 91.2, changePercent: "+2.8%" },
+      "6months": { value: 89.5, changePercent: "+1.2%" },
+      "alltime": { value: 88.7, changePercent: "+3.1%" }
+    };
+
+    return baseData;
+  };
+
+  const mysteryShopStatsData = calculateMysteryShopStatsData();
+
+  // CA KPI data - all-time averages with difference from optimal values
+  const companyKpis = {
+    mcet: { value: 4.3, changePercent: "-0.2" }, // 4.3 vs optimal 4.5 = -0.2 (better = green)
+    tma: { value: 72.1, changePercent: "-2.9" }, // 72.1 vs optimal 75 = -2.9 (worse = red)  
+    vlShare: { value: 12.8, changePercent: "+2.8" } // 12.8 vs optimal 10 = +2.8 (better = green)
+  };
+
+  const mysteryShopHistoryData = [
+    { shop: "Mysteryshop 1", percentage: 85.2 },
+    { shop: "Mysteryshop 2", percentage: 88.7 },
+    { shop: "Mysteryshop 3", percentage: 91.3 },
+    { shop: "Mysteryshop 4", percentage: 89.8 },
+    { shop: "Mysteryshop 5", percentage: 92.5 },
+    { shop: "Mysteryshop 6", percentage: 90.1 },
+    { shop: "Mysteryshop 7", percentage: 93.2 },
+    { shop: "Mysteryshop 8", percentage: 89.6 },
+    { shop: "Mysteryshop 9", percentage: 91.7 },
+    { shop: "Mysteryshop 10", percentage: 94.1 },
+    { shop: "Mysteryshop 11", percentage: 92.3 },
+    { shop: "Mysteryshop 12", percentage: 91.2 }
+  ];
+
+  const getMysteryShopColorClass = (value: number) => {
+    if (value >= 95) return "text-yellow-600"; // Gold
+    if (value >= 90) return "text-green-600"; // Green
+    if (value >= 80) return "text-[#FD7E14]"; // Orange - same as CA KPI
+    return "text-red-600"; // Red
+  };
+
+  const getMysteryShopPillColor = (changePercent: string) => {
+    if (changePercent.startsWith('+')) {
+      return 'bg-green-100 text-green-800';
+    } else if (changePercent.startsWith('-')) {
+      return 'bg-red-100 text-red-800';
+    }
+    return 'bg-gray-100 text-gray-800';
+  };
+
+  const calculateKpiStatsData = () => {
+    // Calculate averages for all time
+    const allTimeAvg = {
+      mcet: historyData.reduce((sum, entry) => sum + entry.mcet, 0) / historyData.length,
+      tma: historyData.reduce((sum, entry) => sum + entry.tma, 0) / historyData.length,
+      vl: historyData.reduce((sum, entry) => sum + entry.vl, 0) / historyData.length
+    }
+
+    // Get current month (most recent entry) and comparison months
+    const currentMonth = historyData[historyData.length - 1] // Most recent
+    const lastMonth = historyData[historyData.length - 2] // Previous month  
+    const sixMonthsAgo = historyData[historyData.length - 7] // 6 months ago
+
+    // Calculate averages for last 6 months
+    const last6MonthsData = historyData.slice(-6)
+    const sixMonthsAvg = {
+      mcet: last6MonthsData.reduce((sum, entry) => sum + entry.mcet, 0) / last6MonthsData.length,
+      tma: last6MonthsData.reduce((sum, entry) => sum + entry.tma, 0) / last6MonthsData.length,
+      vl: last6MonthsData.reduce((sum, entry) => sum + entry.vl, 0) / last6MonthsData.length
+    }
+
+    // Helper to calculate percentage change
+    const calcPercentChange = (current: number, previous: number) => {
+      const change = ((current - previous) / previous) * 100
+      return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`
+    }
+
+    // Helper to calculate optimal difference
+    const calcOptimalDiff = (value: number, optimal: number) => {
+      const diff = value - optimal
+      return diff >= 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`
+    }
+
+    return {
+      "30days": {
+        mcet: { 
+          value: currentMonth.mcet, 
+          changePercent: calcPercentChange(currentMonth.mcet, lastMonth.mcet)
+        },
+        tma: { 
+          value: currentMonth.tma, 
+          changePercent: calcPercentChange(currentMonth.tma, lastMonth.tma)
+        },
+        vlShare: { 
+          value: currentMonth.vl, 
+          changePercent: calcPercentChange(currentMonth.vl, lastMonth.vl)
+        }
+      },
+      "6months": {
+        mcet: { 
+          value: sixMonthsAvg.mcet, 
+          changePercent: calcPercentChange(currentMonth.mcet, sixMonthsAgo.mcet)
+        },
+        tma: { 
+          value: sixMonthsAvg.tma, 
+          changePercent: calcPercentChange(currentMonth.tma, sixMonthsAgo.tma)
+        },
+        vlShare: { 
+          value: sixMonthsAvg.vl, 
+          changePercent: calcPercentChange(currentMonth.vl, sixMonthsAgo.vl)
+        }
+      },
+      "alltime": {
+        mcet: { 
+          value: allTimeAvg.mcet, 
+          changePercent: calcOptimalDiff(allTimeAvg.mcet, 4.5)
+        },
+        tma: { 
+          value: allTimeAvg.tma, 
+          changePercent: calcOptimalDiff(allTimeAvg.tma, 75)
+        },
+        vlShare: { 
+          value: allTimeAvg.vl, 
+          changePercent: calcOptimalDiff(allTimeAvg.vl, 10)
+        }
+      }
+    }
+  }
+
+  const kpiStatsData = calculateKpiStatsData()
+
+  // Helper functions for KPI colors
+  const getKpiColorClass = (category: "mcet" | "tma" | "vlshare", value: number) => {
+    if (category === "mcet") {
+      if (value >= 4.5) return "text-green-600";
+      if (value >= 4.0) return "text-[#FD7E14]";
+      return "text-red-600";
+    } else if (category === "tma") {
+      if (value >= 75) return "text-green-600";
+      if (value >= 65) return "text-[#FD7E14]";
+      return "text-red-600";
+    } else if (category === "vlshare") {
+      if (value >= 10) return "text-green-600";
+      if (value >= 6) return "text-[#FD7E14]";
+      return "text-red-600";
+    }
+    return "text-gray-600";
+  };
+
+  const getKpiStyle = (colorClass: string) => {
+    if (colorClass === "text-[#FD7E14]") {
+      return { color: "#FD7E14" };
+    }
+    return {};
+  };
+
+  const getKpiPillColor = (changePercent: string) => {
     const isPositive = changePercent.startsWith('+');
     return isPositive 
       ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
@@ -381,6 +941,32 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     { id: "settings", label: "Einstellungen", icon: Settings }
   ];
 
+  // Eddie Chat Assistant functions (cloned from SiteLayout)
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const sendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Add user message
+    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
+    setChatMessages(newMessages);
+    setChatInput("");
+
+    // Simulate AI response
+    setTimeout(() => {
+      setChatMessages([
+        ...newMessages,
+        { 
+          role: "ai", 
+          content: "Ich verarbeite Ihre Anfrage. Wie kann ich Ihnen weiter behilflich sein?" 
+        }
+      ]);
+    }, 1000);
+  };
+
   // Typing animation effect
   useEffect(() => {
     if (fullEddieText.length === 0) return;
@@ -405,6 +991,44 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       textContainerRef.current.scrollTop = textContainerRef.current.scrollHeight;
     }
   }, [eddieText, isTyping]);
+
+  // Eddie Chat Assistant useEffect (cloned from SiteLayout)
+  useEffect(() => {
+    if (chatOpen) {
+      scrollToBottom();
+    }
+  }, [chatMessages, chatOpen]);
+
+  // Set CSS variables for light/dark mode input styling (cloned from SiteLayout)
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--input-bg',
+      'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
+    );
+
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const updateColorMode = (isDark: boolean) => {
+      if (isDark) {
+        document.documentElement.style.setProperty(
+          '--input-bg',
+          'linear-gradient(to bottom, rgba(31,41,55,0.95), rgba(17,24,39,0.95))'
+        );
+      } else {
+        document.documentElement.style.setProperty(
+          '--input-bg',
+          'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
+        );
+      }
+    };
+    
+    updateColorMode(darkModeMediaQuery.matches);
+    darkModeMediaQuery.addEventListener('change', (e) => updateColorMode(e.matches));
+    
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', (e) => updateColorMode(e.matches));
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50/30">
@@ -489,10 +1113,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 <div className="w-full h-px bg-gray-100 mb-4"></div>
                 <div 
                   ref={textContainerRef} 
-                  className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 hover:scrollbar-thumb-gray-300 scrollbar-thumb-rounded-full [&::-webkit-scrollbar-button]:hidden"
+                  className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden"
                   style={{
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#e5e7eb transparent'
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                   }}
                 >
                   <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line pr-2">
@@ -540,7 +1164,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       </button>
                       {showDropdown && (
                         <div 
-                          className="absolute top-full right-0 mt-1 border-0 rounded-xl shadow-lg z-10 overflow-hidden w-40 bg-white"
+                          className="absolute top-full right-0 mt-1 border-0 rounded-xl shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                          style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none'
+                          }}
                         >
                           <div
                             onClick={() => {setEinsatzFilter("alle"); setShowDropdown(false);}}
@@ -548,7 +1176,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           >
                             alle
                           </div>
-                          {getLocationOptions().slice(0, 8).map(location => {
+                          {getLocationOptions().map(location => {
                             const statusColor = getLocationStatusColor(location);
                             const hoverClass = statusColor === 'green' 
                               ? 'hover:bg-gradient-to-r hover:from-white hover:to-green-100/80'
@@ -800,11 +1428,12 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             </Card>
 
             <Card 
-              className="border-0 h-20 w-full"
+              className="border-0 h-20 w-full cursor-pointer hover:scale-[1.02] transition-transform duration-200"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(168, 85, 247, 0.003) 50%, rgba(126, 34, 206, 0.005) 100%)',
                 boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
               }}
+              onClick={() => setShowKpiPopup(true)}
             >
               <CardContent className="p-4 h-full">
                 <div className="flex items-center space-x-3 h-full">
@@ -851,7 +1480,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     ) : (
                       // Mystery Shop View
                       <div className="flex flex-col items-start space-y-1">
-                        <div className="flex items-center space-x-2">
+                        <div>
                           <span 
                             className={`text-2xl font-semibold ${
                               getMysteryShopColor(mysteryShopData.value) !== "custom-gold" && 
@@ -866,9 +1495,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           >
                             {mysteryShopData.value}%
                           </span>
-                          <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none ${getPillColorMystery(mysteryShopData.change)}`}>
-                            {mysteryShopData.change}
-                          </span>
                         </div>
                         <p className="text-xs text-gray-500">Mystery Shop Ø</p>
                       </div>
@@ -881,34 +1507,90 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
           {/* Today's Promotions & Recent Activities */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Today's Promotions */}
-            <Card className="border-0 shadow-sm bg-white">
+            {/* Sales Challenge Leaderboard */}
+            <Card 
+              className="border-0 bg-white"
+              style={{
+                boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
+              }}
+            >
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Heutige Promotions</CardTitle>
-                <CardDescription className="text-sm text-gray-500">Aktuelle Einsätze im Überblick</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="h-5 w-5 text-gray-900" />
+                    <CardTitle className="text-lg font-semibold text-gray-900">Sales Challenge Leaderboard</CardTitle>
+                  </div>
+                  <div className="flex items-center space-x-1 text-xs text-gray-600 opacity-50">
+                    <Clock className="h-3 w-3" />
+                    <span className="font-medium">2T 14h 23m</span>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="px-4 py-0 max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="space-y-1">
-                  {todaysPromotions.map((promotion) => (
-                    <div key={promotion.id} className="flex items-center justify-between p-4 hover:bg-gray-50/50 transition-colors">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="text-sm font-medium text-gray-900">{promotion.location}</h4>
-                          <Badge 
-                            variant={promotion.status === 'aktiv' ? 'default' : promotion.status === 'pause' ? 'secondary' : 'outline'}
-                            className="text-xs"
-                          >
-                            {promotion.status}
-                          </Badge>
+                  {[
+                    { rank: 1, name: "Sarah Schmidt", sales: 45, reward: "150€" },
+                    { rank: 2, name: "Michael Weber", sales: 42, reward: "100€" },
+                    { rank: 3, name: "Jan Müller", sales: 38, reward: "50€" },
+                    { rank: 4, name: "Lisa König", sales: 35, reward: "20€" },
+                    { rank: 5, name: "Anna Bauer", sales: 32, reward: "20€" },
+                    { rank: 6, name: "Tom Fischer", sales: 28, reward: "20€" },
+                    { rank: 7, name: "Maria Huber", sales: 25, reward: "20€" },
+                    { rank: 8, name: "David Klein", sales: 22, reward: "20€" }
+                  ].map((entry) => (
+                    <div key={entry.rank} className={`flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:shadow-sm ${
+                      entry.rank === 1 
+                        ? 'border-yellow-200/50 bg-gradient-to-r from-yellow-50/20 to-amber-50/20 hover:from-yellow-50/40 hover:to-amber-50/40'
+                        : entry.rank === 2
+                        ? 'border-gray-200/50 bg-gradient-to-r from-gray-50/20 to-slate-50/20 hover:from-gray-50/40 hover:to-slate-50/40'
+                        : entry.rank === 3
+                        ? 'border-amber-200/50 bg-gradient-to-r from-amber-50/20 to-orange-50/20 hover:from-amber-50/40 hover:to-orange-50/40'
+                        : 'border-blue-200/50 bg-gradient-to-r from-blue-50/20 to-indigo-50/20 hover:from-blue-50/40 hover:to-indigo-50/40'
+                    }`}>
+                      <div className="flex items-center space-x-3">
+                        {/* Placement Icon */}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          entry.rank === 1 
+                            ? '' 
+                            : entry.rank === 2
+                            ? ''
+                            : entry.rank === 3
+                            ? ''
+                            : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                        }`}
+                        style={
+                          entry.rank === 1 
+                            ? { background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)' }
+                            : entry.rank === 2
+                            ? { background: 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)' }
+                            : entry.rank === 3
+                            ? { background: 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)' }
+                            : {}
+                        }>
+                          <span className="text-white font-bold text-sm">{entry.rank}</span>
                         </div>
-                        <p className="text-xs text-gray-500">{promotion.promotor}</p>
-                        <div className="flex items-center space-x-3 mt-1">
-                          <span className="text-xs text-gray-400 flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {promotion.time}
-                          </span>
-                          <span className="text-xs text-gray-400">{promotion.product}</span>
+                        
+                        {/* Promotor Info */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">{entry.name}</h4>
+                          <p className="text-xs text-gray-500">{entry.sales} VL Verkäufe</p>
                         </div>
+                      </div>
+                      
+                      {/* Reward */}
+                      <div className="text-right">
+                        <div className={`text-sm font-bold ${
+                          entry.rank === 1 
+                            ? 'bg-gradient-to-r from-[#E0AA3E] via-[#F0D96A] to-[#E0AA3E] bg-clip-text text-transparent'
+                            : entry.rank === 2
+                            ? 'text-[#BCBDC1]'
+                            : entry.rank === 3
+                            ? 'text-[#BD965D]'
+                            : 'text-blue-600'
+                        }`}>
+                          {entry.reward}
+                        </div>
+                        <p className="text-xs text-gray-400">Belohnung</p>
                       </div>
                     </div>
                   ))}
@@ -916,36 +1598,250 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               </CardContent>
             </Card>
 
-            {/* Recent Activities */}
-            <Card className="border-0 shadow-sm bg-white">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Letzte Aktivitäten</CardTitle>
-                <CardDescription className="text-sm text-gray-500">Aktuelle Systemereignisse</CardDescription>
+            {/* Message Terminal */}
+            <Card className="border-0 flex flex-col h-full bg-gradient-to-br from-white to-blue-50/40" style={{ boxShadow: '0 1px 3px 0 rgba(59, 130, 246, 0.15), 0 1px 2px 0 rgba(96, 165, 250, 0.1)' }}>
+              <CardHeader className="pb-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MessageCircle className="h-5 w-5 text-gray-900" />
+                    <CardTitle className="text-lg font-semibold text-gray-900">Nachrichten Terminal</CardTitle>
+                  </div>
+                </div>
+                {/* Add Promotors Icon - Directly above input field */}
+                {selectedPromotors.length > 0 ? (
+                  <div 
+                    onClick={() => setShowPromotorSelection(true)}
+                    className="flex items-center space-x-1 cursor-pointer hover:opacity-75 transition-opacity"
+                  >
+                    <Check className="h-4 w-4 text-green-600 opacity-50" />
+                    <span className="text-xs text-black opacity-30">
+                      {(() => {
+                        // Determine if all selected promotors are from same region
+                        const allPromotors = [
+                          { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+                          { name: "Michael Weber", region: "steiermark" },
+                          { name: "Jan Müller", region: "salzburg" },
+                          { name: "Lisa König", region: "wien-noe-bgl" },
+                          { name: "Anna Bauer", region: "oberoesterreich" },
+                          { name: "Tom Fischer", region: "tirol" },
+                          { name: "Maria Huber", region: "steiermark" },
+                          { name: "David Klein", region: "vorarlberg" },
+                          { name: "Emma Wagner", region: "kaernten" },
+                          { name: "Paul Berger", region: "wien-noe-bgl" },
+                          { name: "Julia Mayer", region: "salzburg" },
+                          { name: "Felix Gruber", region: "oberoesterreich" },
+                          { name: "Sophie Reiter", region: "steiermark" },
+                          { name: "Max Köhler", region: "tirol" },
+                          { name: "Lena Fuchs", region: "vorarlberg" },
+                          { name: "Klaus Müller", region: "wien-noe-bgl" },
+                          { name: "Sandra Hofer", region: "steiermark" },
+                          { name: "Martin Schneider", region: "salzburg" },
+                          { name: "Nina Weiss", region: "oberoesterreich" },
+                          { name: "Patrick Schwarz", region: "tirol" },
+                          { name: "Andrea Roth", region: "vorarlberg" },
+                          { name: "Florian Braun", region: "kaernten" },
+                          { name: "Jessica Grün", region: "wien-noe-bgl" },
+                          { name: "Daniel Gelb", region: "steiermark" },
+                          { name: "Sabrina Blau", region: "salzburg" },
+                          { name: "Thomas Orange", region: "oberoesterreich" },
+                          { name: "Melanie Violett", region: "tirol" },
+                          { name: "Christian Rosa", region: "vorarlberg" },
+                          { name: "Vanessa Grau", region: "kaernten" },
+                          { name: "Marco Silber", region: "wien-noe-bgl" },
+                          { name: "Tanja Gold", region: "steiermark" },
+                          { name: "Oliver Bronze", region: "salzburg" },
+                          { name: "Carina Kupfer", region: "oberoesterreich" },
+                          { name: "Lukas Platin", region: "tirol" },
+                          { name: "Stephanie Kristall", region: "vorarlberg" },
+                          { name: "Benjamin Diamant", region: "kaernten" },
+                          { name: "Michelle Rubin", region: "wien-noe-bgl" },
+                          { name: "Tobias Saphir", region: "steiermark" },
+                          { name: "Nadine Smaragd", region: "salzburg" },
+                          { name: "Kevin Topas", region: "oberoesterreich" },
+                          { name: "Franziska Opal", region: "tirol" },
+                          { name: "Dominik Achat", region: "vorarlberg" },
+                          { name: "Simone Jade", region: "kaernten" },
+                          { name: "Philip Onyx", region: "wien-noe-bgl" },
+                          { name: "Verena Quarz", region: "steiermark" },
+                          { name: "Fabian Marmor", region: "salzburg" },
+                          { name: "Isabella Granit", region: "oberoesterreich" },
+                          { name: "Maximilian Schiefer", region: "tirol" },
+                          { name: "Katharina Basalt", region: "vorarlberg" },
+                          { name: "Wolfgang Kalk", region: "kaernten" },
+                          { name: "Elena Ton", region: "wien-noe-bgl" },
+                          { name: "Robert Sand", region: "steiermark" },
+                          { name: "Nicole Lehm", region: "salzburg" },
+                          { name: "Stefan Kies", region: "oberoesterreich" },
+                          { name: "Petra Fels", region: "tirol" },
+                          { name: "Alexander Stein", region: "vorarlberg" },
+                          { name: "Christina Berg", region: "kaernten" },
+                          { name: "Manuel Tal", region: "wien-noe-bgl" },
+                          { name: "Andrea Bach", region: "steiermark" },
+                          { name: "Daniel See", region: "salzburg" },
+                          { name: "Sabine Meer", region: "oberoesterreich" },
+                          { name: "Thomas Ozean", region: "tirol" }
+                        ];
+                        
+                        const selectedRegions = selectedPromotors.map(name => {
+                          const promotor = allPromotors.find(p => p.name === name);
+                          return promotor?.region;
+                        }).filter(Boolean);
+                        
+                        const uniqueRegions = [...new Set(selectedRegions)];
+                        
+                        if (uniqueRegions.length === 1 && uniqueRegions[0]) {
+                          const regionNames: Record<string, string> = {
+                            "wien-noe-bgl": "W/NÖ/BGL",
+                            "steiermark": "Steiermark",
+                            "salzburg": "Salzburg", 
+                            "oberoesterreich": "Oberösterreich",
+                            "tirol": "Tirol",
+                            "vorarlberg": "Vorarlberg",
+                            "kaernten": "Kärnten"
+                          };
+                          return `${regionNames[uniqueRegions[0]]} Cluster ausgewählt`;
+                        } else {
+                          return `${selectedPromotors.length} Promotoren ausgewählt`;
+                        }
+                      })()}
+                    </span>
+                  </div>
+                ) : (
+                  <UserPlus 
+                    onClick={() => setShowPromotorSelection(true)}
+                    className="h-4 w-4 text-black opacity-50 cursor-pointer hover:opacity-75 transition-opacity"
+                  />
+                )}
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="space-y-1">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center space-x-3 p-4 hover:bg-gray-50/50 transition-colors">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        activity.type === 'request' ? 'bg-orange-100' :
-                        activity.type === 'training' ? 'bg-green-100' :
-                        activity.type === 'report' ? 'bg-blue-100' : 'bg-gray-100'
-                      }`}>
-                        {activity.type === 'request' ? <AlertCircle className="h-4 w-4 text-orange-600" /> :
-                         activity.type === 'training' ? <UserCheck className="h-4 w-4 text-green-600" /> :
-                         activity.type === 'report' ? <BarChart3 className="h-4 w-4 text-blue-600" /> :
-                         <Settings className="h-4 w-4 text-gray-600" />}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                        <div className="flex items-center space-x-2 text-xs text-gray-500">
-                          <span>{activity.user}</span>
-                          <span>•</span>
-                          <span>{activity.time}</span>
+              <CardContent className="p-4 pt-2 flex-1 flex flex-col">
+                <div className="flex space-x-4 flex-1">
+                  {/* Message Input - Left Side */}
+                  <div className="flex-1 flex flex-col space-y-3">
+                    <div className="flex-1 relative">
+                      <textarea
+                        placeholder="Nachricht eingeben..."
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        className={`w-full h-full p-3 pr-12 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm [&::-webkit-scrollbar]:hidden ${
+                          isEnhancing ? '' : 'transition-all duration-1000'
+                        }`}
+                        style={{ 
+                          scrollbarWidth: 'none', 
+                          msOverflowStyle: 'none',
+                          background: isEnhancing ? '#dbeafe' : 'transparent',
+                          color: isEnhancing ? 'transparent' : '#111827',
+                          transition: isEnhancing ? 'none' : 'background 1000ms, color 1000ms'
+                        }}
+                      />
+                      
+                      {/* Floating Sparkles across entire input field */}
+                      {isEnhancing && (
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
+                          {[
+                            // First string of floating sparkles
+                            { id: 1, top: '15%', left: '10%', delay: '0s', size: 'h-3 w-3' },
+                            { id: 2, top: '35%', left: '25%', delay: '0.3s', size: 'h-4 w-4' },
+                            { id: 3, top: '55%', left: '40%', delay: '0.6s', size: 'h-3 w-3' },
+                            { id: 4, top: '25%', left: '60%', delay: '0.9s', size: 'h-4 w-4' },
+                            { id: 5, top: '45%', left: '75%', delay: '1.2s', size: 'h-3 w-3' },
+                            { id: 6, top: '65%', left: '85%', delay: '1.5s', size: 'h-4 w-4' },
+                            // Second string of floating sparkles
+                            { id: 7, top: '70%', left: '15%', delay: '0.2s', size: 'h-3 w-3' },
+                            { id: 8, top: '50%', left: '30%', delay: '0.5s', size: 'h-4 w-4' },
+                            { id: 9, top: '30%', left: '45%', delay: '0.8s', size: 'h-3 w-3' },
+                            { id: 10, top: '10%', left: '65%', delay: '1.1s', size: 'h-4 w-4' },
+                            { id: 11, top: '80%', left: '50%', delay: '1.4s', size: 'h-3 w-3' },
+                            { id: 12, top: '60%', left: '20%', delay: '1.7s', size: 'h-4 w-4' },
+                            // Third string of floating sparkles
+                            { id: 13, top: '20%', left: '35%', delay: '0.1s', size: 'h-3 w-3' },
+                            { id: 14, top: '40%', left: '55%', delay: '0.4s', size: 'h-4 w-4' },
+                            { id: 15, top: '75%', left: '70%', delay: '0.7s', size: 'h-3 w-3' },
+                            { id: 16, top: '85%', left: '30%', delay: '1.0s', size: 'h-4 w-4' },
+                            { id: 17, top: '40%', left: '15%', delay: '1.3s', size: 'h-3 w-3' },
+                            { id: 18, top: '20%', left: '80%', delay: '1.6s', size: 'h-4 w-4' },
+                            // Fourth string of floating sparkles
+                            { id: 19, top: '60%', left: '45%', delay: '0.15s', size: 'h-3 w-3' },
+                            { id: 20, top: '30%', left: '70%', delay: '0.45s', size: 'h-4 w-4' },
+                            { id: 21, top: '85%', left: '55%', delay: '0.75s', size: 'h-3 w-3' },
+                            { id: 22, top: '50%', left: '10%', delay: '1.05s', size: 'h-4 w-4' },
+                            { id: 23, top: '15%', left: '45%', delay: '1.35s', size: 'h-3 w-3' },
+                            { id: 24, top: '75%', left: '25%', delay: '1.65s', size: 'h-4 w-4' }
+                          ].map((sparkle) => (
+                            <Sparkles
+                              key={sparkle.id}
+                              className={`absolute ${sparkle.size} text-blue-600 opacity-70 animate-ping`}
+                              style={{
+                                top: sparkle.top,
+                                left: sparkle.left,
+                                animationDelay: sparkle.delay,
+                                animationDuration: '1.5s'
+                              }}
+                            />
+                          ))}
                         </div>
+                      )}
+
+                      {/* Magic Wand Icon */}
+                      <div className="absolute bottom-3 right-3 z-20">
+                        <button
+                          onClick={enhanceMessage}
+                          disabled={!messageText.trim() || isEnhancing}
+                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${
+                            !messageText.trim() || isEnhancing 
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer'
+                          }`}
+                        >
+                          <Wand2 className={`h-4 w-4 ${isEnhancing ? 'animate-pulse' : ''}`} />
+                        </button>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex space-x-2">
+                      <button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all">
+                        Sofort senden
+                      </button>
+                      <button 
+                        onClick={() => setShowScheduleModal(true)}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        Planen
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Scheduled Messages - Right Side */}
+                  <div className="flex-1 flex flex-col">
+                    <div className="bg-white rounded-lg shadow-sm pt-2 px-2 pb-2 flex flex-col">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-900">Geplante Nachrichten</h4>
+                        <span className="text-xs text-gray-500">{scheduledMessages.length} geplant</span>
+                      </div>
+                      <div className="space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '215px' }}>
+                                                {scheduledMessages
+                          .sort((a, b) => {
+                            // Properly combine ISO date and time for sorting
+                            const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
+                            const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
+                            return dateA.getTime() - dateB.getTime(); // Earliest first
+                          })
+                          .map((message) => (
+                          <div 
+                            key={message.id} 
+                            onClick={() => handleMessageClick(message)}
+                            className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                          >
+                            <div className="space-y-1">
+                              <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                              <div className="flex items-center justify-between text-xs text-gray-500">
+                                <span>{message.date} {message.time}</span>
+                                <span>{message.recipients}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -953,29 +1849,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
           {/* Quick Actions */}
           <Card className="border-0 shadow-sm bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-gray-900">Schnellzugriffe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Button variant="outline" className="h-auto py-4 flex flex-col items-center space-y-2">
-                  <Plus className="h-5 w-5" />
-                  <span className="text-xs">Neue Promotion</span>
-                </Button>
-                <Button variant="outline" className="h-auto py-4 flex flex-col items-center space-y-2">
-                  <Users className="h-5 w-5" />
-                  <span className="text-xs">Team verwalten</span>
-                </Button>
-                <Button variant="outline" className="h-auto py-4 flex flex-col items-center space-y-2">
-                  <BarChart3 className="h-5 w-5" />
-                  <span className="text-xs">Bericht erstellen</span>
-                </Button>
-                <Button variant="outline" className="h-auto py-4 flex flex-col items-center space-y-2">
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="text-xs">Team-Chat</span>
-                </Button>
-              </div>
-            </CardContent>
           </Card>
         </main>
       </div>
@@ -1446,6 +2319,452 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
         </div>
       )}
 
+      {/* KPI Analytics Popup */}
+      {showKpiPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card 
+            className="w-full max-w-4xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, rgba(168, 85, 247, 0.003) 50%, rgba(126, 34, 206, 0.005) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
+            }}
+          >
+            <CardHeader className="pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-gray-900">KPI Analytics</CardTitle>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowKpiPopup(false)}
+                    className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Navigation Menu */}
+              <div className="mt-4">
+                <div className="flex bg-gray-100/30 dark:bg-gray-800/30 rounded-lg p-1 max-w-sm mx-auto relative">
+                  <div 
+                    className={`absolute top-1 bottom-1 bg-white/50 dark:bg-gray-700/50 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+                      kpiPopupActiveTab === "ca-kpis" 
+                        ? "left-1 right-1/2 mr-0.5" 
+                        : "left-1/2 right-1 ml-0.5"
+                    }`}
+                  />
+                  
+                  <button
+                    onClick={() => setKpiPopupActiveTab("ca-kpis")}
+                    className="relative flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10"
+                  >
+                    <span className={`transition-all duration-200 ${
+                      kpiPopupActiveTab === "ca-kpis" 
+                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent" 
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    }`}>CA KPIs</span>
+                  </button>
+                  <button
+                    onClick={() => setKpiPopupActiveTab("mystery-shop")}
+                    className="relative flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10"
+                  >
+                    <span className={`transition-all duration-200 ${
+                      kpiPopupActiveTab === "mystery-shop" 
+                        ? "bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" 
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                    }`}>Mystery Shop</span>
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent 
+              className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
+              style={{ 
+                backdropFilter: 'none',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              {kpiPopupActiveTab === "ca-kpis" && (
+                <div className="space-y-6">
+                  {/* Three timeframes in horizontal layout */}
+                  <div className="grid grid-cols-3 gap-6">
+                    {/* All Time (17) */}
+                    <div className="bg-gradient-to-br from-purple-50/50 to-white/50 p-4 rounded-lg border border-purple-100">
+                      <h3 className="text-center font-medium text-purple-800 mb-4">All Time (17)</h3>
+                      <div className="space-y-1 mx-2">
+                                                 {/* MC/ET */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg MC/ET:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("mcet", kpiStatsData["alltime"].mcet.value) !== "text-[#FD7E14]" ? getKpiColorClass("mcet", kpiStatsData["alltime"].mcet.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("mcet", kpiStatsData["alltime"].mcet.value))}}
+                             >
+                               {kpiStatsData["alltime"].mcet.value.toFixed(1)}
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["alltime"].mcet.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["alltime"].mcet.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* TMA */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg TMA:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("tma", kpiStatsData["alltime"].tma.value) !== "text-[#FD7E14]" ? getKpiColorClass("tma", kpiStatsData["alltime"].tma.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("tma", kpiStatsData["alltime"].tma.value))}}
+                             >
+                               {kpiStatsData["alltime"].tma.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["alltime"].tma.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["alltime"].tma.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* VL Share */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg VL Share:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("vlshare", kpiStatsData["alltime"].vlShare.value) !== "text-[#FD7E14]" ? getKpiColorClass("vlshare", kpiStatsData["alltime"].vlShare.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("vlshare", kpiStatsData["alltime"].vlShare.value))}}
+                             >
+                               {kpiStatsData["alltime"].vlShare.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["alltime"].vlShare.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["alltime"].vlShare.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+
+                    {/* Last 30 Days (17) */}
+                    <div className="bg-gradient-to-br from-blue-50/50 to-white/50 p-4 rounded-lg border border-blue-100">
+                      <h3 className="text-center font-medium text-blue-800 mb-4">Last 30 Days (17)</h3>
+                      <div className="space-y-1 mx-2">
+                                                 {/* MC/ET */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg MC/ET:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("mcet", kpiStatsData["30days"].mcet.value) !== "text-[#FD7E14]" ? getKpiColorClass("mcet", kpiStatsData["30days"].mcet.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("mcet", kpiStatsData["30days"].mcet.value))}}
+                             >
+                               {kpiStatsData["30days"].mcet.value.toFixed(1)}
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["30days"].mcet.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["30days"].mcet.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* TMA */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg TMA:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("tma", kpiStatsData["30days"].tma.value) !== "text-[#FD7E14]" ? getKpiColorClass("tma", kpiStatsData["30days"].tma.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("tma", kpiStatsData["30days"].tma.value))}}
+                             >
+                               {kpiStatsData["30days"].tma.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["30days"].tma.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["30days"].tma.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* VL Share */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg VL Share:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("vlshare", kpiStatsData["30days"].vlShare.value) !== "text-[#FD7E14]" ? getKpiColorClass("vlshare", kpiStatsData["30days"].vlShare.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("vlshare", kpiStatsData["30days"].vlShare.value))}}
+                             >
+                               {kpiStatsData["30days"].vlShare.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["30days"].vlShare.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["30days"].vlShare.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+
+                    {/* Last 6 Months (17) */}
+                    <div className="bg-gradient-to-br from-green-50/50 to-white/50 p-4 rounded-lg border border-green-100">
+                      <h3 className="text-center font-medium text-green-800 mb-4">Last 6 Months (17)</h3>
+                      <div className="space-y-1 mx-2">
+                                                 {/* MC/ET */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg MC/ET:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("mcet", kpiStatsData["6months"].mcet.value) !== "text-[#FD7E14]" ? getKpiColorClass("mcet", kpiStatsData["6months"].mcet.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("mcet", kpiStatsData["6months"].mcet.value))}}
+                             >
+                               {kpiStatsData["6months"].mcet.value.toFixed(1)}
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["6months"].mcet.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["6months"].mcet.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* TMA */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg TMA:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("tma", kpiStatsData["6months"].tma.value) !== "text-[#FD7E14]" ? getKpiColorClass("tma", kpiStatsData["6months"].tma.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("tma", kpiStatsData["6months"].tma.value))}}
+                             >
+                               {kpiStatsData["6months"].tma.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["6months"].tma.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["6months"].tma.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                         
+                         {/* VL Share */}
+                         <div className="text-center py-0.5">
+                           <div className="flex items-center justify-center">
+                             <div className="text-right text-gray-500 whitespace-nowrap">Avg VL Share:</div>
+                             <div 
+                               className={`font-semibold ${getKpiColorClass("vlshare", kpiStatsData["6months"].vlShare.value) !== "text-[#FD7E14]" ? getKpiColorClass("vlshare", kpiStatsData["6months"].vlShare.value) : ""}`}
+                               style={{marginLeft: '4px', ...getKpiStyle(getKpiColorClass("vlshare", kpiStatsData["6months"].vlShare.value))}}
+                             >
+                               {kpiStatsData["6months"].vlShare.value.toFixed(1)}%
+                             </div>
+                             <div className={`text-xs ${getKpiPillColor(kpiStatsData["6months"].vlShare.changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                               {kpiStatsData["6months"].vlShare.changePercent}
+                             </div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Line Chart */}
+                  <div className="bg-white/50 p-6 rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Monatlicher Trend-Verlauf</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={historyData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="month" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                        />
+                        <YAxis 
+                          yAxisId="mcet"
+                          domain={[0, 6]}
+                          stroke="#6b7280"
+                          fontSize={12}
+                          label={{ value: 'MC/ET', angle: -90, position: 'insideLeft' }}
+                        />
+                        <YAxis 
+                          yAxisId="percentage"
+                          orientation="right"
+                          domain={[0, 100]}
+                          stroke="#6b7280"
+                          fontSize={12}
+                          label={{ value: 'Prozent (%)', angle: 90, position: 'insideRight' }}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value, name) => [
+                            name === 'mcet' ? value : `${value}%`,
+                            name === 'mcet' ? 'MC/ET' : name === 'tma' ? 'TMA' : 'VL Share'
+                          ]}
+                        />
+                        <Line 
+                          yAxisId="mcet"
+                          type="monotone" 
+                          dataKey="mcet" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                        />
+                        <Line 
+                          yAxisId="percentage"
+                          type="monotone" 
+                          dataKey="tma" 
+                          stroke="#10b981" 
+                          strokeWidth={2}
+                          dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                        />
+                        <Line 
+                          yAxisId="percentage"
+                          type="monotone" 
+                          dataKey="vl" 
+                          stroke="#8b5cf6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    
+                    {/* Legend */}
+                    <div className="flex justify-center space-x-6 mt-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">MC/ET (Linke Skala)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">TMA (%)</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">VL Share (%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {kpiPopupActiveTab === "mystery-shop" && (
+                <div className="space-y-6">
+                  {/* Three timeframes in horizontal layout */}
+                  <div className="grid grid-cols-3 gap-6">
+                    {/* All Time */}
+                    <div className="bg-gradient-to-br from-purple-50/50 to-white/50 p-4 rounded-lg border border-purple-100">
+                      <h3 className="text-center font-medium text-purple-800 mb-4">All Time</h3>
+                      <div className="space-y-1 mx-2">
+                        <div className="text-center py-0.5">
+                          <div className="flex items-center justify-center mb-1">
+                            <div 
+                              className={`font-semibold ${getMysteryShopColorClass(mysteryShopStatsData["alltime"].value)}`}
+                            >
+                              {mysteryShopStatsData["alltime"].value.toFixed(1)}%
+                            </div>
+                            <div className={`text-xs ${getMysteryShopPillColor(mysteryShopStatsData["alltime"].changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                              {mysteryShopStatsData["alltime"].changePercent}
+                            </div>
+                          </div>
+                          <div className="text-gray-500 text-sm">Avg Mystery Shop:</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Last 30 Days */}
+                    <div className="bg-gradient-to-br from-blue-50/50 to-white/50 p-4 rounded-lg border border-blue-100">
+                      <h3 className="text-center font-medium text-blue-800 mb-4">Last 30 Days</h3>
+                      <div className="space-y-1 mx-2">
+                        <div className="text-center py-0.5">
+                          <div className="flex items-center justify-center mb-1">
+                            <div 
+                              className={`font-semibold ${getMysteryShopColorClass(mysteryShopStatsData["30days"].value)}`}
+                            >
+                              {mysteryShopStatsData["30days"].value.toFixed(1)}%
+                            </div>
+                            <div className={`text-xs ${getMysteryShopPillColor(mysteryShopStatsData["30days"].changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                              {mysteryShopStatsData["30days"].changePercent}
+                            </div>
+                          </div>
+                          <div className="text-gray-500 text-sm">Avg Mystery Shop:</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Last 6 Months */}
+                    <div className="bg-gradient-to-br from-green-50/50 to-white/50 p-4 rounded-lg border border-green-100">
+                      <h3 className="text-center font-medium text-green-800 mb-4">Last 6 Months</h3>
+                      <div className="space-y-1 mx-2">
+                        <div className="text-center py-0.5">
+                          <div className="flex items-center justify-center mb-1">
+                            <div 
+                              className={`font-semibold ${getMysteryShopColorClass(mysteryShopStatsData["6months"].value)}`}
+                            >
+                              {mysteryShopStatsData["6months"].value.toFixed(1)}%
+                            </div>
+                            <div className={`text-xs ${getMysteryShopPillColor(mysteryShopStatsData["6months"].changePercent)} rounded-full px-1 py-0 whitespace-nowrap`} style={{marginLeft: '4px'}}>
+                              {mysteryShopStatsData["6months"].changePercent}
+                            </div>
+                          </div>
+                          <div className="text-gray-500 text-sm">Avg Mystery Shop:</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Line Chart */}
+                  <div className="bg-white/50 p-6 rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Mystery Shop Trend-Verlauf</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={mysteryShopHistoryData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                          dataKey="shop" 
+                          stroke="#6b7280"
+                          fontSize={12}
+                        />
+                        <YAxis 
+                          domain={[75, 100]}
+                          stroke="#6b7280"
+                          fontSize={12}
+                          label={{ value: 'Prozent (%)', angle: -90, position: 'insideLeft' }}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: '#f9fafb',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value) => [`${value}%`, 'Mystery Shop']}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="percentage" 
+                          stroke="#8b5cf6" 
+                          strokeWidth={2}
+                          dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, stroke: '#8b5cf6', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    
+                    {/* Legend */}
+                    <div className="flex justify-center mt-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                        <span className="text-sm text-gray-600">Mystery Shop (%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Message Modal */}
       {showMessageModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1513,6 +2832,576 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               </form>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Promotor Selection Modal */}
+      {showPromotorSelection && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card 
+            className="w-full max-w-4xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
+            }}
+          >
+            <CardHeader className="pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-gray-900">Promotoren auswählen</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPromotorSelection(false)}
+                  className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Search and Filter Options */}
+              <div className="mt-4 space-y-3">
+                {/* Searchbar */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Promotor suchen..."
+                    value={promotorSelectionSearch}
+                    onChange={(e) => setPromotorSelectionSearch(e.target.value)}
+                    className="px-3 py-1.5 text-sm border-0 bg-white/60 rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
+                    style={{ opacity: 0.7 }}
+                  />
+                </div>
+                
+                {/* Filter Options */}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setActiveRegionFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 bg-gray-100/70 text-gray-700 hover:bg-gray-200/80 ${
+                    activeRegionFilter === "all"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  Alle
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("wien-noe-bgl")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("wien-noe-bgl")} ${getRegionBorder("wien-noe-bgl")} ${
+                    activeRegionFilter === "wien-noe-bgl"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  W/NÖ/BGL
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("steiermark")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("steiermark")} ${getRegionBorder("steiermark")} ${
+                    activeRegionFilter === "steiermark"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  ST
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("salzburg")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("salzburg")} ${getRegionBorder("salzburg")} ${
+                    activeRegionFilter === "salzburg"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  SBG
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("oberoesterreich")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("oberoesterreich")} ${getRegionBorder("oberoesterreich")} ${
+                    activeRegionFilter === "oberoesterreich"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  OÖ
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("tirol")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("tirol")} ${getRegionBorder("tirol")} ${
+                    activeRegionFilter === "tirol"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  T
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("vorarlberg")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("vorarlberg")} ${getRegionBorder("vorarlberg")} ${
+                    activeRegionFilter === "vorarlberg"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  V
+                </button>
+                <button
+                  onClick={() => setActiveRegionFilter("kaernten")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("kaernten")} ${getRegionBorder("kaernten")} ${
+                    activeRegionFilter === "kaernten"
+                      ? "scale-110"
+                      : ""
+                  }`}
+                >
+                  K
+                </button>
+                  </div>
+                  
+                  {/* Select All Filtered Icon */}
+                  <div 
+                    onClick={selectAllFiltered}
+                    className="cursor-pointer"
+                    title="Alle gefilterten auswählen/abwählen"
+                  >
+                    <CheckSquare className="h-5 w-5 text-black hover:text-gray-700 transition-colors" />
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent 
+              className="p-6 flex flex-col h-[400px] [&::-webkit-scrollbar]:hidden" 
+              style={{ 
+                backdropFilter: 'none',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {[
+                  { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+                  { name: "Michael Weber", region: "steiermark" },
+                  { name: "Jan Müller", region: "salzburg" },
+                  { name: "Lisa König", region: "wien-noe-bgl" },
+                  { name: "Anna Bauer", region: "oberoesterreich" },
+                  { name: "Tom Fischer", region: "tirol" },
+                  { name: "Maria Huber", region: "steiermark" },
+                  { name: "David Klein", region: "vorarlberg" },
+                  { name: "Emma Wagner", region: "kaernten" },
+                  { name: "Paul Berger", region: "wien-noe-bgl" },
+                  { name: "Julia Mayer", region: "salzburg" },
+                  { name: "Felix Gruber", region: "oberoesterreich" },
+                  { name: "Sophie Reiter", region: "steiermark" },
+                  { name: "Max Köhler", region: "tirol" },
+                  { name: "Lena Fuchs", region: "vorarlberg" },
+                  { name: "Klaus Müller", region: "wien-noe-bgl" },
+                  { name: "Sandra Hofer", region: "steiermark" },
+                  { name: "Martin Schneider", region: "salzburg" },
+                  { name: "Nina Weiss", region: "oberoesterreich" },
+                  { name: "Patrick Schwarz", region: "tirol" },
+                  { name: "Andrea Roth", region: "vorarlberg" },
+                  { name: "Florian Braun", region: "kaernten" },
+                  { name: "Jessica Grün", region: "wien-noe-bgl" },
+                  { name: "Daniel Gelb", region: "steiermark" },
+                  { name: "Sabrina Blau", region: "salzburg" },
+                  { name: "Thomas Orange", region: "oberoesterreich" },
+                  { name: "Melanie Violett", region: "tirol" },
+                  { name: "Christian Rosa", region: "vorarlberg" },
+                  { name: "Vanessa Grau", region: "kaernten" },
+                  { name: "Marco Silber", region: "wien-noe-bgl" },
+                  { name: "Tanja Gold", region: "steiermark" },
+                  { name: "Oliver Bronze", region: "salzburg" },
+                  { name: "Carina Kupfer", region: "oberoesterreich" },
+                  { name: "Lukas Platin", region: "tirol" },
+                  { name: "Stephanie Kristall", region: "vorarlberg" },
+                  { name: "Benjamin Diamant", region: "kaernten" },
+                  { name: "Michelle Rubin", region: "wien-noe-bgl" },
+                  { name: "Tobias Saphir", region: "steiermark" },
+                  { name: "Nadine Smaragd", region: "salzburg" },
+                  { name: "Kevin Topas", region: "oberoesterreich" },
+                  { name: "Franziska Opal", region: "tirol" },
+                  { name: "Dominik Achat", region: "vorarlberg" },
+                  { name: "Simone Jade", region: "kaernten" },
+                  { name: "Philip Onyx", region: "wien-noe-bgl" },
+                  { name: "Verena Quarz", region: "steiermark" },
+                  { name: "Fabian Marmor", region: "salzburg" },
+                  { name: "Isabella Granit", region: "oberoesterreich" },
+                  { name: "Maximilian Schiefer", region: "tirol" },
+                  { name: "Katharina Basalt", region: "vorarlberg" },
+                  { name: "Wolfgang Kalk", region: "kaernten" },
+                  { name: "Elena Ton", region: "wien-noe-bgl" },
+                  { name: "Robert Sand", region: "steiermark" },
+                  { name: "Nicole Lehm", region: "salzburg" },
+                  { name: "Stefan Kies", region: "oberoesterreich" },
+                  { name: "Petra Fels", region: "tirol" },
+                  { name: "Alexander Stein", region: "vorarlberg" },
+                  { name: "Christina Berg", region: "kaernten" },
+                  { name: "Manuel Tal", region: "wien-noe-bgl" },
+                  { name: "Andrea Bach", region: "steiermark" },
+                  { name: "Daniel See", region: "salzburg" },
+                  { name: "Sabine Meer", region: "oberoesterreich" },
+                  { name: "Thomas Ozean", region: "tirol" }
+                ]
+                .filter(promotor => 
+                  (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                  promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+                )
+                .map((promotor) => {
+                  const isSelected = selectedPromotors.includes(promotor.name);
+                  return (
+                    <button
+                      key={promotor.name}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedPromotors(prev => prev.filter(name => name !== promotor.name));
+                        } else {
+                          setSelectedPromotors(prev => [...prev, promotor.name]);
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full h-10 flex items-center justify-center border ${
+                        isSelected
+                          ? "bg-white/80 text-gray-900 shadow-md border-gray-300 backdrop-blur-sm"
+                          : `${getRegionGradient(promotor.region)} ${getRegionBorder(promotor.region)} text-gray-700 hover:bg-gray-200/80`
+                      }`}
+                    >
+                      {promotor.name}
+                    </button>
+                  );
+                })}
+                </div>
+              </div>
+              
+              {/* Fixed confirmation section at bottom */}
+              {selectedPromotors.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      {selectedPromotors.length} Promotor{selectedPromotors.length !== 1 ? 'en' : ''} ausgewählt
+                    </span>
+                    <Button
+                      onClick={() => setShowPromotorSelection(false)}
+                      variant="ghost"
+                      className="bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
+                    >
+                      Bestätigen
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Schedule Message Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card 
+            className="w-full max-w-md border border-white/20 shadow-xl backdrop-blur-none"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
+            }}
+          >
+            <CardHeader className="pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5 text-gray-900" />
+                  <CardTitle className="text-lg font-semibold text-gray-900">Nachricht planen</CardTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-6 space-y-4">
+              {/* Message Preview */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Nachricht</label>
+                <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {messageText || "Keine Nachricht eingegeben..."}
+                </div>
+              </div>
+              
+              {/* Recipients Preview */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Empfänger</label>
+                <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                  {selectedPromotors.length === 0 
+                    ? "Keine Promotoren ausgewählt..."
+                    : selectedPromotors.length === 1 
+                    ? selectedPromotors[0]
+                    : `${selectedPromotors.length} Promotoren ausgewählt`
+                  }
+                </div>
+              </div>
+              
+              {/* Date Selection */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Datum</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                />
+              </div>
+              
+              {/* Time Selection */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Uhrzeit</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="flex-1 bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  onClick={handleScheduleMessage}
+                  disabled={!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0}
+                  className="flex-1 bg-gradient-to-r from-blue-500/80 to-indigo-600/80 text-white hover:from-blue-600/90 hover:to-indigo-700/90 backdrop-blur-sm border border-blue-200/30"
+                >
+                  Planen
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Message Detail Modal */}
+      {showMessageDetail && selectedMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card 
+            className="w-full max-w-md border border-white/20 shadow-xl backdrop-blur-none"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
+              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
+            }}
+          >
+            <CardHeader className="pb-4 border-b border-gray-100/50">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-gray-900">Geplante Nachricht</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (isEditingMessage) {
+                        handleSaveMessage();
+                      } else {
+                        setIsEditingMessage(true);
+                      }
+                    }}
+                    className="h-5 w-5 text-black opacity-50 hover:opacity-75 transition-opacity"
+                  >
+                    {isEditingMessage ? (
+                      <Check className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <Edit3 className="h-5 w-5" />
+                    )}
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowMessageDetail(false)}
+                    className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-6 space-y-4">
+              {/* Message Content */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Nachricht</label>
+                {isEditingMessage ? (
+                  <textarea
+                    value={editedMessageText}
+                    onChange={(e) => setEditedMessageText(e.target.value)}
+                    className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm min-h-24 max-h-32 resize-none overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  />
+                ) : (
+                  <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                    {selectedMessage.fullText}
+                  </div>
+                )}
+              </div>
+              
+              {/* Schedule Information */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Datum</label>
+                  {isEditingMessage ? (
+                    <input
+                      type="date"
+                      value={editedDate}
+                      onChange={(e) => setEditedDate(e.target.value)}
+                      className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                    />
+                  ) : (
+                    <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                      {selectedMessage.date}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">Zeit</label>
+                  {isEditingMessage ? (
+                    <input
+                      type="time"
+                      value={editedTime}
+                      onChange={(e) => setEditedTime(e.target.value)}
+                      className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                    />
+                  ) : (
+                    <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                      {selectedMessage.time}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Recipients */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Empfänger</label>
+                <div className="flex flex-wrap gap-2 max-h-16 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {selectedMessage.promotors?.map((promotor: string, index: number) => {
+                    const region = getPromotorRegion(promotor);
+                    const colors = getRegionPillColors(region);
+                    return (
+                      <span
+                        key={index}
+                        className={`px-2 py-1 rounded-full text-xs border ${colors}`}
+                      >
+                        {promotor}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Eddie KI Assistant Floating Button (cloned from SiteLayout) */}
+      <button 
+        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
+        onClick={() => {
+          setChatOpen(true);
+          setIsSpinning(true);
+          setTimeout(() => setIsSpinning(false), 1000); // Reset after animation completes
+        }}
+      >
+        <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
+        <img
+          src="/icons/robot 1.svg"
+          alt="KI Assistant"
+          className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
+        />
+      </button>
+
+      {/* Darkening overlay for when KI assistant chat is shown (cloned from SiteLayout) */}
+      <div 
+        className={`fixed inset-0 bg-black transition-opacity duration-500 z-[35] ${
+          chatOpen ? 'opacity-40' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setChatOpen(false)}
+      ></div>
+
+      {/* Eddie KI Assistant Chat Interface (cloned from SiteLayout) */}
+      {chatOpen && (
+        <div className="fixed bottom-36 right-4 w-72 h-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
+          {/* Chat Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 flex items-center justify-between shadow-md sticky top-0 z-10">
+            <div className="flex items-center">
+              <img
+                src="/icons/robot 1.svg"
+                alt="KI Assistant"
+                className="h-5 w-5 mr-2 brightness-0 invert"
+              />
+              <h3 className="text-white font-medium">Frag Eddie!</h3>
+            </div>
+            <button 
+              onClick={() => setChatOpen(false)} 
+              className="text-white hover:bg-blue-600 rounded-full p-1"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-3 pb-16 scrollbar-thin scrollbar-track-transparent hover:scrollbar-thumb-blue-600 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-blue-500/50 [&::-webkit-scrollbar-thumb:hover]:bg-blue-500">
+            <div className="space-y-3">
+              {chatMessages.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                      message.role === 'user' 
+                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100' 
+                        : 'bg-blue-400 text-white'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Chat Input */}
+          <div className="absolute bottom-3 left-3 right-3 z-20">
+            <form onSubmit={sendMessage} className="relative">
+              <input 
+                type="text"
+                value={chatInput} 
+                onChange={(e) => setChatInput(e.target.value)} 
+                placeholder="Frag Eddie egal was..." 
+                className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 placeholder:text-xs"
+                style={{ 
+                  border: 'none', 
+                  boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
+                  WebkitAppearance: 'none', 
+                  MozAppearance: 'none', 
+                  appearance: 'none',
+                  background: 'var(--input-bg, linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95)))'
+                }}
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center"
+                disabled={!chatInput.trim()}
+              >
+                <Send className="h-3.5 w-3.5 rotate-15" />
+              </Button>
+            </form>
+          </div>
         </div>
       )}
     </div>
