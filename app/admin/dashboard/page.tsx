@@ -297,7 +297,6 @@ export default function AdminDashboard() {
     );
     
     setIsEditingMessage(false);
-    setShowMessageDetail(false);
   };
   
   // Region gradient helper
@@ -1728,58 +1727,56 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         style={{ 
                           scrollbarWidth: 'none', 
                           msOverflowStyle: 'none',
-                          background: isEnhancing ? '#dbeafe' : 'transparent',
+                          background: isEnhancing ? 'linear-gradient(135deg, #9FC6FF 0%, #5D97FF 25%, #4663ED 75%, #4F48E6 100%)' : 'transparent',
                           color: isEnhancing ? 'transparent' : '#111827',
-                          transition: isEnhancing ? 'none' : 'background 1000ms, color 1000ms'
+                          transition: isEnhancing ? 'none' : 'background 1000ms, color 1000ms',
+                          border: isEnhancing ? '2px solid transparent' : '1px solid #d1d5db',
+                          borderRadius: '8px',
+                          backgroundImage: isEnhancing ? 'linear-gradient(135deg, #9FC6FF 0%, #5D97FF 25%, #4663ED 75%, #4F48E6 100%), linear-gradient(135deg, #9FC5FF 0%, #2B277F 100%)' : 'none',
+                          backgroundOrigin: isEnhancing ? 'border-box' : 'padding-box',
+                          backgroundClip: isEnhancing ? 'padding-box, border-box' : 'border-box'
                         }}
                       />
                       
-                      {/* Floating Sparkles across entire input field */}
+                      {/* Single Scanning Line Animation */}
                       {isEnhancing && (
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-                          {[
-                            // First string of floating sparkles
-                            { id: 1, top: '15%', left: '10%', delay: '0s', size: 'h-3 w-3' },
-                            { id: 2, top: '35%', left: '25%', delay: '0.3s', size: 'h-4 w-4' },
-                            { id: 3, top: '55%', left: '40%', delay: '0.6s', size: 'h-3 w-3' },
-                            { id: 4, top: '25%', left: '60%', delay: '0.9s', size: 'h-4 w-4' },
-                            { id: 5, top: '45%', left: '75%', delay: '1.2s', size: 'h-3 w-3' },
-                            { id: 6, top: '65%', left: '85%', delay: '1.5s', size: 'h-4 w-4' },
-                            // Second string of floating sparkles
-                            { id: 7, top: '70%', left: '15%', delay: '0.2s', size: 'h-3 w-3' },
-                            { id: 8, top: '50%', left: '30%', delay: '0.5s', size: 'h-4 w-4' },
-                            { id: 9, top: '30%', left: '45%', delay: '0.8s', size: 'h-3 w-3' },
-                            { id: 10, top: '10%', left: '65%', delay: '1.1s', size: 'h-4 w-4' },
-                            { id: 11, top: '80%', left: '50%', delay: '1.4s', size: 'h-3 w-3' },
-                            { id: 12, top: '60%', left: '20%', delay: '1.7s', size: 'h-4 w-4' },
-                            // Third string of floating sparkles
-                            { id: 13, top: '20%', left: '35%', delay: '0.1s', size: 'h-3 w-3' },
-                            { id: 14, top: '40%', left: '55%', delay: '0.4s', size: 'h-4 w-4' },
-                            { id: 15, top: '75%', left: '70%', delay: '0.7s', size: 'h-3 w-3' },
-                            { id: 16, top: '85%', left: '30%', delay: '1.0s', size: 'h-4 w-4' },
-                            { id: 17, top: '40%', left: '15%', delay: '1.3s', size: 'h-3 w-3' },
-                            { id: 18, top: '20%', left: '80%', delay: '1.6s', size: 'h-4 w-4' },
-                            // Fourth string of floating sparkles
-                            { id: 19, top: '60%', left: '45%', delay: '0.15s', size: 'h-3 w-3' },
-                            { id: 20, top: '30%', left: '70%', delay: '0.45s', size: 'h-4 w-4' },
-                            { id: 21, top: '85%', left: '55%', delay: '0.75s', size: 'h-3 w-3' },
-                            { id: 22, top: '50%', left: '10%', delay: '1.05s', size: 'h-4 w-4' },
-                            { id: 23, top: '15%', left: '45%', delay: '1.35s', size: 'h-3 w-3' },
-                            { id: 24, top: '75%', left: '25%', delay: '1.65s', size: 'h-4 w-4' }
-                          ].map((sparkle) => (
-                            <Sparkles
-                              key={sparkle.id}
-                              className={`absolute ${sparkle.size} text-blue-600 opacity-70 animate-ping`}
-                              style={{
-                                top: sparkle.top,
-                                left: sparkle.left,
-                                animationDelay: sparkle.delay,
-                                animationDuration: '1.5s'
-                              }}
-                            />
-                          ))}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 rounded-lg">
+                          <div 
+                            className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg"
+                            style={{
+                              left: '0%',
+                              animation: 'scan-across 2s ease-in-out infinite',
+                              filter: 'blur(1px)'
+                            }}
+                          />
+                          <div 
+                            className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg"
+                            style={{
+                              top: '0%',
+                              animation: 'scan-down 2s ease-in-out infinite',
+                              filter: 'blur(1px)'
+                            }}
+                          />
                         </div>
                       )}
+                      
+                      <style jsx>{`
+                        @keyframes scan-across {
+                          0% { left: -2%; opacity: 0; }
+                          10% { opacity: 0.9; }
+                          50% { opacity: 1; }
+                          90% { opacity: 0.9; }
+                          100% { left: 102%; opacity: 0; }
+                        }
+                        
+                        @keyframes scan-down {
+                          0% { top: -2%; opacity: 0; }
+                          10% { opacity: 0.9; }
+                          50% { opacity: 1; }
+                          90% { opacity: 0.9; }
+                          100% { top: 102%; opacity: 0; }
+                        }
+                      `}</style>
 
                       {/* Magic Wand Icon */}
                       <div className="absolute bottom-3 right-3 z-20">
@@ -1857,13 +1854,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showActivePromotionsModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-6xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(255, 185, 151, 0.003) 50%, rgba(255, 133, 82, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
-            }}
+            className="w-full max-w-6xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -1885,8 +1878,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     placeholder="Promotor suchen..."
                     value={activePromotionsSearch}
                     onChange={(e) => setActivePromotionsSearch(e.target.value)}
-                    className="px-3 py-1.5 text-sm border-0 bg-white/60 rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
-                    style={{ opacity: 0.7 }}
+                    className="px-3 py-1.5 text-sm border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
                   />
                   <div className="flex items-center space-x-2">
                     <Button
@@ -1916,7 +1908,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             <CardContent 
               className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
               style={{ 
-                backdropFilter: 'none',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
@@ -1945,11 +1936,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             key={einsatz.id} 
                             className={`p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm ${
                               statusColor === 'green' 
-                                ? 'bg-gradient-to-r from-green-50/60 to-white/60' 
+                                ? 'bg-gradient-to-r from-white to-green-50/35' 
                                 : statusColor === 'orange'
-                                ? 'bg-gradient-to-r from-orange-50/60 to-white/60'
+                                ? 'bg-orange-50'
                                 : statusColor === 'red'
-                                ? 'bg-gradient-to-r from-red-50/60 to-white/60'
+                                ? 'bg-red-50'
                                 : 'bg-white'
                             }`}
                           >
@@ -2007,13 +1998,13 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm ${
+                            className={`p-3 rounded-lg border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-sm ${
                               statusColor === 'green' 
-                                ? 'bg-gradient-to-br from-green-50/60 to-white/60' 
+                                ? 'bg-gradient-to-br from-white to-green-50/35' 
                                 : statusColor === 'orange'
-                                ? 'bg-gradient-to-br from-orange-50/60 to-white/60'
+                                ? 'bg-orange-50'
                                 : statusColor === 'red'
-                                ? 'bg-gradient-to-br from-red-50/60 to-white/60'
+                                ? 'bg-red-50'
                                 : 'bg-white'
                             }`}
                           >
@@ -2072,13 +2063,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showOffeneAnfragenModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-6xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(251, 146, 60, 0.003) 50%, rgba(234, 88, 12, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(234, 88, 12, 0.06), 0 2px 8px -1px rgba(251, 146, 60, 0.04), 0 8px 32px -4px rgba(234, 88, 12, 0.03)'
-            }}
+            className="w-full max-w-6xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -2106,7 +2093,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             <CardContent 
               className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
               style={{ 
-                backdropFilter: 'none',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
@@ -2121,7 +2107,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   {pendingRequests.map((request) => (
                     <div 
                       key={request.id} 
-                      className="p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm bg-gradient-to-r from-orange-50/60 to-white/60"
+                      className="p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm bg-gradient-to-r from-white to-orange-50"
                     >
                       <div className="flex items-center justify-between">
                         <div className="grid grid-cols-5 gap-4 flex-1 items-center">
@@ -2179,13 +2165,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showActivePromotorenModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-6xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(59, 130, 246, 0.003) 50%, rgba(29, 78, 216, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(29, 78, 216, 0.06), 0 2px 8px -1px rgba(59, 130, 246, 0.04), 0 8px 32px -4px rgba(29, 78, 216, 0.03)'
-            }}
+            className="w-full max-w-6xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -2204,8 +2186,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     placeholder="Promotor suchen..."
                     value={activePromotorenSearch}
                     onChange={(e) => setActivePromotorenSearch(e.target.value)}
-                    className="px-3 py-1.5 text-sm border-0 bg-white/60 rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
-                    style={{ opacity: 0.7 }}
+                    className="px-3 py-1.5 text-sm border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
                   />
                   <div className="flex items-center space-x-2">
                     <Button
@@ -2223,7 +2204,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             <CardContent 
               className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
               style={{ 
-                backdropFilter: 'none',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
@@ -2234,7 +2214,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   .map((promotor) => (
                   <div 
                     key={promotor.id} 
-                    className="p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-gradient-to-br from-blue-50/20 to-white/60"
+                    className="p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-sm bg-white"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -2266,11 +2246,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showDeclineModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-md border border-white/20 shadow-xl"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(251, 146, 60, 0.003) 50%, rgba(234, 88, 12, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(234, 88, 12, 0.06), 0 2px 8px -1px rgba(251, 146, 60, 0.04), 0 8px 32px -4px rgba(234, 88, 12, 0.03)'
-            }}
+            className="w-full max-w-md border border-gray-200 shadow-sm bg-white"
           >
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
@@ -2323,13 +2299,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showKpiPopup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-4xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(168, 85, 247, 0.003) 50%, rgba(126, 34, 206, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
-            }}
+            className="w-full max-w-4xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -2353,9 +2325,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               
               {/* Navigation Menu */}
               <div className="mt-4">
-                <div className="flex bg-gray-100/30 dark:bg-gray-800/30 rounded-lg p-1 max-w-sm mx-auto relative">
+                <div className="flex bg-gray-100 rounded-lg p-1 max-w-sm mx-auto relative">
                   <div 
-                    className={`absolute top-1 bottom-1 bg-white/50 dark:bg-gray-700/50 rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+                    className={`absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-300 ease-in-out ${
                       kpiPopupActiveTab === "ca-kpis" 
                         ? "left-1 right-1/2 mr-0.5" 
                         : "left-1/2 right-1 ml-0.5"
@@ -2368,8 +2340,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   >
                     <span className={`transition-all duration-200 ${
                       kpiPopupActiveTab === "ca-kpis" 
-                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent" 
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                        ? "text-gray-900 font-medium" 
+                        : "text-gray-600 hover:text-gray-900"
                     }`}>CA KPIs</span>
                   </button>
                   <button
@@ -2378,8 +2350,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   >
                     <span className={`transition-all duration-200 ${
                       kpiPopupActiveTab === "mystery-shop" 
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" 
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                        ? "text-gray-900 font-medium" 
+                        : "text-gray-600 hover:text-gray-900"
                     }`}>Mystery Shop</span>
                   </button>
                 </div>
@@ -2389,7 +2361,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             <CardContent 
               className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" 
               style={{ 
-                backdropFilter: 'none',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
@@ -2399,8 +2370,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   {/* Three timeframes in horizontal layout */}
                   <div className="grid grid-cols-3 gap-6">
                     {/* All Time (17) */}
-                    <div className="bg-gradient-to-br from-purple-50/50 to-white/50 p-4 rounded-lg border border-purple-100">
-                      <h3 className="text-center font-medium text-purple-800 mb-4">All Time (17)</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">All Time (17)</h3>
                       <div className="space-y-1 mx-2">
                                                  {/* MC/ET */}
                          <div className="text-center py-0.5">
@@ -2453,8 +2424,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     </div>
 
                     {/* Last 30 Days (17) */}
-                    <div className="bg-gradient-to-br from-blue-50/50 to-white/50 p-4 rounded-lg border border-blue-100">
-                      <h3 className="text-center font-medium text-blue-800 mb-4">Last 30 Days (17)</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">Last 30 Days (17)</h3>
                       <div className="space-y-1 mx-2">
                                                  {/* MC/ET */}
                          <div className="text-center py-0.5">
@@ -2507,8 +2478,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     </div>
 
                     {/* Last 6 Months (17) */}
-                    <div className="bg-gradient-to-br from-green-50/50 to-white/50 p-4 rounded-lg border border-green-100">
-                      <h3 className="text-center font-medium text-green-800 mb-4">Last 6 Months (17)</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">Last 6 Months (17)</h3>
                       <div className="space-y-1 mx-2">
                                                  {/* MC/ET */}
                          <div className="text-center py-0.5">
@@ -2562,7 +2533,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   </div>
 
                   {/* Line Chart */}
-                  <div className="bg-white/50 p-6 rounded-lg border border-gray-200">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Monatlicher Trend-Verlauf</h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={historyData}>
@@ -2653,8 +2624,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   {/* Three timeframes in horizontal layout */}
                   <div className="grid grid-cols-3 gap-6">
                     {/* All Time */}
-                    <div className="bg-gradient-to-br from-purple-50/50 to-white/50 p-4 rounded-lg border border-purple-100">
-                      <h3 className="text-center font-medium text-purple-800 mb-4">All Time</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">All Time</h3>
                       <div className="space-y-1 mx-2">
                         <div className="text-center py-0.5">
                           <div className="flex items-center justify-center mb-1">
@@ -2673,8 +2644,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     </div>
 
                     {/* Last 30 Days */}
-                    <div className="bg-gradient-to-br from-blue-50/50 to-white/50 p-4 rounded-lg border border-blue-100">
-                      <h3 className="text-center font-medium text-blue-800 mb-4">Last 30 Days</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">Last 30 Days</h3>
                       <div className="space-y-1 mx-2">
                         <div className="text-center py-0.5">
                           <div className="flex items-center justify-center mb-1">
@@ -2693,8 +2664,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     </div>
 
                     {/* Last 6 Months */}
-                    <div className="bg-gradient-to-br from-green-50/50 to-white/50 p-4 rounded-lg border border-green-100">
-                      <h3 className="text-center font-medium text-green-800 mb-4">Last 6 Months</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="text-center font-medium text-gray-700 mb-4">Last 6 Months</h3>
                       <div className="space-y-1 mx-2">
                         <div className="text-center py-0.5">
                           <div className="flex items-center justify-center mb-1">
@@ -2714,7 +2685,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   </div>
 
                   {/* Line Chart */}
-                  <div className="bg-white/50 p-6 rounded-lg border border-gray-200">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Mystery Shop Trend-Verlauf</h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={mysteryShopHistoryData}>
@@ -2839,13 +2810,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showPromotorSelection && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-4xl border border-white/20 shadow-xl max-h-[90vh] overflow-hidden backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
-            }}
+            className="w-full max-w-4xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold text-gray-900">Promotoren auswählen</CardTitle>
                 <Button
@@ -2867,8 +2834,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     placeholder="Promotor suchen..."
                     value={promotorSelectionSearch}
                     onChange={(e) => setPromotorSelectionSearch(e.target.value)}
-                    className="px-3 py-1.5 text-sm border-0 bg-white/60 rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
-                    style={{ opacity: 0.7 }}
+                    className="px-3 py-1.5 text-sm border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
                   />
                 </div>
                 
@@ -2972,7 +2938,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             <CardContent 
               className="p-6 flex flex-col h-[400px] [&::-webkit-scrollbar]:hidden" 
               style={{ 
-                backdropFilter: 'none',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none'
               }}
@@ -3098,13 +3063,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-md border border-white/20 shadow-xl backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
-            }}
+            className="w-full max-w-md border border-gray-200 shadow-sm bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Calendar className="h-5 w-5 text-gray-900" />
@@ -3125,7 +3086,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               {/* Message Preview */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Nachricht</label>
-                <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {messageText || "Keine Nachricht eingegeben..."}
                 </div>
               </div>
@@ -3133,7 +3094,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               {/* Recipients Preview */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Empfänger</label>
-                <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
                   {selectedPromotors.length === 0 
                     ? "Keine Promotoren ausgewählt..."
                     : selectedPromotors.length === 1 
@@ -3151,7 +3112,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
                 />
               </div>
               
@@ -3162,23 +3123,23 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   type="time"
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
                 />
               </div>
               
               {/* Action Buttons */}
               <div className="flex space-x-3 pt-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setShowScheduleModal(false)}
-                  className="flex-1 bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
+                  className="flex-1"
                 >
                   Abbrechen
                 </Button>
                 <Button
                   onClick={handleScheduleMessage}
                   disabled={!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0}
-                  className="flex-1 bg-gradient-to-r from-blue-500/80 to-indigo-600/80 text-white hover:from-blue-600/90 hover:to-indigo-700/90 backdrop-blur-sm border border-blue-200/30"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
                 >
                   Planen
                 </Button>
@@ -3192,13 +3153,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       {showMessageDetail && selectedMessage && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
-            className="w-full max-w-md border border-white/20 shadow-xl backdrop-blur-none"
-            style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, rgba(71, 85, 105, 0.003) 50%, rgba(51, 65, 85, 0.005) 100%)',
-              boxShadow: '0 4px 20px -2px rgba(51, 65, 85, 0.06), 0 2px 8px -1px rgba(71, 85, 105, 0.04), 0 8px 32px -4px rgba(51, 65, 85, 0.03)'
-            }}
+            className="w-full max-w-md border border-gray-200 shadow-sm bg-white"
           >
-            <CardHeader className="pb-4 border-b border-gray-100/50">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold text-gray-900">Geplante Nachricht</CardTitle>
                 <div className="flex items-center space-x-2">
@@ -3238,11 +3195,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   <textarea
                     value={editedMessageText}
                     onChange={(e) => setEditedMessageText(e.target.value)}
-                    className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm min-h-24 max-h-32 resize-none overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                    className="w-full p-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm min-h-24 max-h-32 resize-none overflow-y-auto [&::-webkit-scrollbar]:hidden"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   />
                 ) : (
-                  <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
                     {selectedMessage.fullText}
                   </div>
                 )}
@@ -3257,10 +3214,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       type="date"
                       value={editedDate}
                       onChange={(e) => setEditedDate(e.target.value)}
-                      className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                      className="w-full p-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
                     />
                   ) : (
-                    <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
                       {selectedMessage.date}
                     </div>
                   )}
@@ -3272,10 +3229,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       type="time"
                       value={editedTime}
                       onChange={(e) => setEditedTime(e.target.value)}
-                      className="w-full p-3 border border-gray-200/50 bg-white/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm backdrop-blur-sm"
+                      className="w-full p-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
                     />
                   ) : (
-                    <div className="p-3 bg-white/40 rounded-lg text-sm text-gray-800">
+                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
                       {selectedMessage.time}
                     </div>
                   )}
