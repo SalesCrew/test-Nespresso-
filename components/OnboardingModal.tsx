@@ -660,9 +660,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 animate-fade-in">
                 Du bist einen Schritt näher dem Team beizutreten! 🎉
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 animate-fade-in-delay">
+                             <p className="text-gray-600 dark:text-gray-400 animate-fade-in-delay">
                 Das Team meldet sich bei dir, sobald alle Daten ausgewertet wurden.
-              </p>
+               </p>
               
               {/* Loading dots */}
               <div className="flex justify-center space-x-2 mt-6">

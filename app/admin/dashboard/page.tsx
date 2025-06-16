@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Bell,
   Calendar,
@@ -31,6 +31,8 @@ import {
   Wand2,
   Sparkles,
   Edit3,
+  ChevronDown,
+  ChevronUp,
 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messageForm, setMessageForm] = useState({
@@ -63,6 +67,7 @@ export default function AdminDashboard() {
   const [declineReason, setDeclineReason] = useState('');
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [showKpiView, setShowKpiView] = useState(true); // true for CA KPIs, false for Mystery Shop
+  const [isEinsaetzeExpanded, setIsEinsaetzeExpanded] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
   
   // KPI Popup state
@@ -105,6 +110,19 @@ export default function AdminDashboard() {
       { id: 6, preview: "Monatliche Teambesprech­ung...", fullText: "Monatliche Teambesprechung findet wie geplant statt.", time: "15:30", date: "Mittwoch", dateISO: getNextWeekday(3).toISOString().split('T')[0], recipients: "8 Promotoren", promotors: ["Martin Schneider", "Nina Weiss", "Patrick Schwarz", "Andrea Roth", "Florian Braun", "Jessica Grün", "Daniel Gelb", "Sabrina Blau"] }
     ];
   });
+
+  // Toggle state for scheduled messages vs history
+  const [showHistory, setShowHistory] = useState(false);
+
+  // History data for sent messages (both scheduled and instant)
+  const [messageHistory] = useState([
+    { id: 101, preview: "Erinnerung: Teammeeting heute um 14:00...", fullText: "Erinnerung: Teammeeting heute um 14:00 in der Zentrale. Agenda wurde per E-Mail versendet.", time: "08:30", date: "23. Nov 2024", recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber"], sent: true, type: "scheduled" },
+    { id: 102, preview: "Neue Produktinformationen verfügbar...", fullText: "Neue Produktinformationen verfügbar im Portal. Bitte bis Ende der Woche durcharbeiten.", time: "12:15", date: "22. Nov 2024", recipients: "8 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer"], sent: true, type: "instant" },
+    { id: 103, preview: "Wichtige Änderung der Arbeitszeiten...", fullText: "Wichtige Änderung der Arbeitszeiten ab nächster Woche. Details in der separaten E-Mail.", time: "16:45", date: "21. Nov 2024", recipients: "Region Süd", promotors: ["Maria Huber", "David Klein"], sent: true, type: "scheduled" },
+    { id: 104, preview: "Verkaufszahlen übertroffen - Gratulation...", fullText: "Verkaufszahlen übertroffen - Gratulation an das gesamte Team für die hervorragende Leistung diese Woche!", time: "17:20", date: "20. Nov 2024", recipients: "Alle", promotors: ["Emma Wagner", "Paul Berger", "Julia Mayer"], sent: true, type: "instant" },
+    { id: 105, preview: "Schulung nächste Woche verschoben...", fullText: "Schulung nächste Woche verschoben auf Donnerstag. Neue Einladung folgt.", time: "09:10", date: "19. Nov 2024", recipients: "5 Promotoren", promotors: ["Felix Gruber", "Sophie Reiter"], sent: true, type: "scheduled" },
+    { id: 106, preview: "Notfall: Einsatz in Wien abgesagt...", fullText: "Notfall: Einsatz in Wien abgesagt wegen technischer Probleme. Ersatztermin wird bekannt gegeben.", time: "11:30", date: "18. Nov 2024", recipients: "Wien Team", promotors: ["Max Köhler"], sent: true, type: "instant" }
+  ]);
   
   // Message detail popup states
   const [showMessageDetail, setShowMessageDetail] = useState(false);
@@ -932,12 +950,12 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   };
 
   const navigationItems = [
-    { id: "overview", label: "Übersicht", icon: Home, active: true },
-    { id: "promotions", label: "Promotions", icon: Briefcase },
-    { id: "team", label: "Team", icon: Users },
-    { id: "messages", label: "Nachrichten", icon: MessageSquare },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "settings", label: "Einstellungen", icon: Settings }
+    { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard' },
+    { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan' },
+    { id: "team", label: "Team", icon: Users, active: false },
+    { id: "messages", label: "Nachrichten", icon: MessageSquare, active: false },
+    { id: "analytics", label: "Analytics", icon: BarChart3, active: false },
+    { id: "settings", label: "Einstellungen", icon: Settings, active: false }
   ];
 
   // Eddie Chat Assistant functions (cloned from SiteLayout)
@@ -1048,7 +1066,21 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             {navigationItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={() => {
+                  if (item.active) {
+                    // If clicking on the currently active page, toggle sidebar
+                    setSidebarOpen(!sidebarOpen);
+                  } else {
+                    // If clicking on a different page, navigate and collapse sidebar
+                    setSidebarOpen(false);
+                    if (item.id === 'einsatzplan') {
+                      router.push('/admin/einsatzplan');
+                    } else if (item.id === 'overview') {
+                      router.push('/admin/dashboard');
+                    }
+                    // Add other navigation items as needed
+                  }
+                }}
                 className={`${sidebarOpen ? 'w-full flex items-center space-x-3 px-3 py-2' : 'w-8 h-8 flex items-center justify-center mx-auto'} rounded-lg transition-colors ${
                   item.active 
                     ? 'bg-blue-500 text-white' 
@@ -1073,26 +1105,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               <h1 className="text-2xl font-semibold text-gray-900">Guten Tag, Admin</h1>
               <p className="text-gray-500 text-sm">Hier ist Ihr Überblick für heute</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button
-                onClick={() => setShowMessageModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Nachricht senden
-              </Button>
-              <Button variant="outline" size="icon" className="relative">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-              </Button>
-            </div>
+
           </div>
         </header>
 
         {/* Dashboard Content */}
         <main className="p-8 space-y-6">
           {/* Top Row: Eddie Card & Today's Einsätze */}
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4 relative">
             {/* Eddie Assistant Card */}
             <Card 
               className="border-0 w-96 h-80 bg-gradient-to-br from-white to-blue-50/30"
@@ -1127,14 +1147,15 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             </Card>
 
             {/* Today's Einsätze Card */}
-            <Card 
-              className="border-0 h-80 flex-1"
-              style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, rgba(255, 185, 151, 0.003) 50%, rgba(255, 133, 82, 0.005) 100%)',
-                boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
-              }}
-            >
-              <CardContent className="p-6 h-full flex flex-col">
+            <div className="flex-1 relative h-80">
+              <Card 
+                className={`border-0 w-full transition-all duration-300 ${isEinsaetzeExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'relative h-full'}`}
+                style={{
+                  background: 'linear-gradient(135deg, #ffffff 0%, rgba(255, 185, 151, 0.003) 50%, rgba(255, 133, 82, 0.005) 100%)',
+                  boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
+                }}
+              >
+              <CardContent className={`p-6 h-full flex flex-col ${isEinsaetzeExpanded ? 'bg-white' : ''}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-gray-600" />
@@ -1149,6 +1170,16 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         <LayoutGrid className="h-4 w-4 text-gray-600" />
                       ) : (
                         <LayoutList className="h-4 w-4 text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setIsEinsaetzeExpanded(!isEinsaetzeExpanded)}
+                      className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                    >
+                      {isEinsaetzeExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-gray-600" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-gray-600" />
                       )}
                     </button>
                     <div className="relative">
@@ -1296,7 +1327,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       })}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-4 gap-2 h-fit">
+                    <div className="grid grid-cols-5 gap-2 h-fit">
                       {filteredEinsaetze.map((einsatz) => {
                         const statusColor = getStatusColor(einsatz);
                         return (
@@ -1357,8 +1388,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     </div>
                   )}
                 </div>
+
               </CardContent>
-            </Card>
+              </Card>
+            </div>
           </div>
 
           {/* Status Indicators */}
@@ -1606,141 +1639,158 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     <CardTitle className="text-lg font-semibold text-gray-900">Nachrichten Terminal</CardTitle>
                   </div>
                 </div>
-                {/* Add Promotors Icon - Directly above input field */}
-                {selectedPromotors.length > 0 ? (
-                  <div 
-                    onClick={() => setShowPromotorSelection(true)}
-                    className="flex items-center space-x-1 cursor-pointer hover:opacity-75 transition-opacity"
-                  >
-                    <Check className="h-4 w-4 text-green-600 opacity-50" />
-                    <span className="text-xs text-black opacity-30">
-                      {(() => {
-                        // Determine if all selected promotors are from same region
-                        const allPromotors = [
-                          { name: "Sarah Schmidt", region: "wien-noe-bgl" },
-                          { name: "Michael Weber", region: "steiermark" },
-                          { name: "Jan Müller", region: "salzburg" },
-                          { name: "Lisa König", region: "wien-noe-bgl" },
-                          { name: "Anna Bauer", region: "oberoesterreich" },
-                          { name: "Tom Fischer", region: "tirol" },
-                          { name: "Maria Huber", region: "steiermark" },
-                          { name: "David Klein", region: "vorarlberg" },
-                          { name: "Emma Wagner", region: "kaernten" },
-                          { name: "Paul Berger", region: "wien-noe-bgl" },
-                          { name: "Julia Mayer", region: "salzburg" },
-                          { name: "Felix Gruber", region: "oberoesterreich" },
-                          { name: "Sophie Reiter", region: "steiermark" },
-                          { name: "Max Köhler", region: "tirol" },
-                          { name: "Lena Fuchs", region: "vorarlberg" },
-                          { name: "Klaus Müller", region: "wien-noe-bgl" },
-                          { name: "Sandra Hofer", region: "steiermark" },
-                          { name: "Martin Schneider", region: "salzburg" },
-                          { name: "Nina Weiss", region: "oberoesterreich" },
-                          { name: "Patrick Schwarz", region: "tirol" },
-                          { name: "Andrea Roth", region: "vorarlberg" },
-                          { name: "Florian Braun", region: "kaernten" },
-                          { name: "Jessica Grün", region: "wien-noe-bgl" },
-                          { name: "Daniel Gelb", region: "steiermark" },
-                          { name: "Sabrina Blau", region: "salzburg" },
-                          { name: "Thomas Orange", region: "oberoesterreich" },
-                          { name: "Melanie Violett", region: "tirol" },
-                          { name: "Christian Rosa", region: "vorarlberg" },
-                          { name: "Vanessa Grau", region: "kaernten" },
-                          { name: "Marco Silber", region: "wien-noe-bgl" },
-                          { name: "Tanja Gold", region: "steiermark" },
-                          { name: "Oliver Bronze", region: "salzburg" },
-                          { name: "Carina Kupfer", region: "oberoesterreich" },
-                          { name: "Lukas Platin", region: "tirol" },
-                          { name: "Stephanie Kristall", region: "vorarlberg" },
-                          { name: "Benjamin Diamant", region: "kaernten" },
-                          { name: "Michelle Rubin", region: "wien-noe-bgl" },
-                          { name: "Tobias Saphir", region: "steiermark" },
-                          { name: "Nadine Smaragd", region: "salzburg" },
-                          { name: "Kevin Topas", region: "oberoesterreich" },
-                          { name: "Franziska Opal", region: "tirol" },
-                          { name: "Dominik Achat", region: "vorarlberg" },
-                          { name: "Simone Jade", region: "kaernten" },
-                          { name: "Philip Onyx", region: "wien-noe-bgl" },
-                          { name: "Verena Quarz", region: "steiermark" },
-                          { name: "Fabian Marmor", region: "salzburg" },
-                          { name: "Isabella Granit", region: "oberoesterreich" },
-                          { name: "Maximilian Schiefer", region: "tirol" },
-                          { name: "Katharina Basalt", region: "vorarlberg" },
-                          { name: "Wolfgang Kalk", region: "kaernten" },
-                          { name: "Elena Ton", region: "wien-noe-bgl" },
-                          { name: "Robert Sand", region: "steiermark" },
-                          { name: "Nicole Lehm", region: "salzburg" },
-                          { name: "Stefan Kies", region: "oberoesterreich" },
-                          { name: "Petra Fels", region: "tirol" },
-                          { name: "Alexander Stein", region: "vorarlberg" },
-                          { name: "Christina Berg", region: "kaernten" },
-                          { name: "Manuel Tal", region: "wien-noe-bgl" },
-                          { name: "Andrea Bach", region: "steiermark" },
-                          { name: "Daniel See", region: "salzburg" },
-                          { name: "Sabine Meer", region: "oberoesterreich" },
-                          { name: "Thomas Ozean", region: "tirol" }
-                        ];
-                        
-                        const selectedRegions = selectedPromotors.map(name => {
-                          const promotor = allPromotors.find(p => p.name === name);
-                          return promotor?.region;
-                        }).filter(Boolean);
-                        
-                        const uniqueRegions = [...new Set(selectedRegions)];
-                        
-                        if (uniqueRegions.length === 1 && uniqueRegions[0]) {
-                          const regionNames: Record<string, string> = {
-                            "wien-noe-bgl": "W/NÖ/BGL",
-                            "steiermark": "Steiermark",
-                            "salzburg": "Salzburg", 
-                            "oberoesterreich": "Oberösterreich",
-                            "tirol": "Tirol",
-                            "vorarlberg": "Vorarlberg",
-                            "kaernten": "Kärnten"
-                          };
-                          return `${regionNames[uniqueRegions[0]]} Cluster ausgewählt`;
-                        } else {
-                          return `${selectedPromotors.length} Promotoren ausgewählt`;
-                        }
-                      })()}
-                    </span>
-                  </div>
-                ) : (
-                  <UserPlus 
-                    onClick={() => setShowPromotorSelection(true)}
-                    className="h-4 w-4 text-black opacity-50 cursor-pointer hover:opacity-75 transition-opacity"
-                  />
-                )}
+
               </CardHeader>
               <CardContent className="p-4 pt-2 flex-1 flex flex-col">
                 <div className="flex space-x-4 flex-1">
                   {/* Message Input - Left Side */}
                   <div className="flex-1 flex flex-col space-y-3">
-                    <div className="flex-1 relative">
-                      <textarea
-                        placeholder="Nachricht eingeben..."
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        className={`w-full h-full p-3 pr-12 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm [&::-webkit-scrollbar]:hidden ${
-                          isEnhancing ? '' : 'transition-all duration-1000'
-                        }`}
-                        style={{ 
-                          scrollbarWidth: 'none', 
-                          msOverflowStyle: 'none',
-                          background: isEnhancing ? 'linear-gradient(135deg, #9FC6FF 0%, #5D97FF 25%, #4663ED 75%, #4F48E6 100%)' : 'transparent',
-                          color: isEnhancing ? 'transparent' : '#111827',
-                          transition: isEnhancing ? 'none' : 'background 1000ms, color 1000ms',
-                          border: isEnhancing ? '2px solid transparent' : '1px solid #d1d5db',
-                          borderRadius: '8px',
-                          backgroundImage: isEnhancing ? 'linear-gradient(135deg, #9FC6FF 0%, #5D97FF 25%, #4663ED 75%, #4F48E6 100%), linear-gradient(135deg, #9FC5FF 0%, #2B277F 100%)' : 'none',
-                          backgroundOrigin: isEnhancing ? 'border-box' : 'padding-box',
-                          backgroundClip: isEnhancing ? 'padding-box, border-box' : 'border-box'
-                        }}
-                      />
+                    <div className="flex-1 relative border border-gray-200 rounded-lg overflow-hidden" style={{
+                      background: isEnhancing ? 'linear-gradient(135deg, #9FC6FF 0%, #5D97FF 25%, #4663ED 75%, #4F48E6 100%)' : 'transparent'
+                    }}>
+                      <div className="absolute inset-0 pb-8">
+                        <textarea
+                          placeholder="Nachricht eingeben..."
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          className={`w-full h-full p-3 border-0 rounded-lg resize-none focus:outline-none focus:ring-0 text-sm [&::-webkit-scrollbar]:hidden ${
+                            isEnhancing ? '' : 'transition-all duration-1000'
+                          }`}
+                          style={{ 
+                            scrollbarWidth: 'none', 
+                            msOverflowStyle: 'none',
+                            background: 'transparent',
+                            color: isEnhancing ? 'transparent' : '#111827',
+                            transition: isEnhancing ? 'none' : 'color 1000ms',
+                            borderRadius: '8px',
+                            borderBottom: 'none !important'
+                          }}
+                        />
+                      </div>
                       
-                      {/* Single Scanning Line Animation */}
+                      {/* Add Promotors Icon - Left side */}
+                      <div className="absolute bottom-3 left-3 z-10">
+                        {selectedPromotors.length > 0 ? (
+                          <div 
+                            onClick={() => setShowPromotorSelection(true)}
+                            className="flex items-center space-x-1 cursor-pointer hover:opacity-75 transition-opacity"
+                          >
+                            <Check className="h-4 w-4 text-green-600 opacity-50" />
+                            <span className="text-xs text-black opacity-30">
+                              {(() => {
+                                // Determine if all selected promotors are from same region
+                                const allPromotors = [
+                                  { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+                                  { name: "Michael Weber", region: "steiermark" },
+                                  { name: "Jan Müller", region: "salzburg" },
+                                  { name: "Lisa König", region: "wien-noe-bgl" },
+                                  { name: "Anna Bauer", region: "oberoesterreich" },
+                                  { name: "Tom Fischer", region: "tirol" },
+                                  { name: "Maria Huber", region: "steiermark" },
+                                  { name: "David Klein", region: "vorarlberg" },
+                                  { name: "Emma Wagner", region: "kaernten" },
+                                  { name: "Paul Berger", region: "wien-noe-bgl" },
+                                  { name: "Julia Mayer", region: "salzburg" },
+                                  { name: "Felix Gruber", region: "oberoesterreich" },
+                                  { name: "Sophie Reiter", region: "steiermark" },
+                                  { name: "Max Köhler", region: "tirol" },
+                                  { name: "Lena Fuchs", region: "vorarlberg" },
+                                  { name: "Klaus Müller", region: "wien-noe-bgl" },
+                                  { name: "Sandra Hofer", region: "steiermark" },
+                                  { name: "Martin Schneider", region: "salzburg" },
+                                  { name: "Nina Weiss", region: "oberoesterreich" },
+                                  { name: "Patrick Schwarz", region: "tirol" },
+                                  { name: "Andrea Roth", region: "vorarlberg" },
+                                  { name: "Florian Braun", region: "kaernten" },
+                                  { name: "Jessica Grün", region: "wien-noe-bgl" },
+                                  { name: "Daniel Gelb", region: "steiermark" },
+                                  { name: "Sabrina Blau", region: "salzburg" },
+                                  { name: "Thomas Orange", region: "oberoesterreich" },
+                                  { name: "Melanie Violett", region: "tirol" },
+                                  { name: "Christian Rosa", region: "vorarlberg" },
+                                  { name: "Vanessa Grau", region: "kaernten" },
+                                  { name: "Marco Silber", region: "wien-noe-bgl" },
+                                  { name: "Tanja Gold", region: "steiermark" },
+                                  { name: "Oliver Bronze", region: "salzburg" },
+                                  { name: "Carina Kupfer", region: "oberoesterreich" },
+                                  { name: "Lukas Platin", region: "tirol" },
+                                  { name: "Stephanie Kristall", region: "vorarlberg" },
+                                  { name: "Benjamin Diamant", region: "kaernten" },
+                                  { name: "Michelle Rubin", region: "wien-noe-bgl" },
+                                  { name: "Tobias Saphir", region: "steiermark" },
+                                  { name: "Nadine Smaragd", region: "salzburg" },
+                                  { name: "Kevin Topas", region: "oberoesterreich" },
+                                  { name: "Franziska Opal", region: "tirol" },
+                                  { name: "Dominik Achat", region: "vorarlberg" },
+                                  { name: "Simone Jade", region: "kaernten" },
+                                  { name: "Philip Onyx", region: "wien-noe-bgl" },
+                                  { name: "Verena Quarz", region: "steiermark" },
+                                  { name: "Fabian Marmor", region: "salzburg" },
+                                  { name: "Isabella Granit", region: "oberoesterreich" },
+                                  { name: "Maximilian Schiefer", region: "tirol" },
+                                  { name: "Katharina Basalt", region: "vorarlberg" },
+                                  { name: "Wolfgang Kalk", region: "kaernten" },
+                                  { name: "Elena Ton", region: "wien-noe-bgl" },
+                                  { name: "Robert Sand", region: "steiermark" },
+                                  { name: "Nicole Lehm", region: "salzburg" },
+                                  { name: "Stefan Kies", region: "oberoesterreich" },
+                                  { name: "Petra Fels", region: "tirol" },
+                                  { name: "Alexander Stein", region: "vorarlberg" },
+                                  { name: "Christina Berg", region: "kaernten" },
+                                  { name: "Manuel Tal", region: "wien-noe-bgl" },
+                                  { name: "Andrea Bach", region: "steiermark" },
+                                  { name: "Daniel See", region: "salzburg" },
+                                  { name: "Sabine Meer", region: "oberoesterreich" },
+                                  { name: "Thomas Ozean", region: "tirol" }
+                                ];
+                                
+                                const selectedRegions = selectedPromotors.map(name => {
+                                  const promotor = allPromotors.find(p => p.name === name);
+                                  return promotor?.region;
+                                }).filter(Boolean);
+                                
+                                const uniqueRegions = [...new Set(selectedRegions)];
+                                
+                                if (uniqueRegions.length === 1 && uniqueRegions[0]) {
+                                  const regionNames: Record<string, string> = {
+                                    "wien-noe-bgl": "W/NÖ/BGL",
+                                    "steiermark": "Steiermark",
+                                    "salzburg": "Salzburg", 
+                                    "oberoesterreich": "Oberösterreich",
+                                    "tirol": "Tirol",
+                                    "vorarlberg": "Vorarlberg",
+                                    "kaernten": "Kärnten"
+                                  };
+                                  return `${regionNames[uniqueRegions[0]]} Cluster ausgewählt`;
+                                } else {
+                                  return `${selectedPromotors.length} Promotoren ausgewählt`;
+                                }
+                              })()}
+                            </span>
+                          </div>
+                        ) : (
+                          <UserPlus 
+                            onClick={() => setShowPromotorSelection(true)}
+                            className="h-4 w-4 text-black opacity-50 cursor-pointer hover:opacity-75 transition-opacity"
+                          />
+                        )}
+                      </div>
+
+                      {/* Magic Wand Icon - Right side */}
+                      <div className="absolute bottom-3 right-3 z-10">
+                        <Wand2 
+                          onClick={enhanceMessage}
+                          className={`h-4 w-4 cursor-pointer transition-all duration-300 ${
+                            !messageText.trim() || isEnhancing 
+                              ? 'text-gray-400 cursor-not-allowed' 
+                              : 'text-blue-600 hover:text-blue-700'
+                          } ${isEnhancing ? 'animate-pulse' : ''}`}
+                        />
+                      </div>
+                      
+                      {/* Single Scanning Line Animation - Covers entire container including footer icons */}
                       {isEnhancing && (
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 rounded-lg">
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 rounded-lg">
                           <div 
                             className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg"
                             style={{
@@ -1777,21 +1827,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           100% { top: 102%; opacity: 0; }
                         }
                       `}</style>
-
-                      {/* Magic Wand Icon */}
-                      <div className="absolute bottom-3 right-3 z-20">
-                        <button
-                          onClick={enhanceMessage}
-                          disabled={!messageText.trim() || isEnhancing}
-                          className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${
-                            !messageText.trim() || isEnhancing 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-blue-100 text-blue-600 hover:bg-blue-200 cursor-pointer'
-                          }`}
-                        >
-                          <Wand2 className={`h-4 w-4 ${isEnhancing ? 'animate-pulse' : ''}`} />
-                        </button>
-                      </div>
                     </div>
                     <div className="flex space-x-2">
                       <button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all">
@@ -1810,32 +1845,66 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   <div className="flex-1 flex flex-col">
                     <div className="bg-white rounded-lg shadow-sm pt-2 px-2 pb-2 flex flex-col">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-gray-900">Geplante Nachrichten</h4>
-                        <span className="text-xs text-gray-500">{scheduledMessages.length} geplant</span>
+                        <h4 
+                          className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                          onClick={() => setShowHistory(!showHistory)}
+                        >
+                          {showHistory ? "Verlauf" : "Geplante Nachrichten"}
+                        </h4>
+                        <span className="text-xs text-gray-500">
+                          {showHistory ? `${messageHistory.length} gesendet` : `${scheduledMessages.length} geplant`}
+                        </span>
                       </div>
-                      <div className="space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '215px' }}>
-                                                {scheduledMessages
-                          .sort((a, b) => {
-                            // Properly combine ISO date and time for sorting
-                            const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
-                            const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
-                            return dateA.getTime() - dateB.getTime(); // Earliest first
-                          })
-                          .map((message) => (
-                          <div 
-                            key={message.id} 
-                            onClick={() => handleMessageClick(message)}
-                            className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                          >
-                            <div className="space-y-1">
-                              <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>{message.date} {message.time}</span>
-                                <span>{message.recipients}</span>
+                                              <div className="space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '215px' }}>
+                          {showHistory ? (
+                            // Show message history
+                            messageHistory
+                              .sort((a, b) => {
+                                // Sort by date descending (newest first)
+                                const dateA = new Date(a.date);
+                                const dateB = new Date(b.date);
+                                return dateB.getTime() - dateA.getTime();
+                              })
+                              .map((message) => (
+                              <div 
+                                key={message.id} 
+                                onClick={() => handleMessageClick(message)}
+                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{message.date} {message.time}</span>
+                                    <span>{message.recipients}</span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
+                            ))
+                          ) : (
+                            // Show scheduled messages
+                            scheduledMessages
+                              .sort((a, b) => {
+                                // Properly combine ISO date and time for sorting
+                                const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
+                                const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
+                                return dateA.getTime() - dateB.getTime(); // Earliest first
+                              })
+                              .map((message) => (
+                              <div 
+                                key={message.id} 
+                                onClick={() => handleMessageClick(message)}
+                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{message.date} {message.time}</span>
+                                    <span>{message.recipients}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
                       </div>
                     </div>
                   </div>
@@ -2214,7 +2283,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   .map((promotor) => (
                   <div 
                     key={promotor.id} 
-                    className="p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-sm bg-white"
+                    className="p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:border-gray-300 hover:shadow-sm hover:scale-[1.02] bg-gradient-to-br from-white to-blue-50"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -3157,24 +3226,28 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           >
             <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-gray-900">Geplante Nachricht</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  {selectedMessage?.sent ? "Gesendete Nachricht" : "Geplante Nachricht"}
+                </CardTitle>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {
-                      if (isEditingMessage) {
-                        handleSaveMessage();
-                      } else {
-                        setIsEditingMessage(true);
-                      }
-                    }}
-                    className="h-5 w-5 text-black opacity-50 hover:opacity-75 transition-opacity"
-                  >
-                    {isEditingMessage ? (
-                      <Check className="h-5 w-5 text-green-600" />
-                    ) : (
-                      <Edit3 className="h-5 w-5" />
-                    )}
-                  </button>
+                  {!selectedMessage?.sent && (
+                    <button
+                      onClick={() => {
+                        if (isEditingMessage) {
+                          handleSaveMessage();
+                        } else {
+                          setIsEditingMessage(true);
+                        }
+                      }}
+                      className="h-5 w-5 text-black opacity-50 hover:opacity-75 transition-opacity"
+                    >
+                      {isEditingMessage ? (
+                        <Check className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <Edit3 className="h-5 w-5" />
+                      )}
+                    </button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -3191,7 +3264,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               {/* Message Content */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Nachricht</label>
-                {isEditingMessage ? (
+                {isEditingMessage && !selectedMessage?.sent ? (
                   <textarea
                     value={editedMessageText}
                     onChange={(e) => setEditedMessageText(e.target.value)}
@@ -3209,7 +3282,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Datum</label>
-                  {isEditingMessage ? (
+                  {isEditingMessage && !selectedMessage?.sent ? (
                     <input
                       type="date"
                       value={editedDate}
@@ -3224,7 +3297,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Zeit</label>
-                  {isEditingMessage ? (
+                  {isEditingMessage && !selectedMessage?.sent ? (
                     <input
                       type="time"
                       value={editedTime}
