@@ -33,6 +33,7 @@ import {
   Edit3,
   ChevronDown,
   ChevronUp,
+  Trash2,
 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,10 @@ export default function AdminDashboard() {
   const [editedMessageText, setEditedMessageText] = useState("");
   const [editedDate, setEditedDate] = useState("");
   const [editedTime, setEditedTime] = useState("");
+  
+  // Delete confirmation states
+  const [deleteConfirmationState, setDeleteConfirmationState] = useState(false);
+  const [deleteConfirmationTimer, setDeleteConfirmationTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Function to select all filtered promotors
   const selectAllFiltered = () => {
@@ -316,49 +321,70 @@ export default function AdminDashboard() {
     
     setIsEditingMessage(false);
   };
+
+  // Function to delete scheduled message
+  const handleDeleteScheduledMessage = (messageId: number) => {
+    setScheduledMessages(prev => prev.filter(msg => msg.id !== messageId));
+  };
+
+  // Function to handle delete button click in message detail popup
+  const handleDeleteClick = () => {
+    if (!deleteConfirmationState) {
+      // First click - vibrate and start timer
+      setDeleteConfirmationState(true);
+      
+      // Clear any existing timer
+      if (deleteConfirmationTimer) {
+        clearTimeout(deleteConfirmationTimer);
+      }
+      
+      // Set timer to reset confirmation state after 2 seconds
+      const timer = setTimeout(() => {
+        setDeleteConfirmationState(false);
+        setDeleteConfirmationTimer(null);
+      }, 2000);
+      
+      setDeleteConfirmationTimer(timer);
+    } else {
+      // Second click within 2 seconds - actually delete
+      if (selectedMessage && !selectedMessage.sent) {
+        handleDeleteScheduledMessage(selectedMessage.id);
+        setShowMessageDetail(false);
+        setDeleteConfirmationState(false);
+        if (deleteConfirmationTimer) {
+          clearTimeout(deleteConfirmationTimer);
+          setDeleteConfirmationTimer(null);
+        }
+      }
+    }
+  };
   
   // Region gradient helper
   const getRegionGradient = (region: string) => {
     switch (region) {
       case "wien-noe-bgl":
-        return "bg-gradient-to-r from-rose-100 to-transparent";
+        return "bg-red-50/40";
       case "steiermark":
-        return "bg-gradient-to-r from-green-100 to-transparent";
+        return "bg-green-50/40";
       case "salzburg":
-        return "bg-gradient-to-r from-sky-100 to-transparent";
+        return "bg-blue-50/40";
       case "oberoesterreich":
-        return "bg-gradient-to-r from-yellow-100 to-transparent";
+        return "bg-yellow-50/40";
       case "tirol":
-        return "bg-gradient-to-r from-purple-100 to-transparent";
+        return "bg-purple-50/40";
       case "vorarlberg":
-        return "bg-gradient-to-r from-orange-100 to-transparent";
+        return "bg-orange-50/40";
       case "kaernten":
-        return "bg-gradient-to-r from-teal-100 to-transparent";
+        return "bg-teal-50/40";
       default:
-        return "bg-gray-100/70";
+        return "bg-gray-50/40";
     }
   };
 
   // Region border helper
   const getRegionBorder = (region: string) => {
-    switch (region) {
-      case "wien-noe-bgl":
-        return "border-rose-200";
-      case "steiermark":
-        return "border-green-200";
-      case "salzburg":
-        return "border-sky-200";
-      case "oberoesterreich":
-        return "border-yellow-200";
-      case "tirol":
-        return "border-purple-200";
-      case "vorarlberg":
-        return "border-orange-200";
-      case "kaernten":
-        return "border-teal-200";
-      default:
-        return "border-gray-200";
-    }
+    // All pills get the same thin grey border
+    return "border-gray-200";
   };
 
   // Get promotor region
@@ -952,7 +978,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   const navigationItems = [
     { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard' },
     { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan' },
-    { id: "team", label: "Team", icon: Users, active: false },
+    { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team' },
     { id: "messages", label: "Nachrichten", icon: MessageSquare, active: false },
     { id: "analytics", label: "Analytics", icon: BarChart3, active: false },
     { id: "settings", label: "Einstellungen", icon: Settings, active: false }
@@ -1047,6 +1073,17 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     };
   }, []);
 
+  // Cleanup delete confirmation state when modal closes
+  useEffect(() => {
+    if (!showMessageDetail) {
+      setDeleteConfirmationState(false);
+      if (deleteConfirmationTimer) {
+        clearTimeout(deleteConfirmationTimer);
+        setDeleteConfirmationTimer(null);
+      }
+    }
+  }, [showMessageDetail, deleteConfirmationTimer]);
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Minimalistic Sidebar */}
@@ -1077,6 +1114,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       router.push('/admin/einsatzplan');
                     } else if (item.id === 'overview') {
                       router.push('/admin/dashboard');
+                    } else if (item.id === 'team') {
+                      router.push('/admin/team');
                     }
                     // Add other navigation items as needed
                   }
@@ -3231,22 +3270,32 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 </CardTitle>
                 <div className="flex items-center space-x-2">
                   {!selectedMessage?.sent && (
-                    <button
-                      onClick={() => {
-                        if (isEditingMessage) {
-                          handleSaveMessage();
-                        } else {
-                          setIsEditingMessage(true);
-                        }
-                      }}
-                      className="h-5 w-5 text-black opacity-50 hover:opacity-75 transition-opacity"
-                    >
-                      {isEditingMessage ? (
-                        <Check className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Edit3 className="h-5 w-5" />
-                      )}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          if (isEditingMessage) {
+                            handleSaveMessage();
+                          } else {
+                            setIsEditingMessage(true);
+                          }
+                        }}
+                        className="h-5 w-5 text-black opacity-50 hover:opacity-75 transition-opacity"
+                      >
+                        {isEditingMessage ? (
+                          <Check className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <Edit3 className="h-5 w-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDeleteClick}
+                        className={`p-1 text-gray-400 hover:text-red-500 transition-colors ${
+                          deleteConfirmationState ? 'animate-vibrate text-red-500' : ''
+                        }`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
                   )}
                   <Button
                     variant="ghost"

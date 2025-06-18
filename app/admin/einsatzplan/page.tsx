@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import * as XLSX from 'xlsx';
 import { 
   Home, 
@@ -25,7 +26,8 @@ import {
   UserPlus,
   MousePointer,
   History,
-  Check
+  Check,
+  Search
 } from "lucide-react";
 
 export default function EinsatzplanPage() {
@@ -91,6 +93,38 @@ export default function EinsatzplanPage() {
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
+  
+  // Märkte search state
+  const [maerkteSearch, setMaerkteSearch] = useState('');
+  
+  // Eddie Chat Assistant states (cloned from admin dashboard)
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    { role: "ai", content: "Hallo! Wie kann ich Ihnen heute helfen?" },
+  ]);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Function to assign promotion to a promotor
+  const assignPromotionToPromotor = (promotorName: string) => {
+    if (!editingEinsatz) return;
+    
+    // Update the editing einsatz with the promotor and set status to Verplant
+    setEditingEinsatz({
+      ...editingEinsatz,
+      promotor: promotorName,
+      status: 'Verplant'
+    });
+
+    // Also update the main data immediately
+    setEinsatzplanData(prev => prev.map(item => 
+      item.id === editingEinsatz.id 
+        ? { ...item, promotor: promotorName, status: 'Verplant' }
+        : item
+    ));
+  };
+
   const weeksContainerRef = useRef<HTMLDivElement>(null);
   const dateDropdownRef = useRef<HTMLDivElement>(null);
   const plzDropdownRef = useRef<HTMLDivElement>(null);
@@ -277,7 +311,7 @@ export default function EinsatzplanPage() {
   const navigationItems = [
     { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard' },
     { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan' },
-    { id: "team", label: "Team", icon: Users, active: false },
+    { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team' },
     { id: "messages", label: "Nachrichten", icon: MessageSquare, active: false },
     { id: "analytics", label: "Analytics", icon: BarChart3, active: false },
     { id: "settings", label: "Einstellungen", icon: Settings, active: false }
@@ -355,12 +389,12 @@ export default function EinsatzplanPage() {
 
   const getStatusHoverClass = (status: string) => {
     switch (status) {
-      case "Verplant": return "hover:bg-gradient-to-r hover:from-white hover:to-green-100/50";
-      case "Krankenstand": return "hover:bg-gradient-to-r hover:from-white hover:to-red-100/50";
-      case "Notfall": return "hover:bg-gradient-to-r hover:from-white hover:to-orange-100/50";
-      case "Urlaub": return "hover:bg-gradient-to-r hover:from-white hover:to-blue-100/50";
-      case "Zeitausgleich": return "hover:bg-gradient-to-r hover:from-white hover:to-yellow-100/50";
-      case "Markierte": return "hover:bg-gradient-to-r hover:from-white hover:to-purple-100/50";
+      case "Verplant": return "hover:bg-green-100/50";
+      case "Krankenstand": return "hover:bg-red-100/50";
+      case "Notfall": return "hover:bg-orange-100/50";
+      case "Urlaub": return "hover:bg-blue-100/50";
+      case "Zeitausgleich": return "hover:bg-yellow-100/50";
+      case "Markierte": return "hover:bg-purple-100/50";
       default: return "hover:bg-gray-50";
     }
   };
@@ -374,43 +408,27 @@ export default function EinsatzplanPage() {
   const getRegionGradient = (region: string) => {
     switch (region) {
       case "wien-noe-bgl":
-        return "bg-gradient-to-r from-rose-100 to-transparent";
+        return "bg-red-50/40";
       case "steiermark":
-        return "bg-gradient-to-r from-green-100 to-transparent";
+        return "bg-green-50/40";
       case "salzburg":
-        return "bg-gradient-to-r from-sky-100 to-transparent";
+        return "bg-blue-50/40";
       case "oberoesterreich":
-        return "bg-gradient-to-r from-yellow-100 to-transparent";
+        return "bg-yellow-50/40";
       case "tirol":
-        return "bg-gradient-to-r from-purple-100 to-transparent";
+        return "bg-purple-50/40";
       case "vorarlberg":
-        return "bg-gradient-to-r from-orange-100 to-transparent";
+        return "bg-orange-50/40";
       case "kaernten":
-        return "bg-gradient-to-r from-teal-100 to-transparent";
+        return "bg-teal-50/40";
       default:
-        return "bg-gray-100/70";
+        return "bg-gray-50/40";
     }
   };
 
   const getRegionBorder = (region: string) => {
-    switch (region) {
-      case "wien-noe-bgl":
-        return "border-rose-200";
-      case "steiermark":
-        return "border-green-200";
-      case "salzburg":
-        return "border-sky-200";
-      case "oberoesterreich":
-        return "border-yellow-200";
-      case "tirol":
-        return "border-purple-200";
-      case "vorarlberg":
-        return "border-orange-200";
-      case "kaernten":
-        return "border-teal-200";
-      default:
-        return "border-gray-200";
-    }
+    // All pills get the same thin grey border
+    return "border-gray-200";
   };
 
   const selectAllFiltered = () => {
@@ -1112,6 +1130,70 @@ export default function EinsatzplanPage() {
     }
   };
 
+  // Eddie Chat Assistant functions (cloned from admin dashboard)
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const sendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Add user message
+    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
+    setChatMessages(newMessages);
+    setChatInput("");
+
+    // Simulate AI response
+    setTimeout(() => {
+      setChatMessages([
+        ...newMessages,
+        { 
+          role: "ai", 
+          content: "Ich verarbeite Ihre Anfrage. Wie kann ich Ihnen weiter behilflich sein?" 
+        }
+      ]);
+    }, 1000);
+  };
+
+  // Eddie Chat Assistant useEffect
+  useEffect(() => {
+    if (chatOpen) {
+      scrollToBottom();
+    }
+  }, [chatMessages, chatOpen]);
+
+  // Set CSS variables for light/dark mode input styling
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--input-bg',
+      'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
+    );
+
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const updateColorMode = (isDark: boolean) => {
+      if (isDark) {
+        document.documentElement.style.setProperty(
+          '--input-bg',
+          'linear-gradient(to bottom, rgba(31,41,55,0.95), rgba(17,24,39,0.95))'
+        );
+      } else {
+        document.documentElement.style.setProperty(
+          '--input-bg',
+          'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
+        );
+      }
+    };
+    
+    updateColorMode(darkModeMediaQuery.matches);
+    darkModeMediaQuery.addEventListener('change', (e) => updateColorMode(e.matches));
+    
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', (e) => updateColorMode(e.matches));
+    };
+  }, []);
+
   const filteredEinsatzplan = einsatzplanData.filter(item => {
     // Region filter using PLZ mapping
     const itemRegion = getRegionFromPLZ(item.plz);
@@ -1188,6 +1270,8 @@ export default function EinsatzplanPage() {
                       router.push('/admin/einsatzplan');
                     } else if (item.id === 'overview') {
                       router.push('/admin/dashboard');
+                    } else if (item.id === 'team') {
+                      router.push('/admin/team');
                     }
                     // Add other navigation items as needed
                   }
@@ -1255,7 +1339,8 @@ export default function EinsatzplanPage() {
                     </div>
                     
                     {/* Region Filter Pills */}
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-between space-x-3">
+                      <div className="flex items-center space-x-3">
                       {["ALLE", "W/NÖ/BGL", "ST", "S", "OÖ", "T", "V", "K"].map((region) => {
                         const isSelected = regionFilter === region || (regionFilter === "ALLE" && region === "ALLE");
                         return (
@@ -1272,6 +1357,19 @@ export default function EinsatzplanPage() {
                           </button>
                         );
                       })}
+                      </div>
+                      
+                      {/* Search Bar */}
+                      <div className="relative">
+                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400 z-10 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Suchen..."
+                          value={maerkteSearch}
+                          onChange={(e) => setMaerkteSearch(e.target.value)}
+                          className="w-48 pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-0 bg-white placeholder-gray-400"
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -1316,8 +1414,11 @@ export default function EinsatzplanPage() {
           <div className="flex gap-6">
             {/* Big Card - Left Side */}
             <div className="flex-[3] relative">
+              {/* Invisible placeholder to maintain layout space when expanded */}
+              <div className="h-[600px] w-full"></div>
+              
               <Card 
-                className={`border-0 w-full transition-all duration-300 ${isMainCardExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'relative h-[600px]'}`}
+                className={`border-0 w-full transition-all duration-300 ${isMainCardExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'absolute top-0 left-0 right-0 h-[600px]'}`}
                 style={{
                   background: 'linear-gradient(135deg, #ffffff 0%, rgba(99, 102, 241, 0.003) 50%, rgba(79, 70, 229, 0.005) 100%)',
                   boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
@@ -1331,6 +1432,16 @@ export default function EinsatzplanPage() {
                         <h3 className="text-lg font-semibold text-gray-900">Einsatzplan</h3>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setIsMainCardExpanded(!isMainCardExpanded)}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                        >
+                          {isMainCardExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-600" />
+                          )}
+                        </button>
                         <button
                           onClick={() => setViewMode(viewMode === 'list' ? 'days' : 'list')}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
@@ -1897,7 +2008,8 @@ export default function EinsatzplanPage() {
           </div>
           )}
 
-          {/* Promotion Distribution Component */}
+          {/* Promotion Distribution Component - Only for Einsatzplan view */}
+          {!showMaerkteView && (
           <div className="mt-8">
             <Card 
               className="border-0 w-full bg-gradient-to-br from-white to-blue-50/40"
@@ -2106,6 +2218,7 @@ export default function EinsatzplanPage() {
               </CardContent>
             </Card>
           </div>
+          )}
         </main>
       </div>
 
@@ -2648,10 +2761,13 @@ export default function EinsatzplanPage() {
                               <div key={index} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
                                 <span className="text-sm text-gray-900">{promotor}</span>
                                 <div className="flex items-center space-x-2">
-                                  <button className="p-1 rounded hover:bg-green-50 transition-colors">
+                                  <button 
+                                    className="p-1 rounded"
+                                    onClick={() => assignPromotionToPromotor(promotor)}
+                                  >
                                     <Check className="h-4 w-4 text-green-600" />
                                   </button>
-                                  <button className="p-1 rounded hover:bg-red-50 transition-colors">
+                                  <button className="p-1 rounded">
                                     <X className="h-4 w-4 text-red-600" />
                                   </button>
                                 </div>
@@ -2794,6 +2910,106 @@ export default function EinsatzplanPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Eddie KI Assistant Floating Button (cloned from admin dashboard) */}
+      <button 
+        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
+        onClick={() => {
+          setChatOpen(true);
+          setIsSpinning(true);
+          setTimeout(() => setIsSpinning(false), 1000); // Reset after animation completes
+        }}
+      >
+        <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
+        <img
+          src="/icons/robot 1.svg"
+          alt="KI Assistant"
+          className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
+        />
+      </button>
+
+      {/* Darkening overlay for when KI assistant chat is shown (cloned from admin dashboard) */}
+      <div 
+        className={`fixed inset-0 bg-black transition-opacity duration-500 z-[35] ${
+          chatOpen ? 'opacity-40' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setChatOpen(false)}
+      ></div>
+
+      {/* Eddie KI Assistant Chat Interface (cloned from admin dashboard) */}
+      {chatOpen && (
+        <div className="fixed bottom-36 right-4 w-72 h-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
+          {/* Chat Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 flex items-center justify-between shadow-md sticky top-0 z-10">
+            <div className="flex items-center">
+              <img
+                src="/icons/robot 1.svg"
+                alt="KI Assistant"
+                className="h-5 w-5 mr-2 brightness-0 invert"
+              />
+              <h3 className="text-white font-medium">Frag Eddie!</h3>
+            </div>
+            <button 
+              onClick={() => setChatOpen(false)} 
+              className="text-white hover:bg-blue-600 rounded-full p-1"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-3 pb-16 scrollbar-thin scrollbar-track-transparent hover:scrollbar-thumb-blue-600 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-blue-500/50 [&::-webkit-scrollbar-thumb:hover]:bg-blue-500">
+            <div className="space-y-3">
+              {chatMessages.map((message, index) => (
+                <div 
+                  key={index} 
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                      message.role === 'user' 
+                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100' 
+                        : 'bg-blue-400 text-white'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Chat Input */}
+          <div className="absolute bottom-3 left-3 right-3 z-20">
+            <form onSubmit={sendMessage} className="relative">
+              <input 
+                type="text"
+                value={chatInput} 
+                onChange={(e) => setChatInput(e.target.value)} 
+                placeholder="Frag Eddie egal was..." 
+                className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 placeholder:text-xs"
+                style={{ 
+                  border: 'none', 
+                  boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
+                  WebkitAppearance: 'none', 
+                  MozAppearance: 'none', 
+                  appearance: 'none',
+                  background: 'var(--input-bg, linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95)))'
+                }}
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center"
+                disabled={!chatInput.trim()}
+              >
+                <Send className="h-3.5 w-3.5 rotate-15" />
+              </Button>
+            </form>
           </div>
         </div>
       )}
