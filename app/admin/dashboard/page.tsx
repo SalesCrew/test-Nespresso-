@@ -42,6 +42,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
+import AdminNavigation from "@/components/AdminNavigation";
+import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -463,14 +467,7 @@ export default function AdminDashboard() {
     return `${getRegionGradient(region)} ${getRegionBorder(region)} text-gray-700`;
   };
   
-  // Eddie Chat Assistant states (cloned from SiteLayout)
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    { role: "ai", content: "Hallo! Wie kann ich Ihnen heute helfen?" },
-  ]);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
 
 
 
@@ -975,40 +972,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     setSelectedRequestId(null);
   };
 
-  const navigationItems = [
-    { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard' },
-    { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan' },
-    { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team' },
-    { id: "messages", label: "Nachrichten", icon: MessageSquare, active: false },
-    { id: "analytics", label: "Analytics", icon: BarChart3, active: false },
-    { id: "settings", label: "Einstellungen", icon: Settings, active: false }
-  ];
 
-  // Eddie Chat Assistant functions (cloned from SiteLayout)
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
 
-    // Add user message
-    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
-    setChatMessages(newMessages);
-    setChatInput("");
-
-    // Simulate AI response
-    setTimeout(() => {
-      setChatMessages([
-        ...newMessages,
-        { 
-          role: "ai", 
-          content: "Ich verarbeite Ihre Anfrage. Wie kann ich Ihnen weiter behilflich sein?" 
-        }
-      ]);
-    }, 1000);
-  };
 
   // Typing animation effect
   useEffect(() => {
@@ -1035,43 +1001,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     }
   }, [eddieText, isTyping]);
 
-  // Eddie Chat Assistant useEffect (cloned from SiteLayout)
-  useEffect(() => {
-    if (chatOpen) {
-      scrollToBottom();
-    }
-  }, [chatMessages, chatOpen]);
 
-  // Set CSS variables for light/dark mode input styling (cloned from SiteLayout)
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--input-bg',
-      'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
-    );
-
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const updateColorMode = (isDark: boolean) => {
-      if (isDark) {
-        document.documentElement.style.setProperty(
-          '--input-bg',
-          'linear-gradient(to bottom, rgba(31,41,55,0.95), rgba(17,24,39,0.95))'
-        );
-      } else {
-        document.documentElement.style.setProperty(
-          '--input-bg',
-          'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
-        );
-      }
-    };
-    
-    updateColorMode(darkModeMediaQuery.matches);
-    darkModeMediaQuery.addEventListener('change', (e) => updateColorMode(e.matches));
-    
-    return () => {
-      darkModeMediaQuery.removeEventListener('change', (e) => updateColorMode(e.matches));
-    };
-  }, []);
 
   // Cleanup delete confirmation state when modal closes
   useEffect(() => {
@@ -1086,54 +1016,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
   return (
     <div className="min-h-screen bg-gray-50/30">
-      {/* Minimalistic Sidebar */}
-      <div className={`fixed top-0 left-0 h-full bg-white/95 backdrop-blur-sm border-r border-gray-100/50 z-40 transition-all duration-300 ${sidebarOpen ? 'w-56' : 'w-14'}`}>
-        <div className="p-3">
-          <div className={`${sidebarOpen ? 'flex items-center space-x-3' : 'w-8 h-8 flex items-center justify-center mx-auto'} bg-gray-100 rounded-lg mb-6 ${sidebarOpen ? 'p-3' : ''}`}>
-            <Settings className="h-4 w-4 text-gray-600" />
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-sm font-semibold text-gray-900">SalesCrew</h1>
-                <p className="text-xs text-gray-500">Admin Panel</p>
-              </div>
-            )}
-          </div>
-
-          <nav className="space-y-1">
-            {navigationItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.active) {
-                    // If clicking on the currently active page, toggle sidebar
-                    setSidebarOpen(!sidebarOpen);
-                  } else {
-                    // If clicking on a different page, navigate and collapse sidebar
-                    setSidebarOpen(false);
-                    if (item.id === 'einsatzplan') {
-                      router.push('/admin/einsatzplan');
-                    } else if (item.id === 'overview') {
-                      router.push('/admin/dashboard');
-                    } else if (item.id === 'team') {
-                      router.push('/admin/team');
-                    }
-                    // Add other navigation items as needed
-                  }
-                }}
-                className={`${sidebarOpen ? 'w-full flex items-center space-x-3 px-3 py-2' : 'w-8 h-8 flex items-center justify-center mx-auto'} rounded-lg transition-colors ${
-                  item.active 
-                    ? 'bg-blue-500 text-white' 
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
-                title={!sidebarOpen ? item.label : undefined}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
+      {/* Admin Navigation */}
+      <AdminNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-56' : 'ml-14'}`}>
@@ -3215,23 +3099,20 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               {/* Date Selection */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Datum</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
+                  onChange={(value) => setScheduleDate(value)}
+                  className="w-full"
                 />
               </div>
               
               {/* Time Selection */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Uhrzeit</label>
-                <input
-                  type="time"
+                <TimePicker
                   value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
+                  onChange={(value) => setScheduleTime(value)}
+                  className="w-full"
                 />
               </div>
               
@@ -3332,11 +3213,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Datum</label>
                   {isEditingMessage && !selectedMessage?.sent ? (
-                    <input
-                      type="date"
+                    <DatePicker
                       value={editedDate}
-                      onChange={(e) => setEditedDate(e.target.value)}
-                      className="w-full p-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
+                      onChange={(value) => setEditedDate(value)}
+                      className="w-full"
                     />
                   ) : (
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
@@ -3347,11 +3227,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">Zeit</label>
                   {isEditingMessage && !selectedMessage?.sent ? (
-                    <input
-                      type="time"
+                    <TimePicker
                       value={editedTime}
-                      onChange={(e) => setEditedTime(e.target.value)}
-                      className="w-full p-3 border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
+                      onChange={(value) => setEditedTime(value)}
+                      className="w-full"
                     />
                   ) : (
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800">
@@ -3384,105 +3263,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
         </div>
       )}
 
-      {/* Eddie KI Assistant Floating Button (cloned from SiteLayout) */}
-      <button 
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
-        onClick={() => {
-          setChatOpen(true);
-          setIsSpinning(true);
-          setTimeout(() => setIsSpinning(false), 1000); // Reset after animation completes
-        }}
-      >
-        <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
-        <img
-          src="/icons/robot 1.svg"
-          alt="KI Assistant"
-          className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
-        />
-      </button>
-
-      {/* Darkening overlay for when KI assistant chat is shown (cloned from SiteLayout) */}
-      <div 
-        className={`fixed inset-0 bg-black transition-opacity duration-500 z-[35] ${
-          chatOpen ? 'opacity-40' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setChatOpen(false)}
-      ></div>
-
-      {/* Eddie KI Assistant Chat Interface (cloned from SiteLayout) */}
-      {chatOpen && (
-        <div className="fixed bottom-36 right-4 w-72 h-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 flex items-center justify-between shadow-md sticky top-0 z-10">
-            <div className="flex items-center">
-              <img
-                src="/icons/robot 1.svg"
-                alt="KI Assistant"
-                className="h-5 w-5 mr-2 brightness-0 invert"
-              />
-              <h3 className="text-white font-medium">Frag Eddie!</h3>
-            </div>
-            <button 
-              onClick={() => setChatOpen(false)} 
-              className="text-white hover:bg-blue-600 rounded-full p-1"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          
-          {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-3 pb-16 scrollbar-thin scrollbar-track-transparent hover:scrollbar-thumb-blue-600 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-blue-500/50 [&::-webkit-scrollbar-thumb:hover]:bg-blue-500">
-            <div className="space-y-3">
-              {chatMessages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                      message.role === 'user' 
-                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100' 
-                        : 'bg-blue-400 text-white'
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          {/* Chat Input */}
-          <div className="absolute bottom-3 left-3 right-3 z-20">
-            <form onSubmit={sendMessage} className="relative">
-              <input 
-                type="text"
-                value={chatInput} 
-                onChange={(e) => setChatInput(e.target.value)} 
-                placeholder="Frag Eddie egal was..." 
-                className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 placeholder:text-xs"
-                style={{ 
-                  border: 'none', 
-                  boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
-                  WebkitAppearance: 'none', 
-                  MozAppearance: 'none', 
-                  appearance: 'none',
-                  background: 'var(--input-bg, linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95)))'
-                }}
-              />
-              <Button 
-                type="submit" 
-                size="icon" 
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center"
-                disabled={!chatInput.trim()}
-              >
-                <Send className="h-3.5 w-3.5 rotate-15" />
-              </Button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Eddie KI Assistant */}
+      <AdminEddieAssistant />
     </div>
   );
 } 

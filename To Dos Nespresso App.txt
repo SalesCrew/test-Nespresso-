@@ -13,3 +13,14 @@ MA Seite:
 Priorisierungslogig für Märkte
 
 
+Zustimmen für datenaufnahme (stammdatenblatt) 
+
+Dynamisches to do erstellen mit foto option. - two layer task
+
+begründung bei abweichender pause
+
+location mit radius begrenzung
+
+Einsatzzeit darf nie verändert werden
+
+Standart einsatz/sondereinsatz wording

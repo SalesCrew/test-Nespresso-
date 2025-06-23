@@ -18,6 +18,7 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     '/admin/dashboard',  // Admin dashboard
     '/admin/einsatzplan', // Admin einsatzplan
     '/admin/team',       // Admin team/promotoren
+    '/admin/statistiken', // Admin statistiken
   ];
   
   const shouldExcludeLayout = excludedPaths.includes(pathname);

@@ -531,12 +531,31 @@ export default function SimpleOnboardingModal({ isOpen, onComplete, onClose }: S
               <h2 className="text-xl font-semibold">Einsatzregion</h2>
             </div>
             <div className="space-y-4">
-              <Input
-                placeholder="Bevorzugte Einsatz Region (z.B. Wien, Graz, Linz...)"
-                value={formData.preferredRegion}
-                onChange={(e) => updateFormData("preferredRegion", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
+              <p className="text-sm font-medium mb-3">Bevorzugte Einsatz Region (z.B. Wien, Graz, Linz...)</p>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  { key: "wien-noe-bgl", name: "Wien/NÖ/Bgl" },
+                  { key: "steiermark", name: "Steiermark" },
+                  { key: "salzburg", name: "Salzburg" },
+                  { key: "oberoesterreich", name: "Oberösterreich" },
+                  { key: "tirol", name: "Tirol" },
+                  { key: "vorarlberg", name: "Vorarlberg" },
+                  { key: "kaernten", name: "Kärnten" }
+                ].map((region) => (
+                  <Button
+                    key={region.key}
+                    variant="outline"
+                    onClick={() => updateFormData("preferredRegion", region.key)}
+                    className={`w-full ${
+                      formData.preferredRegion === region.key
+                        ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
+                        : "bg-white hover:bg-blue-50 hover:border-blue-200 text-gray-700 border-gray-200"
+                    }`}
+                  >
+                    {region.name}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         )

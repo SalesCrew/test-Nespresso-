@@ -379,10 +379,14 @@ export default function LandingPage() {
       {/* Onboarding Modal */}
       <OnboardingModal 
         isOpen={isOnboardingOpen}
-        onComplete={(data: any) => {
+                onComplete={(data: any) => {
           console.log('Onboarding completed:', data);
           setIsOnboardingOpen(false);
-          // Will add proper handling later
+          
+          // TODO: When database is implemented, save data here
+          // Example: await api.submitOnboardingData(data)
+          
+          alert('Bewerbung erfolgreich eingereicht! Die Daten werden nach der Datenbank-Integration im Admin-Bereich angezeigt.');
         }}
         onClose={() => setIsOnboardingOpen(false)}
       />

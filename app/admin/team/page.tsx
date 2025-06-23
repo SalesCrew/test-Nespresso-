@@ -29,13 +29,21 @@ import {
   Activity,
   FileText,
   GraduationCap,
-  Check
+  Check,
+  ChevronDown,
+  Loader2,
+  Eye,
+  Video,
+  HelpCircle,
+  FileSignature
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import AdminNavigation from "@/components/AdminNavigation";
+import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
 export default function PromotorenPage() {
   const router = useRouter();
@@ -46,14 +54,7 @@ export default function PromotorenPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   
-  // Eddie Chat Assistant states
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    { role: "ai", content: "Hallo! Wie kann ich Ihnen heute helfen?" },
-  ]);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
 
   // Notes functionality
   const [notesOpen, setNotesOpen] = useState<number | null>(null);
@@ -61,15 +62,138 @@ export default function PromotorenPage() {
   const [notesPosition, setNotesPosition] = useState<Record<number, 'left' | 'right'>>({});
   const [detailedViewOpen, setDetailedViewOpen] = useState<number | null>(null);
   const [copiedItems, setCopiedItems] = useState<Record<string, boolean>>({});
+  
+  // Dienstvertrag functionality
+  const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false);
+  const [showDienstvertragContent, setShowDienstvertragContent] = useState(false);
+  
+  // Document management state
+  const [documentStatuses, setDocumentStatuses] = useState<Record<string, string>>({
+    "Staatsbürgerschaftsnachweis": "approved",
+    "Pass": "pending", 
+    "Arbeitserlaubnis": "approved",
+    "Dienstvertrag": "approved",
+    "Strafregister": "approved" // Strafregister starts as approved by default
+  });
+  
+  // Track if Strafregister is deactivated
+  const [strafregisterDeactivated, setStrafregisterDeactivated] = useState(false);
+  
+  // Track which documents have files submitted (variable based on actual submissions)
+  const [documentsWithFiles, setDocumentsWithFiles] = useState<Record<string, boolean>>({
+    "Staatsbürgerschaftsnachweis": true, // Has file
+    "Pass": true, // Has file (pending review)
+    "Arbeitserlaubnis": true, // Has file
+    "Dienstvertrag": false, // No file yet
+    "Strafregister": false // No file (approved by default)
+  });
+  const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const regionDropdownRef = useRef<HTMLDivElement>(null);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const [showStammdatenblatt, setShowStammdatenblatt] = useState(false);
+  
+  // Stammdatenblatt (submitted onboarding data)
+  const [submittedOnboardingData, setSubmittedOnboardingData] = useState([
+    {
+      id: 1,
+      submittedAt: "2024-01-15T10:30:00Z",
+      firstName: "Maria",
+      lastName: "Huber",
+      title: "",
+      gender: "weiblich",
+      pronouns: "",
+      address: "Mariahilfer Straße 45",
+      postalCode: "1060",
+      city: "Wien",
+      phone: "+43 664 789 0123",
+      email: "maria.huber@email.at",
+      socialSecurityNumber: "1234567890",
+      birthDate: "15.03.1995",
+      citizenship: "Österreich",
+      workPermit: null,
+      drivingLicense: true,
+      carAvailable: true,
+      willingToDrive: true,
+      clothingSize: "M",
+      height: "165",
+      education: "Matura",
+      qualifications: "Verkaufserfahrung im Einzelhandel",
+      currentJob: "Teilzeit im Einzelhandel",
+      spontaneity: "mittel",
+      preferredRegion: "wien-noe-bgl",
+      workingDays: ["Mo", "Di", "Mi", "Do", "Fr"],
+      hoursPerWeek: "25"
+    },
+    {
+      id: 2,
+      submittedAt: "2024-01-14T14:20:00Z",
+      firstName: "Stefan",
+      lastName: "Mayer",
+      title: "Mag.",
+      gender: "männlich",
+      pronouns: "",
+      address: "Herrengasse 12",
+      postalCode: "8010",
+      city: "Graz",
+      phone: "+43 676 456 7890",
+      email: "stefan.mayer@gmail.com",
+      socialSecurityNumber: "0987654321",
+      birthDate: "22.07.1992",
+      citizenship: "Deutschland",
+      workPermit: true,
+      drivingLicense: true,
+      carAvailable: false,
+      willingToDrive: false,
+      clothingSize: "L",
+      height: "180",
+      education: "Universitätsabschluss",
+      qualifications: "Marketing Studium",
+      currentJob: "Student",
+      spontaneity: "sehr",
+      preferredRegion: "steiermark",
+      workingDays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+      hoursPerWeek: "30"
+    },
+    {
+      id: 3,
+      submittedAt: "2024-01-13T09:15:00Z",
+      firstName: "Jennifer",
+      lastName: "Schmidt",
+      title: "",
+      gender: "divers",
+      pronouns: "sie/ihr",
+      address: "Mozartplatz 3",
+      postalCode: "5020",
+      city: "Salzburg",
+      phone: "+43 650 123 4567",
+      email: "j.schmidt@outlook.com",
+      socialSecurityNumber: "1122334455",
+      birthDate: "08.11.1998",
+      citizenship: "Österreich",
+      workPermit: null,
+      drivingLicense: false,
+      carAvailable: false,
+      willingToDrive: false,
+      clothingSize: "S",
+      height: "160",
+      education: "Lehre",
+      qualifications: "Einzelhandelskauffrau",
+      currentJob: "Arbeitslos",
+      spontaneity: "wenig",
+      preferredRegion: "salzburg",
+      workingDays: ["Mo", "Mi", "Fr"],
+      hoursPerWeek: "20"
+    }
+  ]);
 
-  const navigationItems = [
-    { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard', href: '/admin/dashboard' },
-    { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan', href: '/admin/einsatzplan' },
-    { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team', href: '/admin/team' },
-    { id: "messages", label: "Nachrichten", icon: MessagesSquare, active: false, href: '#' },
-    { id: "analytics", label: "Analytics", icon: BarChart2, active: false, href: '#' },
-    { id: "settings", label: "Einstellungen", icon: Settings, active: false, href: '#' }
-  ];
+  // TODO: When database is implemented, replace with API call to load submissions
+  // const loadSubmissions = async () => {
+  //   const submissions = await api.getOnboardingSubmissions();
+  //   setSubmittedOnboardingData(prev => [...prev.slice(0, 3), ...submissions]);
+  // };
+
+
 
   // Mock promotor data based on the app structure
   const promotors = [
@@ -247,6 +371,19 @@ export default function PromotorenPage() {
     return `${getRegionGradient(region)} ${getRegionBorder(region)} text-gray-700`;
   };
 
+  const getRegionHoverClass = (region: string) => {
+    switch (region) {
+      case "wien-noe-bgl": return "hover:bg-red-100/50";
+      case "steiermark": return "hover:bg-green-100/50";
+      case "salzburg": return "hover:bg-blue-100/50";
+      case "oberoesterreich": return "hover:bg-yellow-100/50";
+      case "tirol": return "hover:bg-purple-100/50";
+      case "vorarlberg": return "hover:bg-orange-100/50";
+      case "kaernten": return "hover:bg-teal-100/50";
+      default: return "hover:bg-gray-50";
+    }
+  };
+
   // KPI color functions - matching statistics page rules
   const getKpiColor = (category: "mcet" | "tma" | "vlshare", value: number) => {
     if (category === "mcet") {
@@ -291,6 +428,50 @@ export default function PromotorenPage() {
     return matchesSearch && matchesRegion && matchesStatus;
   });
 
+  // Filter submitted onboarding data
+  const filteredSubmittedData = submittedOnboardingData.filter(submission => {
+    const fullName = `${submission.firstName} ${submission.lastName}`.toLowerCase();
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
+                         submission.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRegion = regionFilter === "all" || submission.preferredRegion === regionFilter;
+    
+    return matchesSearch && matchesRegion;
+  });
+
+  // Format submitted date
+  const formatSubmittedDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Format boolean values for display
+  const formatBooleanValue = (value: boolean | null) => {
+    if (value === null) return "N/A";
+    return value ? "Ja" : "Nein";
+  };
+
+  // Format working days for display
+  const formatWorkingDays = (days: string[]) => {
+    return days.join(", ");
+  };
+
+  // Format spontaneity for display
+  const formatSpontaneity = (value: string) => {
+    const spontaneityMap = {
+      "sehr": "Sehr spontan (gleicher Tag)",
+      "mittel": "Mittel (1-2 Tage Vorlauf)",
+      "wenig": "Wenig (1 Woche Vorlauf)",
+      "nie": "Nie"
+    };
+    return spontaneityMap[value as keyof typeof spontaneityMap] || value;
+  };
+
   // Format last activity
   const formatLastActivity = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -303,65 +484,7 @@ export default function PromotorenPage() {
     return `vor ${diffDays - 1} Tagen`;
   };
 
-  // Eddie chat functions (copied from admin dashboard)
-  useEffect(() => {
-    if (chatOpen) {
-      scrollToBottom();
-    }
-  }, [chatMessages, chatOpen]);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--input-bg',
-      'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
-    );
-
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const updateColorMode = (isDark: boolean) => {
-      if (isDark) {
-        document.documentElement.style.setProperty(
-          '--input-bg',
-          'linear-gradient(to bottom, rgba(31,41,55,0.95), rgba(17,24,39,0.95))'
-        );
-      } else {
-        document.documentElement.style.setProperty(
-          '--input-bg',
-          'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))'
-        );
-      }
-    };
-    
-    updateColorMode(darkModeMediaQuery.matches);
-    darkModeMediaQuery.addEventListener('change', (e) => updateColorMode(e.matches));
-    
-    return () => {
-      darkModeMediaQuery.removeEventListener('change', (e) => updateColorMode(e.matches));
-    };
-  }, []);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
-    setChatMessages(newMessages);
-    setChatInput("");
-
-    setTimeout(() => {
-      setChatMessages([
-        ...newMessages,
-        { 
-          role: "ai", 
-          content: "Ich verarbeite Ihre Anfrage. Wie kann ich Ihnen weiter behilflich sein?" 
-        }
-      ]);
-    }, 1000);
-  };
 
   // Notes functions
   const toggleNotes = (promotorId: number) => {
@@ -402,71 +525,419 @@ export default function PromotorenPage() {
     }
   };
 
+  // Document action functions
+  const handleDocumentApprove = (documentName: string) => {
+    setDocumentStatuses(prev => ({ ...prev, [documentName]: "approved" }));
+  };
+
+  const handleDocumentDecline = (documentName: string) => {
+    setDocumentStatuses(prev => ({ ...prev, [documentName]: "pending" }));
+  };
+
+  const handleViewDocument = (documentName: string) => {
+    console.log("Viewing document:", documentName);
+  };
+
+  // Dienstvertrag handler functions
+  const handleDienstvertragSelect = () => {
+    setShowDienstvertragPopup(false);
+    setShowDienstvertragContent(true);
+  };
+
+  // Handle Strafregister special logic
+  const handleStrafregisterAction = (action: 'approve' | 'decline') => {
+    if (action === 'approve') {
+      // When check is pressed, promotor must submit (simulate file submission)
+      setDocumentStatuses(prev => ({ ...prev, "Strafregister": "pending" }));
+      setDocumentsWithFiles(prev => ({ ...prev, "Strafregister": true })); // File submitted
+      setStrafregisterDeactivated(false);
+    } else {
+      // When X is pressed, deactivate
+      setStrafregisterDeactivated(true);
+    }
+  };
+
+  // Handle outside click for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (regionDropdownRef.current && !regionDropdownRef.current.contains(event.target as Node)) {
+        setRegionDropdownOpen(false);
+      }
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50/30">
-      {/* Minimalistic Sidebar */}
-      <div className={`fixed top-0 left-0 h-full bg-white/95 backdrop-blur-sm border-r border-gray-100/50 z-40 transition-all duration-300 ${sidebarOpen ? 'w-56' : 'w-14'}`}>
-        <div className="p-3">
-          <div className={`${sidebarOpen ? 'flex items-center space-x-3' : 'w-8 h-8 flex items-center justify-center mx-auto'} bg-gray-100 rounded-lg mb-6 ${sidebarOpen ? 'p-3' : ''}`}>
-            <Settings className="h-4 w-4 text-gray-600" />
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-sm font-semibold text-gray-900">SalesCrew</h1>
-                <p className="text-xs text-gray-500">Admin Panel</p>
-              </div>
-            )}
-          </div>
-
-          <nav className="space-y-1">
-            {navigationItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.active) {
-                    // If clicking on the currently active page, toggle sidebar
-                    setSidebarOpen(!sidebarOpen);
-                  } else {
-                    // If clicking on a different page, navigate and collapse sidebar
-                    setSidebarOpen(false);
-                    if (item.id === 'einsatzplan') {
-                      router.push('/admin/einsatzplan');
-                    } else if (item.id === 'overview') {
-                      router.push('/admin/dashboard');
-                    } else if (item.id === 'team') {
-                      router.push('/admin/team');
-                    }
-                    // Add other navigation items as needed
-                  }
-                }}
-                className={`${sidebarOpen ? 'w-full flex items-center space-x-3 px-3 py-2' : 'w-8 h-8 flex items-center justify-center mx-auto'} rounded-lg transition-colors ${
-                  item.active 
-                    ? 'bg-blue-500 text-white' 
-                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                }`}
-                title={!sidebarOpen ? item.label : undefined}
-              >
-                <item.icon className="h-4 w-4 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
+      {/* Admin Navigation */}
+      <AdminNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Main Content */}
       <div className={`transition-all duration-300 ${sidebarOpen ? 'ml-56' : 'ml-14'}`}>
         {/* Header */}
         <header className="bg-white border-b border-gray-100 px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Promotoren</h1>
-              <p className="text-gray-500 text-sm">Team Management</p>
+              <div>
+              <h1 className="text-2xl font-semibold text-gray-900">{showStammdatenblatt ? 'Stammdatenblatt' : 'Promotoren'}</h1>
+              <p className="text-gray-500 text-sm">{showStammdatenblatt ? 'Stammdaten-Verwaltung' : 'Team Management'}</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowStammdatenblatt(!showStammdatenblatt)}
+                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                {showStammdatenblatt ? 'Promotoren' : 'Stammdatenblatt'}
+              </button>
             </div>
           </div>
         </header>
 
         {/* Page Content */}
         <main className="p-8">
+          {showStammdatenblatt ? (
+            /* Stammdatenblatt View */
+            <>
+              {/* Search and Filters */}
+              <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Stammdaten suchen..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  {/* Region Filter Dropdown */}
+                  <div className="relative" ref={regionDropdownRef}>
+                    <button
+                      onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                      className="flex items-center justify-between min-w-[140px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
+                    >
+                      <span>{regionFilter === "all" ? "Alle Regionen" : regionNames[regionFilter as keyof typeof regionNames]}</span>
+                      <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${regionDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {regionDropdownOpen && (
+                      <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              setRegionFilter("all");
+                              setRegionDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              regionFilter === "all" 
+                                ? "bg-gray-50 text-gray-900" 
+                                : "text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            Alle Regionen
+                          </button>
+                          {Object.entries(regionNames).map(([key, name]) => (
+                            <button
+                              key={key}
+                              onClick={() => {
+                                setRegionFilter(key);
+                                setRegionDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                                regionFilter === key 
+                                  ? "bg-gray-50 text-gray-900" 
+                                  : `text-gray-600 ${getRegionHoverClass(key)}`
+                              }`}
+                            >
+                              {name}
+                            </button>
+                          ))}
+                        </div>
+              </div>
+            )}
+          </div>
+
+                  {/* Status Filter Dropdown */}
+                  <div className="relative" ref={statusDropdownRef}>
+              <button
+                      onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                      className="flex items-center justify-between min-w-[120px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
+                    >
+                      <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : "Inaktiv"}</span>
+                      <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {statusDropdownOpen && (
+                      <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                        <div className="py-1">
+                          <button
+                onClick={() => {
+                              setStatusFilter("all");
+                              setStatusDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              statusFilter === "all" 
+                                ? "bg-gray-50 text-gray-900" 
+                                : "text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            Alle Status
+              </button>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("active");
+                              setStatusDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              statusFilter === "active" 
+                                ? "bg-gray-50 text-gray-900" 
+                                : "text-gray-600 hover:bg-green-100/50"
+                            }`}
+                          >
+                            Aktiv
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("inactive");
+                              setStatusDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              statusFilter === "inactive" 
+                                ? "bg-gray-50 text-gray-900" 
+                                : "text-gray-600 hover:bg-red-100/50"
+                            }`}
+                          >
+                            Inaktiv
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stammdatenblatt Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSubmittedData.map((submission) => (
+                  <Card 
+                    key={submission.id} 
+                    className="group hover:shadow-xl hover:shadow-gray-900/5 transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden"
+                  >
+                    {/* Subtle gradient border effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200/20 via-transparent to-gray-200/20 rounded-lg"></div>
+                    <div className="absolute inset-[1px] bg-white rounded-lg"></div>
+                    
+                    <CardContent className="relative p-5 space-y-4">
+                      {/* Header with Avatar-style */}
+                      <div className="flex items-center space-x-3 pb-3 border-b border-gray-100">
+                        <div className="relative">
+                          <div className="w-11 h-11 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center text-blue-700 font-medium text-sm ring-2 ring-gray-100 ring-offset-2">
+                            {submission.firstName[0]}{submission.lastName[0]}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base text-gray-900 truncate">
+                            {submission.firstName} {submission.lastName}
+                            {submission.title && ` (${submission.title})`}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {formatSubmittedDate(submission.submittedAt)}
+                          </p>
+                        </div>
+                        <Badge className={`${getRegionPillColors(submission.preferredRegion)} border text-xs px-2.5 py-1 pointer-events-none`}>
+                          {regionNames[submission.preferredRegion as keyof typeof regionNames]}
+                        </Badge>
+                      </div>
+
+                      {/* Contact Information with Icons */}
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2 cursor-pointer group" onClick={() => copyToClipboard(submission.phone, 'phone', submission.id)}>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                            copiedItems[`${submission.id}-phone`] ? 'bg-green-100' : 'bg-gray-100'
+                          }`}>
+                            {copiedItems[`${submission.id}-phone`] ? (
+                              <Check className="h-2.5 w-2.5 text-green-600" />
+                            ) : (
+                              <Phone className="h-2.5 w-2.5 text-gray-500" />
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-600 truncate group-hover:text-gray-800 transition-colors">{submission.phone}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 cursor-pointer group" onClick={() => copyToClipboard(submission.email, 'email', submission.id)}>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                            copiedItems[`${submission.id}-email`] ? 'bg-green-100' : 'bg-gray-100'
+                          }`}>
+                            {copiedItems[`${submission.id}-email`] ? (
+                              <Check className="h-2.5 w-2.5 text-green-600" />
+                            ) : (
+                              <Mail className="h-2.5 w-2.5 text-gray-500" />
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-600 truncate group-hover:text-gray-800 transition-colors">{submission.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 cursor-pointer group" onClick={() => window.open(`https://maps.google.com?q=${encodeURIComponent(`${submission.address}, ${submission.postalCode} ${submission.city}`)}`,'_blank')}>
+                          <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-2.5 w-2.5 text-gray-500" />
+                          </div>
+                          <span className="text-xs text-gray-600 truncate group-hover:text-gray-600 transition-colors">{submission.address}, {submission.postalCode} {submission.city}</span>
+                        </div>
+                      </div>
+
+                      {/* Personal Info Grid */}
+                      <div className="bg-slate-50/30 border border-slate-200/40 rounded-lg p-3 backdrop-blur-sm relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-lg"></div>
+                        <div className="relative grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-gray-500">Geschlecht</span>
+                            <p className="font-medium capitalize text-gray-900">{submission.gender}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Geboren</span>
+                            <p className="font-medium text-gray-900">{submission.birthDate}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Größe</span>
+                            <p className="font-medium text-gray-900">{submission.height} cm</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Größe</span>
+                            <p className="font-medium text-gray-900">{submission.clothingSize}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Working Days - Reusing Promotor Style */}
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-2">Arbeitstage</p>
+                        <div className="flex space-x-1.5">
+                          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => (
+                            <div
+                              key={day}
+                              className={`relative w-6 h-6 rounded-full text-xs font-medium flex items-center justify-center transition-all duration-200 ${
+                                submission.workingDays.includes(day)
+                                  ? 'bg-slate-100 text-slate-700 shadow-sm border border-slate-200/60'
+                                  : 'bg-gray-50/50 text-gray-400 border border-transparent'
+                              }`}
+                            >
+                              {submission.workingDays.includes(day) && (
+                                <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/20 to-transparent"></div>
+                              )}
+                              <span className="relative z-10">{day[0]}</span>
+                            </div>
+                          ))}
+        </div>
+      </div>
+
+                      {/* Mobility Status */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center">
+                          <span className="text-xs text-gray-500 block mb-1">Führerschein</span>
+                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.drivingLicense ? 'bg-green-500' : 'bg-gray-400'}`}>
+                            {submission.drivingLicense ? '✓' : '✗'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs text-gray-500 block mb-1">Auto</span>
+                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.carAvailable ? 'bg-green-500' : 'bg-gray-400'}`}>
+                            {submission.carAvailable ? '✓' : '✗'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-xs text-gray-500 block mb-1">Fahrbereit</span>
+                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.willingToDrive ? 'bg-green-500' : 'bg-gray-400'}`}>
+                            {submission.willingToDrive ? '✓' : '✗'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Education & Experience */}
+                      <div className="space-y-2 text-xs">
+            <div>
+                          <span className="text-gray-500">Ausbildung:</span>
+                          <p className="font-medium text-gray-900">{submission.education}</p>
+            </div>
+                        {submission.qualifications && (
+                          <div>
+                            <span className="text-gray-500">Qualifikationen:</span>
+                            <p className="font-medium text-gray-900">{submission.qualifications}</p>
+          </div>
+                        )}
+                        {submission.currentJob && (
+                          <div>
+                            <span className="text-gray-500">Aktueller Job:</span>
+                            <p className="font-medium text-gray-900">{submission.currentJob}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Work Preferences - Pill Style */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full font-medium">
+                          {submission.hoursPerWeek}h/Woche
+                        </span>
+                        <span className={`px-2.5 py-1 rounded-full font-medium ${
+                          submission.spontaneity === "oft" ? "text-green-700 bg-green-50" :
+                          submission.spontaneity === "selten" ? "text-orange-700 bg-orange-50" :
+                          submission.spontaneity === "nie" ? "text-red-700 bg-red-50" :
+                          "text-gray-600 bg-gray-50"
+                        }`}>
+                          {submission.spontaneity === "oft" ? "Oft spontan" : 
+                           submission.spontaneity === "selten" ? "Selten spontan" :
+                           submission.spontaneity === "nie" ? "Nie spontan" : "Unbekannt"}
+                        </span>
+                      </div>
+
+                      {/* Citizenship & Work Permit */}
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-gray-500">Staatsbürgerschaft:</span>
+                          <p className="font-medium text-gray-900">{submission.citizenship}</p>
+                        </div>
+                        {submission.workPermit !== null && (
+                          <div>
+                            <span className="text-gray-500">Arbeitserlaubnis:</span>
+                            <p className={`font-medium ${submission.workPermit ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatBooleanValue(submission.workPermit)}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-3 border-t border-gray-100">
+                        <Button size="sm" className="flex-1 bg-green-500 hover:bg-green-600 text-xs">
+                          Annehmen
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700 text-xs">
+                          Ablehnen
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Empty State for Stammdatenblatt */}
+              {filteredSubmittedData.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Keine Stammdaten gefunden
+                  </h3>
+                  <p className="text-gray-500">
+                    Es wurden noch keine Bewerbungen eingereicht oder sie entsprechen nicht den Filterkriterien.
+                  </p>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Promotoren View */
+            <>
           {/* Search and Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -475,31 +946,114 @@ export default function PromotorenPage() {
                 placeholder="Promotor suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
             
-            <div className="flex gap-2">
-              <select
-                value={regionFilter}
-                onChange={(e) => setRegionFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
-              >
-                <option value="all">Alle Regionen</option>
-                {Object.entries(regionNames).map(([key, name]) => (
-                  <option key={key} value={key}>{name}</option>
-                ))}
-              </select>
+            <div className="flex gap-3">
+              {/* Region Filter Dropdown */}
+              <div className="relative" ref={regionDropdownRef}>
+                <button
+                  onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                  className="flex items-center justify-between min-w-[140px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
+                >
+                  <span>{regionFilter === "all" ? "Alle Regionen" : regionNames[regionFilter as keyof typeof regionNames]}</span>
+                  <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${regionDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {regionDropdownOpen && (
+                  <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setRegionFilter("all");
+                          setRegionDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          regionFilter === "all" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        Alle Regionen
+                      </button>
+                      {Object.entries(regionNames).map(([key, name]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setRegionFilter(key);
+                            setRegionDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                            regionFilter === key 
+                              ? "bg-gray-50 text-gray-900" 
+                              : `text-gray-600 ${getRegionHoverClass(key)}`
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
-              >
-                <option value="all">Alle Status</option>
-                <option value="active">Aktiv</option>
-                <option value="inactive">Inaktiv</option>
-              </select>
+              {/* Status Filter Dropdown */}
+              <div className="relative" ref={statusDropdownRef}>
+                <button
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  className="flex items-center justify-between min-w-[120px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
+                >
+                  <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : "Inaktiv"}</span>
+                  <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {statusDropdownOpen && (
+                  <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setStatusFilter("all");
+                          setStatusDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          statusFilter === "all" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        Alle Status
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("active");
+                          setStatusDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          statusFilter === "active" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-green-100/50"
+                        }`}
+                      >
+                        Aktiv
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("inactive");
+                          setStatusDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          statusFilter === "inactive" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-red-100/50"
+                        }`}
+                      >
+                        Inaktiv
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -547,7 +1101,7 @@ export default function PromotorenPage() {
 
                   {/* Region Badge */}
                   <div>
-                    <Badge className={`${getRegionPillColors(promotor.region)} border text-xs px-2.5 py-1`}>
+                    <Badge className={`${getRegionPillColors(promotor.region)} border text-xs px-2.5 py-1 pointer-events-none`}>
                       {regionNames[promotor.region as keyof typeof regionNames]}
                     </Badge>
                   </div>
@@ -681,28 +1235,17 @@ export default function PromotorenPage() {
 
               {/* Notes Panel */}
               {notesOpen === promotor.id && (
-                <div className={`absolute top-0 w-80 h-full bg-white border border-gray-200 shadow-xl z-20 ${
+                <div className={`absolute top-1/2 -translate-y-1/2 w-80 h-80 bg-transparent z-20 ${
                   notesPosition[promotor.id] === 'left' 
-                    ? 'right-full rounded-l-lg animate-slide-in-left' 
-                    : 'left-full rounded-r-lg animate-slide-in-right'
+                    ? 'right-full' 
+                    : 'left-full'
                 }`}>
-                  <div className="p-4 h-full flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold text-gray-900">Notizen - {promotor.name}</h4>
-                      <button
-                        onClick={() => setNotesOpen(null)}
-                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      >
-                        <X className="h-4 w-4 text-gray-500" />
-                      </button>
-                    </div>
-                    <textarea
-                      value={notes[promotor.id] || ''}
-                      onChange={(e) => updateNotes(promotor.id, e.target.value)}
-                      placeholder="Notizen zu diesem Promotor hinzufügen..."
-                      className="flex-1 w-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 text-sm"
-                    />
-                  </div>
+                  <textarea
+                    value={notes[promotor.id] || ''}
+                    onChange={(e) => updateNotes(promotor.id, e.target.value)}
+                    placeholder="Notizen zu diesem Promotor hinzufügen..."
+                    className="w-full h-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-gray-200 text-sm bg-white shadow-xl"
+                  />
                 </div>
               )}
             </div>
@@ -720,6 +1263,8 @@ export default function PromotorenPage() {
                 Versuchen Sie andere Suchkriterien oder Filter.
               </p>
             </div>
+          )}
+            </>
           )}
         </main>
       </div>
@@ -777,8 +1322,8 @@ export default function PromotorenPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="p-6 overflow-y-auto max-h-[calc(95vh-140px)]">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+                    <div className="p-6 overflow-y-auto max-h-[calc(95vh-140px)] [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                         
                         {/* Left Column - Personal & Contact */}
                         <div className="space-y-6">
@@ -833,19 +1378,85 @@ export default function PromotorenPage() {
                               </h3>
                               <div className="space-y-3">
                                 {[
-                                  { name: "Staatsbürgerschaftsnachweis", status: "approved" },
-                                  { name: "Pass", status: "pending" },
-                                  { name: "Arbeitserlaubnis", status: "approved" },
-                                  { name: "Dienstvertrag", status: "approved" },
-                                  { name: "Strafregister", status: "missing" }
-                                ].map((doc, index) => (
-                                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                    <span className="text-sm font-medium text-gray-700">{doc.name}</span>
-                                    <Badge variant={doc.status === 'approved' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'} className="text-xs">
-                                      {doc.status === 'approved' ? 'Genehmigt' : doc.status === 'pending' ? 'Ausstehend' : 'Fehlend'}
-                                    </Badge>
-                                  </div>
-                                ))}
+                                  "Staatsbürgerschaftsnachweis",
+                                  "Pass", 
+                                  "Arbeitserlaubnis",
+                                  "Dienstvertrag",
+                                  "Strafregister"
+                                ].map((docName, index) => {
+                                  const status = documentStatuses[docName];
+                                  return (
+                                    <div key={index} className="flex items-center justify-between">
+                                      <span className="text-sm text-gray-600 dark:text-gray-300">{docName}</span>
+                                      <div className="flex items-center space-x-2">
+                                        {status === "approved" && (
+                                          <button
+                                            onClick={() => handleViewDocument(docName)}
+                                            className="p-0 hover:bg-transparent transition-all duration-300 opacity-40 hover:opacity-80"
+                                          >
+                                            <Eye className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                                          </button>
+                                        )}
+                                                                                {status === "pending" ? (
+                                          <div className="flex items-center space-x-1">
+                                            {documentsWithFiles[docName] && (
+                                              <button
+                                                onClick={() => handleViewDocument(docName)}
+                                                className="p-0 hover:bg-transparent transition-all duration-300 opacity-40 hover:opacity-80"
+                                              >
+                                                <Eye className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={() => handleDocumentApprove(docName)}
+                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
+                                            >
+                                              <Check className="h-4 w-4 text-green-500 hover:text-green-600" />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDocumentDecline(docName)}
+                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
+                                            >
+                                              <X className="h-4 w-4 text-red-500 hover:text-red-600" />
+                                            </button>
+                                            <Loader2 className="h-4 w-4 text-orange-400 animate-spin ml-1" />
+                                          </div>
+                                        ) : status === "approved" && docName === "Strafregister" && !strafregisterDeactivated ? (
+                                          <div className="flex items-center space-x-1">
+                                            <button
+                                              onClick={() => handleStrafregisterAction('approve')}
+                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
+                                            >
+                                              <Check className="h-4 w-4 text-green-500 hover:text-green-600" />
+                                            </button>
+                                            <button
+                                              onClick={() => handleStrafregisterAction('decline')}
+                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
+                                            >
+                                              <X className="h-4 w-4 text-red-500 hover:text-red-600" />
+                                            </button>
+                                          </div>
+                                        ) : status === "approved" ? (
+                                          <div className="flex items-center space-x-1">
+                                            {documentsWithFiles[docName] && (
+                                              <button
+                                                onClick={() => handleViewDocument(docName)}
+                                                className="p-0 hover:bg-transparent transition-all duration-300 opacity-40 hover:opacity-80"
+                                              >
+                                                <Eye className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                                              </button>
+                                            )}
+                                            <Check className="h-4 w-4 text-green-500" />
+                                          </div>
+                                        ) : docName === "Strafregister" && strafregisterDeactivated ? (
+                                          <X className="h-4 w-4 text-gray-400" />
+                                        ) : (
+                                          <X className="h-4 w-4 text-red-500" />
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </CardContent>
                           </Card>
@@ -867,6 +1478,36 @@ export default function PromotorenPage() {
                                     {day[0]}
                                   </div>
                                 ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Dienstvertrag */}
+                          <Card className="shadow-sm border-gray-200/60">
+                            <CardContent className="p-4">
+                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                <FileSignature className="h-4 w-4 mr-2 text-blue-500" />
+                                Dienstvertrag
+                              </h3>
+                              <div className="space-y-3">
+                                {/* Current Active Contract */}
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-semibold text-blue-700">Aktiver Vertrag</span>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Aktiv</span>
+                                  </div>
+                                  <div className="text-xs text-gray-600 mb-2">
+                                    <div>Wochenstunden: 32h</div>
+                                    <div>Laufzeit: 01.12.2024 - unbefristet</div>
+                                    <div>Status: geringfügig</div>
+                                  </div>
+                                  <button 
+                                    className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                                    onClick={() => setShowDienstvertragPopup(true)}
+                                  >
+                                    Alle Verträge anzeigen
+                                  </button>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -916,35 +1557,116 @@ export default function PromotorenPage() {
                           {/* Training Progress */}
                           <Card className="shadow-sm border-gray-200/60">
                             <CardContent className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                                 <GraduationCap className="h-4 w-4 mr-2 text-indigo-500" />
                                 Schulungen & Training
                               </h3>
-                              <div className="space-y-3">
+                              <div className="space-y-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                 {[
-                                  { name: "Grundlagen des Verkaufs", status: "completed", progress: 100 },
-                                  { name: "Produktpräsentation", status: "in_progress", progress: 75 },
-                                  { name: "Kundeneinwände behandeln", status: "not_started", progress: 0 },
-                                  { name: "Teamarbeit & Kommunikation", status: "completed", progress: 100 },
-                                  { name: "Digitale Tools & Apps", status: "not_started", progress: 0 }
-                                ].map((training, index) => (
-                                  <div key={index} className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-sm font-medium text-gray-700">{training.name}</span>
-                                      <Badge variant={training.status === 'completed' ? 'default' : training.status === 'in_progress' ? 'secondary' : 'outline'} className="text-xs">
-                                        {training.status === 'completed' ? 'Abgeschlossen' : training.status === 'in_progress' ? 'In Bearbeitung' : 'Nicht begonnen'}
-                                      </Badge>
+                                  { 
+                                    name: "Grundlagen des Verkaufs", 
+                                    status: "erledigt",
+                                    components: {
+                                      video: { required: true, completed: true },
+                                      pdf: { required: true, completed: true },
+                                      quiz: { required: true, completed: true }
+                                    }
+                                  },
+                                  { 
+                                    name: "Produktpräsentation", 
+                                    status: "unterbrochen",
+                                    components: {
+                                      video: { required: true, completed: true },
+                                      pdf: { required: true, completed: false },
+                                      quiz: { required: true, completed: false }
+                                    }
+                                  },
+                                  { 
+                                    name: "Kundeneinwände behandeln", 
+                                    status: "nicht erledigt",
+                                    components: {
+                                      video: { required: false, completed: false },
+                                      pdf: { required: true, completed: false },
+                                      quiz: { required: true, completed: false }
+                                    }
+                                  },
+                                  { 
+                                    name: "Teamarbeit & Kommunikation", 
+                                    status: "erledigt",
+                                    components: {
+                                      video: { required: true, completed: true },
+                                      pdf: { required: false, completed: false },
+                                      quiz: { required: true, completed: true }
+                                    }
+                                  },
+                                  { 
+                                    name: "Digitale Tools & Apps", 
+                                    status: "nicht erledigt",
+                                    components: {
+                                      video: { required: true, completed: false },
+                                      pdf: { required: true, completed: false },
+                                      quiz: { required: true, completed: false }
+                                    }
+                                  }
+                                ].map((training, index) => {
+                                  // Component indicators
+                                  const indicators = [];
+                                  if (training.components.video.required) {
+                                    indicators.push({ icon: Video, completed: training.components.video.completed, key: 'video' });
+                                  }
+                                  if (training.components.pdf.required) {
+                                    indicators.push({ icon: FileText, completed: training.components.pdf.completed, key: 'pdf' });
+                                  }
+                                  if (training.components.quiz.required) {
+                                    indicators.push({ icon: HelpCircle, completed: training.components.quiz.completed, key: 'quiz' });
+                                  }
+
+                                  // Status icon
+                                  const getStatusIcon = (status: string) => {
+                                    switch (status) {
+                                      case "erledigt":
+                                        return <Check className="h-4 w-4 text-green-500" />
+                                      case "unterbrochen":
+                                        return <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
+                                      case "nicht erledigt":
+                                        return <X className="h-4 w-4 text-red-500" />
+                                      default:
+                                        return <X className="h-4 w-4 text-red-500" />
+                                    }
+                                  };
+
+                                  return (
+                                    <div key={index} className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className="text-sm font-medium text-gray-700">{training.name}</span>
+                                          <div className="scale-75">
+                                            {getStatusIcon(training.status)}
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          {indicators.map((indicator) => {
+                                            const IconComponent = indicator.icon;
+                                            return (
+                                              <div key={indicator.key} className="relative">
+                                                <IconComponent 
+                                                  className={`h-3 w-3 ${
+                                                    indicator.completed 
+                                                      ? 'text-green-500' 
+                                                      : 'text-gray-300'
+                                                  }`} 
+                                                />
+                                                {indicator.completed && (
+                                                  <Check className="h-1.5 w-1.5 text-green-500 absolute -top-0.5 -right-0.5 bg-white rounded-full" />
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className={`h-full rounded-full ${
-                                          training.progress === 100 ? 'bg-green-500' : training.progress > 0 ? 'bg-blue-500' : 'bg-gray-300'
-                                        }`}
-                                        style={{ width: `${training.progress}%` }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </CardContent>
                           </Card>
@@ -1040,7 +1762,7 @@ export default function PromotorenPage() {
                                          className={`text-xs border-0 text-white font-medium ${
                                            assignment.type === "Promotion" 
                                              ? "bg-gradient-to-r from-blue-500 to-blue-600" 
-                                             : "bg-gradient-to-r from-purple-500 to-purple-600"
+                                             : "bg-gradient-to-r from-purple-500 to-pink-500"
                                          }`}
                                        >
                                          {assignment.type}
@@ -1066,106 +1788,180 @@ export default function PromotorenPage() {
         </>
       )}
 
-      {/* Eddie Assistant Floating Button */}
-      <button 
-        className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
-        onClick={() => {
-          setChatOpen(true);
-          setIsSpinning(true);
-          setTimeout(() => setIsSpinning(false), 1000);
-        }}
-      >
-        <div className="absolute w-full h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 animate-ping-slow opacity-70"></div>
-        <img
-          src="/icons/robot 1.svg"
-          alt="KI Assistant"
-          className={`h-8 w-8 relative z-10 ${isSpinning ? 'animate-spin-once' : ''} brightness-0 invert`}
-        />
-      </button>
-
-      {/* Eddie Assistant Chat Interface */}
-      {chatOpen && (
+      {/* Dienstvertrag Popup */}
+      {showDienstvertragPopup && (
         <>
-          {/* Darkening overlay */}
           <div 
-            className="fixed inset-0 bg-black transition-opacity duration-500 z-[35] opacity-40"
-            onClick={() => setChatOpen(false)}
+            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
+            onClick={() => setShowDienstvertragPopup(false)}
           ></div>
-
-          {/* Chat Interface */}
-          <div className="fixed bottom-36 right-4 w-72 h-[400px] bg-white rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
-            {/* Chat Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 flex items-center justify-between shadow-md sticky top-0 z-10">
-              <div className="flex items-center">
-                <img
-                  src="/icons/robot 1.svg"
-                  alt="KI Assistant"
-                  className="h-5 w-5 mr-2 brightness-0 invert"
-                />
-                <h3 className="text-white font-medium">Frag Eddie!</h3>
-              </div>
-              <button 
-                onClick={() => setChatOpen(false)} 
-                className="text-white hover:bg-blue-600 rounded-full p-1"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
+              <h3 className="text-lg font-semibold text-center">Dienstverträge</h3>
             </div>
             
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-3 pb-16 scrollbar-thin scrollbar-track-transparent hover:scrollbar-thumb-blue-600">
-              <div className="space-y-3">
-                {chatMessages.map((message, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div 
-                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                        message.role === 'user' 
-                          ? 'bg-gray-200 text-gray-900' 
-                          : 'bg-blue-400 text-white'
-                      }`}
-                    >
-                      {message.content}
-                    </div>
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* New Contract Available */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500 text-lg font-black animate-pulse">!</span>
+                    <span className="text-sm font-semibold text-green-700">Neuer Vertrag verfügbar</span>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Bereit</span>
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  <div>Wochenstunden: 20h → 32h</div>
+                  <div>Gültig ab: 01.12.2024</div>
+                </div>
+                <button 
+                  className="w-full p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                  onClick={handleDienstvertragSelect}
+                >
+                  Ansehen & Unterschreiben
+                </button>
+              </div>
+
+              {/* Current Active Contract */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-blue-700">Aktiver Vertrag</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Aktiv</span>
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  <div>Wochenstunden: 20h</div>
+                  <div>Laufzeit: 01.08.2024 - unbefristet</div>
+                  <div>Status: geringfügig</div>
+                </div>
+                <button 
+                  className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                  onClick={handleDienstvertragSelect}
+                >
+                  Vertrag ansehen
+                </button>
+              </div>
+
+              {/* Previous Contracts */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700 px-1">Frühere Verträge</h4>
+                
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Vertrag v2.0</span>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    <div>Wochenstunden: 8h</div>
+                    <div>Laufzeit: 01.02.2024 - 31.07.2024</div>
+                  </div>
+                  <button 
+                    className="w-full p-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200"
+                    onClick={handleDienstvertragSelect}
+                  >
+                    Archiv ansehen
+                  </button>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Vertrag v1.0</span>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    <div>Wochenstunden: 8h</div>
+                    <div>Laufzeit: 01.02.2023 - 31.01.2024</div>
+                  </div>
+                  <button 
+                    className="w-full p-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200"
+                    onClick={handleDienstvertragSelect}
+                  >
+                    Archiv ansehen
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Chat Input */}
-            <div className="absolute bottom-3 left-3 right-3 z-20">
-              <form onSubmit={sendMessage} className="relative">
-                <input 
-                  type="text"
-                  value={chatInput} 
-                  onChange={(e) => setChatInput(e.target.value)} 
-                  placeholder="Frag Eddie egal was..." 
-                  className="w-full pr-12 py-2 px-5 rounded-full outline-none text-gray-900 placeholder:text-gray-500 placeholder:text-xs"
-                  style={{ 
-                    border: 'none', 
-                    boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
-                    WebkitAppearance: 'none', 
-                    MozAppearance: 'none', 
-                    appearance: 'none',
-                    background: 'var(--input-bg, linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95)))'
-                  }}
-                />
-                <Button 
-                  type="submit" 
-                  size="icon" 
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center"
-                  disabled={!chatInput.trim()}
-                >
-                  <Send className="h-3.5 w-3.5 rotate-15" />
-                </Button>
-              </form>
+            
+            <div className="border-t border-gray-200 p-4">
+              <button 
+                onClick={() => setShowDienstvertragPopup(false)}
+                className="w-full p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium text-gray-700"
+              >
+                Schließen
+              </button>
             </div>
           </div>
         </>
       )}
+
+      {/* Dienstvertrag Content Popup */}
+      {showDienstvertragContent && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+            onClick={() => setShowDienstvertragContent(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[70] p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                <button 
+                  onClick={() => setShowDienstvertragContent(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
+              <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
+                
+                {/* Basic Contract Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Vertragsinformationen</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Arbeitnehmer:</span>
+                      <p>Jan Promotor</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Position:</span>
+                      <p>FachberaterIn</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Wochenstunden:</span>
+                      <p>32 Stunden</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Gehalt:</span>
+                      <p>€ 2.000,-- brutto/Monat</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Vertragsbeginn:</span>
+                      <p>01.12.2024</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Laufzeit:</span>
+                      <p>unbefristet</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center text-gray-500 text-sm">
+                  <p>Vollständiger Vertragstext verfügbar bei Bedarf</p>
+                  <p>Kontaktieren Sie die Personalabteilung für weitere Details</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Eddie KI Assistant */}
+      <AdminEddieAssistant />
     </div>
   );
 } 
