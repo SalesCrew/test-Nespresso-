@@ -379,7 +379,7 @@ export default function LandingPage() {
       {/* Onboarding Modal */}
       <OnboardingModal 
         isOpen={isOnboardingOpen}
-                onComplete={(data: any) => {
+        onComplete={(data: any) => {
           console.log('Onboarding completed:', data);
           setIsOnboardingOpen(false);
           

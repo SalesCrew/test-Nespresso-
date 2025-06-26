@@ -63,6 +63,20 @@ export default function PromotorenPage() {
   const [detailedViewOpen, setDetailedViewOpen] = useState<number | null>(null);
   const [copiedItems, setCopiedItems] = useState<Record<string, boolean>>({});
   
+  // Magic touch functionality (copied from admin/statistiken)
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [magicTouchCategories, setMagicTouchCategories] = useState<Record<number, string>>({});
+
+  // Magic touch categories (copied from admin/statistiken)
+  const categories = [
+    { name: 'Neutral', color: '#f8f9fa', bgColor: '#f8f9fa', borderColor: '#e9ecef', icon: <GraduationCap className="h-3 w-3" /> },
+    { name: 'Beeindruckt', color: '#d1f7eb', bgColor: '#d1f7eb', borderColor: '#a7f3d0', icon: <Star className="h-3 w-3" /> },
+    { name: 'Zufrieden', color: '#fff0c7', bgColor: '#fff0c7', borderColor: '#fde68a', icon: <CheckCircle className="h-3 w-3" /> },
+    { name: 'Verbesserung', color: '#d7ecfb', bgColor: '#d7ecfb', borderColor: '#bfdbfe', icon: <TrendingUp className="h-3 w-3" /> },
+    { name: 'Motivierend (unzufrieden)', color: '#eadaff', bgColor: '#eadaff', borderColor: '#ddd6fe', icon: <Activity className="h-3 w-3" /> },
+    { name: 'Verschlechterung', color: '#ffe3e3', bgColor: '#ffe3e3', borderColor: '#fecaca', icon: <AlertCircle className="h-3 w-3" /> }
+  ];
+  
   // Dienstvertrag functionality
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false);
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false);
@@ -409,6 +423,41 @@ export default function PromotorenPage() {
     return {};
   };
 
+  // Magic touch functions (copied from admin/statistiken)
+  const handleMagicTouchClick = (promotorId: number) => {
+    setOpenDropdown(openDropdown === promotorId ? null : promotorId);
+  };
+
+  const handleCategorySelect = (promotorId: number, category: string) => {
+    setMagicTouchCategories(prev => ({ ...prev, [promotorId]: category }));
+    setOpenDropdown(null);
+  };
+
+  const getMagicTouchStyle = (promotorId: number) => {
+    const selectedCategory = magicTouchCategories[promotorId];
+    if (!selectedCategory) return {};
+    
+    // If Neutral is selected, return empty object to use default styling
+    if (selectedCategory === 'Neutral') return {};
+    
+    const category = categories.find(c => c.name === selectedCategory);
+    if (!category) return {};
+    
+    // Convert hex to rgba with 80% opacity for background
+    const hexToRgba = (hex: string, alpha: number) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    
+    return { 
+      backgroundColor: hexToRgba(category.bgColor, 0.8),
+      borderColor: category.borderColor,
+      boxShadow: `0 1px 3px 0 ${category.borderColor}40, 0 1px 2px 0 ${category.borderColor}60`
+    };
+  };
+
   // Status indicator
   const getStatusIcon = (status: string) => {
     return status === "active" ? (
@@ -565,6 +614,11 @@ export default function PromotorenPage() {
       }
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
         setStatusDropdownOpen(false);
+      }
+      
+      // Close magic touch dropdown
+      if (!event.target || !(event.target as HTMLElement).closest('.magic-touch-dropdown')) {
+        setOpenDropdown(null);
       }
     };
 
@@ -1062,7 +1116,8 @@ export default function PromotorenPage() {
             {filteredPromotors.map((promotor) => (
               <div key={promotor.id} className="relative">
                 <Card 
-                  className="group hover:shadow-xl hover:shadow-gray-900/5 transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden cursor-pointer"
+                  className="group shadow-md hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden cursor-pointer"
+                  style={getMagicTouchStyle(promotor.id)}
                   onClick={() => toggleDetailedView(promotor.id)}
                 >
                   {/* Subtle gradient border effect */}
@@ -1094,9 +1149,43 @@ export default function PromotorenPage() {
                         <p className="text-xs text-gray-500 capitalize mt-0.5">{promotor.status}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreVertical className="h-4 w-4 text-gray-400" />
-                    </Button>
+                    <div className="relative magic-touch-dropdown">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMagicTouchClick(promotor.id);
+                        }}
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center hover:bg-gray-100"
+                      >
+                        <MoreVertical className="h-4 w-4 text-gray-400" />
+                      </button>
+
+                      {openDropdown === promotor.id && (
+                        <div className="absolute top-full right-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] overflow-hidden">
+                          <div className="py-1">
+                            {categories.map((category) => (
+                              <button
+                                key={category.name}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCategorySelect(promotor.id, category.name);
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                              >
+                                <div
+                                  className="w-3 h-3 rounded-full border border-gray-300"
+                                  style={{ backgroundColor: category.bgColor }}
+                                ></div>
+                                <span>{category.name}</span>
+                                {magicTouchCategories[promotor.id] === category.name && (
+                                  <Check className="h-3 w-3 text-blue-500 ml-auto" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Region Badge */}

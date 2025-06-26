@@ -9,7 +9,8 @@ import {
   Home,
   Briefcase,
   MessagesSquare,
-  Users
+  Users,
+  BookOpen
 } from "lucide-react";
 
 interface AdminNavigationProps {
@@ -27,6 +28,7 @@ export default function AdminNavigation({ sidebarOpen, setSidebarOpen }: AdminNa
     { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team', href: '/admin/team' },
     { id: "messages", label: "Nachrichten", icon: MessagesSquare, active: false, href: '#' },
     { id: "statistiken", label: "Statistiken", icon: BarChart2, active: pathname === '/admin/statistiken', href: '/admin/statistiken' },
+    { id: "schulungen", label: "Schulungen", icon: BookOpen, active: pathname === '/admin/schulungen', href: '/admin/schulungen' },
     { id: "settings", label: "Einstellungen", icon: Settings, active: false, href: '#' }
   ];
 
