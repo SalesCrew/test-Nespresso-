@@ -2090,11 +2090,11 @@ export default function SchulungenPage() {
                                 <div className="space-y-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
                                   {(component.formData?.questions || []).map((q: any, qIndex: number) => (
                                     <div key={qIndex} className="bg-white rounded border p-3">
-                                      <p className="font-medium text-sm text-gray-900 mb-2">Frage {qIndex + 1}: {q.question}</p>
+                                      <p className="font-medium text-sm text-gray-900 mb-2 truncate">Frage {qIndex + 1}: {q.question}</p>
                                       {q.type === 'multiple-choice' ? (
                                         <div className="grid grid-cols-2 gap-1">
                                           {q.options?.map((option: string, oIndex: number) => (
-                                            <div key={oIndex} className={`text-xs p-1.5 rounded ${
+                                            <div key={oIndex} className={`text-xs p-1.5 rounded truncate ${
                                               oIndex === q.correctAnswer 
                                                 ? 'bg-green-50 text-green-700 border border-green-200' 
                                                 : 'bg-gray-50 text-gray-600'
@@ -2105,10 +2105,10 @@ export default function SchulungenPage() {
                                         </div>
                                       ) : (
                                         <div className="grid grid-cols-2 gap-2">
-                                          <div className="bg-green-50 text-green-700 border border-green-200 text-xs p-1.5 rounded">
+                                          <div className="bg-green-50 text-green-700 border border-green-200 text-xs p-1.5 rounded truncate">
                                             <strong>Richtig:</strong> {q.correctAnswers || 'Nicht definiert'}
                                           </div>
-                                          <div className="bg-red-50 text-red-700 border border-red-200 text-xs p-1.5 rounded">
+                                          <div className="bg-red-50 text-red-700 border border-red-200 text-xs p-1.5 rounded truncate">
                                             <strong>Falsch:</strong> {q.wrongAnswers || 'Nicht definiert'}
                                           </div>
                                         </div>
