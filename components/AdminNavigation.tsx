@@ -63,9 +63,10 @@ export default function AdminNavigation({ sidebarOpen, setSidebarOpen }: AdminNa
               }}
               className={`${sidebarOpen ? 'w-full flex items-center space-x-3 px-3 py-2' : 'w-8 h-8 flex items-center justify-center mx-auto'} rounded-lg transition-colors ${
                 item.active 
-                  ? 'bg-blue-500 text-white' 
+                  ? 'text-white' 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
               }`}
+              style={item.active ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
               title={!sidebarOpen ? item.label : undefined}
             >
               <item.icon className="h-4 w-4 flex-shrink-0" />

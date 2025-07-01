@@ -35,15 +35,21 @@ import {
   Eye,
   Video,
   HelpCircle,
-  FileSignature
+  FileSignature,
+  Cake,
+  ArrowLeft,
+  Download
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/ui/date-picker";
+import { DienstvertragTemplate } from "@/components/DienstvertragTemplate";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+
 
 export default function PromotorenPage() {
   const router = useRouter();
@@ -80,6 +86,14 @@ export default function PromotorenPage() {
   // Dienstvertrag functionality
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false);
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false);
+  const [selectedPromotorForContract, setSelectedPromotorForContract] = useState<number | null>(null);
+  const [contractForm, setContractForm] = useState({
+    hoursPerWeek: '',
+    monthlyGross: '',
+    startDate: '',
+    endDate: '',
+    isTemporary: false
+  });
   
   // Document management state
   const [documentStatuses, setDocumentStatuses] = useState<Record<string, string>>({
@@ -216,6 +230,8 @@ export default function PromotorenPage() {
       name: "Sarah Schmidt",
       email: "sarah.schmidt@salescrew.de",
       phone: "+43 664 123 4567",
+      address: "Hauptstraße 12, 1010 Wien",
+      birthDate: "15.03.1995",
       region: "wien-noe-bgl",
       workingDays: ["Mo", "Di", "Mi", "Do", "Fr"],
       status: "active",
@@ -239,6 +255,8 @@ export default function PromotorenPage() {
       name: "Michael Weber",
       email: "michael.weber@salescrew.de",
       phone: "+43 676 234 5678",
+      address: "Grazergasse 5, 8010 Graz",
+      birthDate: "22.07.1992",
       region: "steiermark",
       workingDays: ["Mo", "Di", "Mi", "Do"],
       status: "active",
@@ -262,6 +280,8 @@ export default function PromotorenPage() {
       name: "Jan Müller",
       email: "jan.mueller@salescrew.de",
       phone: "+43 650 345 6789",
+      address: "Mozartstraße 8, 5020 Salzburg",
+      birthDate: "10.11.1990",
       region: "salzburg",
       workingDays: ["Di", "Mi", "Do", "Fr", "Sa"],
       status: "active",
@@ -285,6 +305,8 @@ export default function PromotorenPage() {
       name: "Lisa König",
       email: "lisa.koenig@salescrew.de",
       phone: "+43 699 456 7890",
+      address: "Ringstraße 23, 1010 Wien",
+      birthDate: "28.05.1993",
       region: "wien-noe-bgl",
       workingDays: ["Mo", "Mi", "Fr"],
       status: "inactive",
@@ -308,6 +330,8 @@ export default function PromotorenPage() {
       name: "Anna Bauer",
       email: "anna.bauer@salescrew.de",
       phone: "+43 664 567 8901",
+      address: "Linzer Straße 42, 4020 Linz",
+      birthDate: "03.09.1994",
       region: "oberoesterreich",
       workingDays: ["Mo", "Di", "Do", "Fr"],
       status: "active",
@@ -331,6 +355,8 @@ export default function PromotorenPage() {
       name: "Tom Fischer",
       email: "tom.fischer@salescrew.de",
       phone: "+43 676 678 9012",
+      address: "Innsbrucker Straße 15, 6020 Innsbruck",
+      birthDate: "18.01.1991",
       region: "tirol",
       workingDays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa"],
       status: "active",
@@ -606,6 +632,51 @@ export default function PromotorenPage() {
     }
   };
 
+  // Export Dienstvertrag as PDF
+  const exportDienstvertragAsPDF = async () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
+    const element = document.getElementById('dienstvertrag-content');
+    if (!element) return;
+
+    const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+    const filename = promotor 
+      ? `Dienstvertrag_${promotor.name.replace(/\s+/g, '_')}.pdf` 
+      : 'Dienstvertrag.pdf';
+
+    const opt = {
+      margin: 15,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    // Use a cloned element to avoid modifying the original
+    const clonedElement = element.cloneNode(true) as HTMLElement;
+    
+    // Apply styles to help with page breaking
+    const style = document.createElement('style');
+    style.textContent = `
+      p, li, h1, h2, h3, h4, h5, h6, div, tr, td {
+        page-break-inside: avoid !important;
+      }
+    `;
+    clonedElement.appendChild(style);
+
+    try {
+      // Dynamically import html2pdf only when needed (client-side)
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      // Generate the PDF
+      html2pdf().from(clonedElement).set(opt).save();
+    } catch (error) {
+      console.error('Error loading html2pdf:', error);
+    }
+  };
+
   // Handle outside click for dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -643,7 +714,8 @@ export default function PromotorenPage() {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setShowStammdatenblatt(!showStammdatenblatt)}
-                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
+                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
               >
                 {showStammdatenblatt ? 'Promotoren' : 'Stammdatenblatt'}
               </button>
@@ -664,7 +736,7 @@ export default function PromotorenPage() {
                     placeholder="Stammdaten suchen..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    className="pl-10 bg-white border-gray-200 focus:border-gray-200 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 
@@ -787,13 +859,8 @@ export default function PromotorenPage() {
                     <div className="absolute inset-[1px] bg-white rounded-lg"></div>
                     
                     <CardContent className="relative p-5 space-y-4">
-                      {/* Header with Avatar-style */}
+                      {/* Header */}
                       <div className="flex items-center space-x-3 pb-3 border-b border-gray-100">
-                        <div className="relative">
-                          <div className="w-11 h-11 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center text-blue-700 font-medium text-sm ring-2 ring-gray-100 ring-offset-2">
-                            {submission.firstName[0]}{submission.lastName[0]}
-                          </div>
-                        </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-base text-gray-900 truncate">
                             {submission.firstName} {submission.lastName}
@@ -891,19 +958,28 @@ export default function PromotorenPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <div className="text-center">
                           <span className="text-xs text-gray-500 block mb-1">Führerschein</span>
-                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.drivingLicense ? 'bg-green-500' : 'bg-gray-400'}`}>
+                          <div 
+                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!submission.drivingLicense ? 'bg-gray-400' : ''}`}
+                            style={submission.drivingLicense ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                          >
                             {submission.drivingLicense ? '✓' : '✗'}
                           </div>
                         </div>
                         <div className="text-center">
                           <span className="text-xs text-gray-500 block mb-1">Auto</span>
-                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.carAvailable ? 'bg-green-500' : 'bg-gray-400'}`}>
+                          <div 
+                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!submission.carAvailable ? 'bg-gray-400' : ''}`}
+                            style={submission.carAvailable ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                          >
                             {submission.carAvailable ? '✓' : '✗'}
                           </div>
                         </div>
                         <div className="text-center">
                           <span className="text-xs text-gray-500 block mb-1">Fahrbereit</span>
-                          <div className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${submission.willingToDrive ? 'bg-green-500' : 'bg-gray-400'}`}>
+                          <div 
+                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!submission.willingToDrive ? 'bg-gray-400' : ''}`}
+                            style={submission.willingToDrive ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                          >
                             {submission.willingToDrive ? '✓' : '✗'}
                           </div>
                         </div>
@@ -964,7 +1040,7 @@ export default function PromotorenPage() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-3 border-t border-gray-100">
-                        <Button size="sm" className="flex-1 bg-green-500 hover:bg-green-600 text-xs">
+                        <Button size="sm" className="flex-1 text-white text-xs" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}>
                           Annehmen
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700 text-xs">
@@ -1000,7 +1076,7 @@ export default function PromotorenPage() {
                 placeholder="Promotor suchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white border-gray-200 focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="pl-10 bg-white border-gray-200 focus:border-gray-200 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
             
@@ -1232,7 +1308,7 @@ export default function PromotorenPage() {
                           >
                             {promotor.performance.mcet.toFixed(1)}
                           </p>
-                          <p className="text-xs text-gray-500">MC/ET</p>
+                          <p className="text-xs text-gray-500 font-medium">MC/ET</p>
                         </div>
                         <div className="text-center border-l border-r border-slate-200/40">
                           <p 
@@ -1241,7 +1317,7 @@ export default function PromotorenPage() {
                           >
                             {promotor.performance.tma}%
                           </p>
-                          <p className="text-xs text-gray-500">TMA</p>
+                          <p className="text-xs text-gray-500 font-medium">TMA</p>
                         </div>
                         <div className="text-center">
                           <p 
@@ -1250,7 +1326,7 @@ export default function PromotorenPage() {
                           >
                             {promotor.performance.vlshare}%
                           </p>
-                          <p className="text-xs text-gray-500">VL Share</p>
+                          <p className="text-xs text-gray-500 font-medium">VL Share</p>
                         </div>
                       </div>
                     </div>
@@ -1276,12 +1352,10 @@ export default function PromotorenPage() {
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${
                           promotor.onboardingProgress === 100 
-                            ? 'bg-gradient-to-r from-green-400/60 to-emerald-400/60' 
-                            : promotor.onboardingProgress >= 75 
-                            ? 'bg-gradient-to-r from-blue-400/60 to-indigo-400/60'
+                            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60' 
                             : promotor.onboardingProgress >= 50 
                             ? 'bg-gradient-to-r from-yellow-400/60 to-orange-400/60'
-                            : 'bg-gradient-to-r from-red-400/60 to-pink-400/60'
+                            : 'bg-gradient-to-r from-red-600/60 to-red-500/60'
                         }`}
                         style={{ width: `${promotor.onboardingProgress}%` }}
                       ></div>
@@ -1333,7 +1407,8 @@ export default function PromotorenPage() {
                     value={notes[promotor.id] || ''}
                     onChange={(e) => updateNotes(promotor.id, e.target.value)}
                     placeholder="Notizen zu diesem Promotor hinzufügen..."
-                    className="w-full h-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-gray-200 text-sm bg-white shadow-xl"
+                    className="w-full h-full p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-gray-200 text-sm bg-white shadow-xl [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   />
                 </div>
               )}
@@ -1364,12 +1439,20 @@ export default function PromotorenPage() {
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/60 transition-opacity duration-300 z-[60]"
-            onClick={() => setDetailedViewOpen(null)}
+            onClick={() => {
+              if (!showDienstvertragPopup && !showDienstvertragContent) {
+                setDetailedViewOpen(null);
+              }
+            }}
           ></div>
 
           {/* Modal Content */}
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden relative">
+              {/* Dark overlay when Dienstvertrag is open */}
+              {(showDienstvertragPopup || showDienstvertragContent) && (
+                <div className="absolute inset-0 bg-black/40 z-[5] rounded-2xl"></div>
+              )}
               {(() => {
                 const promotor = promotors.find(p => p.id === detailedViewOpen);
                 if (!promotor) return null;
@@ -1379,7 +1462,11 @@ export default function PromotorenPage() {
                     {/* Header */}
                     <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 relative">
                       <button
-                        onClick={() => setDetailedViewOpen(null)}
+                        onClick={() => {
+                          if (!showDienstvertragPopup && !showDienstvertragContent) {
+                            setDetailedViewOpen(null);
+                          }
+                        }}
                         className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors"
                       >
                         <X className="h-5 w-5" />
@@ -1448,11 +1535,15 @@ export default function PromotorenPage() {
                                  </div>
                                 <div className="flex items-center space-x-2">
                                   <MapPin className="h-4 w-4 text-gray-400" />
-                                  <span>{regionNames[promotor.region as keyof typeof regionNames]}</span>
+                                  <span>{promotor.address}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <Calendar className="h-4 w-4 text-gray-400" />
                                   <span>Dabei seit März 2023</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Cake className="h-4 w-4 text-gray-400" />
+                                  <span>{promotor.birthDate}</span>
                                 </div>
                               </div>
                             </CardContent>
@@ -1592,7 +1683,10 @@ export default function PromotorenPage() {
                                   </div>
                                   <button 
                                     className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                                    onClick={() => setShowDienstvertragPopup(true)}
+                                    onClick={() => {
+                                      setSelectedPromotorForContract(promotor.id);
+                                      setShowDienstvertragPopup(true);
+                                    }}
                                   >
                                     Alle Verträge anzeigen
                                   </button>
@@ -1773,16 +1867,14 @@ export default function PromotorenPage() {
                                   <span className="text-sm font-bold text-gray-900">{promotor.onboardingProgress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-3">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-500 ${
-                                      promotor.onboardingProgress === 100 
-                                        ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
-                                        : promotor.onboardingProgress >= 75 
-                                        ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
-                                        : promotor.onboardingProgress >= 50 
-                                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                                        : 'bg-gradient-to-r from-red-400 to-pink-500'
-                                    }`}
+                                                    <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      promotor.onboardingProgress === 100 
+                        ? 'bg-gradient-to-r from-green-500 to-green-800' 
+                        : promotor.onboardingProgress >= 50 
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                        : 'bg-gradient-to-r from-red-600 to-red-500'
+                    }`}
                                     style={{ width: `${promotor.onboardingProgress}%` }}
                                   ></div>
                                 </div>
@@ -1881,50 +1973,250 @@ export default function PromotorenPage() {
       {showDienstvertragPopup && (
         <>
           <div 
-            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
-            onClick={() => setShowDienstvertragPopup(false)}
+            className="fixed inset-0 bg-black/30 z-[75] backdrop-blur-sm"
+            onClick={() => {
+              setShowDienstvertragPopup(false);
+              setSelectedPromotorForContract(null);
+              setContractForm({
+                hoursPerWeek: '',
+                monthlyGross: '',
+                startDate: '',
+                endDate: '',
+                isTemporary: false
+              });
+            }}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl z-[80] p-0 w-[600px] max-h-[85vh] overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
-              <h3 className="text-lg font-semibold text-center">Dienstverträge</h3>
+            <div className="text-white p-6 rounded-t-xl" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold">Dienstvertrag Management</h3>
+                <button
+                  onClick={() => {
+                    setShowDienstvertragPopup(false);
+                    setSelectedPromotorForContract(null);
+                    setContractForm({
+                      hoursPerWeek: '',
+                      monthlyGross: '',
+                      startDate: '',
+                      endDate: '',
+                      isTemporary: false
+                    });
+                  }}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             
-            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* New Contract Available */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-500 text-lg font-black animate-pulse">!</span>
-                    <span className="text-sm font-semibold text-green-700">Neuer Vertrag verfügbar</span>
+            <div className="p-6 space-y-6 max-h-[calc(85vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+              {/* Contract Creation Section */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900">Neuen Vertrag erstellen</h4>
+                
+                {/* Employee Info - Fetched from Promotor */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+                  <h5 className="font-medium text-gray-700 mb-2">Mitarbeiter Information</h5>
+                  <div className="border-b border-gray-200 mb-3"></div>
+                  {(() => {
+                    const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+                    if (!promotor) return null;
+                    
+                    return (
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-500">Name:</span>
+                          <p className="font-medium">{promotor.name}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Email:</span>
+                          <p className="font-medium">{promotor.email}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Region:</span>
+                          <p className="font-medium">{regionNames[promotor.region as keyof typeof regionNames]}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Status:</span>
+                          <p className="font-medium">{promotor.status === 'active' ? 'Aktiv' : 'Inaktiv'}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Contract Details Form */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Wochenstunden
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="z.B. 32"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        value={contractForm.hoursPerWeek}
+                        onChange={(e) => setContractForm({...contractForm, hoursPerWeek: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Monatsgehalt (Brutto)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
+                        <input
+                          type="number"
+                          placeholder="2000"
+                          className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          value={contractForm.monthlyGross}
+                          onChange={(e) => setContractForm({...contractForm, monthlyGross: e.target.value})}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Bereit</span>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Vertragsbeginn
+                    </label>
+                    <DatePicker
+                      value={contractForm.startDate}
+                      onChange={(value) => setContractForm({...contractForm, startDate: value})}
+                      placeholder="tt.mm.jjjj"
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Befristung Option */}
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-0"
+                        checked={contractForm.isTemporary}
+                        onChange={(e) => setContractForm({...contractForm, isTemporary: e.target.checked})}
+                      />
+                      <span className="text-sm font-medium text-gray-700">Befristeter Vertrag</span>
+                    </label>
+                    
+                    {contractForm.isTemporary && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Vertragsende
+                        </label>
+                        <DatePicker
+                          value={contractForm.endDate}
+                          onChange={(value) => setContractForm({...contractForm, endDate: value})}
+                          placeholder="tt.mm.jjjj"
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-600 mb-2">
-                  <div>Wochenstunden: 20h → 32h</div>
-                  <div>Gültig ab: 01.12.2024</div>
-                </div>
-                <button 
-                  className="w-full p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                  onClick={handleDienstvertragSelect}
+
+                {/* Send Button */}
+                <button
+                  onClick={() => {
+                    // Handle contract creation
+                    console.log('Creating contract:', contractForm);
+                    // Reset form and close modal
+                    setContractForm({
+                      hoursPerWeek: '',
+                      monthlyGross: '',
+                      startDate: '',
+                      endDate: '',
+                      isTemporary: false
+                    });
+                    setShowDienstvertragPopup(false);
+                    setSelectedPromotorForContract(null);
+                  }}
+                  disabled={!contractForm.hoursPerWeek || !contractForm.monthlyGross || !contractForm.startDate}
+                  className={`w-full py-3 rounded-lg font-medium transition-all duration-200 text-white ${
+                    contractForm.hoursPerWeek && contractForm.monthlyGross && contractForm.startDate
+                      ? ''
+                      : 'opacity-50 cursor-not-allowed'
+                  }`}
+                  style={contractForm.hoursPerWeek && contractForm.monthlyGross && contractForm.startDate
+                    ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'}
+                    : {background: '#9CA3AF'}
+                  }
                 >
-                  Ansehen & Unterschreiben
+                  Vertrag erstellen & senden
                 </button>
               </div>
 
-              {/* Current Active Contract */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+              {/* Divider */}
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Vertragshistorie</h4>
+
+                {/* Contracts List */}
+                <div className="space-y-3">
+                  {/* Pending Contract */}
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-blue-700">Aktiver Vertrag</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Aktiv</span>
+                      <span className="text-sm font-semibold text-orange-700">Ausstehender Vertrag</span>
+                  <div className="flex items-center space-x-2">
+                        <button 
+                          className="p-1 hover:bg-orange-100/50 rounded transition-colors opacity-50 hover:opacity-75"
+                          title="Unterschriebenen Vertrag ansehen"
+                        >
+                          <Eye className="h-3 w-3 text-orange-600" />
+                        </button>
+                        <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
+                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Warte auf Unterschrift</span>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-600 mb-2">
+                    <div className="text-sm text-gray-600 mb-3">
+                  <div>Wochenstunden: 20h → 32h</div>
+                      <div>Monatsgehalt: € 1.800,-- → € 2.400,--</div>
+                  <div>Gültig ab: 01.12.2024</div>
+                      <div>Versendet: vor 3 Tagen</div>
+                </div>
+                    <div className="flex space-x-2">
+                <button 
+                        className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200 border border-gray-300"
+                  onClick={handleDienstvertragSelect}
+                >
+                        Details anzeigen
+                      </button>
+                      <button 
+                        className="flex-1 py-2 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                        style={{background: 'linear-gradient(135deg, #FB923C, #EA580C)'}}
+                      >
+                        Erinnerung senden
+                </button>
+                    </div>
+              </div>
+
+              {/* Current Active Contract */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-green-700">Aktiver Vertrag</span>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          className="p-1 hover:bg-green-100/50 rounded transition-colors opacity-50 hover:opacity-75"
+                          title="Unterschriebenen Vertrag ansehen"
+                        >
+                          <Eye className="h-3 w-3 text-green-600" />
+                        </button>
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Aktiv</span>
+                </div>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-3">
                   <div>Wochenstunden: 20h</div>
+                      <div>Monatsgehalt: € 1.800,-- brutto</div>
                   <div>Laufzeit: 01.08.2024 - unbefristet</div>
                   <div>Status: geringfügig</div>
                 </div>
                 <button 
-                  className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                      className="w-full py-2 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                      style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
                   onClick={handleDienstvertragSelect}
                 >
                   Vertrag ansehen
@@ -1933,19 +2225,27 @@ export default function PromotorenPage() {
 
               {/* Previous Contracts */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700 px-1">Frühere Verträge</h4>
+                    <h5 className="text-sm font-medium text-gray-700">Frühere Verträge</h5>
                 
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-600">Vertrag v2.0</span>
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        className="p-1 hover:bg-gray-200/50 rounded transition-colors opacity-50 hover:opacity-75"
+                        title="Unterschriebenen Vertrag ansehen"
+                      >
+                        <Eye className="h-3 w-3 text-gray-600" />
+                      </button>
+                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    </div>
                   </div>
                   <div className="text-xs text-gray-500 mb-2">
-                    <div>Wochenstunden: 8h</div>
+                        <div>Wochenstunden: 8h • € 800,--/Monat</div>
                     <div>Laufzeit: 01.02.2024 - 31.07.2024</div>
                   </div>
                   <button 
-                    className="w-full p-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200"
+                        className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
                     onClick={handleDienstvertragSelect}
                   >
                     Archiv ansehen
@@ -1955,14 +2255,22 @@ export default function PromotorenPage() {
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-600">Vertrag v1.0</span>
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        className="p-1 hover:bg-gray-200/50 rounded transition-colors opacity-50 hover:opacity-75"
+                        title="Unterschriebenen Vertrag ansehen"
+                      >
+                        <Eye className="h-3 w-3 text-gray-600" />
+                      </button>
+                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    </div>
                   </div>
                   <div className="text-xs text-gray-500 mb-2">
-                    <div>Wochenstunden: 8h</div>
+                        <div>Wochenstunden: 8h • € 800,--/Monat</div>
                     <div>Laufzeit: 01.02.2023 - 31.01.2024</div>
                   </div>
                   <button 
-                    className="w-full p-2 bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200"
+                        className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
                     onClick={handleDienstvertragSelect}
                   >
                     Archiv ansehen
@@ -1970,14 +2278,7 @@ export default function PromotorenPage() {
                 </div>
               </div>
             </div>
-            
-            <div className="border-t border-gray-200 p-4">
-              <button 
-                onClick={() => setShowDienstvertragPopup(false)}
-                className="w-full p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium text-gray-700"
-              >
-                Schließen
-              </button>
+              </div>
             </div>
           </div>
         </>
@@ -1987,63 +2288,67 @@ export default function PromotorenPage() {
       {showDienstvertragContent && (
         <>
           <div 
-            className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+            className="fixed inset-0 bg-black/40 z-[75] backdrop-blur-sm"
             onClick={() => setShowDienstvertragContent(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[70] p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[80] p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
+            <div className="sticky top-0 text-white p-4 rounded-t-lg" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}>
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Dienstvertrag</h3>
-                <button 
-                  onClick={() => setShowDienstvertragContent(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                <div className="flex items-center space-x-3">
+                  <button 
+                    onClick={() => {
+                      setShowDienstvertragContent(false);
+                      setShowDienstvertragPopup(true);
+                    }}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={exportDienstvertragAsPDF}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    title="Als PDF exportieren"
+                  >
+                    <Download className="h-5 w-5" />
+                  </button>
+                  <button 
+                    onClick={() => setShowDienstvertragContent(false)}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
             
             {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
-              <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
-                
-                {/* Basic Contract Info */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">Vertragsinformationen</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Arbeitnehmer:</span>
-                      <p>Jan Promotor</p>
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-8 [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+              <div className="max-w-3xl mx-auto" id="dienstvertrag-content">
+                {/* Get promotor data for dynamic fields */}
+                {(() => {
+                  const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+                  const promotorName = promotor?.name || "Vorname Nachname";
+                  const promotorBirthDate = promotor?.birthDate || "Tag.Monat.Jahr";
+                  const promotorAddress = promotor?.address || "Adresse";
+                  
+                  return (
+                    <DienstvertragTemplate
+                      promotorName={promotorName}
+                      promotorBirthDate={promotorBirthDate}
+                      promotorAddress={promotorAddress}
+                      hoursPerWeek={contractForm.hoursPerWeek}
+                      monthlyGross={contractForm.monthlyGross}
+                      startDate={contractForm.startDate}
+                      endDate={contractForm.endDate}
+                      isTemporary={contractForm.isTemporary}
+                    />
+                  );
+                })()}
                     </div>
-                    <div>
-                      <span className="font-medium">Position:</span>
-                      <p>FachberaterIn</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Wochenstunden:</span>
-                      <p>32 Stunden</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Gehalt:</span>
-                      <p>€ 2.000,-- brutto/Monat</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Vertragsbeginn:</span>
-                      <p>01.12.2024</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Laufzeit:</span>
-                      <p>unbefristet</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center text-gray-500 text-sm">
-                  <p>Vollständiger Vertragstext verfügbar bei Bedarf</p>
-                  <p>Kontaktieren Sie die Personalabteilung für weitere Details</p>
-                </div>
-              </div>
             </div>
           </div>
         </>

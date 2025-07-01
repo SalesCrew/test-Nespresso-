@@ -1191,17 +1191,39 @@ export default function EinsatzplanPage() {
               <p className="text-gray-500 text-sm">{showMaerkteView ? 'Marktübersicht und Verwaltung' : 'Übersicht und Planung aller Einsätze'}</p>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Menu Buttons */}
+              <button 
+                onClick={() => setShowMaerkteView(false)}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  !showMaerkteView 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Einsatzplan</span>
+              </button>
+              <button 
+                onClick={() => setShowMaerkteView(true)}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  showMaerkteView 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <Home className="h-4 w-4" />
+                <span>Märkte</span>
+              </button>
+              
+              {/* Vertical Divider */}
+              <div className="h-8 w-px bg-gray-300 opacity-60 mx-3"></div>
+              
               <button
                 onClick={() => setShowImportModal(true)}
-                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
+                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
               >
                 {showMaerkteView ? 'Import POS' : 'Import EP'}
-              </button>
-              <button
-                onClick={() => setShowMaerkteView(!showMaerkteView)}
-                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                {showMaerkteView ? 'Einsatzplan' : 'Märkte'}
               </button>
             </div>
           </div>

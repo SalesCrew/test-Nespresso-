@@ -1323,7 +1323,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               className="border-0 cursor-pointer hover:scale-[1.02] transition-transform duration-200 h-20 w-full"
               style={{
                 background: 'linear-gradient(135deg, #ffffff 0%, rgba(34, 197, 94, 0.003) 50%, rgba(21, 128, 61, 0.005) 100%)',
-                boxShadow: '0 4px 20px -2px rgba(21, 128, 61, 0.06), 0 2px 8px -1px rgba(34, 197, 94, 0.04), 0 8px 32px -4px rgba(21, 128, 61, 0.03)'
+                boxShadow: '0 4px 20px -2px rgba(34, 197, 94, 0.06), 0 2px 8px -1px rgba(34, 197, 94, 0.04), 0 8px 32px -4px rgba(34, 197, 94, 0.03)'
               }}
               onClick={() => setShowActivePromotionsModal(true)}
             >

@@ -1,9 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Settings, Plus, Video, FileText, HelpCircle, X, GripVertical, Trash2, Check, Edit, CheckSquare, BookOpen, Loader2, ArrowLeft } from "lucide-react";
+import { Settings, Plus, Video, FileText, HelpCircle, X, GripVertical, Trash2, Check, Edit, CheckSquare, BookOpen, Loader2, ArrowLeft, UserPlus, Play, Eye, ThumbsUp, ThumbsDown } from "lucide-react";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+
+// Custom styles for 3D flip animation
+const flipStyles = `
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-8deg); }
+    40% { transform: rotate(8deg); }
+    60% { transform: rotate(-4deg); }
+    80% { transform: rotate(4deg); }
+  }
+  .wobble {
+    animation: wobble 0.5s ease-in-out;
+  }
+`;
 
 export default function SchulungenPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,8 +62,9 @@ export default function SchulungenPage() {
   const [editedWrongAnswers, setEditedWrongAnswers] = useState('');
 
   // Component form data state
-  const [videoFormData, setVideoFormData] = useState({ transcript: '', title: '', description: '' });
-  const [pdfFormData, setPdfFormData] = useState({ title: '', description: '' });
+  const [videoFormData, setVideoFormData] = useState({ transcript: '', title: '', description: '', duration: 0 });
+  const [pdfFormData, setPdfFormData] = useState({ title: '', description: '', duration: 0 });
+  const [quizFormData, setQuizFormData] = useState({ duration: 0 });
 
   // Schulung finalization state
   const [schulungData, setSchulungData] = useState({ title: '', description: '' });
@@ -68,6 +92,148 @@ export default function SchulungenPage() {
   // Promotor detailed view state
   const [showPromotorDetails, setShowPromotorDetails] = useState(false);
   const [selectedPromotor, setSelectedPromotor] = useState<any>(null);
+
+  // Additional promotor assignment state
+  const [showAssignPromotorDropdown, setShowAssignPromotorDropdown] = useState(false);
+  const [assignPromotorSearch, setAssignPromotorSearch] = useState("");
+  const [assignActiveRegionFilter, setAssignActiveRegionFilter] = useState<string>("all");
+  const [assignSelectedPromotors, setAssignSelectedPromotors] = useState<string[]>([]);
+  const [lastAssignSelectedByIcon, setLastAssignSelectedByIcon] = useState<string[]>([]);
+
+  // Schulung search state
+  const [schulungSearch, setSchulungSearch] = useState("");
+
+  // Navigation state for Schulungen vs Videos
+  const [activeSection, setActiveSection] = useState<"schulungen" | "videos">("schulungen");
+
+  // Videos section state
+  const [videosSearch, setVideosSearch] = useState("");
+  const [flippedVideoId, setFlippedVideoId] = useState<number | null>(null);
+  const [editingVideoId, setEditingVideoId] = useState<number | null>(null);
+  const [editedVideoTitle, setEditedVideoTitle] = useState("");
+  const [editedVideoTranscript, setEditedVideoTranscript] = useState("");
+  const [deleteConfirmVideoId, setDeleteConfirmVideoId] = useState<number | null>(null);
+
+  // Mock videos data - now in state so it can be updated
+  const [videos, setVideos] = useState([
+    {
+      id: 1,
+      title: "Grundlagen des Verkaufs - Einführung",
+      thumbnail: "/placeholder.jpg",
+      likes: 45,
+      dislikes: 2,
+      views: 78,
+      duration: "8:34",
+      uploadDate: "vor 2 Tagen",
+      transcript: "Willkommen zu unserem Verkaufstraining. In diesem Video lernen Sie die wichtigsten Grundlagen für erfolgreiche Verkaufsgespräche. Wir beginnen mit der richtigen Begrüßung und Kontaktaufnahme mit potenziellen Kunden. Ein freundliches Lächeln und selbstbewusstes Auftreten sind der Schlüssel zum Erfolg. Denken Sie daran, dass der erste Eindruck entscheidend ist."
+    },
+    {
+      id: 2,
+      title: "Produktpräsentation Masterclass",
+      thumbnail: "/placeholder.jpg",
+      likes: 62,
+      dislikes: 3,
+      views: 93,
+      duration: "15:22",
+      uploadDate: "vor 3 Tagen",
+      transcript: "Eine überzeugende Produktpräsentation ist das Herzstück jeder erfolgreichen Promotion. In diesem ausführlichen Tutorial zeigen wir Ihnen, wie Sie Produkte so präsentieren, dass Kunden sofort überzeugt sind. Beginnen Sie immer mit den wichtigsten Vorteilen und arbeiten Sie sich zu den Details vor. Nutzen Sie Storytelling-Techniken, um emotionale Verbindungen zu schaffen."
+    },
+    {
+      id: 3,
+      title: "Kundeneinwände professionell behandeln",
+      thumbnail: "/placeholder.jpg",
+      likes: 38,
+      dislikes: 1,
+      views: 54,
+      duration: "12:18",
+      uploadDate: "vor 5 Tagen",
+      transcript: "Kundeneinwände sind völlig normal und sogar ein Zeichen von Interesse. Lernen Sie in diesem Video, wie Sie typische Einwände wie 'Das ist zu teuer' oder 'Ich muss noch überlegen' professionell behandeln. Die HEARD-Methode hilft Ihnen dabei: Hören, Empathie zeigen, Anerkennen, Reagieren, Doppelt nachfragen."
+    },
+    {
+      id: 4,
+      title: "Teamwork und Kommunikation",
+      thumbnail: "/placeholder.jpg",
+      likes: 41,
+      dislikes: 2,
+      views: 67,
+      duration: "18:45",
+      uploadDate: "vor 1 Woche",
+      transcript: "Erfolgreiche Promotionen funktionieren nur im Team. In diesem Video lernen Sie, wie Sie effektiv mit Ihren Kollegen kommunizieren und zusammenarbeiten. Klare Absprachen, regelmäßiger Austausch und gegenseitige Unterstützung sind die Grundpfeiler erfolgreicher Teamarbeit. Wir zeigen Ihnen praktische Kommunikationstechniken."
+    },
+    {
+      id: 5,
+      title: "Digitale Tools für Promotoren",
+      thumbnail: "/placeholder.jpg",
+      likes: 29,
+      dislikes: 1,
+      views: 48,
+      duration: "6:52",
+      uploadDate: "vor 1 Woche",
+      transcript: "Die SalesCrew App und andere digitale Tools können Ihren Arbeitsalltag erheblich erleichtern. In diesem Tutorial zeigen wir Ihnen die wichtigsten Funktionen: Terminplanung, Kundenerfassung, Verkaufsstatistiken und Kommunikation mit dem Team. Nutzen Sie die Technologie zu Ihrem Vorteil."
+    },
+    {
+      id: 6,
+      title: "Sicherheit am Arbeitsplatz",
+      thumbnail: "/placeholder.jpg",
+      likes: 33,
+      dislikes: 0,
+      views: 42,
+      duration: "10:15",
+      uploadDate: "vor 2 Wochen",
+      transcript: "Ihre Sicherheit hat oberste Priorität. In diesem wichtigen Video besprechen wir alle relevanten Sicherheitsrichtlinien für Promotionseinsätze. Dazu gehören: Verhalten in Notfällen, Umgang mit schwierigen Kunden, Arbeitsschutzbestimmungen und wichtige Kontaktnummern. Prägen Sie sich diese Informationen gut ein."
+    }
+  ]);
+
+  // Filter videos based on search query
+  const filteredVideos = videos.filter(video =>
+    video.title.toLowerCase().includes(videosSearch.toLowerCase())
+  );
+
+  // Video card helper functions
+  const handleVideoCardFlip = (videoId: number) => {
+    setFlippedVideoId(flippedVideoId === videoId ? null : videoId);
+    setEditingVideoId(null); // Reset edit mode when flipping
+  };
+
+  const handleVideoEdit = (videoId: number) => {
+    const video = videos.find(v => v.id === videoId);
+    if (video) {
+      setEditingVideoId(videoId);
+      setEditedVideoTitle(video.title);
+      setEditedVideoTranscript(video.transcript);
+    }
+  };
+
+  const handleVideoSave = (videoId: number) => {
+    // Update the video in the state
+    setVideos(prevVideos => prevVideos.map(video => 
+      video.id === videoId 
+        ? { ...video, title: editedVideoTitle, transcript: editedVideoTranscript }
+        : video
+    ));
+    setEditingVideoId(null);
+    // In a real app, this would also save to backend
+  };
+
+  const handleVideoCancel = () => {
+    setEditingVideoId(null);
+    setEditedVideoTitle("");
+    setEditedVideoTranscript("");
+  };
+
+  const handleVideoDelete = (videoId: number) => {
+    if (deleteConfirmVideoId === videoId) {
+      // Second click - actually delete
+      setVideos(prevVideos => prevVideos.filter(video => video.id !== videoId));
+      setDeleteConfirmVideoId(null);
+    } else {
+      // First click - start wobble and set timer
+      setDeleteConfirmVideoId(videoId);
+      setTimeout(() => {
+        setDeleteConfirmVideoId(null);
+      }, 2000);
+    }
+  };
 
   // Mock completion data for promotors
   const getPromotorCompletionStatus = (promotorName: string, schulungId: string) => {
@@ -167,6 +333,8 @@ export default function SchulungenPage() {
     setSelectedCompletionFilter('alle');
     setExpandedComponent(null);
     setShowSchulungDetails(true);
+    // Pre-select promotors who already have this schulung for the assign dropdown
+    setAssignSelectedPromotors(schulung.promotors || []);
   };
 
   const getStatusIcon = (status: string) => {
@@ -301,11 +469,22 @@ export default function SchulungenPage() {
     setSelectedComponents(prev => prev.map((comp, index) => {
       if (index === currentComponentIndex) {
         if (comp.type === 'video') {
-          return { ...comp, formData: videoFormData };
+          // For videos, duration would be automatically detected from video file
+          // For now, we'll use a default of 8 minutes as placeholder
+          return { ...comp, formData: { ...videoFormData, duration: 8 } };
         } else if (comp.type === 'pdf') {
           return { ...comp, formData: pdfFormData };
         } else if (comp.type === 'quiz') {
-          return { ...comp, formData: { questions: quizQuestions } };
+          // Calculate quiz duration automatically
+          let quizDuration = 0;
+          quizQuestions.forEach(question => {
+            if (question.type === 'multiple-choice') {
+              quizDuration += 0.5; // 30 seconds per multiple choice
+            } else if (question.type === 'eddies-frage') {
+              quizDuration += 0.75; // 45 seconds per Eddie's question
+            }
+          });
+          return { ...comp, formData: { questions: quizQuestions, duration: Math.ceil(quizDuration) } };
         }
       }
       return comp;
@@ -333,8 +512,8 @@ export default function SchulungenPage() {
       setQuizQuestions([]);
       
       // Clear form data for new component
-      setVideoFormData({ transcript: '', title: '', description: '' });
-      setPdfFormData({ title: '', description: '' });
+      setVideoFormData({ transcript: '', title: '', description: '', duration: 0 });
+      setPdfFormData({ title: '', description: '', duration: 0 });
     } else {
       // All components completed, go to finalization step
       setCurrentStep('schulung-finalize');
@@ -365,6 +544,17 @@ export default function SchulungenPage() {
 
   const getRegionBorder = (region: string) => {
     return "border-gray-200";
+  };
+
+  // Calculate total duration of schulung
+  const calculateTotalDuration = (components: any[]) => {
+    let totalMinutes = 0;
+    components.forEach(component => {
+      if (component.formData?.duration) {
+        totalMinutes += component.formData.duration;
+      }
+    });
+    return totalMinutes;
   };
 
   const selectAllFiltered = () => {
@@ -457,6 +647,97 @@ export default function SchulungenPage() {
     }
   };
 
+  // Helper functions for assign promotor dropdown
+  const selectAllFilteredAssign = () => {
+    const allPromotors = [
+      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+      { name: "Michael Weber", region: "steiermark" },
+      { name: "Jan Müller", region: "salzburg" },
+      { name: "Lisa König", region: "wien-noe-bgl" },
+      { name: "Anna Bauer", region: "oberoesterreich" },
+      { name: "Tom Fischer", region: "tirol" },
+      { name: "Maria Huber", region: "steiermark" },
+      { name: "David Klein", region: "vorarlberg" },
+      { name: "Emma Wagner", region: "kaernten" },
+      { name: "Paul Berger", region: "wien-noe-bgl" },
+      { name: "Julia Mayer", region: "salzburg" },
+      { name: "Felix Gruber", region: "oberoesterreich" },
+      { name: "Sophie Reiter", region: "steiermark" },
+      { name: "Max Köhler", region: "tirol" },
+      { name: "Lena Fuchs", region: "vorarlberg" },
+      { name: "Klaus Müller", region: "wien-noe-bgl" },
+      { name: "Sandra Hofer", region: "steiermark" },
+      { name: "Martin Schneider", region: "salzburg" },
+      { name: "Nina Weiss", region: "oberoesterreich" },
+      { name: "Patrick Schwarz", region: "tirol" },
+      { name: "Andrea Roth", region: "vorarlberg" },
+      { name: "Florian Braun", region: "kaernten" },
+      { name: "Jessica Grün", region: "wien-noe-bgl" },
+      { name: "Daniel Gelb", region: "steiermark" },
+      { name: "Sabrina Blau", region: "salzburg" },
+      { name: "Thomas Orange", region: "oberoesterreich" },
+      { name: "Melanie Violett", region: "tirol" },
+      { name: "Christian Rosa", region: "vorarlberg" },
+      { name: "Vanessa Grau", region: "kaernten" },
+      { name: "Marco Silber", region: "wien-noe-bgl" },
+      { name: "Tanja Gold", region: "steiermark" },
+      { name: "Oliver Bronze", region: "salzburg" },
+      { name: "Carina Kupfer", region: "oberoesterreich" },
+      { name: "Lukas Platin", region: "tirol" },
+      { name: "Stephanie Kristall", region: "vorarlberg" },
+      { name: "Benjamin Diamant", region: "kaernten" },
+      { name: "Michelle Rubin", region: "wien-noe-bgl" },
+      { name: "Tobias Saphir", region: "steiermark" },
+      { name: "Nadine Smaragd", region: "salzburg" },
+      { name: "Kevin Topas", region: "oberoesterreich" },
+      { name: "Franziska Opal", region: "tirol" },
+      { name: "Dominik Achat", region: "vorarlberg" },
+      { name: "Simone Jade", region: "kaernten" },
+      { name: "Philip Onyx", region: "wien-noe-bgl" },
+      { name: "Verena Quarz", region: "steiermark" },
+      { name: "Fabian Marmor", region: "salzburg" },
+      { name: "Isabella Granit", region: "oberoesterreich" },
+      { name: "Maximilian Schiefer", region: "tirol" },
+      { name: "Katharina Basalt", region: "vorarlberg" },
+      { name: "Wolfgang Kalk", region: "kaernten" },
+      { name: "Elena Ton", region: "wien-noe-bgl" },
+      { name: "Robert Sand", region: "steiermark" },
+      { name: "Nicole Lehm", region: "salzburg" },
+      { name: "Stefan Kies", region: "oberoesterreich" },
+      { name: "Petra Fels", region: "tirol" },
+      { name: "Alexander Stein", region: "vorarlberg" },
+      { name: "Christina Berg", region: "kaernten" },
+      { name: "Manuel Tal", region: "wien-noe-bgl" },
+      { name: "Andrea Bach", region: "steiermark" },
+      { name: "Daniel See", region: "salzburg" },
+      { name: "Sabine Meer", region: "oberoesterreich" },
+      { name: "Thomas Ozean", region: "tirol" }
+    ];
+
+    const filteredNames = allPromotors
+      .filter(promotor => 
+        (assignActiveRegionFilter === "all" || promotor.region === assignActiveRegionFilter) &&
+        promotor.name.toLowerCase().includes(assignPromotorSearch.toLowerCase())
+      )
+      .map(promotor => promotor.name);
+    
+    // Check if we should deselect (if all filtered items are currently selected and match last selection)
+    const allFilteredSelected = filteredNames.every(name => assignSelectedPromotors.includes(name));
+    const matchesLastSelection = lastAssignSelectedByIcon.length > 0 && 
+      filteredNames.every(name => lastAssignSelectedByIcon.includes(name)) &&
+      lastAssignSelectedByIcon.every(name => filteredNames.includes(name));
+    
+    if (allFilteredSelected && matchesLastSelection) {
+      // Deselect the ones that were selected by this icon
+      setAssignSelectedPromotors(prev => prev.filter(name => !lastAssignSelectedByIcon.includes(name)));
+      setLastAssignSelectedByIcon([]);
+    } else {
+      // Select all filtered
+      setAssignSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
+      setLastAssignSelectedByIcon(filteredNames);
+    }
+  };
+
     const handleFinalizeSchulung = () => {
     // Create new schulung object
     const newSchulung = {
@@ -478,8 +759,9 @@ export default function SchulungenPage() {
     setCompletedComponents([]);
     setCurrentComponentIndex(0);
     setQuizQuestions([]);
-    setVideoFormData({ transcript: '', title: '', description: '' });
-    setPdfFormData({ title: '', description: '' });
+    setVideoFormData({ transcript: '', title: '', description: '', duration: 0 });
+    setPdfFormData({ title: '', description: '', duration: 0 });
+    setQuizFormData({ duration: 0 });
     setSchulungData({ title: '', description: '' });
     setSelectedPromotors([]);
     setActiveRegionFilter("all");
@@ -489,6 +771,22 @@ export default function SchulungenPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/30">
+      {/* Custom CSS for 3D flip and wobble animation */}
+      <style jsx>{flipStyles}</style>
+      <style jsx>{`
+        @keyframes wobble {
+          0%, 100% { transform: rotate(0deg); }
+          20% { transform: rotate(-8deg); }
+          40% { transform: rotate(8deg); }
+          60% { transform: rotate(-6deg); }
+          80% { transform: rotate(6deg); }
+        }
+        
+        .wobble {
+          animation: wobble 0.5s ease-in-out;
+        }
+      `}</style>
+      
       {/* Admin Navigation */}
       <AdminNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
@@ -502,8 +800,35 @@ export default function SchulungenPage() {
               <p className="text-gray-500 text-sm">Training und Weiterbildung Verwaltung</p>
             </div>
             
-            {/* Action Buttons */}
+            {/* Menu Buttons and Action Buttons */}
             <div className="flex items-center space-x-3">
+              {/* Menu Buttons */}
+              <button 
+                onClick={() => setActiveSection("schulungen")}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  activeSection === "schulungen" 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>Schulungen</span>
+              </button>
+              <button 
+                onClick={() => setActiveSection("videos")}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  activeSection === "videos" 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <Video className="h-4 w-4" />
+                <span>Videos</span>
+              </button>
+              
+              {/* Vertical Divider */}
+              <div className="h-8 w-px bg-gray-300 opacity-60 mx-3"></div>
+              
               <button className="p-2 bg-white text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Settings className="h-5 w-5" />
               </button>
@@ -513,7 +838,20 @@ export default function SchulungenPage() {
 
         {/* Page Content */}
         <main className="p-8">
-          <div className="flex flex-wrap gap-6">
+          {activeSection === "schulungen" && (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
+                <input
+                  type="text"
+                  placeholder="Schulung suchen..."
+                  value={schulungSearch}
+                  onChange={(e) => setSchulungSearch(e.target.value)}
+                  className="px-4 py-2 text-sm border border-gray-200 bg-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-gray-200"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-6">
             {/* Add New Card */}
             <div 
               onClick={() => setShowCreateModal(true)}
@@ -543,7 +881,12 @@ export default function SchulungenPage() {
             </div>
 
             {/* Created Schulungen */}
-            {createdSchulungen.map((schulung) => (
+            {createdSchulungen
+              .filter((schulung) => 
+                schulung.title.toLowerCase().includes(schulungSearch.toLowerCase()) ||
+                schulung.description.toLowerCase().includes(schulungSearch.toLowerCase())
+              )
+              .map((schulung) => (
               <div 
                 key={schulung.id}
                 className="w-48 h-48 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col cursor-pointer"
@@ -564,33 +907,264 @@ export default function SchulungenPage() {
                   </div>
                 </div>
                 
-                {/* Component Icons */}
-                <div className="flex items-center justify-start space-x-1 mt-3">
-                  {schulung.components.slice(0, 6).map((component, index) => {
-                    const getIcon = () => {
-                      switch (component.type) {
-                        case 'video':
-                          return <Video className="h-4 w-4 text-gray-300" />;
-                        case 'pdf':
-                          return <FileText className="h-4 w-4 text-gray-300" />;
-                        case 'quiz':
-                          return <HelpCircle className="h-4 w-4 text-gray-300" />;
+                {/* Component Icons and Completion Indicator */}
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center space-x-1">
+                    {schulung.components.slice(0, 3).map((component, index) => {
+                      const getIcon = () => {
+                        switch (component.type) {
+                          case 'video':
+                            return <Video className="h-4 w-4 text-gray-300" />;
+                          case 'pdf':
+                            return <FileText className="h-4 w-4 text-gray-300" />;
+                          case 'quiz':
+                            return <HelpCircle className="h-4 w-4 text-gray-300" />;
+                        }
+                      };
+                      
+                      return (
+                        <div key={`${component.id}-${index}`}>
+                          {getIcon()}
+                        </div>
+                      );
+                    })}
+                    {schulung.components.length > 3 && (
+                      <span className="text-sm text-gray-300 ml-1">...</span>
+                    )}
+                  </div>
+                  
+                  {/* Duration and Completion Indicator */}
+                  <div className="flex items-center space-x-3">
+                    {/* Duration */}
+                    {(() => {
+                      const totalMinutes = calculateTotalDuration(schulung.components);
+                      if (totalMinutes > 0) {
+                        return (
+                          <div className="text-xs text-gray-500" style={{opacity: 0.7}}>
+                            {totalMinutes} Min
+                          </div>
+                        );
                       }
-                    };
+                      return null;
+                    })()}
                     
-                    return (
-                      <div key={`${component.id}-${index}`}>
-                        {getIcon()}
-                      </div>
-                    );
-                  })}
-                  {schulung.components.length > 6 && (
-                    <span className="text-sm text-gray-300 ml-1">...</span>
-                  )}
+                    {/* Completion Indicator */}
+                    <div className="text-xs text-gray-600" style={{opacity: 0.5}}>
+                      {(() => {
+                        const completedCount = schulung.promotors.filter((promotorName: string) => 
+                          getPromotorCompletionStatus(promotorName, schulung.id) === 'erledigt'
+                        ).length;
+                        return `${completedCount}/${schulung.promotors.length}`;
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+            </>
+          )}
+
+          {activeSection === "videos" && (
+            <>
+              {/* Search Bar */}
+              <div className="mb-6">
+                <input
+                  type="text"
+                  placeholder="Video suchen..."
+                  value={videosSearch}
+                  onChange={(e) => setVideosSearch(e.target.value)}
+                  className="px-4 py-2 text-sm border border-gray-200 bg-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-gray-200"
+                />
+              </div>
+
+              {/* Videos List */}
+              <div className="grid grid-cols-4 gap-4">
+                {filteredVideos.length > 0 ? (
+                  filteredVideos.map((video) => (
+                    <div key={video.id} className="relative h-80 preserve-3d" style={{ perspective: '1000px' }}>
+                      {/* Flip Container */}
+                      <div 
+                        className={`relative w-full h-full transition-transform duration-700 preserve-3d ${
+                          flippedVideoId === video.id ? 'rotate-y-180' : ''
+                        }`}
+                        style={{ 
+                          transformStyle: 'preserve-3d',
+                          transform: flippedVideoId === video.id ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                        }}
+                      >
+                        {/* Front Side */}
+                        <div 
+                          className="absolute inset-0 w-full h-full backface-hidden bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col"
+                          style={{ backfaceVisibility: 'hidden' }}
+                        >
+                          {/* Video Thumbnail */}
+                          <div className="relative aspect-video bg-gray-200 flex-shrink-0 group">
+                            <img
+                              src={video.thumbnail}
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* Duration Badge */}
+                            <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                              {video.duration}
+                            </div>
+                            {/* Play Button Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <Play className="h-12 w-12 text-white ml-0.5" />
+                            </div>
+                            
+                            {/* Delete Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVideoDelete(video.id);
+                              }}
+                              className={`absolute top-2 right-2 text-black opacity-0 group-hover:opacity-100 transition-opacity ${
+                                deleteConfirmVideoId === video.id ? 'wobble' : ''
+                              }`}
+                            >
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6M10 11v6M14 11v6" />
+                              </svg>
+                            </button>
+                          </div>
+
+                          {/* Video Info - Clickable Footer */}
+                          <div 
+                            className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                            onClick={() => handleVideoCardFlip(video.id)}
+                          >
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                              {video.title}
+                            </h3>
+                            
+                            {/* Stats Row */}
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <div className="flex items-center space-x-4">
+                                {/* Views */}
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="h-4 w-4" />
+                                  <span>{video.views.toLocaleString()}</span>
+                                </div>
+                                
+                                {/* Likes */}
+                                <div className="flex items-center space-x-1">
+                                  <ThumbsUp className="h-4 w-4" />
+                                  <span>{video.likes}</span>
+                                </div>
+                                
+                                {/* Dislikes */}
+                                <div className="flex items-center space-x-1">
+                                  <ThumbsDown className="h-4 w-4" />
+                                  <span>{video.dislikes}</span>
+                                </div>
+                              </div>
+                              
+                              {/* Upload Date */}
+                              <span className="text-xs">
+                                {video.uploadDate}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Back Side */}
+                        <div 
+                          className={`absolute inset-0 w-full h-full bg-white border rounded-lg shadow-sm overflow-hidden cursor-pointer ${
+                            editingVideoId === video.id ? 'border-green-500' : 'border-gray-200'
+                          }`}
+                          style={{ 
+                            backfaceVisibility: 'hidden',
+                            transform: 'rotateY(180deg)',
+                            ...(editingVideoId === video.id ? {
+                              boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)'
+                            } : {})
+                          }}
+                          onClick={(e) => {
+                            // Only flip back if not in edit mode and not clicking on edit controls
+                            if (editingVideoId !== video.id && 
+                                e.target instanceof Element &&
+                                !e.target.closest('button') && 
+                                !e.target.closest('input') && 
+                                !e.target.closest('textarea')) {
+                              handleVideoCardFlip(video.id);
+                            }
+                          }}
+                        >
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => {
+                              if (editingVideoId === video.id) {
+                                handleVideoSave(video.id);
+                              } else {
+                                handleVideoEdit(video.id);
+                              }
+                            }}
+                            className="absolute top-3 right-3 z-10 text-gray-600 hover:text-gray-800 transition-colors opacity-50 hover:opacity-100"
+                          >
+                            {editingVideoId === video.id ? (
+                              <Check className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <Edit className="h-5 w-5" />
+                            )}
+                          </button>
+
+                          {/* Back Content */}
+                          <div className="p-4 h-full flex flex-col">
+                            {/* Title */}
+                            <div className="mb-3">
+                              <h3 
+                                className="text-sm font-semibold text-gray-900 line-clamp-2 outline-none"
+                                contentEditable={editingVideoId === video.id}
+                                suppressContentEditableWarning={true}
+                                onBlur={(e) => {
+                                  if (editingVideoId === video.id) {
+                                    setEditedVideoTitle(e.currentTarget.textContent || '');
+                                  }
+                                }}
+                              >
+                                {editingVideoId === video.id ? editedVideoTitle : video.title}
+                              </h3>
+                              <div className="w-full h-px bg-gray-200 mt-3"></div>
+                            </div>
+
+                            {/* Transcript */}
+                            <div className="flex-1 overflow-hidden">
+                              <h4 className="text-xs font-medium text-gray-700 mb-2">Transkript:</h4>
+                              <div 
+                                className="h-full overflow-y-auto text-xs text-gray-600 leading-relaxed pr-1 outline-none [&::-webkit-scrollbar]:hidden"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                                contentEditable={editingVideoId === video.id}
+                                suppressContentEditableWarning={true}
+                                onBlur={(e) => {
+                                  if (editingVideoId === video.id) {
+                                    setEditedVideoTranscript(e.currentTarget.textContent || '');
+                                  }
+                                }}
+                              >
+                                {editingVideoId === video.id ? editedVideoTranscript : video.transcript}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Keine Videos gefunden
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Versuchen Sie einen anderen Suchbegriff
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </main>
       </div>
 
@@ -881,13 +1455,27 @@ export default function SchulungenPage() {
                       onChange={(e) => setPdfFormData(prev => ({ ...prev, description: e.target.value }))}
                     />
                   </div>
+
+                  {/* Duration */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">Dauer (Minuten)</label>
+                    <input
+                      type="number"
+                      placeholder="z.B. 15"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none"
+                      value={pdfFormData.duration || ''}
+                      onChange={(e) => setPdfFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))}
+                      min="0"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Geschätzte Lesedauer in Minuten</p>
+                  </div>
                 </div>
               ) : currentStep === 'schulung-finalize' ? (
                 /* Schulung Finalization Step */
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}>
                         <BookOpen className="h-5 w-5 text-white" />
                       </div>
                       <h3 className="text-lg font-medium text-gray-900">Schulung abschließen</h3>
@@ -1626,8 +2214,9 @@ export default function SchulungenPage() {
                     setCompletedComponents([]);
                     setCurrentComponentIndex(0);
                     setQuizQuestions([]);
-                    setVideoFormData({ transcript: '', title: '', description: '' });
-                    setPdfFormData({ title: '', description: '' });
+                    setVideoFormData({ transcript: '', title: '', description: '', duration: 0 });
+                    setPdfFormData({ title: '', description: '', duration: 0 });
+                    setQuizFormData({ duration: 0 });
                   }}
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
@@ -1640,8 +2229,9 @@ export default function SchulungenPage() {
                       // Reset state and start with first component
                       setCurrentComponentIndex(0);
                       setCompletedComponents([]);
-                      setVideoFormData({ transcript: '', title: '', description: '' });
-                      setPdfFormData({ title: '', description: '' });
+                      setVideoFormData({ transcript: '', title: '', description: '', duration: 0 });
+                      setPdfFormData({ title: '', description: '', duration: 0 });
+                      setQuizFormData({ duration: 0 });
                       setSchulungData({ title: '', description: '' });
                       setSelectedPromotors([]);
                       setActiveRegionFilter("all");
@@ -1686,7 +2276,7 @@ export default function SchulungenPage() {
                     onClick={handleFinalizeSchulung}
                     disabled={!schulungData.title.trim() || selectedPromotors.length === 0}
                     className="px-4 py-2 text-white rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    style={{background: schulungData.title.trim() && selectedPromotors.length > 0 ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.85), rgba(5, 150, 105, 0.85))' : undefined}}
+                    style={{background: schulungData.title.trim() && selectedPromotors.length > 0 ? 'linear-gradient(135deg, #22C55E, #105F2D)' : undefined}}
                   >
                     Schulung erstellen & versenden
                   </button>
@@ -1983,7 +2573,16 @@ export default function SchulungenPage() {
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{selectedSchulung.title}</h2>
-                <p className="text-sm text-gray-500 mt-1">{selectedSchulung.description}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedSchulung.description}
+                  {(() => {
+                    const totalMinutes = calculateTotalDuration(selectedSchulung.components);
+                    if (totalMinutes > 0) {
+                      return ` • ${totalMinutes} Minuten`;
+                    }
+                    return '';
+                  })()}
+                </p>
               </div>
               <button
                 onClick={() => setShowSchulungDetails(false)}
@@ -2060,7 +2659,7 @@ export default function SchulungenPage() {
                                   <h4 className="font-medium text-gray-900 mb-1">{component.formData?.title || 'Unbenanntes Video'}</h4>
                                   <p className="text-sm text-gray-600 mb-2">{component.formData?.description || 'Keine Beschreibung verfügbar.'}</p>
                                   <div className="text-xs text-gray-500">
-                                    <p className="mb-1"><strong>Dauer:</strong> 8 Minuten</p>
+                                    <p className="mb-1"><strong>Dauer:</strong> {component.formData?.duration || 0} Minuten</p>
                                     <p><strong>Transkript verfügbar:</strong> {component.formData?.transcript ? 'Ja' : 'Nein'}</p>
                                   </div>
                                 </div>
@@ -2078,6 +2677,7 @@ export default function SchulungenPage() {
                                   <p className="text-sm text-gray-600 mb-2">{component.formData?.description || 'Keine Beschreibung verfügbar.'}</p>
                                   <div className="text-xs text-gray-500">
                                     <p className="mb-1"><strong>Seiten:</strong> 24</p>
+                                    <p className="mb-1"><strong>Dauer:</strong> {component.formData?.duration || 0} Minuten</p>
                                     <p><strong>Dateigröße:</strong> 2.3 MB</p>
                                   </div>
                                 </div>
@@ -2117,7 +2717,8 @@ export default function SchulungenPage() {
                                   ))}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  <p><strong>Fragen insgesamt:</strong> {component.formData?.questions?.length || 0}</p>
+                                  <p className="mb-1"><strong>Fragen insgesamt:</strong> {component.formData?.questions?.length || 0}</p>
+                                  <p><strong>Dauer:</strong> {component.formData?.duration || 0} Minuten</p>
                                 </div>
                               </div>
                             )}
@@ -2134,43 +2735,283 @@ export default function SchulungenPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-gray-900">Promotoren Status</h3>
                   
-                  {/* Status Filter Menu */}
-                  <div className="flex bg-gray-100 rounded-lg p-0.5 relative">
-                    {/* Sliding Indicator - matches exact button hover areas */}
-                    <div className={`absolute bg-white rounded-md shadow-sm transition-all duration-300 ease-in-out ${
-                      selectedCompletionFilter === 'alle' 
-                        ? 'top-0.5 bottom-0.5 left-0.5 right-[78px]' 
-                        : selectedCompletionFilter === 'erledigt'
-                        ? 'top-0.5 bottom-0.5 left-[42px] right-[52px]'
-                        : selectedCompletionFilter === 'unterbrochen'
-                        ? 'top-0.5 bottom-0.5 left-[68px] right-[26px]'
-                        : 'top-0.5 bottom-0.5 left-[94px] right-0.5'
-                    }`} />
+                                    <div className="flex items-center space-x-3">
+                    {/* Assign Additional Promotors Icon */}
+                    <div className="relative">
+                      <UserPlus 
+                        onClick={() => setShowAssignPromotorDropdown(!showAssignPromotorDropdown)}
+                        className="h-4 w-4 text-black opacity-50 cursor-pointer hover:opacity-75 transition-opacity"
+                      />
+                      
+                      {/* Dropdown Menu */}
+                      {showAssignPromotorDropdown && (
+                        <div className="absolute top-full right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 p-4">
+                          <div className="space-y-3">
+                            {/* Search */}
+                            <input
+                              type="text"
+                              placeholder="Promotor suchen..."
+                              value={assignPromotorSearch}
+                              onChange={(e) => setAssignPromotorSearch(e.target.value)}
+                              className="w-full px-3 py-1.5 text-sm border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
+                            />
+                            
+                            {/* Filter Options */}
+                            <div className="flex items-center justify-between">
+                                                             <div className="flex gap-1">
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("all")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 bg-gray-100/70 text-gray-700 hover:bg-gray-200/80 ${
+                                     assignActiveRegionFilter === "all" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   Alle
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("wien-noe-bgl")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("wien-noe-bgl")} ${getRegionBorder("wien-noe-bgl")} ${
+                                     assignActiveRegionFilter === "wien-noe-bgl" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   W/NÖ/BGL
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("steiermark")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("steiermark")} ${getRegionBorder("steiermark")} ${
+                                     assignActiveRegionFilter === "steiermark" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   ST
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("salzburg")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("salzburg")} ${getRegionBorder("salzburg")} ${
+                                     assignActiveRegionFilter === "salzburg" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   SBG
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("oberoesterreich")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("oberoesterreich")} ${getRegionBorder("oberoesterreich")} ${
+                                     assignActiveRegionFilter === "oberoesterreich" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   OÖ
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("tirol")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("tirol")} ${getRegionBorder("tirol")} ${
+                                     assignActiveRegionFilter === "tirol" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   T
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("vorarlberg")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("vorarlberg")} ${getRegionBorder("vorarlberg")} ${
+                                     assignActiveRegionFilter === "vorarlberg" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   V
+                                 </button>
+                                 <button
+                                   onClick={() => setAssignActiveRegionFilter("kaernten")}
+                                   className={`px-1.5 py-1 rounded text-xs font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("kaernten")} ${getRegionBorder("kaernten")} ${
+                                     assignActiveRegionFilter === "kaernten" ? "scale-110" : ""
+                                   }`}
+                                 >
+                                   K
+                                 </button>
+                               </div>
+                              
+                              {/* Select All Filtered Icon */}
+                              <div 
+                                onClick={selectAllFilteredAssign}
+                                className="cursor-pointer"
+                                title="Alle gefilterten auswählen/abwählen"
+                              >
+                                <CheckSquare className="h-5 w-5 text-black hover:text-gray-700 transition-colors" />
+                              </div>
+                            </div>
+
+                            {/* Promotor Grid */}
+                            <div className="max-h-48 overflow-auto [&::-webkit-scrollbar]:hidden p-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                              <div className="grid grid-cols-3 gap-2 pb-2">
+                                {[
+                                  { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+                                  { name: "Michael Weber", region: "steiermark" },
+                                  { name: "Jan Müller", region: "salzburg" },
+                                  { name: "Lisa König", region: "wien-noe-bgl" },
+                                  { name: "Anna Bauer", region: "oberoesterreich" },
+                                  { name: "Tom Fischer", region: "tirol" },
+                                  { name: "Maria Huber", region: "steiermark" },
+                                  { name: "David Klein", region: "vorarlberg" },
+                                  { name: "Emma Wagner", region: "kaernten" },
+                                  { name: "Paul Berger", region: "wien-noe-bgl" },
+                                  { name: "Julia Mayer", region: "salzburg" },
+                                  { name: "Felix Gruber", region: "oberoesterreich" },
+                                  { name: "Sophie Reiter", region: "steiermark" },
+                                  { name: "Max Köhler", region: "tirol" },
+                                  { name: "Lena Fuchs", region: "vorarlberg" },
+                                  { name: "Klaus Müller", region: "wien-noe-bgl" },
+                                  { name: "Sandra Hofer", region: "steiermark" },
+                                  { name: "Martin Schneider", region: "salzburg" },
+                                  { name: "Nina Weiss", region: "oberoesterreich" },
+                                  { name: "Patrick Schwarz", region: "tirol" },
+                                  { name: "Andrea Roth", region: "vorarlberg" },
+                                  { name: "Florian Braun", region: "kaernten" },
+                                  { name: "Jessica Grün", region: "wien-noe-bgl" },
+                                  { name: "Daniel Gelb", region: "steiermark" },
+                                  { name: "Sabrina Blau", region: "salzburg" },
+                                  { name: "Thomas Orange", region: "oberoesterreich" },
+                                  { name: "Melanie Violett", region: "tirol" },
+                                  { name: "Christian Rosa", region: "vorarlberg" },
+                                  { name: "Vanessa Grau", region: "kaernten" },
+                                  { name: "Marco Silber", region: "wien-noe-bgl" },
+                                  { name: "Tanja Gold", region: "steiermark" },
+                                  { name: "Oliver Bronze", region: "salzburg" },
+                                  { name: "Carina Kupfer", region: "oberoesterreich" },
+                                  { name: "Lukas Platin", region: "tirol" },
+                                  { name: "Stephanie Kristall", region: "vorarlberg" },
+                                  { name: "Benjamin Diamant", region: "kaernten" },
+                                  { name: "Michelle Rubin", region: "wien-noe-bgl" },
+                                  { name: "Tobias Saphir", region: "steiermark" },
+                                  { name: "Nadine Smaragd", region: "salzburg" },
+                                  { name: "Kevin Topas", region: "oberoesterreich" },
+                                  { name: "Franziska Opal", region: "tirol" },
+                                  { name: "Dominik Achat", region: "vorarlberg" },
+                                  { name: "Simone Jade", region: "kaernten" },
+                                  { name: "Philip Onyx", region: "wien-noe-bgl" },
+                                  { name: "Verena Quarz", region: "steiermark" },
+                                  { name: "Fabian Marmor", region: "salzburg" },
+                                  { name: "Isabella Granit", region: "oberoesterreich" },
+                                  { name: "Maximilian Schiefer", region: "tirol" },
+                                  { name: "Katharina Basalt", region: "vorarlberg" },
+                                  { name: "Wolfgang Kalk", region: "kaernten" },
+                                  { name: "Elena Ton", region: "wien-noe-bgl" },
+                                  { name: "Robert Sand", region: "steiermark" },
+                                  { name: "Nicole Lehm", region: "salzburg" },
+                                  { name: "Stefan Kies", region: "oberoesterreich" },
+                                  { name: "Petra Fels", region: "tirol" },
+                                  { name: "Alexander Stein", region: "vorarlberg" },
+                                  { name: "Christina Berg", region: "kaernten" },
+                                  { name: "Manuel Tal", region: "wien-noe-bgl" },
+                                  { name: "Andrea Bach", region: "steiermark" },
+                                  { name: "Daniel See", region: "salzburg" },
+                                  { name: "Sabine Meer", region: "oberoesterreich" },
+                                  { name: "Thomas Ozean", region: "tirol" }
+                                ]
+                                .filter(promotor => 
+                                  (assignActiveRegionFilter === "all" || promotor.region === assignActiveRegionFilter) &&
+                                  promotor.name.toLowerCase().includes(assignPromotorSearch.toLowerCase())
+                                )
+                                .map((promotor) => {
+                                  const isSelected = assignSelectedPromotors.includes(promotor.name);
+                                  return (
+                                    <button
+                                      key={promotor.name}
+                                      onClick={() => {
+                                        if (isSelected) {
+                                          setAssignSelectedPromotors(prev => prev.filter(name => name !== promotor.name));
+                                        } else {
+                                          setAssignSelectedPromotors(prev => [...prev, promotor.name]);
+                                        }
+                                      }}
+                                      className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 w-full h-8 flex items-center justify-center border ${
+                                        isSelected
+                                          ? "bg-white/80 text-gray-900 shadow-md border-gray-300 backdrop-blur-sm"
+                                          : `${getRegionGradient(promotor.region)} ${getRegionBorder(promotor.region)} text-gray-700 hover:bg-gray-200/80`
+                                      }`}
+                                    >
+                                      {promotor.name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                              <div className="text-xs text-gray-600">
+                                {assignSelectedPromotors.length} Promotor{assignSelectedPromotors.length !== 1 ? 'en' : ''} ausgewählt
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => setShowAssignPromotorDropdown(false)}
+                                  className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                  Abbrechen
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Add selected promotors to the schulung
+                                    setCreatedSchulungen(prev => 
+                                      prev.map(schulung => 
+                                        schulung.id === selectedSchulung.id 
+                                          ? { ...schulung, promotors: [...new Set([...schulung.promotors, ...assignSelectedPromotors])] }
+                                          : schulung
+                                      )
+                                    );
+                                    
+                                    // Update the selected schulung state
+                                    setSelectedSchulung((prev: any) => ({
+                                      ...prev,
+                                      promotors: [...new Set([...prev.promotors, ...assignSelectedPromotors])]
+                                    }));
+                                    
+                                    setShowAssignPromotorDropdown(false);
+                                  }}
+                                  className="px-3 py-1.5 text-white text-xs font-medium rounded-lg transition-colors"
+                                  style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                                >
+                                  Zuweisen
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     
-                    <button
-                      onClick={() => setSelectedCompletionFilter('alle')}
-                      className="relative z-10 py-1.5 px-2.5 rounded-md text-xs font-medium transition-all duration-200 text-gray-600 hover:text-gray-900"
-                    >
-                      Alle
-                    </button>
-                    <button
-                      onClick={() => setSelectedCompletionFilter('erledigt')}
-                      className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
-                    >
-                      <Check className="h-3.5 w-3.5 text-green-500" />
-                    </button>
-                    <button
-                      onClick={() => setSelectedCompletionFilter('unterbrochen')}
-                      className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
-                    >
-                      <Loader2 className="h-3.5 w-3.5 text-orange-500 animate-spin" />
-                    </button>
-                    <button
-                      onClick={() => setSelectedCompletionFilter('nicht erledigt')}
-                      className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
-                    >
-                      <X className="h-3.5 w-3.5 text-red-500" />
-                    </button>
+                    {/* Status Filter Menu */}
+                    <div className="flex bg-gray-100 rounded-lg p-0.5 relative">
+                      {/* Sliding Indicator - matches exact button hover areas */}
+                      <div className={`absolute bg-white rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+                        selectedCompletionFilter === 'alle' 
+                          ? 'top-0.5 bottom-0.5 left-0.5 right-[78px]' 
+                          : selectedCompletionFilter === 'erledigt'
+                          ? 'top-0.5 bottom-0.5 left-[42px] right-[52px]'
+                          : selectedCompletionFilter === 'unterbrochen'
+                          ? 'top-0.5 bottom-0.5 left-[68px] right-[26px]'
+                          : 'top-0.5 bottom-0.5 left-[94px] right-0.5'
+                      }`} />
+                      
+                      <button
+                        onClick={() => setSelectedCompletionFilter('alle')}
+                        className="relative z-10 py-1.5 px-2.5 rounded-md text-xs font-medium transition-all duration-200 text-gray-600 hover:text-gray-900"
+                      >
+                        Alle
+                      </button>
+                      <button
+                        onClick={() => setSelectedCompletionFilter('erledigt')}
+                        className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
+                      >
+                        <Check className="h-3.5 w-3.5 text-green-500" />
+                      </button>
+                      <button
+                        onClick={() => setSelectedCompletionFilter('unterbrochen')}
+                        className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
+                      >
+                        <Loader2 className="h-3.5 w-3.5 text-orange-500 animate-spin" />
+                      </button>
+                      <button
+                        onClick={() => setSelectedCompletionFilter('nicht erledigt')}
+                        className="relative z-10 p-1.5 rounded-md transition-all duration-200 hover:bg-gray-50"
+                      >
+                        <X className="h-3.5 w-3.5 text-red-500" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
