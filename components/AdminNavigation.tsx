@@ -10,7 +10,8 @@ import {
   Briefcase,
   MessagesSquare,
   Users,
-  BookOpen
+  BookOpen,
+  Trophy
 } from "lucide-react";
 
 interface AdminNavigationProps {
@@ -29,6 +30,7 @@ export default function AdminNavigation({ sidebarOpen, setSidebarOpen }: AdminNa
     { id: "messages", label: "Nachrichten", icon: MessagesSquare, active: false, href: '#' },
     { id: "statistiken", label: "Statistiken", icon: BarChart2, active: pathname === '/admin/statistiken', href: '/admin/statistiken' },
     { id: "schulungen", label: "Schulungen", icon: BookOpen, active: pathname === '/admin/schulungen', href: '/admin/schulungen' },
+    { id: "sales-challenge", label: "Sales Challenge", icon: Trophy, active: pathname === '/admin/sales-challenge', href: '/admin/sales-challenge' },
     { id: "settings", label: "Einstellungen", icon: Settings, active: false, href: '#' }
   ];
 

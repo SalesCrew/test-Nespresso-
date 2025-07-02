@@ -113,6 +113,9 @@ export default function SchulungenPage() {
   const [editedVideoTitle, setEditedVideoTitle] = useState("");
   const [editedVideoTranscript, setEditedVideoTranscript] = useState("");
   const [deleteConfirmVideoId, setDeleteConfirmVideoId] = useState<number | null>(null);
+  
+  // Schulung delete state
+  const [deleteConfirmSchulungId, setDeleteConfirmSchulungId] = useState<string | null>(null);
 
   // Mock videos data - now in state so it can be updated
   const [videos, setVideos] = useState([
@@ -231,6 +234,21 @@ export default function SchulungenPage() {
       setDeleteConfirmVideoId(videoId);
       setTimeout(() => {
         setDeleteConfirmVideoId(null);
+      }, 2000);
+    }
+  };
+
+  const handleSchulungDelete = (schulungId: string) => {
+    if (deleteConfirmSchulungId === schulungId) {
+      // Second click - actually delete
+      setCreatedSchulungen(prevSchulungen => prevSchulungen.filter(schulung => schulung.id !== schulungId));
+      setDeleteConfirmSchulungId(null);
+      setShowSchulungDetails(false); // Close the modal after deletion
+    } else {
+      // First click - start wobble and set timer
+      setDeleteConfirmSchulungId(schulungId);
+      setTimeout(() => {
+        setDeleteConfirmSchulungId(null);
       }, 2000);
     }
   };
@@ -933,30 +951,14 @@ export default function SchulungenPage() {
                     )}
                   </div>
                   
-                  {/* Duration and Completion Indicator */}
-                  <div className="flex items-center space-x-3">
-                    {/* Duration */}
+                  {/* Completion Indicator */}
+                  <div className="text-xs text-gray-600" style={{opacity: 0.5}}>
                     {(() => {
-                      const totalMinutes = calculateTotalDuration(schulung.components);
-                      if (totalMinutes > 0) {
-                        return (
-                          <div className="text-xs text-gray-500" style={{opacity: 0.7}}>
-                            {totalMinutes} Min
-                          </div>
-                        );
-                      }
-                      return null;
+                      const completedCount = schulung.promotors.filter((promotorName: string) => 
+                        getPromotorCompletionStatus(promotorName, schulung.id) === 'erledigt'
+                      ).length;
+                      return `${completedCount}/${schulung.promotors.length}`;
                     })()}
-                    
-                    {/* Completion Indicator */}
-                    <div className="text-xs text-gray-600" style={{opacity: 0.5}}>
-                      {(() => {
-                        const completedCount = schulung.promotors.filter((promotorName: string) => 
-                          getPromotorCompletionStatus(promotorName, schulung.id) === 'erledigt'
-                        ).length;
-                        return `${completedCount}/${schulung.promotors.length}`;
-                      })()}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -2584,12 +2586,23 @@ export default function SchulungenPage() {
                   })()}
                 </p>
               </div>
-              <button
-                onClick={() => setShowSchulungDetails(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleSchulungDelete(selectedSchulung.id)}
+                  className={`text-gray-400 hover:text-red-600 transition-colors ${
+                    deleteConfirmSchulungId === selectedSchulung.id ? 'wobble' : ''
+                  }`}
+                  title="Schulung löschen (doppelklick)"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setShowSchulungDetails(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Content */}

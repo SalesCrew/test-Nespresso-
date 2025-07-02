@@ -47,15 +47,15 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
   // Determine activeTab based on pathname
   useEffect(() => {
-    if (pathname === "/") {
+    if (pathname === "/promotors/dashboard") {
       setActiveTab("home");
-    } else if (pathname === "/einsatz") {
+    } else if (pathname === "/promotors/einsatz") {
       setActiveTab("einsatz");
     } else if (pathname === "/chats") {
       setActiveTab("chats");
-    } else if (pathname === "/kpis" || pathname === "/statistiken") {
+    } else if (pathname === "/kpis" || pathname === "/promotors/statistiken") {
       setActiveTab("kpis");
-    } else if (pathname === "/profil") {
+    } else if (pathname === "/promotors/profil") {
       setActiveTab("profil");
     } else {
       // Fallback, or determine based on a default route
@@ -220,7 +220,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
             <div className="flex flex-col">
               <p className="text-base font-semibold text-gray-800 dark:text-gray-200">Jan Promotor</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {pathname === "/einsatz" ? "Einsatzplanung" : pathname === "/statistiken" ? "CA KPIs" : pathname === "/profil" ? "Profil" : "Dashboard"} {/* Dynamic subtitle */}
+                {pathname === "/promotors/einsatz" ? "Einsatzplanung" : pathname === "/promotors/statistiken" ? "CA KPIs" : pathname === "/promotors/profil" ? "Profil" : "Dashboard"} {/* Dynamic subtitle */}
               </p>
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "home" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/dashboard")}
+              onClick={() => handleNavigation("/promotors/dashboard")}
             >
               <Home className="h-6 w-6" />
             </Button>
@@ -396,7 +396,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "einsatz" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/einsatz")}
+              onClick={() => handleNavigation("/promotors/einsatz")}
             >
               <Briefcase className="h-6 w-6" />
             </Button>
@@ -416,7 +416,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "kpis" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/statistiken")}
+              onClick={() => handleNavigation("/promotors/statistiken")}
             >
               <BarChart2 className="h-6 w-6" />
             </Button>
@@ -426,7 +426,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "profil" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/profil")}
+              onClick={() => handleNavigation("/promotors/profil")}
             >
               <User className="h-6 w-6" />
             </Button>

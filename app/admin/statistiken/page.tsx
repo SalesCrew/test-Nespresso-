@@ -1942,7 +1942,8 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="bg-white p-6 rounded-lg border border-gray-200 relative" id="trend-chart">
                       <button
                         onClick={generatePDF}
-                        className="absolute top-4 right-4 flex items-center space-x-2 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
+                        className="absolute top-4 right-4 flex items-center space-x-2 px-3 py-1.5 text-white text-sm rounded-lg transition-colors"
+                        style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
                       >
                         <FileText className="h-4 w-4" />
                         <span>Create PDF</span>

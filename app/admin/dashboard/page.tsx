@@ -3128,7 +3128,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 <Button
                   onClick={handleScheduleMessage}
                   disabled={!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all"
                 >
                   Planen
                 </Button>

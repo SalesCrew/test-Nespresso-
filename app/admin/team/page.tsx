@@ -38,7 +38,9 @@ import {
   FileSignature,
   Cake,
   ArrowLeft,
-  Download
+  Download,
+  CreditCard,
+  Ruler
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -94,6 +96,17 @@ export default function PromotorenPage() {
     endDate: '',
     isTemporary: false
   });
+  
+  // Bank details functionality - for showing/hiding IBAN
+  const [ibanVisible, setIbanVisible] = useState<Record<number, boolean>>({});
+  const [ibanTimeouts, setIbanTimeouts] = useState<Record<number, NodeJS.Timeout>>({});
+  const [ibanCopied, setIbanCopied] = useState<Record<number, boolean>>({});
+  const [accountHolderCopied, setAccountHolderCopied] = useState<Record<number, boolean>>({});
+  const [bicCopied, setBicCopied] = useState<Record<number, boolean>>({});
+
+  // Status confirmation modal state
+  const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [statusChangePromotorId, setStatusChangePromotorId] = useState<number | null>(null);
   
   // Document management state
   const [documentStatuses, setDocumentStatuses] = useState<Record<string, string>>({
@@ -224,7 +237,7 @@ export default function PromotorenPage() {
 
 
   // Mock promotor data based on the app structure
-  const promotors = [
+  const [promotors, setPromotors] = useState([
     {
       id: 1,
       name: "Sarah Schmidt",
@@ -248,7 +261,17 @@ export default function PromotorenPage() {
         krankenstand: 2,
         notfaelle: 1
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Sarah Schmidt",
+        bankName: "Erste Bank Austria",
+        iban: "AT611904300234573201",
+        bic: "EASYATW1"
+      },
+      clothingInfo: {
+        height: "165",
+        size: "M"
+      }
     },
     {
       id: 2,
@@ -273,7 +296,17 @@ export default function PromotorenPage() {
         krankenstand: 1,
         notfaelle: 0
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Michael Weber",
+        bankName: "Raiffeisen Bank",
+        iban: "AT331200000012345678",
+        bic: "RLNWATWW"
+      },
+      clothingInfo: {
+        height: "180",
+        size: "L"
+      }
     },
     {
       id: 3,
@@ -298,7 +331,17 @@ export default function PromotorenPage() {
         krankenstand: 0,
         notfaelle: 0
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Jan Müller",
+        bankName: "Salzburger Bank",
+        iban: "AT485200000012345678",
+        bic: "SBGAAT2S"
+      },
+      clothingInfo: {
+        height: "175",
+        size: "M"
+      }
     },
     {
       id: 4,
@@ -323,7 +366,17 @@ export default function PromotorenPage() {
         krankenstand: 3,
         notfaelle: 2
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Lisa König",
+        bankName: "Bank Austria",
+        iban: "AT611100000012345678",
+        bic: "BKAUATWW"
+      },
+      clothingInfo: {
+        height: "162",
+        size: "S"
+      }
     },
     {
       id: 5,
@@ -348,7 +401,17 @@ export default function PromotorenPage() {
         krankenstand: 1,
         notfaelle: 1
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Anna Bauer",
+        bankName: "Oberbank",
+        iban: "AT151500000001234567",
+        bic: "OBKLAT2L"
+      },
+      clothingInfo: {
+        height: "170",
+        size: "M"
+      }
     },
     {
       id: 6,
@@ -373,9 +436,19 @@ export default function PromotorenPage() {
         krankenstand: 0,
         notfaelle: 1
       },
-      avatar: "/placeholder.svg"
+      avatar: "/placeholder.svg",
+      bankDetails: {
+        accountHolder: "Tom Fischer",
+        bankName: "Tiroler Sparkasse",
+        iban: "AT342050303000012345",
+        bic: "SPIHAT22"
+      },
+      clothingInfo: {
+        height: "185",
+        size: "XL"
+      }
     }
-  ];
+  ]);
 
   // Region mapping for display
   const regionNames = {
@@ -501,6 +574,11 @@ export default function PromotorenPage() {
     const matchesStatus = statusFilter === "all" || promotor.status === statusFilter;
     
     return matchesSearch && matchesRegion && matchesStatus;
+  }).sort((a, b) => {
+    // Sort by status: active promotors first, inactive last
+    if (a.status === 'active' && b.status === 'inactive') return -1;
+    if (a.status === 'inactive' && b.status === 'active') return 1;
+    return 0;
   });
 
   // Filter submitted onboarding data
@@ -632,6 +710,114 @@ export default function PromotorenPage() {
     }
   };
 
+  // IBAN masking and click functionality
+  const maskIban = (iban: string) => {
+    if (iban.length <= 5) return iban;
+    return "x".repeat(iban.length - 5) + iban.slice(-5);
+  };
+
+  const handleIbanClick = async (promotorId: number) => {
+    const promotor = promotors.find(p => p.id === promotorId);
+    if (!promotor) return;
+
+    if (ibanVisible[promotorId]) {
+      // IBAN is already visible, copy it
+      try {
+        await navigator.clipboard.writeText(promotor.bankDetails.iban);
+        
+        // Show copied state
+        setIbanCopied(prev => ({ ...prev, [promotorId]: true }));
+        
+        // Hide copied state after 2 seconds
+        setTimeout(() => {
+          setIbanCopied(prev => ({ ...prev, [promotorId]: false }));
+        }, 2000);
+      } catch (error) {
+        console.error('Failed to copy IBAN:', error);
+      }
+    } else {
+      // Show full IBAN
+      setIbanVisible(prev => ({ ...prev, [promotorId]: true }));
+      
+      // Clear any existing timeout for this promotor
+      if (ibanTimeouts[promotorId]) {
+        clearTimeout(ibanTimeouts[promotorId]);
+      }
+      
+      // Set timeout to hide IBAN after 3 seconds
+      const timeout = setTimeout(() => {
+        setIbanVisible(prev => ({ ...prev, [promotorId]: false }));
+        setIbanTimeouts(prev => {
+          const newTimeouts = { ...prev };
+          delete newTimeouts[promotorId];
+          return newTimeouts;
+        });
+      }, 3000);
+      
+      setIbanTimeouts(prev => ({ ...prev, [promotorId]: timeout }));
+    }
+  };
+
+  const handleAccountHolderClick = async (promotorId: number) => {
+    const promotor = promotors.find(p => p.id === promotorId);
+    if (!promotor) return;
+
+    try {
+      await navigator.clipboard.writeText(promotor.bankDetails.accountHolder);
+      
+      // Show copied state
+      setAccountHolderCopied(prev => ({ ...prev, [promotorId]: true }));
+      
+      // Hide copied state after 2 seconds
+      setTimeout(() => {
+        setAccountHolderCopied(prev => ({ ...prev, [promotorId]: false }));
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy account holder:', error);
+    }
+  };
+
+  const handleBicClick = async (promotorId: number) => {
+    const promotor = promotors.find(p => p.id === promotorId);
+    if (!promotor) return;
+
+    try {
+      await navigator.clipboard.writeText(promotor.bankDetails.bic);
+      
+      // Show copied state
+      setBicCopied(prev => ({ ...prev, [promotorId]: true }));
+      
+      // Hide copied state after 2 seconds
+      setTimeout(() => {
+        setBicCopied(prev => ({ ...prev, [promotorId]: false }));
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy BIC:', error);
+    }
+  };
+
+  // Handle status change
+  const handleStatusClick = (promotorId: number) => {
+    const promotor = promotors.find(p => p.id === promotorId);
+    if (promotor && promotor.status === 'active') {
+      setStatusChangePromotorId(promotorId);
+      setShowStatusConfirmation(true);
+    }
+  };
+
+  const handleStatusChange = () => {
+    if (statusChangePromotorId) {
+      // In a real app, this would update the database
+      setPromotors(prev => prev.map(promotor => 
+        promotor.id === statusChangePromotorId 
+          ? { ...promotor, status: 'inactive' }
+          : promotor
+      ));
+      setShowStatusConfirmation(false);
+      setStatusChangePromotorId(null);
+    }
+  };
+
   // Export Dienstvertrag as PDF
   const exportDienstvertragAsPDF = async () => {
     // Only run on client side
@@ -697,6 +883,13 @@ export default function PromotorenPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Cleanup IBAN timeouts on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(ibanTimeouts).forEach(timeout => clearTimeout(timeout));
+    };
+  }, [ibanTimeouts]);
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       {/* Admin Navigation */}
@@ -713,11 +906,24 @@ export default function PromotorenPage() {
             </div>
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => setShowStammdatenblatt(!showStammdatenblatt)}
-                className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
-                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                onClick={() => setShowStammdatenblatt(false)}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  !showStammdatenblatt 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
               >
-                {showStammdatenblatt ? 'Promotoren' : 'Stammdatenblatt'}
+                <span>Promotoren</span>
+              </button>
+              <button 
+                onClick={() => setShowStammdatenblatt(true)}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  showStammdatenblatt 
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <span>Stammdatenblatt</span>
               </button>
             </div>
           </div>
@@ -1225,43 +1431,7 @@ export default function PromotorenPage() {
                         <p className="text-xs text-gray-500 capitalize mt-0.5">{promotor.status}</p>
                       </div>
                     </div>
-                    <div className="relative magic-touch-dropdown">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMagicTouchClick(promotor.id);
-                        }}
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center hover:bg-gray-100"
-                      >
-                        <MoreVertical className="h-4 w-4 text-gray-400" />
-                      </button>
 
-                      {openDropdown === promotor.id && (
-                        <div className="absolute top-full right-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] overflow-hidden">
-                          <div className="py-1">
-                            {categories.map((category) => (
-                              <button
-                                key={category.name}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCategorySelect(promotor.id, category.name);
-                                }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center space-x-2"
-                              >
-                                <div
-                                  className="w-3 h-3 rounded-full border border-gray-300"
-                                  style={{ backgroundColor: category.bgColor }}
-                                ></div>
-                                <span>{category.name}</span>
-                                {magicTouchCategories[promotor.id] === category.name && (
-                                  <Check className="h-3 w-3 text-blue-500 ml-auto" />
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   {/* Region Badge */}
@@ -1487,9 +1657,12 @@ export default function PromotorenPage() {
                             <Badge className={`${getRegionPillColors(promotor.region)} border text-xs`}>
                               {regionNames[promotor.region as keyof typeof regionNames]}
                             </Badge>
-                            <span className={`text-sm font-medium ${
+                            <span 
+                              className={`text-sm font-medium cursor-pointer hover:underline ${
                               promotor.status === 'active' ? 'text-green-300' : 'text-gray-400'
-                            }`}>
+                              }`}
+                              onClick={() => handleStatusClick(promotor.id)}
+                            >
                               {promotor.status === 'active' ? 'Aktiv' : 'Inaktiv'}
                             </span>
                           </div>
@@ -1533,7 +1706,10 @@ export default function PromotorenPage() {
                                    )}
                                    <span>{promotor.email}</span>
                                  </div>
-                                <div className="flex items-center space-x-2">
+                                <div 
+                                  className="flex items-center space-x-2 cursor-pointer"
+                                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(promotor.address)}`, '_blank')}
+                                >
                                   <MapPin className="h-4 w-4 text-gray-400" />
                                   <span>{promotor.address}</span>
                                 </div>
@@ -1867,14 +2043,14 @@ export default function PromotorenPage() {
                                   <span className="text-sm font-bold text-gray-900">{promotor.onboardingProgress}%</span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-3">
-                                                    <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      promotor.onboardingProgress === 100 
+                                  <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      promotor.onboardingProgress === 100 
                         ? 'bg-gradient-to-r from-green-500 to-green-800' 
-                        : promotor.onboardingProgress >= 50 
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                                        : promotor.onboardingProgress >= 50 
+                                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
                         : 'bg-gradient-to-r from-red-600 to-red-500'
-                    }`}
+                                    }`}
                                     style={{ width: `${promotor.onboardingProgress}%` }}
                                   ></div>
                                 </div>
@@ -1882,6 +2058,81 @@ export default function PromotorenPage() {
                                   {promotor.onboardingProgress === 100 ? 'Onboarding abgeschlossen' : 
                                    promotor.onboardingProgress >= 75 ? 'Fast abgeschlossen' :
                                    promotor.onboardingProgress >= 50 ? 'In Bearbeitung' : 'Gerade begonnen'}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Bank Details */}
+                          <Card className="shadow-sm border-gray-200/60">
+                            <CardContent className="p-4">
+                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                <CreditCard className="h-4 w-4 mr-2 text-blue-500" />
+                                Bankdaten
+                              </h3>
+                              <div className="space-y-2">
+                                {/* Account Holder and Bank Name - Side by Side */}
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-0.5">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                      Kontoinhaber
+                                    </label>
+                                    <div className="flex items-center space-x-2">
+                                      <p 
+                                        className="text-sm font-medium text-gray-900 cursor-pointer"
+                                        onClick={() => handleAccountHolderClick(promotor.id)}
+                                      >
+                                        {promotor.bankDetails.accountHolder}
+                                      </p>
+                                      {accountHolderCopied[promotor.id] && (
+                                        <Check className="h-3 w-3 text-green-500" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                      Bankname
+                                    </label>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {promotor.bankDetails.bankName}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* IBAN */}
+                                <div className="space-y-0.5">
+                                  <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                    IBAN
+                                  </label>
+                                  <div className="flex items-center space-x-2">
+                                    <p 
+                                      className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
+                                      onClick={() => handleIbanClick(promotor.id)}
+                                    >
+                                      {ibanVisible[promotor.id] ? promotor.bankDetails.iban : maskIban(promotor.bankDetails.iban)}
+                                    </p>
+                                    {ibanCopied[promotor.id] && (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* BIC */}
+                                <div className="space-y-0.5">
+                                  <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                    BIC
+                                  </label>
+                                  <div className="flex items-center space-x-2">
+                                                                         <p 
+                                       className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
+                                       onClick={() => handleBicClick(promotor.id)}
+                                     >
+                                      {promotor.bankDetails.bic}
+                                    </p>
+                                    {bicCopied[promotor.id] && (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -1953,6 +2204,41 @@ export default function PromotorenPage() {
                                      <p className="text-xs text-gray-500">{assignment.location}</p>
                                    </div>
                                  ))}
+                               </div>
+                             </CardContent>
+                           </Card>
+
+                           {/* Clothing Size Information */}
+                           <Card className="shadow-sm border-gray-200/60">
+                             <CardContent className="p-4">
+                               <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                 <Ruler className="h-4 w-4 mr-2 text-purple-500" />
+                                 Kleidergröße
+                               </h3>
+                               <div className="space-y-3">
+                                 <div className="grid grid-cols-2 gap-3">
+                                   <div className="space-y-1 text-center">
+                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                       Körpergröße
+                                     </label>
+                                     <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
+                                       <p className="text-lg font-bold text-gray-900">
+                                         {promotor.clothingInfo.height}
+                                       </p>
+                                       <span className="text-xs text-gray-500 ml-1 font-medium">cm</span>
+                                     </div>
+                                   </div>
+                                   <div className="space-y-1 text-center">
+                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                       Kleidergröße
+                                     </label>
+                                     <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
+                                       <p className="text-lg font-bold text-gray-900">
+                                         {promotor.clothingInfo.size}
+                                       </p>
+                                     </div>
+                                   </div>
+                                 </div>
                                </div>
                              </CardContent>
                            </Card>
@@ -2237,7 +2523,7 @@ export default function PromotorenPage() {
                       >
                         <Eye className="h-3 w-3 text-gray-600" />
                       </button>
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 mb-2">
@@ -2262,7 +2548,7 @@ export default function PromotorenPage() {
                       >
                         <Eye className="h-3 w-3 text-gray-600" />
                       </button>
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
                     </div>
                   </div>
                   <div className="text-xs text-gray-500 mb-2">
@@ -2305,7 +2591,7 @@ export default function PromotorenPage() {
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </button>
-                  <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                <h3 className="text-xl font-bold">Dienstvertrag</h3>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button 
@@ -2315,12 +2601,12 @@ export default function PromotorenPage() {
                   >
                     <Download className="h-5 w-5" />
                   </button>
-                  <button 
-                    onClick={() => setShowDienstvertragContent(false)}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                <button 
+                  onClick={() => setShowDienstvertragContent(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
                 </div>
               </div>
             </div>
@@ -2349,6 +2635,43 @@ export default function PromotorenPage() {
                   );
                 })()}
                     </div>
+                    </div>
+                    </div>
+        </>
+      )}
+
+      {/* Status Confirmation Modal */}
+      {showStatusConfirmation && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
+            onClick={() => setShowStatusConfirmation(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl z-[100] p-6 w-[400px]">
+            <div className="text-center">
+              <div className="mb-4">
+                <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Promotor als inaktiv setzen?
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Möchten Sie diesen Promotor wirklich als inaktiv markieren? Diese Aktion kann später rückgängig gemacht werden.
+                </p>
+                </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowStatusConfirmation(false)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleStatusChange}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Bestätigen
+                </button>
+              </div>
             </div>
           </div>
         </>

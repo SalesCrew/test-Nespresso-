@@ -1403,7 +1403,7 @@ export default function DashboardPage() {
       {/* Schulungen & Videos Button */}
       <div className="mb-6">
       <button 
-          onClick={() => router.push('/schulungen-videos')}
+                            onClick={() => router.push('/promotors/schulungen-videos')}
           className="w-full py-6 px-4 bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-indigo-700 hover:via-purple-600 hover:to-pink-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-3"
         >
           <GraduationCap className="h-6 w-6" />
