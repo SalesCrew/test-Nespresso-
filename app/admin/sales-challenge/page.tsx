@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Trophy, Users, Target, Gift, X, CheckSquare } from "lucide-react";
+import { Trophy, Users, Target, Gift, X, CheckSquare, Plus } from "lucide-react";
 
 const allPromotors = [
   { name: "Sarah Schmidt", region: "wien-noe-bgl" },
@@ -86,7 +86,7 @@ export default function SalesChallengePage() {
     endDate: string;
     metric: string;
     participants: string[];
-    rewards: { position: string; prize: string }[];
+    rewards: { position: string; prize: string; rank: number }[];
     rules: string;
   }>({
     name: "",
@@ -94,9 +94,9 @@ export default function SalesChallengePage() {
     metric: "",
     participants: [],
     rewards: [
-      { position: "1st", prize: "" },
-      { position: "2nd", prize: "" },
-      { position: "3rd", prize: "" }
+      { position: "1st", prize: "", rank: 1 },
+      { position: "2nd", prize: "", rank: 2 },
+      { position: "3rd", prize: "", rank: 3 }
     ],
     rules: ""
   });
@@ -106,7 +106,7 @@ export default function SalesChallengePage() {
   const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
   const [activeRegionFilter, setActiveRegionFilter] = useState("all");
 
-  const totalSteps = 5;
+  const totalSteps = 4;
   
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -164,6 +164,47 @@ export default function SalesChallengePage() {
       // Select all filtered
       const newSelection = [...new Set([...challengeData.participants, ...filtered])];
       setChallengeData(prev => ({ ...prev, participants: newSelection }));
+    }
+  };
+
+  const addMoreReward = () => {
+    const nextRank = challengeData.rewards.length + 1;
+    const newReward = { 
+      position: `${nextRank}${nextRank === 4 ? 'th' : nextRank === 5 ? 'th' : nextRank === 6 ? 'th' : nextRank === 7 ? 'th' : nextRank === 8 ? 'th' : nextRank === 9 ? 'th' : nextRank === 10 ? 'th' : 'th'}`, 
+      prize: "", 
+      rank: nextRank 
+    };
+    setChallengeData(prev => ({
+      ...prev,
+      rewards: [...prev.rewards, newReward]
+    }));
+  };
+
+
+
+  const getRankIconStyle = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return { background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)' };
+      case 2:
+        return { background: 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)' };
+      case 3:
+        return { background: 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)' };
+      default:
+        return { background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)' };
+    }
+  };
+
+  const getRankInputStyle = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return 'border-yellow-200/50 bg-gradient-to-r from-yellow-50/20 to-amber-50/20 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:from-yellow-50/40 hover:to-amber-50/40';
+      case 2:
+        return 'border-gray-200/50 bg-gradient-to-r from-gray-50/20 to-slate-50/20 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:from-gray-50/40 hover:to-slate-50/40';
+      case 3:
+        return 'border-amber-200/50 bg-gradient-to-r from-amber-50/20 to-orange-50/20 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:from-amber-50/40 hover:to-orange-50/40';
+      default:
+        return 'border-blue-200/50 bg-gradient-to-r from-blue-50/20 to-indigo-50/20 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:from-blue-50/40 hover:to-indigo-50/40';
     }
   };
 
@@ -312,25 +353,39 @@ export default function SalesChallengePage() {
                         <Gift className="h-3 w-3 text-green-600" />
                         <h4 className="text-xs font-medium text-gray-900">Belohnungen</h4>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-h-40 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {challengeData.rewards.map((reward, index) => (
                           <div key={index} className="flex items-center space-x-2">
-                            <div className="flex items-center justify-center w-6 h-6 rounded bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-semibold text-xs">
-                              {index + 1}
+                            <div 
+                              className="flex items-center justify-center w-6 h-6 rounded-full text-white font-semibold text-xs flex-shrink-0"
+                              style={getRankIconStyle(reward.rank)}
+                            >
+                              {reward.rank}
                             </div>
                             <Input
-                              placeholder={`${reward.position} Platz`}
+                              placeholder={`${reward.position} Platz Belohnung`}
                               value={reward.prize}
                               onChange={(e) => {
                                 const newRewards = [...challengeData.rewards];
                                 newRewards[index].prize = e.target.value;
                                 setChallengeData(prev => ({ ...prev, rewards: newRewards }));
                               }}
-                              className="border-gray-200 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-xs"
+                              className={`text-xs transition-all duration-200 ${getRankInputStyle(reward.rank)}`}
                             />
                           </div>
                         ))}
                       </div>
+                      {challengeData.rewards.length < 10 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={addMoreReward}
+                          className="w-full text-xs h-7 text-gray-500 hover:text-gray-700 focus-visible:ring-0"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Weitere Belohnung hinzufügen
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -346,7 +401,8 @@ export default function SalesChallengePage() {
                           placeholder="Regeln, Bewertungskriterien und Bedingungen..."
                           value={challengeData.rules}
                           onChange={(e) => setChallengeData(prev => ({ ...prev, rules: e.target.value }))}
-                          className="border-gray-200 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-xs min-h-20"
+                          className="border-gray-200 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-xs min-h-36 [&::-webkit-scrollbar]:hidden"
+                          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         />
                       </div>
                     </div>
@@ -566,8 +622,8 @@ export default function SalesChallengePage() {
                     </span>
                     <Button
                       onClick={() => setShowPromotorSelection(false)}
-                      variant="ghost"
-                      className="bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
+                      className="text-white hover:opacity-90 transition-opacity"
+                      style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
                     >
                       Bestätigen
                     </Button>
