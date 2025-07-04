@@ -870,33 +870,33 @@ export default function SchulungenPage() {
               </div>
 
               <div className="flex flex-wrap gap-6">
-            {/* Add New Card */}
-            <div 
-              onClick={() => setShowCreateModal(true)}
-              className="w-48 h-48 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4 flex flex-col"
+          {/* Add New Card */}
+          <div 
+            onClick={() => setShowCreateModal(true)}
+            className="w-48 h-48 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4 flex flex-col"
               style={{boxShadow: '0 2px 6px rgba(34, 197, 94, 0.18)'}}
-            >
-              {/* Header */}
-              <div className="mb-4 text-center">
-                <h3 className="text-lg font-semibold text-gray-800 tracking-tight">Schulung erstellen</h3>
-              </div>
-              
-              {/* Plus Container */}
-              <div className="flex-1 mb-1 -mx-4">
-                <div className="w-full h-full bg-gray-100 border-t border-b border-gray-200 flex items-center justify-center">
-                  <div className="px-4 py-1 rounded-lg border border-gray-200" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: '0.65'}}>
-                    <Plus className="h-5 w-5 text-white" />
-                  </div>
+          >
+            {/* Header */}
+            <div className="mb-4 text-center">
+              <h3 className="text-lg font-semibold text-gray-800 tracking-tight">Schulung erstellen</h3>
+            </div>
+            
+            {/* Plus Container */}
+            <div className="flex-1 mb-1 -mx-4">
+              <div className="w-full h-full bg-gray-100 border-t border-b border-gray-200 flex items-center justify-center">
+                <div className="px-4 py-1 rounded-lg border border-gray-200" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: '0.65'}}>
+                  <Plus className="h-5 w-5 text-white" />
                 </div>
               </div>
-              
-              {/* Bottom Icons */}
-              <div className="flex items-center justify-start space-x-1 mt-3">
-                <Video className="h-4 w-4 text-gray-300" />
-                <FileText className="h-4 w-4 text-gray-300" />
-                <HelpCircle className="h-4 w-4 text-gray-300" />
-              </div>
             </div>
+            
+            {/* Bottom Icons */}
+            <div className="flex items-center justify-start space-x-1 mt-3">
+              <Video className="h-4 w-4 text-gray-300" />
+              <FileText className="h-4 w-4 text-gray-300" />
+              <HelpCircle className="h-4 w-4 text-gray-300" />
+            </div>
+          </div>
 
             {/* Created Schulungen */}
             {createdSchulungen
@@ -1335,10 +1335,10 @@ export default function SchulungenPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                        <Video className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">Video einrichten</h3>
+                    <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <Video className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Video einrichten</h3>
                     </div>
                     <div className="text-sm text-gray-500">
                       Schritt {currentComponentIndex + 1} von {selectedComponents.length}
@@ -1413,10 +1413,10 @@ export default function SchulungenPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}>
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">PDF Dokument einrichten</h3>
+                    <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}>
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">PDF Dokument einrichten</h3>
                     </div>
                     <div className="text-sm text-gray-500">
                       Schritt {currentComponentIndex + 1} von {selectedComponents.length}
@@ -1717,10 +1717,10 @@ export default function SchulungenPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                        <HelpCircle className="h-5 w-5 text-white" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900">Quiz erstellen</h3>
+                    <div className="h-8 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <HelpCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">Quiz erstellen</h3>
                     </div>
                     <div className="text-sm text-gray-500">
                       Schritt {currentComponentIndex + 1} von {selectedComponents.length}
@@ -1802,22 +1802,22 @@ export default function SchulungenPage() {
                                       // Find the new index for the correct answer
                                       const newCorrectAnswer = originalIndices.indexOf(mcCorrectAnswer);
                                       
-                                      const newQuestion = {
-                                        id: `mc_${Date.now()}`,
-                                        type: 'multiple-choice' as const,
-                                        question: questionInput.value.trim(),
+                                    const newQuestion = {
+                                      id: `mc_${Date.now()}`,
+                                      type: 'multiple-choice' as const,
+                                      question: questionInput.value.trim(),
                                         options: filledOptions,
                                         correctAnswer: newCorrectAnswer >= 0 ? newCorrectAnswer : 0,
-                                        position: quizQuestions.length + 1
-                                      };
-                                      setQuizQuestions(prev => [...prev, newQuestion]);
-                                      
-                                      // Clear form
-                                      questionInput.value = '';
-                                      optionInputs.forEach(input => input.value = '');
+                                      position: quizQuestions.length + 1
+                                    };
+                                    setQuizQuestions(prev => [...prev, newQuestion]);
+                                    
+                                    // Clear form
+                                    questionInput.value = '';
+                                    optionInputs.forEach(input => input.value = '');
                                       setMcCorrectAnswer(0);
-                                      setMcOptionsCount(4);
-                                      setShowQuestionForm(null);
+                                    setMcOptionsCount(4);
+                                    setShowQuestionForm(null);
                                     }
                                   }
                                 }}
@@ -1858,18 +1858,18 @@ export default function SchulungenPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-1">
                               {Array.from({ length: mcOptionsCount }, (_, index) => (
-                                <input
+                                  <input
                                   key={index}
-                                  type="text"
-                                  placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                                    type="text"
+                                    placeholder={`Option ${String.fromCharCode(65 + index)}`}
                                   className={`w-full p-1.5 border rounded outline-none focus:outline-none focus:ring-0 focus:ring-offset-0 focus:shadow-none text-xs transition-all duration-200 ${
                                     mcCorrectAnswer === index
                                       ? 'bg-green-50/80 border-green-300/70 shadow-sm shadow-green-200/50 focus:bg-green-50/80 focus:border-green-300/70'
                                       : 'border-gray-300 hover:border-gray-400 focus:border-gray-300'
                                   }`}
-                                  id={`mc-option-${index}`}
+                                    id={`mc-option-${index}`}
                                   onClick={(e) => handleOptionClick(index, e)}
-                                />
+                                  />
                               ))}
                             </div>
                           </div>
@@ -2102,16 +2102,16 @@ export default function SchulungenPage() {
                                         </div>
                                       ) : (
                                         <div className="grid grid-cols-2 gap-2">
-                                          {question.options?.map((option, optionIndex) => (
+                                        {question.options?.map((option, optionIndex) => (
                                             <div key={optionIndex} className={`text-sm p-2 rounded border transition-all duration-200 break-words ${
-                                              question.correctAnswer === optionIndex 
+                                            question.correctAnswer === optionIndex 
                                                 ? 'bg-green-50/20 border-green-300/20 text-green-800 font-medium shadow-sm shadow-green-200/50' 
                                                 : 'bg-rose-50/20 border-rose-300/20 text-red-600 shadow-sm shadow-rose-200/50'
-                                            }`}>
-                                              {String.fromCharCode(65 + optionIndex)}: {option || 'Keine Option eingegeben'}
-                                            </div>
-                                          ))}
-                                        </div>
+                                          }`}>
+                                            {String.fromCharCode(65 + optionIndex)}: {option || 'Keine Option eingegeben'}
+                                          </div>
+                                        ))}
+                                      </div>
                                       )}
                                     </div>
                                   </div>
@@ -2144,8 +2144,8 @@ export default function SchulungenPage() {
                                           />
                                         ) : (
                                           <div className="text-sm p-2 rounded border transition-all duration-200 break-words bg-green-50/20 border-green-300/20 text-green-800 font-medium shadow-sm shadow-green-200/50 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                                            {question.correctAnswers || 'Nicht definiert'}
-                                          </div>
+                                          {question.correctAnswers || 'Nicht definiert'}
+                                        </div>
                                         )}
                                       </div>
                                       <div>
@@ -2160,8 +2160,8 @@ export default function SchulungenPage() {
                                           />
                                         ) : (
                                           <div className="text-sm p-2 rounded border transition-all duration-200 break-words bg-rose-50/20 border-rose-300/20 text-red-600 shadow-sm shadow-rose-200/50 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                                            {question.wrongAnswers || 'Nicht definiert'}
-                                          </div>
+                                          {question.wrongAnswers || 'Nicht definiert'}
+                                        </div>
                                         )}
                                       </div>
                                     </div>

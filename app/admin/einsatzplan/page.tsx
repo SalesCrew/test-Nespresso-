@@ -1192,7 +1192,7 @@ export default function EinsatzplanPage() {
             </div>
             <div className="flex items-center space-x-3">
               {/* Menu Buttons */}
-              <button 
+              <button
                 onClick={() => setShowMaerkteView(false)}
                 className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
                   !showMaerkteView 
@@ -1203,7 +1203,7 @@ export default function EinsatzplanPage() {
                 <Calendar className="h-4 w-4" />
                 <span>Einsatzplan</span>
               </button>
-              <button 
+              <button
                 onClick={() => setShowMaerkteView(true)}
                 className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
                   showMaerkteView 
