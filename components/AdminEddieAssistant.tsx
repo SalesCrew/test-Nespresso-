@@ -78,7 +78,7 @@ export default function AdminEddieAssistant() {
     <>
       {/* Eddie KI Assistant Floating Button */}
       <button 
-        className="fixed bottom-20 right-8 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
+        className="fixed bottom-20 right-8 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-[55] hover:shadow-xl transition-shadow"
         onClick={() => {
           setChatOpen(true);
           setIsSpinning(true);
@@ -95,7 +95,7 @@ export default function AdminEddieAssistant() {
 
       {/* Darkening overlay for when KI assistant chat is shown */}
       <div 
-        className={`fixed inset-0 bg-black transition-opacity duration-500 z-[35] ${
+        className={`fixed inset-0 bg-black transition-opacity duration-500 z-50 ${
           chatOpen ? 'opacity-40' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setChatOpen(false)}
@@ -103,7 +103,7 @@ export default function AdminEddieAssistant() {
 
       {/* Eddie KI Assistant Chat Interface */}
       {chatOpen && (
-        <div className="fixed bottom-36 right-8 w-72 h-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
+        <div className="fixed bottom-36 right-8 w-72 h-[400px] bg-white dark:bg-gray-900 rounded-lg shadow-xl flex flex-col z-[60] overflow-hidden">
           {/* Chat Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-3 flex items-center justify-between shadow-md sticky top-0 z-10">
             <div className="flex items-center">

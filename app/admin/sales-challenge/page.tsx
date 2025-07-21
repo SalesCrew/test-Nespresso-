@@ -395,7 +395,7 @@ export default function SalesChallengePage() {
           const newHistory = [...(p.history || [])];
           
           return {
-            ...p,
+          ...p,
             score: newScore,
             history: newHistory
           };

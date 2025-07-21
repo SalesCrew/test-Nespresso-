@@ -24,3 +24,5 @@ location mit radius begrenzung
 Einsatzzeit darf nie verändert werden
 
 Standart einsatz/sondereinsatz wording
+
+Leichte abweichung bestätigen/ablehnen

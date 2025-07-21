@@ -11,7 +11,8 @@ import {
   MessagesSquare,
   Users,
   BookOpen,
-  Trophy
+  Trophy,
+  Cpu
 } from "lucide-react";
 
 interface AdminNavigationProps {
@@ -31,6 +32,7 @@ export default function AdminNavigation({ sidebarOpen, setSidebarOpen }: AdminNa
     { id: "statistiken", label: "Statistiken", icon: BarChart2, active: pathname === '/admin/statistiken', href: '/admin/statistiken' },
     { id: "schulungen", label: "Schulungen", icon: BookOpen, active: pathname === '/admin/schulungen', href: '/admin/schulungen' },
     { id: "sales-challenge", label: "Sales Challenge", icon: Trophy, active: pathname === '/admin/sales-challenge', href: '/admin/sales-challenge' },
+    { id: "demotool-agent", label: "DemoTool Agent", icon: Cpu, active: pathname === '/admin/demotool-agent', href: '/admin/demotool-agent' },
     { id: "settings", label: "Einstellungen", icon: Settings, active: false, href: '#' }
   ];
 
