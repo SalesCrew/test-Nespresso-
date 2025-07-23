@@ -414,6 +414,12 @@ export default function DemoToolAgentPage() {
   const [generationQueue, setGenerationQueue] = useState<Array<{data: any, side: 'left' | 'right'}>>([]);
   const [generationIndex, setGenerationIndex] = useState(0);
   const generationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track columns that came from cross-card actions (for fillup bar exclusion)
+  const [leftCrossCardColumns, setLeftCrossCardColumns] = useState<Set<number>>(new Set());
+  const [rightCrossCardColumns, setRightCrossCardColumns] = useState<Set<number>>(new Set());
+
+
   const [showLeftDownloadModal, setShowLeftDownloadModal] = useState(false);
   const [leftDownloadDateRange, setLeftDownloadDateRange] = useState<{start: string | null, end: string | null}>({start: null, end: null});
   const [leftDownloadAllTime, setLeftDownloadAllTime] = useState(false);
@@ -815,14 +821,33 @@ export default function DemoToolAgentPage() {
   const handleLeftRejectColumn = (columnId: number) => {
     setLeftRejectingColumns(prev => new Set(prev).add(columnId));
     
-    // Remove column after animation completes
+    // Move column to right card's validated history after animation completes
     setTimeout(() => {
       setLeftRejectingColumns(prev => {
         const newSet = new Set(prev);
         newSet.delete(columnId);
         return newSet;
       });
+      
+      // Remove from left card's display order
+      setLeftDisplayOrder(prev => prev.filter(id => id !== columnId));
+      
+      // Track action taken on LEFT card (for left fillup bar)
       setLeftRejectedColumns(prev => new Set(prev).add(columnId));
+      
+      // Add to right card's validated columns (for history display)
+      setValidatedColumns(prev => new Set(prev).add(columnId));
+      
+      // Mark this as a cross-card column for right card (to exclude from right fillup bar)
+      setRightCrossCardColumns(prev => new Set(prev).add(columnId));
+      
+      // Add to right card's display order for history
+      setRightDisplayOrder(prev => {
+        if (!prev.includes(columnId)) {
+          return [columnId, ...prev];
+        }
+        return prev;
+      });
     }, 500); // Animation duration
   };
 
@@ -845,14 +870,33 @@ export default function DemoToolAgentPage() {
   const handleRejectColumn = (columnId: number) => {
     setRejectingColumns(prev => new Set(prev).add(columnId));
     
-    // Remove column after animation completes
+    // Move column to left card's validated history after animation completes
     setTimeout(() => {
       setRejectingColumns(prev => {
         const newSet = new Set(prev);
         newSet.delete(columnId);
         return newSet;
       });
+      
+      // Remove from right card's display order
+      setRightDisplayOrder(prev => prev.filter(id => id !== columnId));
+      
+      // Track action taken on RIGHT card (for right fillup bar)
       setRejectedColumns(prev => new Set(prev).add(columnId));
+      
+      // Add to left card's validated columns (for history display)
+      setLeftValidatedColumns(prev => new Set(prev).add(columnId));
+      
+      // Mark this as a cross-card column for left card (to exclude from left fillup bar)
+      setLeftCrossCardColumns(prev => new Set(prev).add(columnId));
+      
+      // Add to left card's display order for history
+      setLeftDisplayOrder(prev => {
+        if (!prev.includes(columnId)) {
+          return [columnId, ...prev];
+        }
+        return prev;
+      });
     }, 500); // Animation duration
   };
 
@@ -1411,7 +1455,7 @@ export default function DemoToolAgentPage() {
                               style={{
                                 background: 'linear-gradient(135deg, #FA0C0C, #CD0000)',
                                 boxShadow: '0 0 6px 2px rgba(250, 12, 12, 0.5)',
-                                width: `${((leftValidatedColumns.size + leftRejectedColumns.size) / mockLeftEinsaetze.length) * 100}%`,
+                                width: `${leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length > 0 ? (([...leftValidatedColumns].filter(id => !leftCrossCardColumns.has(id)).length + [...leftRejectedColumns].filter(id => leftDisplayOrder.includes(id)).length) / leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length) * 100 : 0}%`,
                                 transition: 'width 0.5s ease-in-out',
                                 opacity: 0.7
                               }}
@@ -1420,9 +1464,9 @@ export default function DemoToolAgentPage() {
                           
                           {/* Indicator Numbers */}
                           <div className="absolute top-7 left-5 text-[10px] flex space-x-1">
-                            <span className="text-green-500 opacity-70">{leftValidatedColumns.size}</span>
+                            <span className="text-green-500 opacity-70">{[...leftValidatedColumns].filter(id => !leftCrossCardColumns.has(id)).length}</span>
                             <span className="text-red-500 opacity-70">{leftRejectedColumns.size}</span>
-                            <span className="text-gray-500 opacity-40">{leftDisplayOrder.length}</span>
+                            <span className="text-gray-500 opacity-40">{leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id) && !leftValidatedColumns.has(id) && !leftRejectedColumns.has(id)).length}</span>
                           </div>
                         </>
                       )}
@@ -1438,11 +1482,14 @@ export default function DemoToolAgentPage() {
                     >
                       {/* Empty State */}
                       {leftDisplayOrder.filter(id => {
-                        const einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                        let einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                        if (!einsatz) {
+                          einsatz = mockEinsaetze.find(e => e.id === id);
+                        }
                         if (!einsatz) return false;
                         return showLeftVerlauf ? leftValidatedColumns.has(id) : (!leftValidatedColumns.has(id) && !leftRejectedColumns.has(id));
                       }).length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center px-5 py-12">
+                        <div className="flex flex-col items-center justify-center h-full text-center px-5 pt-16 pb-12">
                           <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                             <CheckCircle2 className="h-6 w-6 text-gray-400" />
                           </div>
@@ -1455,7 +1502,10 @@ export default function DemoToolAgentPage() {
                       <div className="px-5 pt-12 pb-6 space-y-3">
                         {/* Unified Column Rendering */}
                         {leftDisplayOrder.filter(id => {
-                          const einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                          let einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                          if (!einsatz) {
+                            einsatz = mockEinsaetze.find(e => e.id === id);
+                          }
                           if (!einsatz) return false;
                           // Show all columns that are in display order
                           if (showLeftVerlauf) {
@@ -1464,7 +1514,11 @@ export default function DemoToolAgentPage() {
                             return !leftValidatedColumns.has(id) && !leftRejectedColumns.has(id);
                           }
                         }).map((id, index) => {
-                          const einsatz = mockLeftEinsaetze.find(e => e.id === id)!;
+                          let einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                          if (!einsatz) {
+                            einsatz = mockEinsaetze.find(e => e.id === id);
+                          }
+                          if (!einsatz) return null;
                           const isExpanded = expandedColumns.has(einsatz.id);
                           return (
                           <div
@@ -2157,7 +2211,7 @@ export default function DemoToolAgentPage() {
                               style={{
                                 background: 'linear-gradient(135deg, #22C55E, #105F2D)',
                                 boxShadow: '0 0 6px 2px rgba(34, 197, 94, 0.5)',
-                                width: `${((validatedColumns.size + rejectedColumns.size) / mockEinsaetze.length) * 100}%`,
+                                width: `${rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length > 0 ? (([...validatedColumns].filter(id => !rightCrossCardColumns.has(id)).length + [...rejectedColumns].filter(id => rightDisplayOrder.includes(id)).length) / rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length) * 100 : 0}%`,
                                 transition: 'width 0.5s ease-in-out',
                                 opacity: 0.7
                               }}
@@ -2166,9 +2220,9 @@ export default function DemoToolAgentPage() {
                           
                           {/* Indicator Numbers */}
                           <div className="absolute top-7 left-5 text-[10px] flex space-x-1">
-                            <span className="text-green-500 opacity-70">{validatedColumns.size}</span>
+                            <span className="text-green-500 opacity-70">{[...validatedColumns].filter(id => !rightCrossCardColumns.has(id)).length}</span>
                             <span className="text-red-500 opacity-70">{rejectedColumns.size}</span>
-                            <span className="text-gray-500 opacity-40">{rightDisplayOrder.length}</span>
+                            <span className="text-gray-500 opacity-40">{rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id) && !validatedColumns.has(id) && !rejectedColumns.has(id)).length}</span>
                           </div>
                         </>
                       )}
@@ -2184,11 +2238,14 @@ export default function DemoToolAgentPage() {
                     >
                                             {/* Empty State */}
                       {rightDisplayOrder.filter(id => {
-                        const einsatz = mockEinsaetze.find(e => e.id === id);
+                        let einsatz = mockEinsaetze.find(e => e.id === id);
+                        if (!einsatz) {
+                          einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                        }
                         if (!einsatz) return false;
                         return showVerlauf ? validatedColumns.has(id) : (!validatedColumns.has(id) && !rejectedColumns.has(id));
                       }).length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center px-5 py-12">
+                        <div className="flex flex-col items-center justify-center h-full text-center px-5 pt-16 pb-12">
                           <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                             <CheckCircle2 className="h-6 w-6 text-gray-400" />
                           </div>
@@ -2201,7 +2258,10 @@ export default function DemoToolAgentPage() {
                       <div className="px-5 pt-12 pb-6 space-y-3">
                         {/* Unified Column Rendering */}
                         {rightDisplayOrder.filter(id => {
-                          const einsatz = mockEinsaetze.find(e => e.id === id);
+                          let einsatz = mockEinsaetze.find(e => e.id === id);
+                          if (!einsatz) {
+                            einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                          }
                           if (!einsatz) return false;
                           // Show all columns that are in display order
                           if (showVerlauf) {
@@ -2210,7 +2270,11 @@ export default function DemoToolAgentPage() {
                             return !validatedColumns.has(id) && !rejectedColumns.has(id);
                           }
                         }).map((id, index) => {
-                          const einsatz = mockEinsaetze.find(e => e.id === id)!;
+                          let einsatz = mockEinsaetze.find(e => e.id === id);
+                          if (!einsatz) {
+                            einsatz = mockLeftEinsaetze.find(e => e.id === id);
+                          }
+                          if (!einsatz) return null;
                           const isExpanded = expandedColumns.has(einsatz.id);
                           return (
                           <div

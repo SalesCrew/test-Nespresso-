@@ -28,7 +28,7 @@ export default function AdminNavigation({ sidebarOpen, setSidebarOpen }: AdminNa
     { id: "overview", label: "Übersicht", icon: Home, active: pathname === '/admin/dashboard', href: '/admin/dashboard' },
     { id: "einsatzplan", label: "Einsatzplan", icon: Briefcase, active: pathname === '/admin/einsatzplan', href: '/admin/einsatzplan' },
     { id: "team", label: "Promotoren", icon: Users, active: pathname === '/admin/team', href: '/admin/team' },
-    { id: "messages", label: "Nachrichten", icon: MessagesSquare, active: false, href: '#' },
+    { id: "messages", label: "Nachrichten", icon: MessagesSquare, active: pathname === '/admin/chat', href: '/admin/chat' },
     { id: "statistiken", label: "Statistiken", icon: BarChart2, active: pathname === '/admin/statistiken', href: '/admin/statistiken' },
     { id: "schulungen", label: "Schulungen", icon: BookOpen, active: pathname === '/admin/schulungen', href: '/admin/schulungen' },
     { id: "sales-challenge", label: "Sales Challenge", icon: Trophy, active: pathname === '/admin/sales-challenge', href: '/admin/sales-challenge' },
