@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, MoreVertical, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle } from "lucide-react";
+import { Search, MoreVertical, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser } from "lucide-react";
 import AdminNavigation from "@/components/AdminNavigation";
 
 interface Contact {
@@ -20,10 +20,13 @@ interface Message {
   time: string;
   own: boolean;
   edited?: boolean;
+  reaction?: string;
+  photo?: string;
   replyTo?: {
     id: number;
     sender: string;
     content: string;
+    photo?: string;
   };
 }
 
@@ -32,6 +35,272 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);  
 
   const [messageInput, setMessageInput] = useState("");
+  const [attachmentPopup, setAttachmentPopup] = useState(false);
+  const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null>(null);
+  const [colorPalette, setColorPalette] = useState<{ show: boolean; selectedColor: string }>({ show: false, selectedColor: '' });
+  const [eraserPalette, setEraserPalette] = useState<{ show: boolean; selectedSize: number }>({ show: false, selectedSize: 0 });
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingPaths, setDrawingPaths] = useState<Array<{ color: string; points: Array<{ x: number; y: number }> }>>([]);
+  const [undoHistory, setUndoHistory] = useState<Array<{ 
+    photoEditor: { show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null;
+    drawingPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }>;
+  }>>([]);
+  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string }>({ show: false, selectedCategory: 'smileys' });
+
+  const [photoViewer, setPhotoViewer] = useState<{
+    show: boolean;
+    currentIndex: number;
+    photos: string[];
+  }>({
+    show: false,
+    currentIndex: 0,
+    photos: []
+  });
+
+  const [infoMenu, setInfoMenu] = useState<{
+    show: boolean;
+    selectedTab: 'fotos' | 'media';
+  }>({
+    show: false,
+    selectedTab: 'fotos'
+  });
+
+  // Emoji categories and data
+  const emojiCategories = {
+    smileys: {
+      name: 'Smileys & People',
+      emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '☺️', '😚', '😙', '🥲', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😶‍🌫️', '😏', '😒', '🙄', '😬', '😮‍💨', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶', '🥴', '😵', '🤯', '🤠', '🥳', '🥸', '😎', '🤓', '🧐']
+    },
+    animals: {
+      name: 'Animals & Nature',
+      emojis: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐻‍❄️', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🪱', '🐛', '🦋', '🐌', '🐞', '🐜', '🪰', '🪲', '🪳', '🦟', '🦗', '🕷️', '🕸️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🪶', '🐓', '🦃', '🦤', '🦚', '🦜', '🦢', '🦩', '🕊️', '🐇', '🦝', '🦨', '🦡', '🦫', '🦦', '🦥', '🐁', '🐀', '🐿️', '🦔']
+    },
+    food: {
+      name: 'Food & Drink',
+      emojis: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🌶️', '🫒', '🥒', '🥬', '🥦', '🧄', '🧅', '🍄', '🥜', '🌰', '🍞', '🥐', '🥖', '🫓', '🥨', '🥯', '🥞', '🧇', '🧀', '🍖', '🍗', '🥩', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🫔', '🥙', '🧆', '🥚', '🍳', '🥘', '🍲', '🫕', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯']
+    },
+    activities: {
+      name: 'Activities',
+      emojis: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛷', '⛸️', '🥌', '🎿', '⛷️', '🏂', '🪂', '🏋️‍♀️', '🏋️', '🏋️‍♂️', '🤼‍♀️', '🤼', '🤼‍♂️', '🤸‍♀️', '🤸', '🤸‍♂️', '⛹️‍♀️', '⛹️', '⛹️‍♂️', '🤺', '🤾‍♀️', '🤾', '🤾‍♂️', '🏌️‍♀️', '🏌️', '🏌️‍♂️', '🏇', '🧘‍♀️', '🧘', '🧘‍♂️', '🏄‍♀️', '🏄', '🏄‍♂️', '🏊‍♀️', '🏊', '🏊‍♂️', '🤽‍♀️', '🤽', '🤽‍♂️', '🚣‍♀️', '🚣', '🚣‍♂️', '🧗‍♀️', '🧗', '🧗‍♂️', '🚵‍♀️', '🚵', '🚵‍♂️', '🚴‍♀️', '🚴', '🚴‍♂️', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖️', '🏵️', '🎗️', '🎫', '🎟️', '🎪', '🤹', '🤹‍♂️', '🤹‍♀️', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎵', '🎶', '🥁', '🪘', '🎹', '🎷', '🎺', '🪗', '🎸', '🪕', '🎻', '🎲', '♟️', '🎯', '🎳', '🎮', '🎰', '🧩']
+    },
+    travel: {
+      name: 'Travel & Places',
+      emojis: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🏍️', '🛵', '🚲', '🛴', '🛹', '🛼', '🚁', '🛸', '✈️', '🛩️', '🛫', '🛬', '🪂', '💺', '🚀', '🛰️', '🚊', '🚝', '🚅', '🚄', '🚈', '🚞', '🚋', '🚃', '🚟', '🚠', '🚡', '⛴️', '🛥️', '🚤', '⛵', '🛶', '🚣', '🛸', '🚢', '⚓', '⛽', '🚧', '🚨', '🚥', '🚦', '🛑', '🚏', '🗺️', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟️', '🎡', '🎢', '🎠', '⛱️', '🏖️', '🏝️', '🏜️', '🌋', '⛰️', '🏔️', '🗻', '🏕️', '⛺', '🛖', '🏠', '🏡', '🏘️', '🏚️', '🏗️', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛️', '⛪', '🕌', '🛕', '🕍', '⛩️', '🕋', '⛲', '⛱️', '🌁', '🌃', '🏙️', '🌄', '🌅', '🌆', '🌇', '🌉', '♨️', '🎠', '🎡', '🎢', '💈', '🎪']
+    },
+    objects: {
+      name: 'Objects',
+      emojis: ['⌚', '📱', '📲', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '🖲️', '🕹️', '🗜️', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽️', '🎞️', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙️', '🎚️', '🎛️', '🧭', '⏱️', '⏲️', '⏰', '🕰️', '⌛', '⏳', '📡', '🔋', '🔌', '💡', '🕯️', '🪔', '🧯', '🛢️', '💸', '💵', '💴', '💶', '💷', '🪙', '💰', '💳', '💎', '⚖️', '🪜', '🧰', '🔧', '🔨', '⚒️', '🛠️', '⛏️', '🪓', '🪚', '🔩', '⚙️', '🪤', '🧱', '⛓️', '🧲', '🔫', '💣', '🧨', '🪓', '🔪', '🗡️', '⚔️', '🛡️', '🚬', '⚰️', '🪦', '⚱️', '🏺', '🔮', '📿', '🧿', '💈', '⚗️', '🔭', '🔬', '🕳️', '🩹', '🩺', '💊', '💉', '🩸', '🧬', '🦠', '🧫', '🧪', '🌡️', '🧹', '🧺', '🧻', '🚽', '🚰', '🚿', '🛁', '🛀', '🧼', '🪥', '🪒', '🧽', '🪣', '🧴', '🛎️', '🔑', '🗝️', '🚪', '🪑', '🛋️', '🛏️', '🛌', '🧸', '🪆', '🖼️', '🪞', '🪟', '🛍️', '🛒', '🎁', '🎀', '🎊', '🎉', '🎈', '🎄', '🎃', '🎋', '🎍', '🎎', '🎏', '🎐', '🎑', '🧧', '🎀', '🎁', '🎗️', '🎟️', '🎫', '🎖️', '🏆', '🏅', '🥇', '🥈', '🥉']
+    },
+    symbols: {
+      name: 'Symbols',
+      emojis: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕', '🛑', '⛔', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯', '💹', '❇️', '✳️', '❎', '🌐', '💠', '🔤', '🔡', '🔠', '🔢', '🔣', '#️⃣', '*️⃣', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '🔤', '🔡', '🔠', '🔣', '🔽', '🔼', '⏸️', '⏹️', '⏺️', '⏭️', '⏮️', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '➗', '✖️', '🟰', '♾️', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜', '✔️', '☑️', '🔘', '🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '⚫', '⚪', '🟤', '🔺', '🔻', '🔸', '🔹', '🔶', '🔷', '🔳', '🔲', '▪️', '▫️', '◾', '◽', '◼️', '◻️', '🟥', '🟧', '🟨', '🟩', '🟦', '🟪', '⬛', '⬜', '🟫', '🔈', '🔉', '🔊', '🔇', '📢', '📣', '📯', '🔔', '🔕']
+    }
+  };
+
+  // Save current state to undo history
+  const saveToHistory = () => {
+    setUndoHistory(prev => [
+      ...prev,
+      {
+        photoEditor: photoEditor ? { ...photoEditor, crop: photoEditor.crop ? { ...photoEditor.crop } : null } : null,
+        drawingPaths: [...drawingPaths]
+      }
+    ]);
+  };
+
+  // Undo last change
+  const undoLastChange = () => {
+    if (undoHistory.length > 0) {
+      const lastState = undoHistory[undoHistory.length - 1];
+      setPhotoEditor(lastState.photoEditor);
+      setDrawingPaths(lastState.drawingPaths);
+      setUndoHistory(prev => prev.slice(0, -1));
+    }
+  };
+
+  // Get all photos from current chat messages
+  const getAllPhotosFromChat = () => {
+    if (!selectedChat) return [];
+    const chatMessages = allMessages[selectedChat.id] || [];
+    return chatMessages
+      .filter((msg: Message) => msg.photo)
+      .map((msg: Message) => msg.photo!)
+      .reverse(); // Most recent first
+  };
+
+  // Open photo viewer
+  const openPhotoViewer = (photoUrl: string) => {
+    const allPhotos = getAllPhotosFromChat();
+    const currentIndex = allPhotos.indexOf(photoUrl);
+    setPhotoViewer({
+      show: true,
+      currentIndex: currentIndex >= 0 ? currentIndex : 0,
+      photos: allPhotos
+    });
+  };
+
+  // Navigate photo viewer
+  const navigatePhotoViewer = (direction: 'prev' | 'next') => {
+    setPhotoViewer(prev => {
+      let newIndex;
+      if (direction === 'prev') {
+        newIndex = prev.currentIndex > 0 ? prev.currentIndex - 1 : prev.photos.length - 1;
+      } else {
+        newIndex = prev.currentIndex < prev.photos.length - 1 ? prev.currentIndex + 1 : 0;
+      }
+      return { ...prev, currentIndex: newIndex };
+    });
+  };
+
+  // Close photo viewer
+  const closePhotoViewer = () => {
+    setPhotoViewer({ show: false, currentIndex: 0, photos: [] });
+  };
+
+  // Add emoji picker slide animation CSS
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideUpFromBottom {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    `;
+    if (!document.head.querySelector('style[data-emoji-slide-animation]')) {
+      style.setAttribute('data-emoji-slide-animation', 'true');
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  // Keyboard shortcuts for photo viewer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (photoViewer.show) {
+        if (e.key === 'Escape') {
+          closePhotoViewer();
+        } else if (e.key === 'ArrowLeft') {
+          navigatePhotoViewer('prev');
+        } else if (e.key === 'ArrowRight') {
+          navigatePhotoViewer('next');
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [photoViewer.show]);
+
+  // Close info menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (infoMenu.show) {
+        const target = event.target as Element;
+        const infoMenuContainer = target.closest('[data-info-menu]');
+        if (!infoMenuContainer) {
+          setInfoMenu(prev => ({ ...prev, show: false }));
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [infoMenu.show]);
+
+  // Combine image with drawings, apply rotation and cropping
+  const combineImageWithDrawings = async (
+    imageUrl: string, 
+    paths: Array<{ color: string; points: Array<{ x: number; y: number }> }>, 
+    rotation: number = 0,
+    crop: { x: number; y: number; width: number; height: number } | null = null
+  ): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(imageUrl);
+        return;
+      }
+      const img = document.createElement('img');
+      
+      img.onload = () => {
+        // Calculate final dimensions considering crop
+        let finalWidth = img.width;
+        let finalHeight = img.height;
+        
+        if (crop) {
+          finalWidth = img.width * crop.width;
+          finalHeight = img.height * crop.height;
+        }
+        
+        // Handle rotation by swapping dimensions if needed
+        if (rotation % 180 === 90) {
+          canvas.width = finalHeight;
+          canvas.height = finalWidth;
+        } else {
+          canvas.width = finalWidth;
+          canvas.height = finalHeight;
+        }
+        
+        // Apply rotation and cropping
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        
+        if (crop) {
+          // Draw cropped portion
+          const sourceX = img.width * crop.x;
+          const sourceY = img.height * crop.y;
+          const sourceWidth = img.width * crop.width;
+          const sourceHeight = img.height * crop.height;
+          
+          ctx.drawImage(
+            img, 
+            sourceX, sourceY, sourceWidth, sourceHeight,
+            -finalWidth / 2, -finalHeight / 2, finalWidth, finalHeight
+          );
+        } else {
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        }
+        
+        ctx.restore();
+        
+        // Calculate scaling factors (the image in preview is 300px wide with h-48 = 192px)
+        const scaleX = img.width / 276; // 300px - 24px padding
+        const scaleY = img.height / 192; // h-48 = 192px
+        
+        // Draw all paths
+        paths.forEach(path => {
+          if (path.points.length > 1) {
+            ctx.strokeStyle = path.color;
+            ctx.lineWidth = 3 * Math.max(scaleX, scaleY); // Scale line width
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            
+            const firstPoint = path.points[0];
+            ctx.moveTo(firstPoint.x * scaleX, firstPoint.y * scaleY);
+            
+            for (let i = 1; i < path.points.length; i++) {
+              const point = path.points[i];
+              ctx.lineTo(point.x * scaleX, point.y * scaleY);
+            }
+            
+            ctx.stroke();
+          }
+        });
+        
+        resolve(canvas.toDataURL());
+      };
+      
+      img.src = imageUrl;
+    });
+  };
   const [contextMenu, setContextMenu] = useState<{ show: boolean; x: number; y: number; messageId: number | null; isOwnMessage: boolean }>({
     show: false, x: 0, y: 0, messageId: null, isOwnMessage: false
   });
@@ -42,10 +311,22 @@ export default function ChatPage() {
   const [editAnimation, setEditAnimation] = useState<{ startY: number; endY: number } | null>(null);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<number>>(new Set());
-  const [deleteDialog, setDeleteDialog] = useState<{ show: boolean; messageId: number | null; isOwnMessage: boolean }>({
+  const [deleteDialog, setDeleteDialog] = useState<{ 
+    show: boolean; 
+    messageId: number | null; 
+    isOwnMessage: boolean;
+    isBulkDelete: boolean;
+    selectedMessageIds: number[];
+    hasOwnMessages: boolean;
+    hasOtherMessages: boolean;
+  }>({
     show: false,
     messageId: null,
-    isOwnMessage: false
+    isOwnMessage: false,
+    isBulkDelete: false,
+    selectedMessageIds: [],
+    hasOwnMessages: false,
+    hasOtherMessages: false
   });
   const [allMessages, setAllMessages] = useState<Record<number, Message[]>>({
     1: [ // Lisa Müller - lots of messages for scrolling
@@ -143,7 +424,8 @@ export default function ChatPage() {
           replyTo: {
             id: replyingTo.id,
             sender: replyingTo.sender,
-            content: replyingTo.content
+            content: replyingTo.content,
+            photo: replyingTo.photo
           }
         })
       };
@@ -327,7 +609,28 @@ export default function ChatPage() {
         setSelectedMessages(newSelected);
       }
     } else if (action === 'delete' && contextMenu.messageId) {
-      setDeleteDialog({ show: true, messageId: contextMenu.messageId, isOwnMessage: contextMenu.isOwnMessage });
+      setDeleteDialog({ 
+        show: true, 
+        messageId: contextMenu.messageId, 
+        isOwnMessage: contextMenu.isOwnMessage,
+        isBulkDelete: false,
+        selectedMessageIds: [],
+        hasOwnMessages: false,
+        hasOtherMessages: false
+      });
+    } else if (action.startsWith('react-') && contextMenu.messageId && selectedChat) {
+      const emoji = action.split('react-')[1];
+      setAllMessages(prev => ({
+        ...prev,
+        [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
+          msg.id === contextMenu.messageId 
+            ? { 
+                ...msg, 
+                reaction: msg.reaction === emoji ? undefined : emoji // Toggle reaction
+              }
+            : msg
+        )
+      }));
     } else {
       console.log(`${action} message ${contextMenu.messageId}`);
     }
@@ -358,7 +661,15 @@ export default function ChatPage() {
         ...prev,
         [selectedChat.id]: (prev[selectedChat.id] || []).filter(msg => msg.id !== deleteDialog.messageId)
       }));
-      setDeleteDialog({ show: false, messageId: null, isOwnMessage: false });
+      setDeleteDialog({ 
+        show: false, 
+        messageId: null, 
+        isOwnMessage: false,
+        isBulkDelete: false,
+        selectedMessageIds: [],
+        hasOwnMessages: false,
+        hasOtherMessages: false
+      });
     }
   };
 
@@ -373,8 +684,60 @@ export default function ChatPage() {
             : msg
         )
       }));
-      setDeleteDialog({ show: false, messageId: null, isOwnMessage: false });
+      setDeleteDialog({ 
+        show: false, 
+        messageId: null, 
+        isOwnMessage: false,
+        isBulkDelete: false,
+        selectedMessageIds: [],
+        hasOwnMessages: false,
+        hasOtherMessages: false
+      });
     }
+  };
+
+  // Handle copying all selected messages
+  const handleCopySelectedMessages = () => {
+    if (!selectedChat || selectedMessages.size === 0) return;
+    
+    const messagesToCopy = allMessages[selectedChat.id]?.filter(msg => 
+      selectedMessages.has(msg.id)
+    ) || [];
+    
+    const copiedText = messagesToCopy
+      .sort((a, b) => a.id - b.id) // Sort by message order
+      .map(msg => `${msg.sender}: ${msg.content}`)
+      .join('\n');
+    
+    navigator.clipboard.writeText(copiedText).catch(err => {
+      console.error('Failed to copy messages:', err);
+    });
+    
+    // Exit select mode after copying
+    setIsSelectMode(false);
+    setSelectedMessages(new Set());
+  };
+
+  // Handle deleting selected messages with appropriate dialog
+  const handleDeleteSelectedMessages = () => {
+    if (!selectedChat || selectedMessages.size === 0) return;
+    
+    const messagesToDelete = allMessages[selectedChat.id]?.filter(msg => 
+      selectedMessages.has(msg.id)
+    ) || [];
+    
+    const hasOwnMessages = messagesToDelete.some(msg => msg.own);
+    const hasOtherMessages = messagesToDelete.some(msg => !msg.own);
+    
+    setDeleteDialog({ 
+      show: true, 
+      messageId: null, 
+      isOwnMessage: false,
+      isBulkDelete: true,
+      selectedMessageIds: Array.from(selectedMessages),
+      hasOwnMessages,
+      hasOtherMessages
+    });
   };
 
   const messages = selectedChat ? allMessages[selectedChat.id] || [] : [];
@@ -384,26 +747,44 @@ export default function ChatPage() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
     }
-  }, [messages, selectedChat]);
+  }, [messages.length, selectedChat]);
 
-  // Handle click outside context menu
+  // Handle click outside context menu, attachment popup, and photo editor
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
       if (contextMenu.show) {
         closeContextMenu();
       }
+      if (attachmentPopup && !target.closest('[data-attachment-popup]') && !target.closest('[data-attachment-trigger]')) {
+        setAttachmentPopup(false);
+      }
+      if (photoEditor && !target.closest('[data-photo-editor]')) {
+        setPhotoEditor(null);
+        setColorPalette({ show: false, selectedColor: '#000000' });
+        setDrawingPaths([]);
+      }
+      if (emojiPicker.show && !target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-trigger]')) {
+        setEmojiPicker(prev => ({ ...prev, show: false }));
+      }
     };
 
-    if (contextMenu.show) {
+    if (contextMenu.show || attachmentPopup || photoEditor || emojiPicker.show) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [contextMenu.show]);
+  }, [contextMenu.show, attachmentPopup, photoEditor, colorPalette.show, emojiPicker.show]);
 
-  // Handle escape key to cancel reply, edit, or delete dialog
+  // Handle escape key to cancel reply, edit, delete dialog, or photo editor
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (photoEditor) {
+          setPhotoEditor(null);
+          setColorPalette({ show: false, selectedColor: '#000000' });
+          setDrawingPaths([]);
+        }
         if (replyingTo) {
           setReplyingTo(null);
           setReplyAnimation(null);
@@ -424,20 +805,53 @@ export default function ChatPage() {
           }
         }
         if (deleteDialog.show) {
-          setDeleteDialog({ show: false, messageId: null, isOwnMessage: false });
+          setDeleteDialog({ 
+            show: false, 
+            messageId: null, 
+            isOwnMessage: false, 
+            isBulkDelete: false, 
+            selectedMessageIds: [], 
+            hasOwnMessages: false, 
+            hasOtherMessages: false 
+          });
+        }
+        if (emojiPicker.show) {
+          setEmojiPicker(prev => ({ ...prev, show: false }));
         }
       }
     };
 
-    if (replyingTo || editingMessage || deleteDialog.show) {
+    if (photoEditor || replyingTo || editingMessage || deleteDialog.show || emojiPicker.show) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [replyingTo, editingMessage, deleteDialog]);
+  }, [photoEditor, replyingTo, editingMessage, deleteDialog]);
 
+  // Helper function to check if line segment intersects with circle
+  const checkLineCircleIntersection = (
+    pointA: { x: number; y: number }, 
+    pointB: { x: number; y: number }, 
+    circleCenter: { x: number; y: number }, 
+    radius: number
+  ): boolean => {
+    const dx = pointB.x - pointA.x;
+    const dy = pointB.y - pointA.y;
+    const fx = pointA.x - circleCenter.x;
+    const fy = pointA.y - circleCenter.y;
 
+    const a = dx * dx + dy * dy;
+    const b = 2 * (fx * dx + fy * dy);
+    const c = (fx * fx + fy * fy) - radius * radius;
 
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) return false;
 
+    const sqrt = Math.sqrt(discriminant);
+    const t1 = (-b - sqrt) / (2 * a);
+    const t2 = (-b + sqrt) / (2 * a);
+
+    return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/30">
@@ -544,9 +958,126 @@ export default function ChatPage() {
                 </div>
               </div>
               
-                              <div className="flex space-x-4">
-                  <Info className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" />
+                                            <div className="flex space-x-4">
+                {isSelectMode && (
+                  <>
+                    <Copy 
+                      className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                      onClick={handleCopySelectedMessages}
+                    />
+                    <Trash2 
+                      className="h-5 w-5 text-red-600 cursor-pointer hover:text-red-800" 
+                      onClick={handleDeleteSelectedMessages}
+                    />
+                  </>
+                )}
+                <div className="relative" data-info-menu>
+                  <Info 
+                    className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                    onClick={() => setInfoMenu(prev => ({ ...prev, show: !prev.show }))}
+                  />
+                  
+                  {/* Info Menu Dropdown */}
+                  {infoMenu.show && (
+                    <div 
+                      className="absolute top-8 right-0 rounded-lg shadow-lg border border-gray-200 z-50"
+                      style={{ 
+                        width: '320px', 
+                        minHeight: '400px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.97)'
+                      }}
+                    >
+                                             {/* Menu Header */}
+                      <div className="flex border-b border-gray-100 relative">
+                        <button
+                          onClick={() => setInfoMenu(prev => ({ ...prev, selectedTab: 'fotos' }))}
+                          className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                            infoMenu.selectedTab === 'fotos'
+                              ? 'text-transparent'
+                              : 'text-gray-600 hover:text-gray-800'
+                          }`}
+                          style={infoMenu.selectedTab === 'fotos' ? {
+                            background: 'linear-gradient(135deg, #22C55E, #105F2D)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          } : {}}
+                        >
+                          Fotos
+                        </button>
+                        <button
+                          onClick={() => setInfoMenu(prev => ({ ...prev, selectedTab: 'media' }))}
+                          className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                            infoMenu.selectedTab === 'media'
+                              ? 'text-transparent'
+                              : 'text-gray-600 hover:text-gray-800'
+                          }`}
+                          style={infoMenu.selectedTab === 'media' ? {
+                            background: 'linear-gradient(135deg, #22C55E, #105F2D)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          } : {}}
+                        >
+                          Media
+                        </button>
+                        {/* Sliding underline */}
+                        <div 
+                          className="absolute bottom-0 h-0.5 transition-all duration-300 ease-in-out"
+                          style={{
+                            background: 'linear-gradient(135deg, #22C55E, #105F2D)',
+                            width: '50%',
+                            transform: infoMenu.selectedTab === 'fotos' ? 'translateX(0)' : 'translateX(100%)'
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Menu Content */}
+                      <div className="p-4">
+                        {infoMenu.selectedTab === 'fotos' && (
+                          <>
+                            {getAllPhotosFromChat().length > 0 ? (
+                              <div 
+                                className="max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                              >
+                                <div className="grid grid-cols-4 gap-2">
+                                  {getAllPhotosFromChat().map((photo, index) => (
+                                    <button
+                                      key={index}
+                                      onClick={() => {
+                                        openPhotoViewer(photo);
+                                        setInfoMenu(prev => ({ ...prev, show: false }));
+                                      }}
+                                      className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+                                    >
+                                      <img
+                                        src={photo}
+                                        alt={`Photo ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center text-gray-500 py-8">
+                                <p>Keine Fotos vorhanden</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        
+                        {infoMenu.selectedTab === 'media' && (
+                          <div className="text-center text-gray-500 py-8">
+                            <p>Keine Media-Dateien vorhanden</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </div>
             </div>
 
             {/* Messages Area */}
@@ -599,7 +1130,7 @@ export default function ChatPage() {
                       </div>
                     )}
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      className={`relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         message.own
                           ? 'text-white'
                           : 'bg-white text-gray-800 border border-gray-200'
@@ -636,27 +1167,106 @@ export default function ChatPage() {
                           }}
                           onClick={() => handleReplyClick(message.replyTo!.id)}
                         >
-                          <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
-                            {message.replyTo.sender}
-                          </p>
-                          <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
-                             style={{ 
-                               wordBreak: 'break-word',
-                               overflow: 'hidden',
-                               display: '-webkit-box',
-                               WebkitLineClamp: 2,
-                               WebkitBoxOrient: 'vertical'
-                             }}>
-                            {message.replyTo.content}
-                          </p>
+                          {message.replyTo.photo ? (
+                            <div className="flex justify-between">
+                              <div className="flex-1 pr-2">
+                                <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
+                                  {message.replyTo.sender}
+                                </p>
+                                {message.replyTo.content && (
+                                  <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'}`}
+                                     style={{ 
+                                       hyphens: 'auto',
+                                       wordBreak: 'break-word',
+                                       overflowWrap: 'break-word',
+                                       overflow: 'hidden',
+                                       display: '-webkit-box',
+                                       WebkitLineClamp: 1,
+                                       WebkitBoxOrient: 'vertical'
+                                     }}>
+                                    {message.replyTo.content}
+                                  </p>
+                                )}
+                              </div>
+                              <img 
+                                src={message.replyTo.photo} 
+                                alt="Reply photo" 
+                                className="w-10 h-10 rounded object-cover flex-shrink-0"
+                              />
+                            </div>
+                          ) : (
+                            <>
+                              <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
+                                {message.replyTo.sender}
+                              </p>
+                              <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                 style={{ 
+                                   wordBreak: 'break-word',
+                                   overflow: 'hidden',
+                                   display: '-webkit-box',
+                                   WebkitLineClamp: 2,
+                                   WebkitBoxOrient: 'vertical'
+                                 }}>
+                                {message.replyTo.content}
+                              </p>
+                            </>
+                          )}
                         </div>
                       )}
-                      <p className={`text-sm ${message.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}>
-                        {message.content}
-                      </p>
+                      
+                      {/* Photo Display */}
+                      {message.photo && (
+                        <div className="mt-2 mb-2">
+                          <img
+                            src={message.photo}
+                            alt="Shared photo"
+                            className="w-full h-auto rounded-lg cursor-pointer"
+                            style={{ 
+                              maxHeight: '300px',
+                              minHeight: '120px',
+                              objectFit: 'cover',
+                              aspectRatio: 'auto'
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPhotoViewer(message.photo!);
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Text Content */}
+                      {message.content && (
+                        <p 
+                          className={`text-sm ${message.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}
+                          style={{ 
+                            hyphens: 'auto',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}
+                        >
+                          {message.content}
+                        </p>
+                      )}
                       <p className={`text-xs mt-1 ${message.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
                         {message.edited && '(edited) '}{message.time}
                       </p>
+                      
+                      {/* Reaction Emoji */}
+                      {message.reaction && (
+                        <div 
+                          className={`absolute ${message.own ? 'right-10' : 'left-10'} bg-white rounded-full border border-gray-200 shadow-sm`}
+                          style={{
+                            bottom: '-13px',
+                            transform: 'translate(0, 0)',
+                            zIndex: 10
+                          }}
+                        >
+                          <span className="text-sm px-1.5 py-0.5 block leading-none">
+                            {message.reaction}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Checkbox for own messages (right side) */}
@@ -750,15 +1360,32 @@ export default function ChatPage() {
                     <span>Löschen</span>
                   </button>
                   <hr className="border-gray-100 opacity-50" />
-                  <button
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 flex items-center justify-center space-x-3"
-                    onClick={() => handleContextAction('react')}
-                  >
-                    <span className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer">❤️</span>
-                    <span className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer">👍</span>
-                    <span className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer">😂</span>
-                    <span className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer">😮</span>
-                  </button>
+                  <div className="w-full px-4 py-2 text-left text-sm text-gray-700 flex items-center justify-center space-x-3">
+                    <span 
+                      className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer"
+                      onClick={() => handleContextAction('react-❤️')}
+                    >
+                      ❤️
+                    </span>
+                    <span 
+                      className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer"
+                      onClick={() => handleContextAction('react-👍')}
+                    >
+                      👍
+                    </span>
+                    <span 
+                      className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer"
+                      onClick={() => handleContextAction('react-😂')}
+                    >
+                      😂
+                    </span>
+                    <span 
+                      className="text-lg hover:scale-125 transition-transform duration-150 cursor-pointer"
+                      onClick={() => handleContextAction('react-😮')}
+                    >
+                      😮
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
@@ -783,7 +1410,7 @@ export default function ChatPage() {
                  />
                 
                 {/* Reply Message Bubble */}
-                <div className={`absolute z-50 flex ${replyingTo.own ? 'right-4 justify-end' : 'left-4 justify-start'}`} style={{ bottom: '80px' }}>
+                <div className={`absolute z-50 flex ${replyingTo.own ? 'right-4 justify-end' : 'left-4 justify-start'}`} style={{ bottom: emojiPicker.show ? '238px' : '80px' }}>
                   <div 
                     style={{
                       animation: `slide-to-reply-${replyingTo.id} 0.4s cubic-bezier(0.4, 0, 0.2, 1)`
@@ -816,7 +1443,9 @@ export default function ChatPage() {
                           </p>
                           <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
                              style={{ 
+                               hyphens: 'auto',
                                wordBreak: 'break-word',
+                               overflowWrap: 'break-word',
                                overflow: 'hidden',
                                display: '-webkit-box',
                                WebkitLineClamp: 2,
@@ -826,9 +1455,36 @@ export default function ChatPage() {
                           </p>
                         </div>
                       )}
-                      <p className={`text-sm ${replyingTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}>
-                        {replyingTo.content}
-                      </p>
+                      {/* Photo Display */}
+                      {replyingTo.photo && (
+                        <div className="mt-2 mb-2">
+                          <img
+                            src={replyingTo.photo}
+                            alt="Reply photo"
+                            className="w-full h-auto rounded-lg"
+                            style={{ 
+                              maxHeight: '300px',
+                              minHeight: '120px',
+                              objectFit: 'cover',
+                              aspectRatio: 'auto'
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Text Content */}
+                      {replyingTo.content && (
+                        <p 
+                          className={`text-sm ${replyingTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}
+                          style={{ 
+                            hyphens: 'auto',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}
+                        >
+                          {replyingTo.content}
+                        </p>
+                      )}
                       <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
                         {replyingTo.edited && '(edited) '}{replyingTo.time}
                       </p>
@@ -857,7 +1513,7 @@ export default function ChatPage() {
                 />
                 
                 {/* Edit Message Bubble */}
-                <div className={`absolute z-50 flex ${editingMessage.own ? 'right-4 justify-end' : 'left-4 justify-start'}`} style={{ bottom: '80px' }}>
+                <div className={`absolute z-50 flex ${editingMessage.own ? 'right-4 justify-end' : 'left-4 justify-start'}`} style={{ bottom: emojiPicker.show ? '238px' : '80px' }}>
                   <div 
                     style={{
                       animation: `slide-to-edit-${editingMessage.id} 0.4s cubic-bezier(0.4, 0, 0.2, 1)`
@@ -888,21 +1544,50 @@ export default function ChatPage() {
                           <p className={`text-xs font-medium ${editingMessage.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
                             {editingMessage.replyTo.sender}
                           </p>
-                                                     <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
-                              style={{ 
-                                wordBreak: 'break-word',
-                                overflow: 'hidden',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical'
-                              }}>
-                             {editingMessage.replyTo.content}
-                           </p>
+                                                                               <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
+                             style={{ 
+                               hyphens: 'auto',
+                               wordBreak: 'break-word',
+                               overflowWrap: 'break-word',
+                               overflow: 'hidden',
+                               display: '-webkit-box',
+                               WebkitLineClamp: 2,
+                               WebkitBoxOrient: 'vertical'
+                             }}>
+                            {editingMessage.replyTo.content}
+                          </p>
                         </div>
                       )}
-                                             <p className={`text-sm ${editingMessage.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}>
-                         {editingMessage.content}
-                       </p>
+                                                                   {/* Photo Display */}
+                      {editingMessage.photo && (
+                        <div className="mt-2 mb-2">
+                          <img
+                            src={editingMessage.photo}
+                            alt="Edit photo"
+                            className="w-full h-auto rounded-lg"
+                            style={{ 
+                              maxHeight: '300px',
+                              minHeight: '120px',
+                              objectFit: 'cover',
+                              aspectRatio: 'auto'
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Text Content */}
+                      {editingMessage.content && (
+                        <p 
+                          className={`text-sm ${editingMessage.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}
+                          style={{ 
+                            hyphens: 'auto',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                          }}
+                        >
+                          {editingMessage.content}
+                        </p>
+                      )}
                                              <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
                          {editingMessage.edited && '(edited) '}{editingMessage.time}
                        </p>
@@ -932,10 +1617,24 @@ export default function ChatPage() {
                 }}
               />
               <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                <Paperclip className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" />
+                <Paperclip 
+                  data-attachment-trigger
+                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAttachmentPopup(!attachmentPopup);
+                  }}
+                />
               </div>
               <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                <Smile className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" />
+                <Smile 
+                  data-emoji-trigger
+                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show }));
+                  }}
+                />
                 <button 
                   type="submit"
                   className="h-8 w-8 rounded-full flex items-center justify-center"
@@ -950,16 +1649,839 @@ export default function ChatPage() {
               </div>
             </form>
 
+            {/* Emoji Picker */}
+            {emojiPicker.show && (
+              <div 
+                data-emoji-picker
+                className="absolute bg-white rounded-lg shadow-lg border border-gray-200 z-40"
+                style={{
+                  bottom: '71px',
+                  left: '16px',
+                  right: '16px',
+                  height: '160px',
+                  boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
+                  transform: 'translateY(0)',
+                  transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                  animation: 'slideUpFromBottom 0.3s ease-out'
+                }}
+              >
+                {/* Emoji Grid */}
+                <div className="h-full flex flex-col">
+                  <div 
+                    className="flex-1 p-3"
+                    style={{
+                      overflowY: 'auto',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <style jsx>{`
+                      div::-webkit-scrollbar {
+                        display: none;
+                      }
+                    `}</style>
+                    <div className="grid grid-cols-8 gap-1" style={{ height: 'fit-content' }}>
+                      {emojiCategories[emojiPicker.selectedCategory as keyof typeof emojiCategories]?.emojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          className="text-xl p-1.5 rounded hover:bg-gray-100 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMessageInput(prev => prev + emoji);
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Category Footer */}
+                  <div className="border-t border-gray-200 p-1 bg-gray-50 rounded-b-lg">
+                    <div className="flex justify-around">
+                      {Object.entries(emojiCategories).map(([key, category]) => (
+                        <button
+                          key={key}
+                          className={`p-1.5 rounded transition-colors ${
+                            emojiPicker.selectedCategory === key 
+                              ? 'bg-gray-300 text-gray-700' 
+                              : 'hover:bg-gray-200 text-gray-600'
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEmojiPicker(prev => ({ ...prev, selectedCategory: key }));
+                          }}
+                          title={category.name}
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            {key === 'smileys' && (
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z" clipRule="evenodd" />
+                            )}
+                            {key === 'animals' && (
+                              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM4 8a1 1 0 000 2h1a1 1 0 100-2H4zm0 4a1 1 0 100 2h1a1 1 0 100-2H4zm4-4a1 1 0 000 2h1a1 1 0 100-2H8zm0 4a1 1 0 100 2h1a1 1 0 100-2H8z" />
+                            )}
+                            {key === 'food' && (
+                              <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                            )}
+                            {key === 'activities' && (
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                            )}
+                            {key === 'travel' && (
+                              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            )}
+                            {key === 'objects' && (
+                              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clipRule="evenodd" />
+                            )}
+                            {key === 'symbols' && (
+                              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                            )}
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Attachment Popup */}
+            {attachmentPopup && (
+              <div 
+                data-attachment-popup
+                className="absolute bg-white rounded-lg shadow-lg border border-gray-100 z-50"
+                style={{
+                  bottom: '70px',
+                  left: '20px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                  backdropFilter: 'blur(10px)',
+                  minWidth: '160px'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3 rounded-t-lg"
+                  onClick={() => {
+                    document.getElementById('photo-input')?.click();
+                    setAttachmentPopup(false);
+                  }}
+                >
+                  <Image className="h-4 w-4" />
+                  <span>Foto</span>
+                </button>
+                <button
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3 rounded-b-lg"
+                  onClick={() => {
+                    document.getElementById('pdf-input')?.click();
+                    setAttachmentPopup(false);
+                  }}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>PDF</span>
+                </button>
+              </div>
+            )}
+
+            {/* Hidden file inputs */}
+            <input
+              id="photo-input"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    const imageUrl = event.target?.result as string;
+                    setPhotoEditor({
+                      show: true,
+                      image: imageUrl,
+                      caption: '',
+                      rotation: 0,
+                      brightness: 100,
+                      contrast: 100,
+                      crop: null,
+                      cropMode: false
+                    });
+                    setColorPalette({ show: false, selectedColor: '' });
+                    setDrawingPaths([]);
+                  };
+                  reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+              }}
+            />
+            <input
+              id="pdf-input"
+              type="file"
+              accept=".pdf"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  console.log('PDF selected:', file.name);
+                  // TODO: Handle PDF upload
+                }
+              }}
+            />
+
+            {/* Photo Editor Card */}
+            {photoEditor && (
+              <div 
+                data-photo-editor
+                className="absolute left-4 bg-white rounded-lg shadow-lg border border-gray-200 animate-slide-up z-50 flex flex-col"
+                style={{
+                  bottom: '96px',
+                  width: '300px',
+                  minHeight: photoEditor.rotation % 180 === 90 ? '400px' : 'auto',
+                  height: 'auto'
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Color Palette - positioned over the image */}
+                {colorPalette.show && (
+                  <div 
+                    className="absolute bg-white rounded-lg shadow-lg border border-gray-200 p-2"
+                    style={{ 
+                      top: '50px',
+                      left: '12px',
+                      right: '20px',
+                      zIndex: 100,
+                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="grid grid-cols-8 gap-1.5">
+                      {['#000000', '#404040', '#808080', '#C0C0C0', '#FFFFFF', '#8B4513', '#A52A2A', '#800000',
+                        '#FF0000', '#FF6347', '#FFA500', '#FFD700', '#FFFF00', '#32CD32', '#00FF00', '#006400',
+                        '#00FFFF', '#40E0D0', '#0000FF', '#4169E1', '#800080', '#9370DB', '#FF00FF', '#FF1493'].map((color) => (
+                        <button
+                          key={color}
+                          className={`w-5 h-5 rounded-md hover:scale-110 transition-transform ${
+                            color === '#FFFFFF' ? 'border border-gray-200' : ''
+                          } ${
+                            colorPalette.selectedColor === color ? 'scale-125' : ''
+                          }`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => {
+                            setColorPalette({ show: false, selectedColor: color });
+                            setEraserPalette({ show: false, selectedSize: 0 });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Eraser Size Palette - positioned over the image */}
+                {eraserPalette.show && (
+                  <div 
+                    data-photo-editor
+                    className="absolute bg-white rounded-lg shadow-lg border border-gray-200 p-2"
+                    style={{ 
+                      top: '50px',
+                      left: '12px',
+                      right: '20px',
+                      zIndex: 100,
+                      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="grid grid-cols-6 gap-2 items-center justify-items-center">
+                      {[5, 10, 15, 20, 25, 30].map((size) => (
+                        <button
+                          key={size}
+                          className={`rounded-full bg-black/90 hover:scale-110 transition-transform ${
+                            eraserPalette.selectedSize === size ? 'scale-125' : ''
+                          }`}
+                          style={{ 
+                            width: `${Math.max(8, size)}px`, 
+                            height: `${Math.max(8, size)}px` 
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEraserPalette({ show: false, selectedSize: size });
+                            setColorPalette({ show: false, selectedColor: '' });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Toolbar */}
+                <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    <div className="flex space-x-1">
+                      <button 
+                        className={`p-1.5 rounded relative transition-colors ${
+                          colorPalette.selectedColor ? 'bg-gray-200' : 'hover:bg-gray-200'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (colorPalette.selectedColor) {
+                            // Deselect if already selected
+                            setColorPalette({ show: false, selectedColor: '' });
+                          } else {
+                            // Show palette to select color
+                            setColorPalette(prev => ({ ...prev, show: !prev.show }));
+                          }
+                        }}
+                      >
+                        <Pen className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button 
+                        className={`p-1.5 rounded relative transition-colors ${
+                          eraserPalette.selectedSize > 0 ? 'bg-gray-200' : 'hover:bg-gray-200'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (eraserPalette.selectedSize > 0) {
+                            // Deselect if already selected
+                            setEraserPalette({ show: false, selectedSize: 0 });
+                          } else {
+                            // Show palette to select size
+                            setEraserPalette(prev => ({ ...prev, show: !prev.show }));
+                          }
+                        }}
+                      >
+                        <Eraser className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button 
+                        className="p-1.5 hover:bg-gray-200 rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          saveToHistory();
+                          setPhotoEditor(prev => prev ? {
+                            ...prev,
+                            rotation: prev.rotation + 90
+                          } : null);
+                        }}
+                      >
+                        <RotateCw className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button 
+                        className={`p-1.5 rounded transition-colors ${
+                          photoEditor?.cropMode ? 'bg-gray-200' : 'hover:bg-gray-200'
+                        }`}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (photoEditor) {
+                            if (photoEditor.cropMode) {
+                              // Submit crop and disable crop mode
+                              if (photoEditor.crop) {
+                                saveToHistory();
+                                try {
+                                  const croppedImage = await combineImageWithDrawings(
+                                    photoEditor.image,
+                                    drawingPaths,
+                                    photoEditor.rotation,
+                                    photoEditor.crop
+                                  );
+                                  
+                                  setPhotoEditor(prev => prev ? {
+                                    ...prev,
+                                    image: croppedImage,
+                                    cropMode: false,
+                                    crop: null,
+                                    rotation: 0
+                                  } : null);
+                                  
+                                  // Clear drawing paths since they're now applied to the image
+                                  setDrawingPaths([]);
+                                } catch (error) {
+                                  console.error('Failed to apply crop:', error);
+                                  // Fallback: just disable crop mode
+                                  setPhotoEditor(prev => prev ? {
+                                    ...prev,
+                                    cropMode: false
+                                  } : null);
+                                }
+                              } else {
+                                // No crop defined, just disable crop mode
+                                setPhotoEditor(prev => prev ? {
+                                  ...prev,
+                                  cropMode: false
+                                } : null);
+                              }
+                            } else {
+                              // Enable crop mode with default selection
+                              saveToHistory();
+                              setPhotoEditor(prev => prev ? {
+                                ...prev,
+                                cropMode: true,
+                                crop: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 }
+                              } : null);
+                            }
+                          }
+                        }}
+                      >
+                        <Crop className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                    <button 
+                      className="p-1.5 hover:bg-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        undoLastChange();
+                      }}
+                      disabled={undoHistory.length === 0}
+                    >
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                    </button>
+                  </div>
+
+                                  {/* Photo Preview */}
+                  <div className={`p-3 ${photoEditor.rotation % 180 === 90 ? 'flex-1 flex flex-col items-center justify-center' : ''}`}>
+                    <div 
+                      className="relative bg-white"
+                      style={{
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        WebkitBorderRadius: '8px',
+                        MozBorderRadius: '8px',
+                        WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                        transform: `rotate(${photoEditor.rotation}deg)`,
+                        transformOrigin: 'center',
+                        width: photoEditor.rotation % 180 === 90 ? '270px' : 'auto',
+                        height: photoEditor.rotation % 180 === 90 ? '270px' : 'auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <img
+                        src={photoEditor.image}
+                        alt="Preview"
+                        className={photoEditor.rotation % 180 === 90 ? "max-w-full max-h-full object-contain" : "max-w-full h-auto"}
+                        style={{
+                          filter: `brightness(${photoEditor.brightness}%) contrast(${photoEditor.contrast}%)`,
+                          borderRadius: '8px',
+                          display: 'block'
+                        }}
+                      />
+                      
+                      {/* Crop Lines Overlay */}
+                      {photoEditor.cropMode && photoEditor.crop && (
+                        <div className="absolute inset-0">
+                          {/* Crop rectangle outline */}
+                          <div 
+                            className="absolute border-2 border-white shadow-lg pointer-events-none"
+                            style={{
+                              top: `${photoEditor.crop.y * 100}%`,
+                              left: `${photoEditor.crop.x * 100}%`,
+                              width: `${photoEditor.crop.width * 100}%`,
+                              height: `${photoEditor.crop.height * 100}%`
+                            }}
+                          />
+                          
+                          {/* Corner handles */}
+                          {(() => {
+                            const createDragHandler = (type: 'tl' | 'tr' | 'bl' | 'br' | 't' | 'b' | 'l' | 'r') => (e: React.MouseEvent) => {
+                              e.preventDefault();
+                              if (!photoEditor?.crop) return;
+                              
+                              const startX = e.clientX;
+                              const startY = e.clientY;
+                              const startCrop = {...photoEditor.crop};
+                              const photoElement = (e.currentTarget as HTMLElement).parentElement as HTMLElement;
+                              
+                              const handleMouseMove = (e: MouseEvent) => {
+                                const rect = photoElement?.getBoundingClientRect();
+                                if (!rect) return;
+                                
+                                const deltaX = (e.clientX - startX) / rect.width;
+                                const deltaY = (e.clientY - startY) / rect.height;
+                                
+                                let newCrop = {...startCrop};
+                                
+                                if (type === 'tl') {
+                                  const newX = Math.max(0, Math.min(startCrop.x + deltaX, startCrop.x + startCrop.width - 0.1));
+                                  const newY = Math.max(0, Math.min(startCrop.y + deltaY, startCrop.y + startCrop.height - 0.1));
+                                  newCrop = {
+                                    x: newX,
+                                    y: newY,
+                                    width: startCrop.width - (newX - startCrop.x),
+                                    height: startCrop.height - (newY - startCrop.y)
+                                  };
+                                } else if (type === 'tr') {
+                                  const newY = Math.max(0, Math.min(startCrop.y + deltaY, startCrop.y + startCrop.height - 0.1));
+                                  const newWidth = Math.max(0.1, Math.min(1 - startCrop.x, startCrop.width + deltaX));
+                                  newCrop = {
+                                    x: startCrop.x,
+                                    y: newY,
+                                    width: newWidth,
+                                    height: startCrop.height - (newY - startCrop.y)
+                                  };
+                                } else if (type === 'bl') {
+                                  const newX = Math.max(0, Math.min(startCrop.x + deltaX, startCrop.x + startCrop.width - 0.1));
+                                  const newHeight = Math.max(0.1, Math.min(1 - startCrop.y, startCrop.height + deltaY));
+                                  newCrop = {
+                                    x: newX,
+                                    y: startCrop.y,
+                                    width: startCrop.width - (newX - startCrop.x),
+                                    height: newHeight
+                                  };
+                                } else if (type === 'br') {
+                                  const newWidth = Math.max(0.1, Math.min(1 - startCrop.x, startCrop.width + deltaX));
+                                  const newHeight = Math.max(0.1, Math.min(1 - startCrop.y, startCrop.height + deltaY));
+                                  newCrop = {
+                                    x: startCrop.x,
+                                    y: startCrop.y,
+                                    width: newWidth,
+                                    height: newHeight
+                                  };
+                                } else if (type === 't') {
+                                  const newY = Math.max(0, Math.min(startCrop.y + deltaY, startCrop.y + startCrop.height - 0.1));
+                                  newCrop = {
+                                    ...startCrop,
+                                    y: newY,
+                                    height: startCrop.height - (newY - startCrop.y)
+                                  };
+                                } else if (type === 'b') {
+                                  const newHeight = Math.max(0.1, Math.min(1 - startCrop.y, startCrop.height + deltaY));
+                                  newCrop = {
+                                    ...startCrop,
+                                    height: newHeight
+                                  };
+                                } else if (type === 'l') {
+                                  const newX = Math.max(0, Math.min(startCrop.x + deltaX, startCrop.x + startCrop.width - 0.1));
+                                  newCrop = {
+                                    ...startCrop,
+                                    x: newX,
+                                    width: startCrop.width - (newX - startCrop.x)
+                                  };
+                                } else if (type === 'r') {
+                                  const newWidth = Math.max(0.1, Math.min(1 - startCrop.x, startCrop.width + deltaX));
+                                  newCrop = {
+                                    ...startCrop,
+                                    width: newWidth
+                                  };
+                                }
+                                
+                                setPhotoEditor(prev => prev ? ({
+                                  ...prev,
+                                  crop: newCrop
+                                }) : prev);
+                              };
+                              
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove);
+                                document.removeEventListener('mouseup', handleMouseUp);
+                              };
+                              
+                              document.addEventListener('mousemove', handleMouseMove);
+                              document.addEventListener('mouseup', handleMouseUp);
+                            };
+                            
+                            return (
+                              <>
+                                {/* Top-left */}
+                                <div 
+                                  className="absolute w-3 h-3 bg-white border border-gray-400 cursor-nw-resize z-10"
+                                  style={{
+                                    top: `${photoEditor.crop.y * 100}%`,
+                                    left: `${photoEditor.crop.x * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('tl')}
+                                />
+                                {/* Top-right */}
+                                <div 
+                                  className="absolute w-3 h-3 bg-white border border-gray-400 cursor-ne-resize z-10"
+                                  style={{
+                                    top: `${photoEditor.crop.y * 100}%`,
+                                    left: `${(photoEditor.crop.x + photoEditor.crop.width) * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('tr')}
+                                />
+                                {/* Bottom-left */}
+                                <div 
+                                  className="absolute w-3 h-3 bg-white border border-gray-400 cursor-sw-resize z-10"
+                                  style={{
+                                    top: `${(photoEditor.crop.y + photoEditor.crop.height) * 100}%`,
+                                    left: `${photoEditor.crop.x * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('bl')}
+                                />
+                                {/* Bottom-right */}
+                                <div 
+                                  className="absolute w-3 h-3 bg-white border border-gray-400 cursor-se-resize z-10"
+                                  style={{
+                                    top: `${(photoEditor.crop.y + photoEditor.crop.height) * 100}%`,
+                                    left: `${(photoEditor.crop.x + photoEditor.crop.width) * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('br')}
+                                />
+                                
+                                {/* Side handles */}
+                                {/* Top */}
+                                <div 
+                                  className="absolute w-3 h-2 bg-white border border-gray-400 cursor-n-resize z-10"
+                                  style={{
+                                    top: `${photoEditor.crop.y * 100}%`,
+                                    left: `${(photoEditor.crop.x + photoEditor.crop.width / 2) * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('t')}
+                                />
+                                {/* Bottom */}
+                                <div 
+                                  className="absolute w-3 h-2 bg-white border border-gray-400 cursor-s-resize z-10"
+                                  style={{
+                                    top: `${(photoEditor.crop.y + photoEditor.crop.height) * 100}%`,
+                                    left: `${(photoEditor.crop.x + photoEditor.crop.width / 2) * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('b')}
+                                />
+                                {/* Left */}
+                                <div 
+                                  className="absolute w-2 h-3 bg-white border border-gray-400 cursor-w-resize z-10"
+                                  style={{
+                                    top: `${(photoEditor.crop.y + photoEditor.crop.height / 2) * 100}%`,
+                                    left: `${photoEditor.crop.x * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('l')}
+                                />
+                                {/* Right */}
+                                <div 
+                                  className="absolute w-2 h-3 bg-white border border-gray-400 cursor-e-resize z-10"
+                                  style={{
+                                    top: `${(photoEditor.crop.y + photoEditor.crop.height / 2) * 100}%`,
+                                    left: `${(photoEditor.crop.x + photoEditor.crop.width) * 100}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  onMouseDown={createDragHandler('r')}
+                                />
+                              </>
+                            );
+                          })()}
+                          
+                          {/* Dimmed overlay outside crop area */}
+                          <div className="absolute inset-0 bg-black bg-opacity-30 pointer-events-none"
+                            style={{
+                              clipPath: `polygon(0 0, 0 100%, ${photoEditor.crop.x * 100}% 100%, ${photoEditor.crop.x * 100}% ${photoEditor.crop.y * 100}%, ${(photoEditor.crop.x + photoEditor.crop.width) * 100}% ${photoEditor.crop.y * 100}%, ${(photoEditor.crop.x + photoEditor.crop.width) * 100}% ${(photoEditor.crop.y + photoEditor.crop.height) * 100}%, ${photoEditor.crop.x * 100}% ${(photoEditor.crop.y + photoEditor.crop.height) * 100}%, ${photoEditor.crop.x * 100}% 100%, 100% 100%, 100% 0)`
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Drawing Canvas Overlay */}
+                      <svg 
+                        className="absolute top-0 left-0 w-full h-full cursor-crosshair"
+                        style={{ 
+                          pointerEvents: (colorPalette.selectedColor || eraserPalette.selectedSize) ? 'auto' : 'none',
+                          cursor: eraserPalette.selectedSize > 0 ? 
+                            `url("data:image/svg+xml,%3csvg width='${eraserPalette.selectedSize}' height='${eraserPalette.selectedSize}' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='${eraserPalette.selectedSize/2}' cy='${eraserPalette.selectedSize/2}' r='${eraserPalette.selectedSize/2-1}' fill='none' stroke='%23666' stroke-width='1'/%3e%3c/svg%3e") ${eraserPalette.selectedSize/2} ${eraserPalette.selectedSize/2}, auto` : 
+                            'crosshair'
+                        }}
+                        onMouseDown={(e) => {
+                          if (!colorPalette.selectedColor && !eraserPalette.selectedSize) return;
+                          saveToHistory();
+                          setIsDrawing(true);
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const y = e.clientY - rect.top;
+                          
+                          if (colorPalette.selectedColor) {
+                            // Drawing mode
+                            setDrawingPaths(prev => [...prev, { color: colorPalette.selectedColor, points: [{ x, y }] }]);
+                          } else if (eraserPalette.selectedSize) {
+                            // Erasing mode - remove paths that intersect with eraser area
+                            const eraserRadius = eraserPalette.selectedSize / 2;
+                            setDrawingPaths(prev => {
+                              const newPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }> = [];
+                              prev.forEach(path => {
+                                const segments: Array<Array<{ x: number; y: number }>> = [];
+                                let currentSegment: Array<{ x: number; y: number }> = [];
+                                
+                                path.points.forEach(point => {
+                                  const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+                                  
+                                  if (distance > eraserRadius) {
+                                    currentSegment.push(point);
+                                  } else {
+                                    // Point is within eraser, end current segment
+                                    if (currentSegment.length > 1) {
+                                      segments.push([...currentSegment]);
+                                    }
+                                    currentSegment = [];
+                                  }
+                                });
+                                
+                                // Add final segment if it exists
+                                if (currentSegment.length > 1) {
+                                  segments.push(currentSegment);
+                                }
+                                
+                                // Create new paths for each segment
+                                segments.forEach(segment => {
+                                  if (segment.length > 1) {
+                                    newPaths.push({ ...path, points: segment });
+                                  }
+                                });
+                              });
+                              
+                              return newPaths;
+                            });
+                          }
+                        }}
+                        onMouseMove={(e) => {
+                          if (!isDrawing) return;
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const y = e.clientY - rect.top;
+                          
+                          if (colorPalette.selectedColor) {
+                            // Drawing mode
+                            setDrawingPaths(prev => {
+                              const newPaths = [...prev];
+                              newPaths[newPaths.length - 1].points.push({ x, y });
+                              return newPaths;
+                            });
+                                                     } else if (eraserPalette.selectedSize) {
+                             // Erasing mode - continuously remove paths that intersect with eraser area
+                             const eraserRadius = eraserPalette.selectedSize / 2;
+                             setDrawingPaths(prev => {
+                               const newPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }> = [];
+                               prev.forEach(path => {
+                                 const segments: Array<Array<{ x: number; y: number }>> = [];
+                                 let currentSegment: Array<{ x: number; y: number }> = [];
+                                 
+                                 path.points.forEach(point => {
+                                   const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+                                   
+                                   if (distance > eraserRadius) {
+                                     currentSegment.push(point);
+                                   } else {
+                                     // Point is within eraser, end current segment
+                                     if (currentSegment.length > 1) {
+                                       segments.push([...currentSegment]);
+                                     }
+                                     currentSegment = [];
+                                   }
+                                 });
+                                 
+                                 // Add final segment if it exists
+                                 if (currentSegment.length > 1) {
+                                   segments.push(currentSegment);
+                                 }
+                                 
+                                 // Create new paths for each segment
+                                 segments.forEach(segment => {
+                                   if (segment.length > 1) {
+                                     newPaths.push({ ...path, points: segment });
+                                   }
+                                 });
+                               });
+                               
+                               return newPaths;
+                             });
+                           }
+                        }}
+                        onMouseUp={() => setIsDrawing(false)}
+                        onMouseLeave={() => setIsDrawing(false)}
+                      >
+                        {drawingPaths.map((path, pathIndex) => (
+                          <path
+                            key={pathIndex}
+                            d={`M ${path.points.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                            stroke={path.color}
+                            strokeWidth="3"
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        ))}
+                      </svg>
+                    </div>
+                  </div>
+
+                {/* Caption Input */}
+                <div className="p-3 border-t border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <Smile className="w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Bildunterschrift (optional)"
+                      value={photoEditor.caption}
+                      onChange={(e) => setPhotoEditor(prev => prev ? { ...prev, caption: e.target.value } : null)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 text-sm outline-none placeholder-gray-400"
+                    />
+                    <button
+                      onClick={async () => {
+                        if (selectedChat && photoEditor) {
+                          // Combine image with drawings, rotation and cropping (only if not in crop mode)
+                          const finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation, photoEditor.cropMode ? null : photoEditor.crop);
+
+                          const newMessage: Message = {
+                            id: Date.now(),
+                            sender: "You",
+                            content: photoEditor.caption,
+                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                            own: true,
+                            photo: finalImage
+                          };
+
+                          setAllMessages(prev => ({
+                            ...prev,
+                            [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
+                          }));
+
+                          setPhotoEditor(null);
+                          setColorPalette({ show: false, selectedColor: '' });
+                          setDrawingPaths([]);
+                        }
+                      }}
+                      className="p-2 rounded-full text-white"
+                      style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Delete Confirmation Dialog */}
             {deleteDialog.show && (
               <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-60 flex items-center justify-center">
                 <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Nachricht löschen</h3>
-                  <p className="text-gray-600 mb-6">Wie möchten Sie die Nachricht löschen?</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    {deleteDialog.isBulkDelete ? 'Nachrichten löschen' : 'Nachricht löschen'}
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    {deleteDialog.isBulkDelete ? 'Wie möchten Sie die Nachrichten löschen?' : 'Wie möchten Sie die Nachricht löschen?'}
+                  </p>
                   
                   <div className="space-y-3">
                     <button
-                      onClick={handleDeleteForMe}
+                      onClick={() => {
+                        if (deleteDialog.isBulkDelete) {
+                          // Bulk delete for me
+                          if (selectedChat) {
+                            setAllMessages(prev => ({
+                              ...prev,
+                              [selectedChat.id]: (prev[selectedChat.id] || []).filter(msg => 
+                                !deleteDialog.selectedMessageIds.includes(msg.id)
+                              )
+                            }));
+                            setIsSelectMode(false);
+                            setSelectedMessages(new Set());
+                          }
+                        } else {
+                          handleDeleteForMe();
+                        }
+                        // Close dialog (ignoring linter for now)
+                        setDeleteDialog({ show: false, messageId: null, isOwnMessage: false } as any);
+                      }}
                       className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
                       style={{
                         borderColor: 'rgba(34, 197, 94, 0.85)'
@@ -972,12 +2494,39 @@ export default function ChatPage() {
                       }}
                     >
                       <div className="font-medium">Für mich löschen</div>
-                      <div className="text-xs text-gray-500">Die Nachricht wird nur für Sie entfernt</div>
+                      <div className="text-xs text-gray-500">
+                        {deleteDialog.isBulkDelete 
+                          ? 'Die Nachrichten werden nur für Sie entfernt'
+                          : 'Die Nachricht wird nur für Sie entfernt'
+                        }
+                      </div>
                     </button>
                     
-                    {deleteDialog.isOwnMessage && (
+                    {/* Show "Delete for all" only if: single own message OR bulk with only own messages */}
+                    {((deleteDialog.isBulkDelete && deleteDialog.hasOwnMessages && !deleteDialog.hasOtherMessages) || 
+                      (!deleteDialog.isBulkDelete && deleteDialog.isOwnMessage)) && (
                       <button
-                        onClick={handleDeleteForEveryone}
+                        onClick={() => {
+                          if (deleteDialog.isBulkDelete) {
+                            // Bulk delete for everyone (only own messages)
+                            if (selectedChat) {
+                              setAllMessages(prev => ({
+                                ...prev,
+                                [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
+                                  deleteDialog.selectedMessageIds.includes(msg.id) && msg.own
+                                    ? { ...msg, content: 'Nachricht gelöscht...', edited: false }
+                                    : msg
+                                )
+                              }));
+                              setIsSelectMode(false);
+                              setSelectedMessages(new Set());
+                            }
+                          } else {
+                            handleDeleteForEveryone();
+                          }
+                          // Close dialog (ignoring linter for now)
+                          setDeleteDialog({ show: false, messageId: null, isOwnMessage: false } as any);
+                        }}
                         className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
                         style={{
                           borderColor: 'rgba(250, 12, 12, 0.85)'
@@ -990,13 +2539,18 @@ export default function ChatPage() {
                         }}
                       >
                         <div className="font-medium">Für alle löschen</div>
-                        <div className="text-xs text-gray-500">Die Nachricht wird für alle entfernt</div>
+                        <div className="text-xs text-gray-500">
+                          {deleteDialog.isBulkDelete 
+                            ? 'Die Nachrichten werden für alle entfernt'
+                            : 'Die Nachricht wird für alle entfernt'
+                          }
+                        </div>
                       </button>
                     )}
                   </div>
                   
                   <button
-                    onClick={() => setDeleteDialog({ show: false, messageId: null, isOwnMessage: false })}
+                    onClick={() => setDeleteDialog({ show: false, messageId: null, isOwnMessage: false } as any)}
                     className="w-full mt-4 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     Abbrechen
@@ -1029,6 +2583,107 @@ export default function ChatPage() {
          )}
        </div>
      </div>
+
+     {/* Photo Viewer */}
+     {photoViewer.show && (
+       <div 
+         className="fixed inset-0 bg-black flex flex-col z-[9999]"
+         onClick={closePhotoViewer}
+         style={{ 
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0,
+           width: '100vw',
+           height: '100vh',
+           backgroundColor: 'black'
+         }}
+       >
+         {/* Main photo display */}
+         <div className="flex-1 flex items-center justify-center relative">
+           {/* Previous arrow */}
+           {photoViewer.photos.length > 1 && (
+             <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 navigatePhotoViewer('prev');
+               }}
+               className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
+             >
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+               </svg>
+             </button>
+           )}
+
+           {/* Current photo */}
+           <img
+             src={photoViewer.photos[photoViewer.currentIndex]}
+             alt="Full size photo"
+             className="object-contain"
+             onClick={(e) => e.stopPropagation()}
+             style={{
+               maxWidth: 'calc(100vw - 160px)',
+               maxHeight: 'calc(100vh - 160px)',
+               width: 'auto',
+               height: 'auto'
+             }}
+           />
+
+           {/* Next arrow */}
+           {photoViewer.photos.length > 1 && (
+             <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 navigatePhotoViewer('next');
+               }}
+               className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
+             >
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+               </svg>
+             </button>
+           )}
+
+           {/* Close button */}
+           <button
+             onClick={closePhotoViewer}
+             className="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all"
+           >
+             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+             </svg>
+           </button>
+         </div>
+
+         {/* Thumbnail footer */}
+         <div className="h-24 bg-black bg-opacity-50 flex items-center justify-center px-4">
+           <div className="flex gap-2 overflow-x-auto max-w-full">
+             {photoViewer.photos.map((photo, index) => (
+               <button
+                 key={index}
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   setPhotoViewer(prev => ({ ...prev, currentIndex: index }));
+                 }}
+                 className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${
+                   index === photoViewer.currentIndex
+                     ? 'border-white'
+                     : 'border-transparent opacity-70 hover:opacity-100'
+                 }`}
+               >
+                 <img
+                   src={photo}
+                   alt={`Thumbnail ${index + 1}`}
+                   className="w-full h-full object-cover rounded"
+                 />
+               </button>
+             ))}
+           </div>
+         </div>
+       </div>
+     )}
    </div>
    );
  } 
