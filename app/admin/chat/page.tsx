@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Search, MoreVertical, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot } from "lucide-react";
 import AdminNavigation from "@/components/AdminNavigation";
 
 interface Contact {
@@ -11,6 +11,12 @@ interface Contact {
   time: string;
   unread: number;
   online: boolean;
+  pinned?: boolean;
+  markedUnread?: boolean;
+  isGroup?: boolean;
+  profileImage?: string | null;
+  description?: string;
+  members?: number[];
 }
 
 interface Message {
@@ -22,11 +28,16 @@ interface Message {
   edited?: boolean;
   reaction?: string;
   photo?: string;
+  pdf?: string;
+  pdfName?: string;
+  type?: string;
   replyTo?: {
     id: number;
     sender: string;
     content: string;
     photo?: string;
+    pdf?: string;
+    pdfName?: string;
   };
 }
 
@@ -37,6 +48,7 @@ export default function ChatPage() {
   const [messageInput, setMessageInput] = useState("");
   const [attachmentPopup, setAttachmentPopup] = useState(false);
   const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null>(null);
+  const [pdfEditor, setPdfEditor] = useState<{ show: boolean; file: File; caption: string } | null>(null);
   const [colorPalette, setColorPalette] = useState<{ show: boolean; selectedColor: string }>({ show: false, selectedColor: '' });
   const [eraserPalette, setEraserPalette] = useState<{ show: boolean; selectedSize: number }>({ show: false, selectedSize: 0 });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -45,7 +57,7 @@ export default function ChatPage() {
     photoEditor: { show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null;
     drawingPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }>;
   }>>([]);
-  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string }>({ show: false, selectedCategory: 'smileys' });
+  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' }>({ show: false, selectedCategory: 'smileys', context: 'input' });
 
   const [photoViewer, setPhotoViewer] = useState<{
     show: boolean;
@@ -125,6 +137,16 @@ export default function ChatPage() {
     return chatMessages
       .filter((msg: Message) => msg.photo)
       .map((msg: Message) => msg.photo!)
+      .reverse(); // Most recent first
+  };
+
+  // Get all PDFs from current chat messages
+  const getAllPdfsFromChat = () => {
+    if (!selectedChat) return [];
+    const chatMessages = allMessages[selectedChat.id] || [];
+    return chatMessages
+      .filter((msg: Message) => msg.pdf)
+      .map((msg: Message) => ({ url: msg.pdf!, name: msg.pdfName || msg.pdf! }))
       .reverse(); // Most recent first
   };
 
@@ -304,6 +326,12 @@ export default function ChatPage() {
   const [contextMenu, setContextMenu] = useState<{ show: boolean; x: number; y: number; messageId: number | null; isOwnMessage: boolean }>({
     show: false, x: 0, y: 0, messageId: null, isOwnMessage: false
   });
+  const [contactContextMenu, setContactContextMenu] = useState<{ show: boolean; x: number; y: number; contactId: number | null }>({
+    show: false, x: 0, y: 0, contactId: null
+  });
+  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: number[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null }>({
+    show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null
+  });
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [replyAnimation, setReplyAnimation] = useState<{ startY: number; endY: number } | null>(null);
   const [flashingMessageId, setFlashingMessageId] = useState<number | null>(null);
@@ -328,6 +356,14 @@ export default function ChatPage() {
     hasOwnMessages: false,
     hasOtherMessages: false
   });
+  const [clearChatDialog, setClearChatDialog] = useState<{ 
+    show: boolean; 
+    contactId: number | null; 
+  }>({
+    show: false,
+    contactId: null
+  });
+
   const [allMessages, setAllMessages] = useState<Record<number, Message[]>>({
     1: [ // Lisa Müller - lots of messages for scrolling
       { id: 1, sender: "Lisa Müller", content: "Hallo! Wie läuft es heute?", time: "09:15", own: false },
@@ -382,13 +418,20 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mock data - replace with real data later
-  const contacts = [
-    { id: 1, name: "Lisa Müller", lastMessage: "Alles klar, bis später!", time: "14:32", unread: 2, online: true },
-    { id: 2, name: "Max Schmidt", lastMessage: "Die Zahlen sehen gut aus", time: "13:45", unread: 0, online: false },
-    { id: 3, name: "Anna Weber", lastMessage: "Danke für die Info!", time: "12:15", unread: 1, online: true },
-    { id: 4, name: "Tom Klein", lastMessage: "Wann ist das Meeting?", time: "11:30", unread: 0, online: true },
-    { id: 5, name: "Sarah Lange", lastMessage: "Perfekt, danke!", time: "10:22", unread: 0, online: false },
-  ];
+  const [contacts, setContacts] = useState<Contact[]>([
+    { id: 1, name: "Lisa Müller", lastMessage: "Alles klar, bis später!", time: "14:32", unread: 2, online: true, pinned: false, markedUnread: false },
+    { id: 2, name: "Max Schmidt", lastMessage: "Die Zahlen sehen gut aus", time: "13:45", unread: 0, online: false, pinned: false, markedUnread: false },
+    { id: 3, name: "Anna Weber", lastMessage: "Danke für die Info!", time: "12:15", unread: 1, online: true, pinned: false, markedUnread: false },
+    { id: 4, name: "Tom Klein", lastMessage: "Wann ist das Meeting?", time: "11:30", unread: 0, online: true, pinned: false, markedUnread: false },
+    { id: 5, name: "Sarah Lange", lastMessage: "Perfekt, danke!", time: "10:22", unread: 0, online: false, pinned: false, markedUnread: false },
+  ]);
+
+  // Sort contacts to show pinned ones first
+  const sortedContacts = [...contacts].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
 
     // Handle sending messages
   const handleSendMessage = (e: React.FormEvent) => {
@@ -425,7 +468,9 @@ export default function ChatPage() {
             id: replyingTo.id,
             sender: replyingTo.sender,
             content: replyingTo.content,
-            photo: replyingTo.photo
+            photo: replyingTo.photo,
+            pdf: replyingTo.pdf,
+            pdfName: replyingTo.pdfName
           }
         })
       };
@@ -501,6 +546,42 @@ export default function ChatPage() {
   // Close context menu
   const closeContextMenu = () => {
     setContextMenu({ show: false, x: 0, y: 0, messageId: null, isOwnMessage: false });
+  };
+
+  // Handle right-click context menu for contacts
+  const handleContactContextMenu = (e: React.MouseEvent, contactId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const menuWidth = 200;
+    const menuHeight = 160;
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+    
+    let x = mouseX;
+    let y = mouseY;
+    
+    // If menu would go off right edge, position it to the left of mouse
+    if (mouseX + menuWidth > window.innerWidth) {
+      x = mouseX - menuWidth;
+    }
+    
+    // If menu would go off bottom edge, position it above mouse
+    if (mouseY + menuHeight > window.innerHeight) {
+      y = mouseY - menuHeight;
+    }
+    
+    setContactContextMenu({
+      show: true,
+      x: x,
+      y: y,
+      contactId
+    });
+  };
+
+  // Close contact context menu
+  const closeContactContextMenu = () => {
+    setContactContextMenu({ show: false, x: 0, y: 0, contactId: null });
   };
 
   // Handle context menu actions
@@ -757,6 +838,9 @@ export default function ChatPage() {
       if (contextMenu.show) {
         closeContextMenu();
       }
+      if (contactContextMenu.show) {
+        closeContactContextMenu();
+      }
       if (attachmentPopup && !target.closest('[data-attachment-popup]') && !target.closest('[data-attachment-trigger]')) {
         setAttachmentPopup(false);
       }
@@ -765,16 +849,22 @@ export default function ChatPage() {
         setColorPalette({ show: false, selectedColor: '#000000' });
         setDrawingPaths([]);
       }
+      if (pdfEditor && !target.closest('[data-pdf-editor]')) {
+        setPdfEditor(null);
+      }
       if (emojiPicker.show && !target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-trigger]')) {
         setEmojiPicker(prev => ({ ...prev, show: false }));
       }
+      if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
+        setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+      }
     };
 
-    if (contextMenu.show || attachmentPopup || photoEditor || emojiPicker.show) {
+    if (contextMenu.show || contactContextMenu.show || attachmentPopup || photoEditor || pdfEditor || emojiPicker.show || groupCreationPopup.show) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [contextMenu.show, attachmentPopup, photoEditor, colorPalette.show, emojiPicker.show]);
+  }, [contextMenu.show, contactContextMenu.show, attachmentPopup, photoEditor, pdfEditor, colorPalette.show, emojiPicker.show, groupCreationPopup.show]);
 
   // Handle escape key to cancel reply, edit, delete dialog, or photo editor
   useEffect(() => {
@@ -815,17 +905,24 @@ export default function ChatPage() {
             hasOtherMessages: false 
           });
         }
+        if (clearChatDialog.show) {
+          setClearChatDialog({ show: false, contactId: null });
+        }
+
         if (emojiPicker.show) {
           setEmojiPicker(prev => ({ ...prev, show: false }));
+        }
+        if (groupCreationPopup.show) {
+          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
         }
       }
     };
 
-    if (photoEditor || replyingTo || editingMessage || deleteDialog.show || emojiPicker.show) {
+    if (photoEditor || replyingTo || editingMessage || deleteDialog.show || clearChatDialog.show || emojiPicker.show || groupCreationPopup.show) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [photoEditor, replyingTo, editingMessage, deleteDialog]);
+  }, [photoEditor, replyingTo, editingMessage, deleteDialog, clearChatDialog, emojiPicker, groupCreationPopup]);
 
   // Helper function to check if line segment intersects with circle
   const checkLineCircleIntersection = (
@@ -865,10 +962,14 @@ export default function ChatPage() {
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="p-4 border-b border-gray-200 bg-white relative">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-xl font-semibold text-gray-800">Chats</h1>
-            <MoreVertical className="h-5 w-5 text-gray-600 cursor-pointer" />
+            <SquarePen 
+              className="h-5 w-5 text-gray-600 cursor-pointer" 
+              onClick={() => setGroupCreationPopup(prev => ({ ...prev, show: !prev.show }))}
+              data-group-trigger
+            />
           </div>
           
           {/* Search */}
@@ -877,31 +978,276 @@ export default function ChatPage() {
             <input
               type="text"
               placeholder="Suche oder starte neuen Chat"
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none"
             />
           </div>
+
+          {/* Group Creation Popup */}
+          {groupCreationPopup.show && (
+            <div className="absolute top-12 right-4 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-72 max-h-96 flex flex-col opacity-97" data-group-popup>
+              {groupCreationPopup.step === 1 ? (
+                <>
+                  {/* Popup Search */}
+                  <div className="p-3 border-b border-gray-100">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Kontakte suchen..."
+                        value={groupCreationPopup.searchQuery}
+                        onChange={(e) => setGroupCreationPopup(prev => ({ ...prev, searchQuery: e.target.value }))}
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-lg text-sm focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Contacts List with Checkboxes */}
+                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                    {contacts
+                      .filter(contact => 
+                        contact.name.toLowerCase().includes(groupCreationPopup.searchQuery.toLowerCase())
+                      )
+                      .map(contact => (
+                        <div 
+                          key={contact.id}
+                          className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            setGroupCreationPopup(prev => ({
+                              ...prev,
+                              selectedContacts: prev.selectedContacts.includes(contact.id)
+                                ? prev.selectedContacts.filter(id => id !== contact.id)
+                                : [...prev.selectedContacts, contact.id]
+                            }));
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <div 
+                              className={`mr-3 w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer ${
+                                groupCreationPopup.selectedContacts.includes(contact.id) 
+                                  ? 'border-transparent' 
+                                  : 'border-gray-300'
+                              }`}
+                              style={groupCreationPopup.selectedContacts.includes(contact.id) 
+                                ? { backgroundColor: '#22C55E' }
+                                : {}
+                              }
+                            >
+                              {groupCreationPopup.selectedContacts.includes(contact.id) && (
+                                <Check className="w-2.5 h-2.5 text-white" />
+                              )}
+                            </div>
+                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium mr-3">
+                              {contact.name.charAt(0)}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900">{contact.name}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+
+                  {/* Submit Button (appears when contacts selected) */}
+                  {groupCreationPopup.selectedContacts.length > 0 && (
+                    <div className="p-3 border-t border-gray-100">
+                      <button
+                        className="w-full py-2 px-4 rounded-lg text-white font-medium transition-all"
+                        style={{
+                          background: 'linear-gradient(135deg, #22C55E, #105F2D)'
+                        }}
+                        data-group-popup
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          console.log('Weiter clicked, advancing to step 2');
+                          setGroupCreationPopup(prev => ({ ...prev, step: 2 }));
+                        }}
+                      >
+                        Weiter ({groupCreationPopup.selectedContacts.length})
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Step 2: Group Details
+                <>
+                  <div className="p-3 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">Gruppe erstellen</h3>
+                  </div>
+                  
+                  <div className="p-3 space-y-2 overflow-y-auto">
+                    {/* Group Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Gruppenname *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Gruppenname eingeben..."
+                        value={groupCreationPopup.groupName}
+                        onChange={(e) => setGroupCreationPopup(prev => ({ ...prev, groupName: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-50 rounded-lg text-sm focus:outline-none border border-gray-200"
+                      />
+                    </div>
+
+                    {/* Group Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Beschreibung (optional)
+                      </label>
+                      <textarea
+                        placeholder="Gruppenbeschreibung..."
+                        value={groupCreationPopup.groupDescription}
+                        onChange={(e) => setGroupCreationPopup(prev => ({ ...prev, groupDescription: e.target.value }))}
+                        className="w-full px-3 py-2 bg-gray-50 rounded-lg text-sm focus:outline-none border border-gray-200 resize-none"
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Group Profile Picture */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Profilbild (optional)
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                          {groupCreationPopup.profileImage ? (
+                            <img 
+                              src={groupCreationPopup.profileImage} 
+                              alt="Group profile" 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Image className="w-5 h-5 text-gray-400" />
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                setGroupCreationPopup(prev => ({ 
+                                  ...prev, 
+                                  profileImage: event.target?.result as string 
+                                }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                          id="group-profile-input"
+                        />
+                        <button 
+                          className="px-2 py-1 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+                          onClick={() => document.getElementById('group-profile-input')?.click()}
+                          type="button"
+                        >
+                          Bild auswählen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Create Button */}
+                  <div className="p-2 border-t border-gray-100">
+                    <button
+                      className="w-full py-2 px-4 rounded-lg text-white font-medium transition-all"
+                      style={{
+                        background: 'linear-gradient(135deg, #22C55E, #105F2D)',
+                        opacity: groupCreationPopup.groupName.trim() ? 1 : 0.3
+                      }}
+                      disabled={!groupCreationPopup.groupName.trim()}
+                      onClick={() => {
+                        if (groupCreationPopup.groupName.trim()) {
+                          // Create new group chat
+                          const newGroupId = Date.now(); // Simple ID generation
+                          const newGroup = {
+                            id: newGroupId,
+                            name: groupCreationPopup.groupName,
+                            lastMessage: "Gruppe erstellt",
+                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                            unread: 0,
+                            online: true,
+                            pinned: false,
+                            markedUnread: false,
+                            isGroup: true,
+                            profileImage: groupCreationPopup.profileImage,
+                            description: groupCreationPopup.groupDescription,
+                            members: groupCreationPopup.selectedContacts
+                          };
+                          
+                          // Add group to contacts
+                          setContacts(prev => [newGroup, ...prev]);
+                          
+                          // Initialize group messages
+                          setAllMessages(prev => ({
+                            ...prev,
+                            [newGroupId]: [{
+                              id: 1,
+                              sender: "System",
+                              content: `Die Gruppe "${groupCreationPopup.groupName}" wurde am ${new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric' })} erstellt`,
+                              time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                              own: false,
+                              type: "system"
+                            }]
+                          }));
+                          
+                          // Select the new group
+                          setSelectedChat(newGroup);
+                          
+                          // Close popup
+                          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+                        }
+                      }}
+                    >
+                      Gruppe erstellen
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Contacts List */}
         <div className="flex-1 overflow-y-auto relative [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
 
           
-          {contacts.map((contact, index) => (
+          {sortedContacts.map((contact, index) => (
             <div
               key={contact.id}
-                                           onClick={() => {
-                 setSelectedChat(contact);
-               }}
-               className={`flex items-center p-3 m-2 cursor-pointer rounded-lg relative z-10 transition-colors duration-200 ${
-                 selectedChat?.id === contact.id 
-                   ? 'bg-gray-200' 
-                   : 'hover:bg-gray-100'
-               }`}
+              onClick={() => {
+                setSelectedChat(contact);
+                // Clear unread indicators when opening chat
+                setContacts(prev => prev.map(c => 
+                  c.id === contact.id 
+                    ? { ...c, unread: 0, markedUnread: false }
+                    : c
+                ));
+              }}
+              onContextMenu={(e) => handleContactContextMenu(e, contact.id)}
+              className={`flex items-center p-3 m-2 cursor-pointer rounded-lg relative z-10 transition-colors duration-200 ${
+                selectedChat?.id === contact.id 
+                  ? 'bg-gray-200' 
+                  : 'hover:bg-gray-100'
+              }`}
             >
               {/* Avatar */}
               <div className="relative">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium">{contact.name.charAt(0)}</span>
+                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                  {contact.profileImage ? (
+                    <img 
+                      src={contact.profileImage} 
+                      alt={contact.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-medium">{contact.name.charAt(0)}</span>
+                  )}
                 </div>
                 {contact.online && (
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
@@ -912,16 +1258,21 @@ export default function ChatPage() {
               <div className="ml-3 flex-1 min-w-0">
                 <div className="flex justify-between items-center">
                   <p className="text-sm font-medium text-gray-900 truncate">{contact.name}</p>
-                  <span className="text-xs text-gray-500">{contact.time}</span>
+                  <div className="flex items-center space-x-1">
+                    {contact.pinned && (
+                      <Pin className="h-3 w-3 text-gray-400 opacity-50" />
+                    )}
+                    <span className="text-xs text-gray-500">{contact.time}</span>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   <p className="text-sm text-gray-600 truncate">{contact.lastMessage}</p>
-                  {contact.unread > 0 && (
+                  {(contact.unread > 0 || contact.markedUnread) && (
                     <span 
                       className="text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
                       style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
                     >
-                      {contact.unread}
+                      {contact.unread > 0 ? contact.unread : ''}
                     </span>
                   )}
                 </div>
@@ -945,8 +1296,16 @@ export default function ChatPage() {
             >
               <div className="flex items-center">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium">{selectedChat.name.charAt(0)}</span>
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                    {selectedChat.profileImage ? (
+                      <img 
+                        src={selectedChat.profileImage} 
+                        alt={selectedChat.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-medium">{selectedChat.name.charAt(0)}</span>
+                    )}
                   </div>
                   {selectedChat.online && (
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
@@ -1069,9 +1428,38 @@ export default function ChatPage() {
                         )}
                         
                         {infoMenu.selectedTab === 'media' && (
-                          <div className="text-center text-gray-500 py-8">
-                            <p>Keine Media-Dateien vorhanden</p>
-                          </div>
+                          <>
+                            {getAllPdfsFromChat().length > 0 ? (
+                              <div 
+                                className="max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                              >
+                                <div className="grid grid-cols-4 gap-2">
+                                  {getAllPdfsFromChat().map((pdf, index) => (
+                                    <div
+                                      key={index}
+                                      className="aspect-square rounded-lg overflow-hidden bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer flex flex-col items-center justify-center p-2"
+                                      onClick={() => {
+                                        window.open(pdf.url, '_blank');
+                                        setInfoMenu(prev => ({ ...prev, show: false }));
+                                      }}
+                                    >
+                                      <div className="flex-1 flex items-center justify-center">
+                                        <FileText className="w-8 h-8 text-red-500" />
+                                      </div>
+                                      <div className="text-xs text-gray-700 text-center truncate w-full mt-1">
+                                        {pdf.name}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center text-gray-500 py-8">
+                                <p>Keine PDF-Dateien vorhanden</p>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -1094,7 +1482,48 @@ export default function ChatPage() {
               }}
             >
               <div className="space-y-4">
-                                  {messages.map((message: Message) => (
+                {messages.map((message: Message, index: number) => {
+                  // Create fake dates for demonstration - different dates based on message groups
+                  const getFakeDate = (msgIndex: number) => {
+                    if (msgIndex < 5) return '2024-01-15';
+                    if (msgIndex < 10) return '2024-01-16'; 
+                    if (msgIndex < 15) return '2024-01-17';
+                    return '2024-01-18';
+                  };
+                  
+                  const currentDate = getFakeDate(index);
+                  const previousDate = index > 0 ? getFakeDate(index - 1) : null;
+                  const showDateSeparator = index === 0 || currentDate !== previousDate;
+
+                  return (
+                    <React.Fragment key={`fragment-${message.id}`}>
+                      {/* Date Separator */}
+                      {showDateSeparator && (
+                        <div className="flex justify-center my-4">
+                                                     <div className="bg-gray-100 rounded-full px-3 py-1 opacity-60">
+                             <span className="text-xs text-gray-500">
+                               {new Date(currentDate).toLocaleDateString('de-DE', {
+                                 weekday: 'short',
+                                 day: 'numeric',
+                                 month: 'short',
+                                 year: 'numeric'
+                               })}
+                             </span>
+                           </div>
+                        </div>
+                      )}
+                      
+                      {/* Message */}
+                      {message.type === "system" ? (
+                        // System Message Card (like date separator)
+                        <div className="flex justify-center my-4">
+                          <div className="bg-gray-100 rounded-full px-3 py-1 opacity-60">
+                            <span className="text-xs text-gray-500">
+                              {message.content}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
                   <div
                     key={message.id}
                     className={`flex items-center ${message.own ? 'justify-end' : 'justify-start'} ${
@@ -1194,6 +1623,29 @@ export default function ChatPage() {
                                 className="w-10 h-10 rounded object-cover flex-shrink-0"
                               />
                             </div>
+                          ) : message.replyTo.pdf ? (
+                            <div className="flex justify-between">
+                              <div className="flex-1 pr-2">
+                                <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
+                                  {message.replyTo.sender}
+                                </p>
+                                <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'}`}
+                                   style={{ 
+                                     hyphens: 'auto',
+                                     wordBreak: 'break-word',
+                                     overflowWrap: 'break-word',
+                                     overflow: 'hidden',
+                                     display: '-webkit-box',
+                                     WebkitLineClamp: 1,
+                                     WebkitBoxOrient: 'vertical'
+                                   }}>
+                                  {message.replyTo.pdfName || message.replyTo.pdf}
+                                </p>
+                              </div>
+                              <div className="w-10 h-10 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-4 h-4 text-white" />
+                              </div>
+                            </div>
                           ) : (
                             <>
                               <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
@@ -1234,6 +1686,32 @@ export default function ChatPage() {
                           />
                         </div>
                       )}
+
+                      {/* PDF Display */}
+                      {message.pdf && (
+                        <div 
+                          className="mt-2 mb-2 rounded-lg p-3 flex items-center space-x-3 cursor-pointer transition-colors hover:bg-gray-100"
+                          style={{ 
+                            backgroundColor: 'rgba(255,255,255,0.5)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(message.pdf, '_blank');
+                          }}
+                        >
+                          <div className="w-10 h-12 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {message.pdfName || message.pdf}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PDF-Dokument
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Text Content */}
                       {message.content && (
@@ -1255,7 +1733,7 @@ export default function ChatPage() {
                       {/* Reaction Emoji */}
                       {message.reaction && (
                         <div 
-                          className={`absolute ${message.own ? 'right-10' : 'left-10'} bg-white rounded-full border border-gray-200 shadow-sm`}
+                          className={`absolute ${message.own ? 'left-2' : 'right-2'} bg-white rounded-full border border-gray-200 shadow-sm`}
                           style={{
                             bottom: '-13px',
                             transform: 'translate(0, 0)',
@@ -1297,7 +1775,10 @@ export default function ChatPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                      )}
+                    </React.Fragment>
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
             </div>
@@ -1390,7 +1871,80 @@ export default function ChatPage() {
               </div>
             )}
 
-            
+            {/* Contact Context Menu */}
+            {contactContextMenu.show && (() => {
+              const currentContact = contacts.find(c => c.id === contactContextMenu.contactId);
+              return (
+                <div
+                  className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-100"
+                  style={{
+                    left: contactContextMenu.x,
+                    top: contactContextMenu.y,
+                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                    backdropFilter: 'blur(10px)',
+                    minWidth: '200px'
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div>
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    onClick={() => {
+                      if (contactContextMenu.contactId) {
+                        setContacts(prev => prev.map(contact => 
+                          contact.id === contactContextMenu.contactId 
+                            ? { ...contact, markedUnread: !contact.markedUnread }
+                            : contact
+                        ));
+                      }
+                      closeContactContextMenu();
+                    }}
+                  >
+                    <CircleDot className="h-4 w-4" />
+                    <span>{currentContact?.markedUnread ? 'Als gelesen markieren' : 'Als ungelesen markieren'}</span>
+                  </button>
+                  <hr className="border-gray-100 opacity-50" />
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    onClick={() => {
+                      if (contactContextMenu.contactId) {
+                        setContacts(prev => prev.map(contact => 
+                          contact.id === contactContextMenu.contactId 
+                            ? { ...contact, pinned: !contact.pinned }
+                            : contact
+                        ));
+                      }
+                      closeContactContextMenu();
+                    }}
+                  >
+                    <div className="relative">
+                      <Pin className="h-4 w-4" />
+                      {currentContact?.pinned && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-5 h-px bg-gray-700 rotate-45"></div>
+                        </div>
+                      )}
+                    </div>
+                    <span>{currentContact?.pinned ? 'Entpinnen' : 'Anheften'}</span>
+                  </button>
+                  <hr className="border-gray-100 opacity-50" />
+                  <button
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                    onClick={() => {
+                      setClearChatDialog({
+                        show: true,
+                        contactId: contactContextMenu.contactId
+                      });
+                      closeContactContextMenu();
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Chat leeren</span>
+                  </button>
+                </div>
+              </div>
+            );
+            })()}
 
             {/* Reply Overlay */}
             {replyingTo && (
@@ -1469,6 +2023,32 @@ export default function ChatPage() {
                               aspectRatio: 'auto'
                             }}
                           />
+                        </div>
+                      )}
+
+                      {/* PDF Display */}
+                      {replyingTo.pdf && (
+                        <div 
+                          className="mt-2 mb-2 rounded-lg p-3 flex items-center space-x-3 cursor-pointer transition-colors hover:bg-gray-100"
+                          style={{ 
+                            backgroundColor: 'rgba(255,255,255,0.5)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(replyingTo.pdf, '_blank');
+                          }}
+                        >
+                          <div className="w-10 h-12 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {replyingTo.pdfName || replyingTo.pdf}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PDF-Dokument
+                            </div>
+                          </div>
                         </div>
                       )}
                       
@@ -1574,6 +2154,32 @@ export default function ChatPage() {
                           />
                         </div>
                       )}
+
+                      {/* PDF Display */}
+                      {editingMessage.pdf && (
+                        <div 
+                          className="mt-2 mb-2 rounded-lg p-3 flex items-center space-x-3 cursor-pointer transition-colors hover:bg-gray-100"
+                          style={{ 
+                            backgroundColor: 'rgba(255,255,255,0.5)',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(editingMessage.pdf, '_blank');
+                          }}
+                        >
+                          <div className="w-10 h-12 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {editingMessage.pdfName || editingMessage.pdf}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              PDF-Dokument
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Text Content */}
                       {editingMessage.content && (
@@ -1632,7 +2238,7 @@ export default function ChatPage() {
                   className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEmojiPicker(prev => ({ ...prev, show: !prev.show }));
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
                   }}
                 />
                 <button 
@@ -1655,9 +2261,10 @@ export default function ChatPage() {
                 data-emoji-picker
                 className="absolute bg-white rounded-lg shadow-lg border border-gray-200 z-40"
                 style={{
-                  bottom: '71px',
-                  left: '16px',
+                  bottom: emojiPicker.context === 'input' ? '71px' : '96px',
+                  left: emojiPicker.context === 'input' ? '16px' : '320px',
                   right: '16px',
+                  width: emojiPicker.context === 'input' ? 'auto' : 'auto',
                   height: '160px',
                   boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
                   transform: 'translateY(0)',
@@ -1687,7 +2294,13 @@ export default function ChatPage() {
                           className="text-xl p-1.5 rounded hover:bg-gray-100 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setMessageInput(prev => prev + emoji);
+                            if (emojiPicker.context === 'photo') {
+                              setPhotoEditor(prev => prev ? { ...prev, caption: prev.caption + emoji } : null);
+                            } else if (emojiPicker.context === 'pdf') {
+                              setPdfEditor(prev => prev ? { ...prev, caption: prev.caption + emoji } : null);
+                            } else {
+                              setMessageInput(prev => prev + emoji);
+                            }
                           }}
                         >
                           {emoji}
@@ -1819,9 +2432,13 @@ export default function ChatPage() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  console.log('PDF selected:', file.name);
-                  // TODO: Handle PDF upload
+                  setPdfEditor({
+                    show: true,
+                    file: file,
+                    caption: ''
+                  });
                 }
+                e.target.value = '';
               }}
             />
 
@@ -2406,7 +3023,17 @@ export default function ChatPage() {
                 {/* Caption Input */}
                 <div className="p-3 border-t border-gray-200">
                   <div className="flex items-center space-x-2">
-                    <Smile className="w-5 h-5 text-gray-400" />
+                    <Smile 
+                      className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEmojiPicker(prev => ({ 
+                          ...prev, 
+                          show: !prev.show, 
+                          context: 'photo' 
+                        }));
+                      }}
+                    />
                     <input
                       type="text"
                       placeholder="Bildunterschrift (optional)"
@@ -2438,6 +3065,89 @@ export default function ChatPage() {
                           setPhotoEditor(null);
                           setColorPalette({ show: false, selectedColor: '' });
                           setDrawingPaths([]);
+                        }
+                      }}
+                      className="p-2 rounded-full text-white"
+                      style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PDF Editor Card */}
+            {pdfEditor && (
+              <div 
+                data-pdf-editor
+                className="absolute left-4 bg-white rounded-lg shadow-lg border border-gray-200 animate-slide-up z-50 flex flex-col"
+                style={{
+                  bottom: '96px',
+                  width: '300px',
+                  height: '300px',
+                  opacity: 0.9
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* PDF Display Area */}
+                <div className="flex-1 flex items-center justify-center p-3">
+                  <div className="flex flex-col items-center text-center">
+                    {/* PDF Icon */}
+                    <FileText className="w-8 h-8 text-black mb-2" />
+                    
+                    {/* PDF Info */}
+                    <div className="text-sm font-medium text-gray-900 mb-1 truncate max-w-[250px]">
+                      {pdfEditor.file.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {(pdfEditor.file.size / (1024 * 1024)).toFixed(1)} MB, PDF-Dokument
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caption Input */}
+                <div className="p-3 border-t border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <Smile 
+                      className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEmojiPicker(prev => ({ 
+                          ...prev, 
+                          show: !prev.show, 
+                          context: 'pdf' 
+                        }));
+                      }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Bildunterschrift (optional)"
+                      value={pdfEditor.caption}
+                      onChange={(e) => setPdfEditor(prev => prev ? { ...prev, caption: e.target.value } : null)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 text-sm outline-none placeholder-gray-400"
+                    />
+                    <button
+                      onClick={() => {
+                        if (selectedChat && pdfEditor) {
+                          const pdfUrl = URL.createObjectURL(pdfEditor.file);
+                          const newMessage: Message = {
+                            id: Date.now(),
+                            sender: 'Du',
+                            content: pdfEditor.caption || '',
+                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                            own: true,
+                            pdf: pdfUrl,
+                            pdfName: pdfEditor.file.name
+                          };
+
+                          setAllMessages(prev => ({
+                            ...prev,
+                            [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
+                          }));
+
+                          setPdfEditor(null);
                         }
                       }}
                       className="p-2 rounded-full text-white"
@@ -2558,6 +3268,8 @@ export default function ChatPage() {
                 </div>
               </div>
             )}
+
+
           </>
         ) : (
           /* No Chat Selected */
@@ -2684,6 +3396,63 @@ export default function ChatPage() {
          </div>
        </div>
      )}
+
+     {/* Clear Chat Confirmation Dialog */}
+     {clearChatDialog.show && (
+       <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center">
+         <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+           <h3 className="text-lg font-semibold text-gray-900 mb-4">
+             Chat leeren
+           </h3>
+           <p className="text-gray-600 mb-6">
+             Sind Sie sicher, dass Sie diesen Chat leeren möchten? Alle Nachrichten werden dauerhaft gelöscht.
+           </p>
+           
+           <div className="space-y-3">
+             <button
+               onClick={() => {
+                 if (clearChatDialog.contactId) {
+                   setAllMessages(prev => ({
+                     ...prev,
+                     [clearChatDialog.contactId!]: []
+                   }));
+                   setContacts(prev => prev.map(contact => 
+                     contact.id === clearChatDialog.contactId 
+                       ? { ...contact, lastMessage: "" }
+                       : contact
+                   ));
+                 }
+                 setClearChatDialog({ show: false, contactId: null });
+               }}
+               className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
+               style={{
+                 borderColor: 'rgba(250, 12, 12, 0.85)'
+               }}
+               onMouseEnter={(e) => {
+                 e.currentTarget.style.backgroundColor = 'rgba(250, 12, 12, 0.05)';
+               }}
+               onMouseLeave={(e) => {
+                 e.currentTarget.style.backgroundColor = 'transparent';
+               }}
+             >
+               <div className="font-medium">Chat leeren</div>
+               <div className="text-xs text-gray-500">
+                 Alle Nachrichten werden gelöscht
+               </div>
+             </button>
+           </div>
+           
+           <button
+             onClick={() => setClearChatDialog({ show: false, contactId: null })}
+             className="w-full mt-4 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+           >
+             Abbrechen
+           </button>
+         </div>
+       </div>
+     )}
+
+
    </div>
    );
  } 
