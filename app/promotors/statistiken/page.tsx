@@ -1016,27 +1016,19 @@ Liebe Grüße, dein Nespresso Team`}
                       {/* Read button - more distinct but smaller */}
                       <button 
                         onClick={handleFeedbackRead}
-                        className="bg-white text-orange-600 font-medium py-2.5 px-5 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                        className="relative z-10 bg-white text-orange-600 font-medium py-2.5 px-5 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
                       >
                         ✓ Gelesen
                       </button>
                     </>
                   ) : (
-                    /* Confirmation message when feedback is read */
-                    <div className="py-4">
-                      <div className="flex items-center justify-center mb-2">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                          <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                    <div className="flex items-center justify-center h-[140px] w-full px-4">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                        <div className="text-white">
+                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Lesen!</div>
+                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
                         </div>
                       </div>
-                      <p className="text-white font-medium text-sm drop-shadow">
-                        Feedback wurde dem Verlauf hinzugefügt
-                      </p>
-                      <p className="text-white/80 text-xs mt-1">
-                        Du kannst es jederzeit in deinem Verlauf einsehen
-                      </p>
                     </div>
                   )}
                 </div>
