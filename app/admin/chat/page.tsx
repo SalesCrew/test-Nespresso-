@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import AdminNavigation from "@/components/AdminNavigation";
 
 interface Contact {
@@ -193,6 +195,16 @@ export default function ChatPage() {
           opacity: 1;
         }
       }
+      @keyframes slideDownFromTop {
+        from {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
     `;
     if (!document.head.querySelector('style[data-emoji-slide-animation]')) {
       style.setAttribute('data-emoji-slide-animation', 'true');
@@ -332,6 +344,157 @@ export default function ChatPage() {
   const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: number[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null }>({
     show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null
   });
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [kickMemberDialog, setKickMemberDialog] = useState<{ show: boolean; memberName: string; memberIndex: number | null }>({ show: false, memberName: '', memberIndex: null });
+  const [showPromotorSelection, setShowPromotorSelection] = useState(false);
+  const [selectedPromotors, setSelectedPromotors] = useState<string[]>([]);
+  const [activeRegionFilter, setActiveRegionFilter] = useState<string>("all");
+  const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
+  const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
+
+  // Helper functions for group members
+  const getMemberNames = (memberIds: number[] = []) => {
+    return memberIds.map(id => {
+      const contact = contacts.find((c: Contact) => c.id === id);
+      return contact ? contact.name : `User ${id}`;
+    });
+  };
+
+  const formatGroupMembers = (memberIds: number[] = []) => {
+    const names = getMemberNames(memberIds);
+    if (names.length <= 3) {
+      return names.join(', ');
+    }
+    return `${names.slice(0, 3).join(', ')}...`;
+  };
+
+  // Region gradient helper
+  const getRegionGradient = (region: string) => {
+    switch (region) {
+      case "wien-noe-bgl":
+        return "bg-red-50/40";
+      case "steiermark":
+        return "bg-green-50/40";
+      case "salzburg":
+        return "bg-blue-50/40";
+      case "oberoesterreich":
+        return "bg-yellow-50/40";
+      case "tirol":
+        return "bg-purple-50/40";
+      case "vorarlberg":
+        return "bg-orange-50/40";
+      case "kaernten":
+        return "bg-teal-50/40";
+      default:
+        return "bg-gray-50/40";
+    }
+  };
+
+  // Region border helper
+  const getRegionBorder = (region: string) => {
+    // All pills get the same thin grey border
+    return "border-gray-200";
+  };
+
+  // Function to select all filtered promotors
+  const selectAllFiltered = () => {
+    const allPromotors = [
+      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+      { name: "Michael Weber", region: "steiermark" },
+      { name: "Jan Müller", region: "salzburg" },
+      { name: "Lisa König", region: "wien-noe-bgl" },
+      { name: "Anna Bauer", region: "oberoesterreich" },
+      { name: "Tom Fischer", region: "tirol" },
+      { name: "Maria Huber", region: "steiermark" },
+      { name: "David Klein", region: "vorarlberg" },
+      { name: "Emma Wagner", region: "kaernten" },
+      { name: "Paul Berger", region: "wien-noe-bgl" },
+      { name: "Julia Mayer", region: "salzburg" },
+      { name: "Felix Gruber", region: "oberoesterreich" },
+      { name: "Sophie Reiter", region: "steiermark" },
+      { name: "Max Köhler", region: "tirol" },
+      { name: "Lena Fuchs", region: "vorarlberg" },
+      { name: "Klaus Müller", region: "wien-noe-bgl" },
+      { name: "Sandra Hofer", region: "steiermark" },
+      { name: "Martin Schneider", region: "salzburg" },
+      { name: "Nina Weiss", region: "oberoesterreich" },
+      { name: "Patrick Schwarz", region: "tirol" },
+      { name: "Andrea Roth", region: "vorarlberg" },
+      { name: "Florian Braun", region: "kaernten" },
+      { name: "Jessica Grün", region: "wien-noe-bgl" },
+      { name: "Daniel Gelb", region: "steiermark" },
+      { name: "Sabrina Blau", region: "salzburg" },
+      { name: "Thomas Orange", region: "oberoesterreich" },
+      { name: "Melanie Violett", region: "tirol" },
+      { name: "Christian Rosa", region: "vorarlberg" },
+      { name: "Vanessa Grau", region: "kaernten" },
+      { name: "Marco Silber", region: "wien-noe-bgl" },
+      { name: "Tanja Gold", region: "steiermark" },
+      { name: "Oliver Bronze", region: "salzburg" },
+      { name: "Carina Kupfer", region: "oberoesterreich" },
+      { name: "Lukas Platin", region: "tirol" },
+      { name: "Stephanie Kristall", region: "vorarlberg" },
+      { name: "Benjamin Diamant", region: "kaernten" },
+      { name: "Michelle Rubin", region: "wien-noe-bgl" },
+      { name: "Tobias Saphir", region: "steiermark" },
+      { name: "Nadine Smaragd", region: "salzburg" },
+      { name: "Kevin Topas", region: "oberoesterreich" },
+      { name: "Franziska Opal", region: "tirol" },
+      { name: "Dominik Achat", region: "vorarlberg" },
+      { name: "Simone Jade", region: "kaernten" },
+      { name: "Philip Onyx", region: "wien-noe-bgl" },
+      { name: "Verena Quarz", region: "steiermark" },
+      { name: "Fabian Marmor", region: "salzburg" },
+      { name: "Isabella Granit", region: "oberoesterreich" },
+      { name: "Maximilian Schiefer", region: "tirol" },
+      { name: "Katharina Basalt", region: "vorarlberg" },
+      { name: "Wolfgang Kalk", region: "kaernten" },
+      { name: "Elena Ton", region: "wien-noe-bgl" },
+      { name: "Robert Sand", region: "steiermark" },
+      { name: "Nicole Lehm", region: "salzburg" },
+      { name: "Stefan Kies", region: "oberoesterreich" },
+      { name: "Petra Fels", region: "tirol" },
+      { name: "Alexander Stein", region: "vorarlberg" },
+      { name: "Christina Berg", region: "kaernten" },
+      { name: "Manuel Tal", region: "wien-noe-bgl" },
+      { name: "Andrea Bach", region: "steiermark" },
+      { name: "Daniel See", region: "salzburg" },
+      { name: "Sabine Meer", region: "oberoesterreich" },
+      { name: "Thomas Ozean", region: "tirol" }
+    ];
+
+    const filteredNames = allPromotors
+      .filter(promotor => 
+        (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+        promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+      )
+      .map(promotor => promotor.name);
+    
+    // Check if we should deselect (if all filtered items are currently selected and match last selection)
+    const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
+    const matchesLastSelection = lastSelectedByIcon.length > 0 && 
+      filteredNames.length === lastSelectedByIcon.length &&
+      filteredNames.every(name => lastSelectedByIcon.includes(name));
+    
+    if (allFilteredSelected && matchesLastSelection) {
+      // Deselect all filtered items
+      setSelectedPromotors(prev => prev.filter(name => !filteredNames.includes(name)));
+      setLastSelectedByIcon([]);
+    } else {
+      // Select all filtered items
+      setSelectedPromotors(prev => {
+        const newSelected = [...prev];
+        filteredNames.forEach(name => {
+          if (!newSelected.includes(name)) {
+            newSelected.push(name);
+          }
+        });
+        return newSelected;
+      });
+      setLastSelectedByIcon(filteredNames);
+    }
+  };
+
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [replyAnimation, setReplyAnimation] = useState<{ startY: number; endY: number } | null>(null);
   const [flashingMessageId, setFlashingMessageId] = useState<number | null>(null);
@@ -830,6 +993,22 @@ export default function ChatPage() {
     }
   }, [messages.length, selectedChat]);
 
+  // Close participants dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showParticipants) {
+        const target = event.target as Element;
+        const participantsContainer = target.closest('[data-participants]');
+        if (!participantsContainer) {
+          setShowParticipants(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showParticipants]);
+
   // Handle click outside context menu, attachment popup, and photo editor
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -908,12 +1087,18 @@ export default function ChatPage() {
         if (clearChatDialog.show) {
           setClearChatDialog({ show: false, contactId: null });
         }
+        if (kickMemberDialog.show) {
+          setKickMemberDialog({ show: false, memberName: '', memberIndex: null });
+        }
 
         if (emojiPicker.show) {
           setEmojiPicker(prev => ({ ...prev, show: false }));
         }
         if (groupCreationPopup.show) {
           setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+        }
+        if (showPromotorSelection) {
+          setShowPromotorSelection(false);
         }
       }
     };
@@ -1289,7 +1474,7 @@ export default function ChatPage() {
           <>
             {/* Chat Header */}
             <div 
-              className="bg-white border-b border-gray-200 p-4 flex items-center justify-between"
+              className="bg-white border-b border-gray-200 p-4 flex items-center justify-between relative"
               style={{
                 boxShadow: 'inset 20px 0 30px -20px rgba(0,0,0,0.15)'
               }}
@@ -1313,7 +1498,19 @@ export default function ChatPage() {
                 </div>
                 <div className="ml-3">
                   <h2 className="text-lg font-semibold text-gray-900">{selectedChat.name}</h2>
-                  <p className="text-sm text-gray-500">{selectedChat.online ? 'Online' : 'Zuletzt online heute'}</p>
+                  {selectedChat.isGroup ? (
+                    <p 
+                      className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowParticipants(true);
+                      }}
+                    >
+                      {formatGroupMembers(selectedChat.members)}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">{selectedChat.online ? 'Online' : 'Zuletzt online heute'}</p>
+                  )}
                 </div>
               </div>
               
@@ -1466,7 +1663,437 @@ export default function ChatPage() {
                   )}
                 </div>
               </div>
+              
+              {/* Participants Dropdown */}
+              {showParticipants && selectedChat?.isGroup && (
+                <div 
+                  className="absolute top-full left-4 mt-2 rounded-lg shadow-lg border border-gray-200 z-50"
+                  data-participants
+                  style={{ 
+                    width: '320px',
+                    maxHeight: '400px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                    animation: 'slideDownFromTop 0.3s ease-out'
+                  }}
+                >
+                  {/* Header */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Gruppenteilnehmer ({getMemberNames(selectedChat.members).length})
+                      </h3>
+                      <button
+                        onClick={() => setShowPromotorSelection(true)}
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Participants List */}
+                  <div className="p-4 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="space-y-3">
+                      {getMemberNames(selectedChat.members).map((name, index) => (
+                        <div key={index} className="flex items-center space-x-3 group hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                            <span className="text-white text-xs font-medium">{name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{name}</p>
+                            <p className="text-xs text-gray-500">Online</p>
+                          </div>
+                          <button
+                            onClick={() => setKickMemberDialog({ show: true, memberName: name, memberIndex: index })}
+                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all duration-200"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Kick Member Confirmation Dialog */}
+            {kickMemberDialog.show && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center">
+                <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Mitglied entfernen</h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Möchten Sie <strong>{kickMemberDialog.memberName}</strong> wirklich aus der Gruppe entfernen?
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setKickMemberDialog({ show: false, memberName: '', memberIndex: null })}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      Abbrechen
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (kickMemberDialog.memberIndex !== null && selectedChat && selectedChat.members) {
+                          // Remove member from the group
+                          const updatedMembers = [...selectedChat.members];
+                          updatedMembers.splice(kickMemberDialog.memberIndex, 1);
+                          
+                          // Update the selected chat
+                          const updatedChat = { ...selectedChat, members: updatedMembers };
+                          setSelectedChat(updatedChat);
+                          
+                          // Update the contacts list
+                          setContacts(prev => prev.map(contact => 
+                            contact.id === selectedChat.id 
+                              ? { ...contact, members: updatedMembers }
+                              : contact
+                          ));
+                          
+                          // Add system message about member being removed
+                          const currentMessages = allMessages[selectedChat.id] || [];
+                          const systemMessage = {
+                            id: currentMessages.length + 1,
+                            sender: "System",
+                            content: `${kickMemberDialog.memberName} wurde aus der Gruppe entfernt`,
+                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                            own: false,
+                            type: "system"
+                          };
+                          
+                          setAllMessages(prev => ({
+                            ...prev,
+                            [selectedChat.id]: [...currentMessages, systemMessage]
+                          }));
+                        }
+                        setKickMemberDialog({ show: false, memberName: '', memberIndex: null });
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                      style={{ background: 'linear-gradient(135deg, #DC2626, #B91C1C)' }}
+                    >
+                      Entfernen
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Promotor Selection Modal */}
+            {showPromotorSelection && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <Card 
+                  className="w-full max-w-4xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white"
+                >
+                  <CardHeader className="pb-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold text-gray-900">Promotoren auswählen</CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPromotorSelection(false)}
+                        className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Search and Filter Options */}
+                    <div className="mt-4 space-y-3">
+                      {/* Searchbar */}
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Promotor suchen..."
+                          value={promotorSelectionSearch}
+                          onChange={(e) => setPromotorSelectionSearch(e.target.value)}
+                          className="px-3 py-1.5 text-sm border border-gray-200 bg-white rounded-lg focus:outline-none focus:ring-0 placeholder-gray-400"
+                        />
+                      </div>
+                      
+                      {/* Filter Options */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setActiveRegionFilter("all")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 bg-gray-100/70 text-gray-700 hover:bg-gray-200/80 ${
+                              activeRegionFilter === "all"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            Alle
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("wien-noe-bgl")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("wien-noe-bgl")} ${getRegionBorder("wien-noe-bgl")} ${
+                              activeRegionFilter === "wien-noe-bgl"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            W/NÖ/BGL
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("steiermark")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("steiermark")} ${getRegionBorder("steiermark")} ${
+                              activeRegionFilter === "steiermark"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            ST
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("salzburg")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("salzburg")} ${getRegionBorder("salzburg")} ${
+                              activeRegionFilter === "salzburg"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            SBG
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("oberoesterreich")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("oberoesterreich")} ${getRegionBorder("oberoesterreich")} ${
+                              activeRegionFilter === "oberoesterreich"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            OÖ
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("tirol")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("tirol")} ${getRegionBorder("tirol")} ${
+                              activeRegionFilter === "tirol"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            T
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("vorarlberg")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("vorarlberg")} ${getRegionBorder("vorarlberg")} ${
+                              activeRegionFilter === "vorarlberg"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            V
+                          </button>
+                          <button
+                            onClick={() => setActiveRegionFilter("kaernten")}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("kaernten")} ${getRegionBorder("kaernten")} ${
+                              activeRegionFilter === "kaernten"
+                                ? "scale-110"
+                                : ""
+                            }`}
+                          >
+                            K
+                          </button>
+                        </div>
+                        
+                        {/* Select All Filtered Icon */}
+                        <div 
+                          onClick={selectAllFiltered}
+                          className="cursor-pointer"
+                          title="Alle gefilterten auswählen/abwählen"
+                        >
+                          <CheckSquare className="h-5 w-5 text-black hover:text-gray-700 transition-colors" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent 
+                    className="p-6 flex flex-col h-[400px] [&::-webkit-scrollbar]:hidden" 
+                    style={{ 
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {[
+                          { name: "Sarah Schmidt", region: "wien-noe-bgl" },
+                          { name: "Michael Weber", region: "steiermark" },
+                          { name: "Jan Müller", region: "salzburg" },
+                          { name: "Lisa König", region: "wien-noe-bgl" },
+                          { name: "Anna Bauer", region: "oberoesterreich" },
+                          { name: "Tom Fischer", region: "tirol" },
+                          { name: "Maria Huber", region: "steiermark" },
+                          { name: "David Klein", region: "vorarlberg" },
+                          { name: "Emma Wagner", region: "kaernten" },
+                          { name: "Paul Berger", region: "wien-noe-bgl" },
+                          { name: "Julia Mayer", region: "salzburg" },
+                          { name: "Felix Gruber", region: "oberoesterreich" },
+                          { name: "Sophie Reiter", region: "steiermark" },
+                          { name: "Max Köhler", region: "tirol" },
+                          { name: "Lena Fuchs", region: "vorarlberg" },
+                          { name: "Klaus Müller", region: "wien-noe-bgl" },
+                          { name: "Sandra Hofer", region: "steiermark" },
+                          { name: "Martin Schneider", region: "salzburg" },
+                          { name: "Nina Weiss", region: "oberoesterreich" },
+                          { name: "Patrick Schwarz", region: "tirol" },
+                          { name: "Andrea Roth", region: "vorarlberg" },
+                          { name: "Florian Braun", region: "kaernten" },
+                          { name: "Jessica Grün", region: "wien-noe-bgl" },
+                          { name: "Daniel Gelb", region: "steiermark" },
+                          { name: "Sabrina Blau", region: "salzburg" },
+                          { name: "Thomas Orange", region: "oberoesterreich" },
+                          { name: "Melanie Violett", region: "tirol" },
+                          { name: "Christian Rosa", region: "vorarlberg" },
+                          { name: "Vanessa Grau", region: "kaernten" },
+                          { name: "Marco Silber", region: "wien-noe-bgl" },
+                          { name: "Tanja Gold", region: "steiermark" },
+                          { name: "Oliver Bronze", region: "salzburg" },
+                          { name: "Carina Kupfer", region: "oberoesterreich" },
+                          { name: "Lukas Platin", region: "tirol" },
+                          { name: "Stephanie Kristall", region: "vorarlberg" },
+                          { name: "Benjamin Diamant", region: "kaernten" },
+                          { name: "Michelle Rubin", region: "wien-noe-bgl" },
+                          { name: "Tobias Saphir", region: "steiermark" },
+                          { name: "Nadine Smaragd", region: "salzburg" },
+                          { name: "Kevin Topas", region: "oberoesterreich" },
+                          { name: "Franziska Opal", region: "tirol" },
+                          { name: "Dominik Achat", region: "vorarlberg" },
+                          { name: "Simone Jade", region: "kaernten" },
+                          { name: "Philip Onyx", region: "wien-noe-bgl" },
+                          { name: "Verena Quarz", region: "steiermark" },
+                          { name: "Fabian Marmor", region: "salzburg" },
+                          { name: "Isabella Granit", region: "oberoesterreich" },
+                          { name: "Maximilian Schiefer", region: "tirol" },
+                          { name: "Katharina Basalt", region: "vorarlberg" },
+                          { name: "Wolfgang Kalk", region: "kaernten" },
+                          { name: "Elena Ton", region: "wien-noe-bgl" },
+                          { name: "Robert Sand", region: "steiermark" },
+                          { name: "Nicole Lehm", region: "salzburg" },
+                          { name: "Stefan Kies", region: "oberoesterreich" },
+                          { name: "Petra Fels", region: "tirol" },
+                          { name: "Alexander Stein", region: "vorarlberg" },
+                          { name: "Christina Berg", region: "kaernten" },
+                          { name: "Manuel Tal", region: "wien-noe-bgl" },
+                          { name: "Andrea Bach", region: "steiermark" },
+                          { name: "Daniel See", region: "salzburg" },
+                          { name: "Sabine Meer", region: "oberoesterreich" },
+                          { name: "Thomas Ozean", region: "tirol" }
+                        ]
+                        .filter(promotor => 
+                          (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                          promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+                        )
+                        .map((promotor) => {
+                          const isSelected = selectedPromotors.includes(promotor.name);
+                          return (
+                            <button
+                              key={promotor.name}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setSelectedPromotors(prev => prev.filter(name => name !== promotor.name));
+                                } else {
+                                  setSelectedPromotors(prev => [...prev, promotor.name]);
+                                }
+                              }}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full h-10 flex items-center justify-center border ${
+                                isSelected
+                                  ? "bg-white/80 text-gray-900 shadow-md border-gray-300 backdrop-blur-sm"
+                                  : `${getRegionGradient(promotor.region)} ${getRegionBorder(promotor.region)} text-gray-700 hover:bg-gray-200/80`
+                              }`}
+                            >
+                              {promotor.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Fixed confirmation section at bottom */}
+                    {selectedPromotors.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-100 flex-shrink-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            {selectedPromotors.length} Promotor{selectedPromotors.length !== 1 ? 'en' : ''} ausgewählt
+                          </span>
+                          <Button
+                            onClick={() => {
+                              // Add selected promotors to group
+                              if (selectedChat && selectedChat.members && selectedPromotors.length > 0) {
+                                let updatedMembers = [...selectedChat.members];
+                                const addedNames: string[] = [];
+                                
+                                selectedPromotors.forEach((promotorName, index) => {
+                                  const newMemberId = Math.max(...contacts.map(c => c.id)) + index + 1;
+                                  updatedMembers.push(newMemberId);
+                                  
+                                  // Add new contact if not exists
+                                  const newContact = {
+                                    id: newMemberId,
+                                    name: promotorName,
+                                    lastMessage: "",
+                                    time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                    unread: 0,
+                                    avatar: "",
+                                    online: true,
+                                    pinned: false,
+                                    markedUnread: false
+                                  };
+                                  
+                                  setContacts(prev => {
+                                    if (!prev.find(c => c.id === newMemberId)) {
+                                      return [...prev, newContact];
+                                    }
+                                    return prev;
+                                  });
+                                  
+                                  addedNames.push(promotorName);
+                                });
+                                
+                                // Update the selected chat
+                                const updatedChat = { ...selectedChat, members: updatedMembers };
+                                setSelectedChat(updatedChat);
+                                
+                                // Update the contacts list
+                                setContacts(prev => prev.map(contact => 
+                                  contact.id === selectedChat.id 
+                                    ? { ...contact, members: updatedMembers }
+                                    : contact
+                                ));
+                                
+                                // Add system message
+                                const currentMessages = allMessages[selectedChat.id] || [];
+                                const systemMessage = {
+                                  id: currentMessages.length + 1,
+                                  sender: "System",
+                                  content: `${addedNames.join(', ')} ${addedNames.length === 1 ? 'wurde' : 'wurden'} zur Gruppe hinzugefügt`,
+                                  time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                  own: false,
+                                  type: "system"
+                                };
+                                
+                                setAllMessages(prev => ({
+                                  ...prev,
+                                  [selectedChat.id]: [...currentMessages, systemMessage]
+                                }));
+                                
+                                // Reset selection
+                                setSelectedPromotors([]);
+                              }
+                              setShowPromotorSelection(false);
+                            }}
+                            variant="ghost"
+                            className="bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
+                          >
+                            Bestätigen
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Messages Area */}
             <div 

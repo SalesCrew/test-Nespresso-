@@ -1455,7 +1455,7 @@ export default function DemoToolAgentPage() {
                               style={{
                                 background: 'linear-gradient(135deg, #FA0C0C, #CD0000)',
                                 boxShadow: '0 0 6px 2px rgba(250, 12, 12, 0.5)',
-                                width: `${leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length > 0 ? (([...leftValidatedColumns].filter(id => !leftCrossCardColumns.has(id)).length + [...leftRejectedColumns].filter(id => leftDisplayOrder.includes(id)).length) / leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length) * 100 : 0}%`,
+                                width: `${leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length > 0 ? (([...leftValidatedColumns].filter(id => !leftCrossCardColumns.has(id)).length + leftRejectedColumns.size) / (leftDisplayOrder.filter(id => !leftCrossCardColumns.has(id)).length + leftRejectedColumns.size)) * 100 : 0}%`,
                                 transition: 'width 0.5s ease-in-out',
                                 opacity: 0.7
                               }}
@@ -2211,7 +2211,7 @@ export default function DemoToolAgentPage() {
                               style={{
                                 background: 'linear-gradient(135deg, #22C55E, #105F2D)',
                                 boxShadow: '0 0 6px 2px rgba(34, 197, 94, 0.5)',
-                                width: `${rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length > 0 ? (([...validatedColumns].filter(id => !rightCrossCardColumns.has(id)).length + [...rejectedColumns].filter(id => rightDisplayOrder.includes(id)).length) / rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length) * 100 : 0}%`,
+                                width: `${rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length > 0 ? (([...validatedColumns].filter(id => !rightCrossCardColumns.has(id)).length + rejectedColumns.size) / (rightDisplayOrder.filter(id => !rightCrossCardColumns.has(id)).length + rejectedColumns.size)) * 100 : 0}%`,
                                 transition: 'width 0.5s ease-in-out',
                                 opacity: 0.7
                               }}
