@@ -1321,20 +1321,13 @@ Liebe Grüße, dein Nespresso Team`}
             </Card>
           ) : (
             /* Collapsed Confirmation Card */
-            <Card className="w-full border border-green-200 dark:border-green-700 shadow-sm bg-green-50 dark:bg-green-900/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-semibold text-green-800 dark:text-green-200 text-sm">
-                      Sales Challenge Gratulation gelesen
-                    </div>
-                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      To-Do als erledigt markiert
+            <Card className="relative bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 border-0 shadow-xl overflow-hidden">
+              <CardContent className="p-0">
+                <div className="flex items-center justify-center h-[140px] w-full px-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                    <div className="text-white">
+                      <div className="text-lg font-semibold mb-2">✓ Danke fürs Lesen!</div>
+                      <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
                     </div>
                   </div>
                 </div>

@@ -31,6 +31,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const footerButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [showBreakingNews, setShowBreakingNews] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(true);
+  const [isInChat, setIsInChat] = useState(false);
   const lastScrollY = useRef(0);
   
   // KI Assistant states
@@ -45,21 +46,31 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   // Training session detection
   const [isInTrainingSession, setIsInTrainingSession] = useState(false);
 
-  // Determine activeTab based on pathname
+  // Determine activeTab based on pathname and handle footer visibility for chat
   useEffect(() => {
     if (pathname === "/promotors/dashboard") {
       setActiveTab("home");
+      setIsFooterVisible(true); // Ensure footer is visible on other pages
+      setIsInChat(false);
     } else if (pathname === "/promotors/einsatz") {
       setActiveTab("einsatz");
-    } else if (pathname === "/chats") {
+      setIsFooterVisible(true); // Ensure footer is visible on other pages
+      setIsInChat(false);
+    } else if (pathname === "/promotors/chat") {
       setActiveTab("chats");
     } else if (pathname === "/kpis" || pathname === "/promotors/statistiken") {
       setActiveTab("kpis");
+      setIsFooterVisible(true); // Ensure footer is visible on other pages
+      setIsInChat(false);
     } else if (pathname === "/promotors/profil") {
       setActiveTab("profil");
+      setIsFooterVisible(true); // Ensure footer is visible on other pages
+      setIsInChat(false);
     } else {
       // Fallback, or determine based on a default route
       setActiveTab("home"); 
+      setIsFooterVisible(true); // Ensure footer is visible on other pages
+      setIsInChat(false);
     }
   }, [pathname]);
 
@@ -85,6 +96,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   // Scroll handler for footer visibility
   useEffect(() => {
     const handleScroll = () => {
+      // Don't handle scroll visibility if we're in a chat
+      if (isInChat) {
+        return; // Skip scroll handling when in a chat
+      }
+
       const currentScrollY = window.scrollY;
       const scrollThreshold = 10; // Minimum scroll to trigger hide/show
 
@@ -104,7 +120,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [isInChat]);
 
   // KI Assistant chat functions
   useEffect(() => {
@@ -144,28 +160,26 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     };
   }, []);
 
-  // Check for active training session
+  // Check for active training session and chat session
   useEffect(() => {
-    const checkTrainingSession = () => {
+    const checkSession = () => {
       const showVideoPlayer = localStorage.getItem('showVideoPlayer') === 'true'
       const showPDFReader = localStorage.getItem('showPDFReader') === 'true'
       const showQuiz = localStorage.getItem('showQuiz') === 'true'
-      
       setIsInTrainingSession(showVideoPlayer || showPDFReader || showQuiz)
+
+      const isInChatMode = localStorage.getItem('isInChatMode') === 'true'
+      setIsInChat(isInChatMode)
     }
 
     // Check on mount
-    checkTrainingSession()
+    checkSession()
 
-    // Listen for localStorage changes
-    window.addEventListener('storage', checkTrainingSession)
-    
-    // Also check periodically in case localStorage is updated from the same tab
-    const interval = setInterval(checkTrainingSession, 500)
+    // Listen for localStorage changes from other tabs AND custom dispatched events
+    window.addEventListener('storage', checkSession)
 
     return () => {
-      window.removeEventListener('storage', checkTrainingSession)
-      clearInterval(interval)
+      window.removeEventListener('storage', checkSession)
     }
   }, [])
 
@@ -277,7 +291,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       </main>
 
       {/* KI Assistant Floating Button */}
-      {!isInTrainingSession && (
+      {!isInTrainingSession && !isInChat && (
         <button 
           className="fixed bottom-20 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg flex items-center justify-center z-40 hover:shadow-xl transition-shadow"
           onClick={() => {
@@ -371,10 +385,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       )}
 
       {/* Shared Persistent Footer Menu */}
-      {!isInTrainingSession && (
+      {!isInTrainingSession && !isInChat && (
         <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 w-auto px-3 py-2 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-full z-30 shadow-[0_35px_65px_-15px_rgba(0,0,0,0.25)] overflow-hidden transition-transform duration-300 ease-in-out ${
           isFooterVisible ? 'translate-y-0' : 'translate-y-[calc(100%+1rem)]' // 100% + bottom-4 (1rem)
-        }`}>
+        }`}
+>
           <div className="relative flex items-center justify-around space-x-2 h-12">
             <div
               className="absolute bg-blue-500 rounded-full shadow-lg"
@@ -406,7 +421,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               size="icon"
               className={`flex flex-col items-center justify-center h-10 w-10 rounded-full relative z-10 transition-colors border-none shadow-none ${activeTab === "chats" ? "text-white" : "text-gray-500 dark:text-gray-400"} hover:bg-transparent hover:text-inherit focus:bg-transparent`}
               style={{ backgroundColor: 'transparent' }}
-              onClick={() => handleNavigation("/chats")}
+              onClick={() => handleNavigation("/promotors/chat")}
             >
               <MessagesSquare className="h-6 w-6" />
             </Button>
