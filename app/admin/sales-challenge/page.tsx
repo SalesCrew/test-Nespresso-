@@ -172,26 +172,35 @@ export default function SalesChallengePage() {
   const getRegionGradient = (region: string) => {
     switch (region) {
       case "wien-noe-bgl":
-        return "bg-red-50/40";
+        return "bg-[#E8F0FE]";
       case "steiermark":
-        return "bg-green-50/40";
+        return "bg-[#E7F5ED]";
       case "salzburg":
-        return "bg-blue-50/40";
+        return "bg-[#F0E9FF]";
       case "oberoesterreich":
-        return "bg-yellow-50/40";
+        return "bg-[#FFF3E6]";
       case "tirol":
-        return "bg-purple-50/40";
+        return "bg-[#FDEBF3]";
       case "vorarlberg":
-        return "bg-orange-50/40";
+        return "bg-[#EAF8FF]";
       case "kaernten":
-        return "bg-teal-50/40";
+        return "bg-[#EAF6FF]";
       default:
-        return "bg-gray-50/40";
+        return "bg-gray-50";
     }
   };
 
   const getRegionBorder = (region: string) => {
-    return "border-gray-200";
+    switch (region) {
+      case "wien-noe-bgl": return "border-[#CBD7F5]";
+      case "steiermark": return "border-[#CFECDD]";
+      case "salzburg": return "border-[#DDD4FF]";
+      case "oberoesterreich": return "border-[#FFE3C7]";
+      case "tirol": return "border-[#F8D5E5]";
+      case "vorarlberg": return "border-[#CFEFFF]";
+      case "kaernten": return "border-[#D6ECFF]";
+      default: return "border-gray-200";
+    }
   };
 
   const selectAllFiltered = () => {

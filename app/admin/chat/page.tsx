@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import AdminNavigation from "@/components/AdminNavigation";
 
 interface Contact {
@@ -19,6 +21,7 @@ interface Contact {
   profileImage?: string | null;
   description?: string;
   members?: number[];
+  readOnly?: boolean;
 }
 
 interface Message {
@@ -341,8 +344,8 @@ export default function ChatPage() {
   const [contactContextMenu, setContactContextMenu] = useState<{ show: boolean; x: number; y: number; contactId: number | null }>({
     show: false, x: 0, y: 0, contactId: null
   });
-  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: number[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null }>({
-    show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null
+  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: number[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null; readOnly: boolean }>({
+    show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false
   });
   const [showParticipants, setShowParticipants] = useState(false);
   const [kickMemberDialog, setKickMemberDialog] = useState<{ show: boolean; memberName: string; memberIndex: number | null }>({ show: false, memberName: '', memberIndex: null });
@@ -351,6 +354,7 @@ export default function ChatPage() {
   const [activeRegionFilter, setActiveRegionFilter] = useState<string>("all");
   const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
+  const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
 
   // Helper functions for group members
   const getMemberNames = (memberIds: number[] = []) => {
@@ -372,28 +376,36 @@ export default function ChatPage() {
   const getRegionGradient = (region: string) => {
     switch (region) {
       case "wien-noe-bgl":
-        return "bg-red-50/40";
+        return "bg-[#E8F0FE]";
       case "steiermark":
-        return "bg-green-50/40";
+        return "bg-[#E7F5ED]";
       case "salzburg":
-        return "bg-blue-50/40";
+        return "bg-[#F0E9FF]";
       case "oberoesterreich":
-        return "bg-yellow-50/40";
+        return "bg-[#FFF3E6]";
       case "tirol":
-        return "bg-purple-50/40";
+        return "bg-[#FDEBF3]";
       case "vorarlberg":
-        return "bg-orange-50/40";
+        return "bg-[#EAF8FF]";
       case "kaernten":
-        return "bg-teal-50/40";
+        return "bg-[#EAF6FF]";
       default:
-        return "bg-gray-50/40";
+        return "bg-gray-50";
     }
   };
 
   // Region border helper
   const getRegionBorder = (region: string) => {
-    // All pills get the same thin grey border
-    return "border-gray-200";
+    switch (region) {
+      case "wien-noe-bgl": return "border-[#CBD7F5]";
+      case "steiermark": return "border-[#CFECDD]";
+      case "salzburg": return "border-[#DDD4FF]";
+      case "oberoesterreich": return "border-[#FFE3C7]";
+      case "tirol": return "border-[#F8D5E5]";
+      case "vorarlberg": return "border-[#CFEFFF]";
+      case "kaernten": return "border-[#D6ECFF]";
+      default: return "border-gray-200";
+    }
   };
 
   // Function to select all filtered promotors
@@ -1035,7 +1047,7 @@ export default function ChatPage() {
         setEmojiPicker(prev => ({ ...prev, show: false }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
-        setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+        setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
       }
     };
 
@@ -1095,7 +1107,7 @@ export default function ChatPage() {
           setEmojiPicker(prev => ({ ...prev, show: false }));
         }
         if (groupCreationPopup.show) {
-          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
         }
         if (showPromotorSelection) {
           setShowPromotorSelection(false);
@@ -1261,7 +1273,7 @@ export default function ChatPage() {
                     <h3 className="text-lg font-semibold text-gray-900">Gruppe erstellen</h3>
                   </div>
                   
-                  <div className="p-3 space-y-2 overflow-y-auto">
+                  <div className="p-3 space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Group Name */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1335,6 +1347,21 @@ export default function ChatPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Read-only group (admins only may write) */}
+                    <div className="mt-2 p-3 border border-gray-200 rounded-lg flex items-start justify-between">
+                      <div className="pr-3">
+                        <p className="text-sm font-medium text-gray-800">Nur Admins dürfen schreiben</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Aktiviere dies, um eine reine Ankündigungsgruppe zu erstellen. Promotors können dann nur lesen.</p>
+                      </div>
+                      <Switch
+                        className={cn("overflow-hidden", groupCreationPopup.readOnly ? "border-0" : "")}
+                        checked={groupCreationPopup.readOnly}
+                        onCheckedChange={(checked: boolean) => setGroupCreationPopup(prev => ({ ...prev, readOnly: checked }))}
+                        style={groupCreationPopup.readOnly ? { background: 'linear-gradient(135deg, #22C55E, #105F2D)' } : undefined}
+                        aria-label="Nur Admins dürfen schreiben"
+                      />
+                    </div>
                   </div>
 
                   {/* Create Button */}
@@ -1362,7 +1389,8 @@ export default function ChatPage() {
                             isGroup: true,
                             profileImage: groupCreationPopup.profileImage,
                             description: groupCreationPopup.groupDescription,
-                            members: groupCreationPopup.selectedContacts
+                            members: groupCreationPopup.selectedContacts,
+                            readOnly: groupCreationPopup.readOnly
                           };
                           
                           // Add group to contacts
@@ -1385,7 +1413,7 @@ export default function ChatPage() {
                           setSelectedChat(newGroup);
                           
                           // Close popup
-                          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null });
+                          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
                         }
                       }}
                     >
@@ -1526,6 +1554,26 @@ export default function ChatPage() {
                       onClick={handleDeleteSelectedMessages}
                     />
                   </>
+                )}
+                {selectedChat.isGroup && selectedChat.readOnly && (
+                  <div 
+                    className="relative"
+                    onMouseEnter={() => setShowReadOnlyTooltip(true)}
+                    onMouseLeave={() => setShowReadOnlyTooltip(false)}
+                  >
+                    <Lock 
+                      className="h-5 w-5 text-gray-600" 
+                      aria-label="Nur Admins dürfen schreiben"
+                    />
+                    {showReadOnlyTooltip && (
+                      <div 
+                        className="absolute top-8 right-0 z-50 w-64 rounded-lg shadow-lg border border-gray-200 bg-white p-3"
+                      >
+                        <p className="text-sm font-medium text-gray-900">Nur Admins dürfen schreiben</p>
+                        <p className="text-xs text-gray-600 mt-1">Dies ist eine reine Ankündigungsgruppe. Admins können schreiben, Promotors lesen nur.</p>
+                      </div>
+                    )}
+                  </div>
                 )}
                 <div className="relative" data-info-menu>
                   <Info 

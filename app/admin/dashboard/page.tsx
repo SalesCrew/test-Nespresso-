@@ -88,6 +88,7 @@ export default function AdminDashboard() {
   
   // Message enhancement states
   const [messageText, setMessageText] = useState("");
+  const [enableTwoStep, setEnableTwoStep] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   
   // Scheduling states
@@ -121,12 +122,12 @@ export default function AdminDashboard() {
 
   // History data for sent messages (both scheduled and instant)
   const [messageHistory] = useState([
-    { id: 101, preview: "Erinnerung: Teammeeting heute um 14:00...", fullText: "Erinnerung: Teammeeting heute um 14:00 in der Zentrale. Agenda wurde per E-Mail versendet.", time: "08:30", date: "23. Nov 2024", recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber"], sent: true, type: "scheduled" },
-    { id: 102, preview: "Neue Produktinformationen verfügbar...", fullText: "Neue Produktinformationen verfügbar im Portal. Bitte bis Ende der Woche durcharbeiten.", time: "12:15", date: "22. Nov 2024", recipients: "8 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer"], sent: true, type: "instant" },
-    { id: 103, preview: "Wichtige Änderung der Arbeitszeiten...", fullText: "Wichtige Änderung der Arbeitszeiten ab nächster Woche. Details in der separaten E-Mail.", time: "16:45", date: "21. Nov 2024", recipients: "Region Süd", promotors: ["Maria Huber", "David Klein"], sent: true, type: "scheduled" },
-    { id: 104, preview: "Verkaufszahlen übertroffen - Gratulation...", fullText: "Verkaufszahlen übertroffen - Gratulation an das gesamte Team für die hervorragende Leistung diese Woche!", time: "17:20", date: "20. Nov 2024", recipients: "Alle", promotors: ["Emma Wagner", "Paul Berger", "Julia Mayer"], sent: true, type: "instant" },
-    { id: 105, preview: "Schulung nächste Woche verschoben...", fullText: "Schulung nächste Woche verschoben auf Donnerstag. Neue Einladung folgt.", time: "09:10", date: "19. Nov 2024", recipients: "5 Promotoren", promotors: ["Felix Gruber", "Sophie Reiter"], sent: true, type: "scheduled" },
-    { id: 106, preview: "Notfall: Einsatz in Wien abgesagt...", fullText: "Notfall: Einsatz in Wien abgesagt wegen technischer Probleme. Ersatztermin wird bekannt gegeben.", time: "11:30", date: "18. Nov 2024", recipients: "Wien Team", promotors: ["Max Köhler"], sent: true, type: "instant" }
+    { id: 101, preview: "Erinnerung: Teammeeting heute um 14:00...", fullText: "Erinnerung: Teammeeting heute um 14:00 in der Zentrale. Agenda wurde per E-Mail versendet.", time: "08:30", date: "23. Nov 2024", recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber"], readBy: ["Sarah Schmidt"], sent: true, type: "scheduled" },
+    { id: 102, preview: "Neue Produktinformationen verfügbar...", fullText: "Neue Produktinformationen verfügbar im Portal. Bitte bis Ende der Woche durcharbeiten.", time: "12:15", date: "22. Nov 2024", recipients: "8 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer"], readBy: ["Lisa König", "Tom Fischer"], sent: true, type: "instant" },
+    { id: 103, preview: "Wichtige Änderung der Arbeitszeiten...", fullText: "Wichtige Änderung der Arbeitszeiten ab nächster Woche. Details in der separaten E-Mail.", time: "16:45", date: "21. Nov 2024", recipients: "Region Süd", promotors: ["Maria Huber", "David Klein"], readBy: [], sent: true, type: "scheduled" },
+    { id: 104, preview: "Verkaufszahlen übertroffen - Gratulation...", fullText: "Verkaufszahlen übertroffen - Gratulation an das gesamte Team für die hervorragende Leistung diese Woche!", time: "17:20", date: "20. Nov 2024", recipients: "Alle", promotors: ["Emma Wagner", "Paul Berger", "Julia Mayer"], readBy: ["Julia Mayer"], sent: true, type: "instant" },
+    { id: 105, preview: "Schulung nächste Woche verschoben...", fullText: "Schulung nächste Woche verschoben auf Donnerstag. Neue Einladung folgt.", time: "09:10", date: "19. Nov 2024", recipients: "5 Promotoren", promotors: ["Felix Gruber", "Sophie Reiter"], readBy: ["Felix Gruber", "Sophie Reiter"], sent: true, type: "scheduled" },
+    { id: 106, preview: "Notfall: Einsatz in Wien abgesagt...", fullText: "Notfall: Einsatz in Wien abgesagt wegen technischer Probleme. Ersatztermin wird bekannt gegeben.", time: "11:30", date: "18. Nov 2024", recipients: "Wien Team", promotors: ["Max Köhler"], readBy: [], sent: true, type: "instant" }
   ]);
   
   // Message detail popup states
@@ -365,30 +366,48 @@ export default function AdminDashboard() {
   
   // Region gradient helper
   const getRegionGradient = (region: string) => {
+    // Pastel, clean, modern shades per cluster
     switch (region) {
       case "wien-noe-bgl":
-        return "bg-red-50/40";
+        return "bg-[#E8F0FE]"; // pastel blue
       case "steiermark":
-        return "bg-green-50/40";
+        return "bg-[#E7F5ED]"; // pastel green
       case "salzburg":
-        return "bg-blue-50/40";
+        return "bg-[#F0E9FF]"; // pastel indigo/lavender
       case "oberoesterreich":
-        return "bg-yellow-50/40";
+        return "bg-[#FFF3E6]"; // pastel orange
       case "tirol":
-        return "bg-purple-50/40";
+        return "bg-[#FDEBF3]"; // pastel pink
       case "vorarlberg":
-        return "bg-orange-50/40";
+        return "bg-[#EAF8FF]"; // pastel cyan
       case "kaernten":
-        return "bg-teal-50/40";
+        return "bg-[#EAF6FF]"; // soft sky
       default:
-        return "bg-gray-50/40";
+        return "bg-gray-50";
     }
   };
 
   // Region border helper
   const getRegionBorder = (region: string) => {
-    // All pills get the same thin grey border
-    return "border-gray-200";
+    // Matching soft borders per cluster
+    switch (region) {
+      case "wien-noe-bgl":
+        return "border-[#CBD7F5]";
+      case "steiermark":
+        return "border-[#CFECDD]";
+      case "salzburg":
+        return "border-[#DDD4FF]";
+      case "oberoesterreich":
+        return "border-[#FFE3C7]";
+      case "tirol":
+        return "border-[#F8D5E5]";
+      case "vorarlberg":
+        return "border-[#CFEFFF]";
+      case "kaernten":
+        return "border-[#D6ECFF]";
+      default:
+        return "border-gray-200";
+    }
   };
 
   // Get promotor region
@@ -1556,11 +1575,19 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             {/* Message Terminal */}
             <Card className="border-0 flex flex-col h-full bg-gradient-to-br from-white to-blue-50/40" style={{ boxShadow: '0 1px 3px 0 rgba(59, 130, 246, 0.15), 0 1px 2px 0 rgba(96, 165, 250, 0.1)' }}>
               <CardHeader className="pb-0">
-                <div className="flex items-center justify-between">
+                <div className="relative flex items-center">
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="h-5 w-5 text-gray-900" />
                     <CardTitle className="text-lg font-semibold text-gray-900">Nachrichten Terminal</CardTitle>
                   </div>
+                  {/* Absolute positioned toggle whose right edge aligns with the left column's right edge */}
+                  <button
+                    onClick={() => setEnableTwoStep(prev => !prev)}
+                    className={`absolute left-[calc(50%-0.5rem)] top-1/2 -translate-y-1/2 -translate-x-full h-6 px-2 rounded-md text-xs font-medium border transition-colors leading-none ${enableTwoStep ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                    title="Zweistufig: Anhänge (Foto/PDF) beim Empfänger aktivieren"
+                  >
+                    2‑Step
+                  </button>
                 </div>
 
               </CardHeader>
@@ -3243,19 +3270,38 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               {/* Recipients */}
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Empfänger</label>
-                <div className="flex flex-wrap gap-2 max-h-16 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {selectedMessage.promotors?.map((promotor: string, index: number) => {
-                    const region = getPromotorRegion(promotor);
-                    const colors = getRegionPillColors(region);
-                    return (
-                      <span
-                        key={index}
-                        className={`px-2 py-1 rounded-full text-xs border ${colors}`}
-                      >
-                        {promotor}
-                      </span>
-                    );
-                  })}
+                <div className="space-y-2 max-h-24 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div>
+                    <p className="text-[11px] text-gray-500 mb-1">Gelesen</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedMessage.readBy || []).map((promotor: string, index: number) => {
+                        const region = getPromotorRegion(promotor);
+                        const colors = getRegionPillColors(region);
+                        return (
+                          <span key={`read-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} flex items-center gap-1`}>
+                            <Check className="h-3 w-3 text-green-600" /> {promotor}
+                          </span>
+                        );
+                      })}
+                      {(!selectedMessage.readBy || selectedMessage.readBy.length === 0) && (
+                        <span className="text-xs text-gray-400">Keine</span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-gray-500 mb-1">Ungelesen</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedMessage.unreadBy || selectedMessage.promotors || []).filter((p: string) => !(selectedMessage.readBy || []).includes(p)).map((promotor: string, index: number) => {
+                        const region = getPromotorRegion(promotor);
+                        const colors = getRegionPillColors(region);
+                        return (
+                          <span key={`unread-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60`}>
+                            {promotor}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
