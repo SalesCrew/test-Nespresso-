@@ -214,13 +214,17 @@ export default function DashboardPage() {
       const cached = typeof window !== 'undefined' ? localStorage.getItem('displayName') : null;
       if (cached) setDisplayName(cached);
       try {
-        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include' });
-        if (res.ok) {
-          const json = await res.json();
-          const name = json?.profile?.display_name || 'Promotor';
-          setDisplayName(name);
-          try { localStorage.setItem('displayName', name); } catch {}
-        }
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const name = profile?.display_name || 'Promotor';
+        setDisplayName(name);
+        try { localStorage.setItem('displayName', name); } catch {}
       } catch {}
     }
     loadName();
