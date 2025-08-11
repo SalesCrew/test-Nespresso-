@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,12 +47,14 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
   // Training session detection
   const [isInTrainingSession, setIsInTrainingSession] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [openPwPopover, setOpenPwPopover] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState<string | null>(null);
   const [pwSaving, setPwSaving] = useState(false);
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
   // Determine activeTab based on pathname and handle footer visibility for chat
   useEffect(() => {
@@ -251,9 +253,65 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setShowPasswordModal(true); setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); }}>
-              <Settings className="h-5 w-5" />
-            </Button>
+            <Popover open={openPwPopover} onOpenChange={setOpenPwPopover}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); setCurrentPassword(""); }}>
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" sideOffset={8} className="w-80 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Passwort ändern</h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm text-gray-600">Aktuelles Passwort</label>
+                    <div className="relative">
+                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? 'Hide' : 'Show'}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Neues Passwort</label>
+                    <div className="relative">
+                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, next: !s.next}))}>{showPw.next ? 'Hide' : 'Show'}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Passwort wiederholen</label>
+                    <div className="relative">
+                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, confirm: !s.confirm}))}>{showPw.confirm ? 'Hide' : 'Show'}</button>
+                    </div>
+                  </div>
+                  {pwError && <p className="text-sm text-red-600">{pwError}</p>}
+                  {pwSuccess && <p className="text-sm text-green-600">{pwSuccess}</p>}
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      className="flex-1 text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      style={{ background: 'linear-gradient(to right, rgb(59,130,246), rgb(79,70,229))' }}
+                      onClick={async () => {
+                        try {
+                          setPwError(null); setPwSuccess(null); setPwSaving(true);
+                          if (!newPassword || newPassword.length < 8) throw new Error('Bitte mindestens 8 Zeichen verwenden.');
+                          if (newPassword !== confirmPassword) throw new Error('Passwörter stimmen nicht überein.');
+                          const supabase = createSupabaseBrowserClient();
+                          // Optionally reauthenticate by signing in with current password if needed by your policy
+                          const { error } = await supabase.auth.updateUser({ password: newPassword });
+                          if (error) throw error;
+                          setPwSuccess('Passwort geändert.');
+                          setTimeout(() => setOpenPwPopover(false), 1000);
+                        } catch (err: any) {
+                          setPwError(err.message || 'Ändern fehlgeschlagen');
+                        } finally { setPwSaving(false); }
+                      }}
+                      disabled={pwSaving}
+                    >
+                      {pwSaving ? 'Speichere…' : 'Ändern'}
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </header>
@@ -462,56 +520,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         </div>
       )}
 
-      {/* Change Password Modal */}
-      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Passwort ändern</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 pt-1">
-            <div>
-              <label className="text-sm text-gray-600">Neues Passwort</label>
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600">Passwort bestätigen</label>
-              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-            </div>
-            {pwError && <p className="text-sm text-red-600">{pwError}</p>}
-            {pwSuccess && <p className="text-sm text-green-600">{pwSuccess}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" className="focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" onClick={() => setShowPasswordModal(false)}>Abbrechen</Button>
-            <Button
-              className="text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              style={{ background: 'linear-gradient(135deg, #22C55E, #105F2D)' }}
-              onClick={async () => {
-                try {
-                  setPwError(null); setPwSuccess(null); setPwSaving(true);
-                  if (!newPassword || newPassword.length < 8) {
-                    throw new Error('Bitte mindestens 8 Zeichen verwenden.');
-                  }
-                  if (newPassword !== confirmPassword) {
-                    throw new Error('Passwörter stimmen nicht überein.');
-                  }
-                  const supabase = createSupabaseBrowserClient();
-                  const { error } = await supabase.auth.updateUser({ password: newPassword });
-                  if (error) throw error;
-                  setPwSuccess('Passwort erfolgreich geändert.');
-                  setTimeout(() => setShowPasswordModal(false), 1200);
-                } catch (err: any) {
-                  setPwError(err.message || 'Ändern fehlgeschlagen');
-                } finally {
-                  setPwSaving(false);
-                }
-              }}
-              disabled={pwSaving}
-            >
-              {pwSaving ? 'Speichere…' : 'Ändern'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Password change popover is handled near the settings icon via Popover */}
     </div>
   );
 } 
