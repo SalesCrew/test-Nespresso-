@@ -46,11 +46,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const raw = await req.json().catch(() => ({} as any));
-  const fullName = (raw.full_name ?? `${raw.firstName ?? ''} ${raw.lastName ?? ''}`).trim();
-  const email = typeof raw.email === 'string' ? raw.email.trim() : '';
-  if (!email || !email.includes('@') || !fullName) {
-    return NextResponse.json({ error: 'Ungültige Daten: name oder email fehlen' }, { status: 400 });
-  }
+  const fullNameComputed = (raw.full_name ?? `${raw.firstName ?? ''} ${raw.lastName ?? ''}`)?.trim?.() ?? '';
+  const emailComputed = typeof raw.email === 'string' ? raw.email.trim() : '';
+  // Do not block the flow; persist even with partial data
+  const fullName = fullNameComputed || 'Unbekannt';
+  const email = emailComputed || null;
   const body = {
     full_name: fullName,
     email,

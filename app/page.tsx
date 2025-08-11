@@ -394,7 +394,7 @@ export default function LandingPage() {
               })
             });
             const json = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(json?.error || 'Bewerbung konnte nicht gespeichert werden');
+            if (!res.ok) throw new Error(typeof json?.error === 'string' ? json.error : 'Bewerbung konnte nicht gespeichert werden');
             alert('Bewerbung erfolgreich eingereicht!');
           } catch (e: any) {
             alert(e.message || 'Fehler beim Einreichen der Bewerbung');
