@@ -92,7 +92,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     async function loadName() {
       try {
         // Use a server-backed route to ensure cookies/session are respected and RLS applies correctly
-        const res = await fetch('/api/me', { cache: 'no-store' });
+        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include' });
         if (!res.ok) return;
         const json = await res.json();
         const name = json?.profile?.display_name || 'Promotor';

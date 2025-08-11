@@ -214,7 +214,7 @@ export default function DashboardPage() {
       const cached = typeof window !== 'undefined' ? localStorage.getItem('displayName') : null;
       if (cached) setDisplayName(cached);
       try {
-        const res = await fetch('/api/me', { cache: 'no-store' });
+        const res = await fetch('/api/me', { cache: 'no-store', credentials: 'include' });
         if (res.ok) {
           const json = await res.json();
           const name = json?.profile?.display_name || 'Promotor';
