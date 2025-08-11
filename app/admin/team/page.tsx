@@ -277,11 +277,56 @@ export default function PromotorenPage() {
     }
   };
 
-  // TODO: When database is implemented, replace with API call to load submissions
-  // const loadSubmissions = async () => {
-  //   const submissions = await api.getOnboardingSubmissions();
-  //   setSubmittedOnboardingData(prev => [...prev.slice(0, 3), ...submissions]);
-  // };
+  // Load real applications from backend
+  const loadSubmissions = async () => {
+    try {
+      const res = await fetch('/api/applications', { cache: 'no-store' });
+      const json = await res.json();
+      if (res.ok && Array.isArray(json.applications)) {
+        // Map server shape to UI shape expected here
+        const mapped = json.applications.map((a: any, idx: number) => ({
+          id: idx + 1,
+          submittedAt: a.created_at ?? new Date().toISOString(),
+          firstName: (a.full_name ?? '').split(' ')[0] ?? '',
+          lastName: (a.full_name ?? '').split(' ').slice(1).join(' ') ?? '',
+          title: a.title ?? '',
+          gender: a.gender ?? '',
+          pronouns: a.pronouns ?? '',
+          address: a.address ?? '',
+          postalCode: a.postalCode ?? '',
+          city: a.city ?? '',
+          phone: a.phone ?? '',
+          email: a.email ?? '',
+          socialSecurityNumber: a.socialSecurityNumber ?? '',
+          birthDate: a.birthDate ?? '',
+          citizenship: a.citizenship ?? '',
+          workPermit: a.workPermit ?? null,
+          drivingLicense: a.drivingLicense ?? null,
+          carAvailable: a.carAvailable ?? null,
+          willingToDrive: a.willingToDrive ?? null,
+          clothingSize: a.clothingSize ?? '',
+          height: a.height ?? '',
+          education: a.education ?? '',
+          qualifications: a.qualifications ?? '',
+          currentJob: a.currentJob ?? '',
+          spontaneity: a.spontaneity ?? '',
+          preferredRegion: a.preferredRegion ?? '',
+          workingDays: a.workingDays ?? [],
+          hoursPerWeek: a.hoursPerWeek ?? ''
+        }));
+        setSubmittedOnboardingData(mapped);
+      }
+    } catch (e) {
+      // fail silent for now
+    }
+  };
+
+  useEffect(() => {
+    // When the Stammdatenblatt tab is opened, load latest
+    if (showStammdatenblatt) {
+      loadSubmissions();
+    }
+  }, [showStammdatenblatt]);
 
 
 

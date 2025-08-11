@@ -313,8 +313,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
               <Input
-                placeholder="E-Mail"
-                type="email"
+                placeholder="E-Mail (frei einzugeben)"
+                type="text"
                 value={formData.email}
                 onChange={(e) => updateFormData("email", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
