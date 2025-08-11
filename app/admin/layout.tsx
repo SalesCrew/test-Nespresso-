@@ -12,10 +12,20 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     redirect("/auth/salescrew/login");
   }
 
-  // Only admins may access admin routes
-  if (!profile || (profile.role !== "admin_of_admins" && profile.role !== "admin_staff")) {
-    redirect("/promotors/dashboard");
+  // If profile is missing, route to admin login to avoid loops
+  if (!profile) {
+    redirect("/auth/salescrew/login");
   }
 
-  return <div className="min-h-screen bg-gray-50/30">{children}</div>;
+  // Only admins may access admin routes
+  if (profile.role === "admin_of_admins" || profile.role === "admin_staff") {
+    return <div className="min-h-screen bg-gray-50/30">{children}</div>;
+  }
+
+  // Known non-admin (promotor) → send to promotor dashboard; others go home
+  if (profile.role === "promotor") {
+    redirect("/promotors/dashboard");
+  }
+  redirect("/");
+  return null;
 }

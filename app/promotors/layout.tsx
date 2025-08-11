@@ -13,9 +13,18 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     redirect("/auth/promotors/login");
   }
 
-  if (!profile || profile.role !== "promotor") {
+  if (!profile) {
+    redirect("/auth/promotors/login");
+  }
+
+  if (profile.role === "promotor") {
+    return <SiteLayout>{children}</SiteLayout>;
+  }
+
+  if (profile.role === "admin_of_admins" || profile.role === "admin_staff") {
     redirect("/admin/dashboard");
   }
 
-  return <SiteLayout>{children}</SiteLayout>;
+  redirect("/");
+  return null;
 }
