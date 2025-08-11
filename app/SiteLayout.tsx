@@ -99,7 +99,9 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
           .select('display_name')
           .eq('user_id', user.id)
           .maybeSingle();
-        const name = (profile?.display_name && String(profile.display_name).trim()) || 'Promotor';
+        const profileName = profile?.display_name && String(profile.display_name).trim();
+        const metaName = user.user_metadata?.display_name || user.user_metadata?.full_name;
+        const name = profileName || metaName || 'Promotor';
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
       } catch {}
