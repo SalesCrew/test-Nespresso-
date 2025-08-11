@@ -37,7 +37,8 @@ import {
 } from "lucide-react"
 
 // @ts-ignore
-import html2pdf from "html2pdf.js";
+// Avoid importing browser-only libraries at module scope to prevent SSR/prerender errors
+// We'll dynamically import `html2pdf.js` inside the functions that need it
 
 export default function ProfilPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "stats">("overview")
@@ -128,7 +129,7 @@ export default function ProfilPage() {
   }
 
   // Export Dienstvertrag as PDF using html2pdf.js for robust page breaking
-  const exportDienstvertragAsPDF = () => {
+  const exportDienstvertragAsPDF = async () => {
     const element = document.getElementById('dienstvertrag-content');
     if (!element) return;
 
@@ -153,6 +154,9 @@ export default function ProfilPage() {
     `;
     clonedElement.appendChild(style);
 
+    // Dynamically import browser-only library to avoid SSR usage
+    const mod = await import('html2pdf.js');
+    const html2pdf = mod.default ?? mod;
     html2pdf().from(clonedElement).set(opt).save();
   };
 
