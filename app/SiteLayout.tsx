@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SiteLayoutProps {
@@ -45,6 +47,12 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
   // Training session detection
   const [isInTrainingSession, setIsInTrainingSession] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [pwSuccess, setPwSuccess] = useState<string | null>(null);
+  const [pwSaving, setPwSaving] = useState(false);
 
   // Determine activeTab based on pathname and handle footer visibility for chat
   useEffect(() => {
@@ -243,7 +251,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setShowPasswordModal(true); setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); }}>
               <Settings className="h-5 w-5" />
             </Button>
           </div>
@@ -453,6 +461,57 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
           </div>
         </div>
       )}
+
+      {/* Change Password Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Passwort ändern</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-1">
+            <div>
+              <label className="text-sm text-gray-600">Neues Passwort</label>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">Passwort bestätigen</label>
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+            </div>
+            {pwError && <p className="text-sm text-red-600">{pwError}</p>}
+            {pwSuccess && <p className="text-sm text-green-600">{pwSuccess}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" onClick={() => setShowPasswordModal(false)}>Abbrechen</Button>
+            <Button
+              className="text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              style={{ background: 'linear-gradient(135deg, #22C55E, #105F2D)' }}
+              onClick={async () => {
+                try {
+                  setPwError(null); setPwSuccess(null); setPwSaving(true);
+                  if (!newPassword || newPassword.length < 8) {
+                    throw new Error('Bitte mindestens 8 Zeichen verwenden.');
+                  }
+                  if (newPassword !== confirmPassword) {
+                    throw new Error('Passwörter stimmen nicht überein.');
+                  }
+                  const supabase = createSupabaseBrowserClient();
+                  const { error } = await supabase.auth.updateUser({ password: newPassword });
+                  if (error) throw error;
+                  setPwSuccess('Passwort erfolgreich geändert.');
+                  setTimeout(() => setShowPasswordModal(false), 1200);
+                } catch (err: any) {
+                  setPwError(err.message || 'Ändern fehlgeschlagen');
+                } finally {
+                  setPwSaving(false);
+                }
+              }}
+              disabled={pwSaving}
+            >
+              {pwSaving ? 'Speichere…' : 'Ändern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
