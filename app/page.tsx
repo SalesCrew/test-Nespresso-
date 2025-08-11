@@ -379,14 +379,25 @@ export default function LandingPage() {
       {/* Onboarding Modal */}
       <OnboardingModal 
         isOpen={isOnboardingOpen}
-        onComplete={(data: any) => {
-          console.log('Onboarding completed:', data);
-          setIsOnboardingOpen(false);
-          
-          // TODO: When database is implemented, save data here
-          // Example: await api.submitOnboardingData(data)
-          
-          alert('Bewerbung erfolgreich eingereicht! Die Daten werden nach der Datenbank-Integration im Admin-Bereich angezeigt.');
+        onComplete={async (data: any) => {
+          try {
+            const res = await fetch('/api/applications', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                full_name: `${data.firstName} ${data.lastName}`.trim(),
+                email: data.email,
+                phone: data.phone,
+                notes: `region=${data.preferredRegion}; hours=${data.hoursPerWeek}`
+              })
+            });
+            if (!res.ok) throw new Error('Bewerbung konnte nicht gespeichert werden');
+            alert('Bewerbung erfolgreich eingereicht!');
+          } catch (e: any) {
+            alert(e.message || 'Fehler beim Einreichen der Bewerbung');
+          } finally {
+            setIsOnboardingOpen(false);
+          }
         }}
         onClose={() => setIsOnboardingOpen(false)}
       />

@@ -1295,8 +1295,14 @@ export default function PromotorenPage() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-3 border-t border-gray-100">
-                        <Button size="sm" className="flex-1 text-white text-xs" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}>
-                          Annehmen
+                        <Button
+                          size="sm"
+                          className="flex-1 text-white text-xs"
+                          style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                          onClick={() => approveSubmission(submission)}
+                          disabled={submitting}
+                        >
+                          {submitting ? '...' : 'Annehmen'}
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700 text-xs">
                           Ablehnen
