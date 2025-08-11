@@ -263,12 +263,14 @@ export default function PromotorenPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: entry.email,
-          display_name: `${entry.firstName} ${entry.lastName}`.trim()
+          display_name: `${entry.firstName} ${entry.lastName}`.trim(),
+          applicationId: entry.id,
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Fehler bei Annehmen');
-      setToastMsg('Promotor angelegt');
+      setToastMsg(`Promotor angelegt. Initiales Passwort: ${data?.password ?? 'gesendet'}`);
+      await loadSubmissions();
     } catch (e: any) {
       setToastMsg(e.message || 'Fehler');
     } finally {
