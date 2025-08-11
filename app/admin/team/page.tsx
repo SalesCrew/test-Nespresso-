@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -135,6 +136,10 @@ export default function PromotorenPage() {
   const [showStammdatenblatt, setShowStammdatenblatt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [approveForm, setApproveForm] = useState<{email: string; display_name: string; applicationId: string | null}>({ email: '', display_name: '', applicationId: null });
+  const [approveError, setApproveError] = useState<string | null>(null);
+  const [approveResultPw, setApproveResultPw] = useState<string | null>(null);
   
   // Stammdatenblatt (submitted onboarding data)
   const [submittedOnboardingData, setSubmittedOnboardingData] = useState([
@@ -254,6 +259,31 @@ export default function PromotorenPage() {
     }
   };
 
+  // Approval Dialog UI
+  const ApprovalDialog = () => (
+    <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+      <DialogHeader>
+        <DialogTitle>Promotor anlegen</DialogTitle>
+      </DialogHeader>
+      <DialogContent>
+        <div className="space-y-2">
+          <label className="text-sm text-gray-600">Name</label>
+          <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white" />
+          <label className="text-sm text-gray-600">E-Mail</label>
+          <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white" />
+          {approveError && <p className="text-sm text-red-600">{approveError}</p>}
+          {approveResultPw && <p className="text-sm text-green-600">Initiales Passwort: <strong>{approveResultPw}</strong></p>}
+        </div>
+      </DialogContent>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setApproveOpen(false)}>Schließen</Button>
+        <Button onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
+          {submitting ? 'Erstelle...' : 'Erstellen'}
+        </Button>
+      </DialogFooter>
+    </Dialog>
+  );
+
   // Approve (Annehmen) → create promotor account from submission
   const approveSubmission = async (entry: any) => {
     try {
@@ -262,17 +292,19 @@ export default function PromotorenPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: entry.email,
-          display_name: `${entry.firstName} ${entry.lastName}`.trim(),
-          applicationId: entry.id,
+          email: approveForm.email,
+          display_name: approveForm.display_name,
+          applicationId: approveForm.applicationId ?? entry.id,
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Fehler bei Annehmen');
-      setToastMsg(`Promotor angelegt. Initiales Passwort: ${data?.password ?? 'gesendet'}`);
+      setApproveResultPw(data?.password ?? null);
+      setApproveError(null);
+      setToastMsg(`Promotor angelegt`);
       await loadSubmissions();
     } catch (e: any) {
-      setToastMsg(e.message || 'Fehler');
+      setApproveError(e.message || 'Fehler');
     } finally {
       setSubmitting(false);
       setTimeout(() => setToastMsg(null), 2500);
@@ -287,7 +319,7 @@ export default function PromotorenPage() {
       if (res.ok && Array.isArray(json.applications)) {
         // Map server shape to UI shape expected here
         const mapped = json.applications.map((a: any) => ({
-          id: a.id, // keep DB id (uuid) for actions like approve
+          id: a.id as string, // keep DB id (uuid) for actions like approve
           submittedAt: a.created_at ?? new Date().toISOString(),
           firstName: (a.full_name ?? '').split(' ')[0] ?? '',
           lastName: (a.full_name ?? '').split(' ').slice(1).join(' ') ?? '',
@@ -1326,7 +1358,8 @@ export default function PromotorenPage() {
                       </div>
 
                       {/* Citizenship & Work Permit */}
-                      <div className="grid grid-cols-2 gap-3 text-xs">
+              <ApprovalDialog />
+              <div className="grid grid-cols-2 gap-3 text-xs">
                         <div>
                           <span className="text-gray-500">Staatsbürgerschaft:</span>
                           <p className="font-medium text-gray-900">{submission.citizenship}</p>
@@ -1347,10 +1380,9 @@ export default function PromotorenPage() {
                           size="sm"
                           className="flex-1 text-white text-xs"
                           style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
-                          onClick={() => approveSubmission(submission)}
-                          disabled={submitting}
+                          onClick={() => { setApproveOpen(true); setApproveForm({ email: submission.email || '', display_name: `${submission.firstName} ${submission.lastName}`.trim(), applicationId: String(submission.id ?? '') }); setApproveResultPw(null); setApproveError(null); }}
                         >
-                          {submitting ? '...' : 'Annehmen'}
+                          Annehmen
                         </Button>
                         <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700 text-xs">
                           Ablehnen
