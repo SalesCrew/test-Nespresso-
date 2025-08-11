@@ -388,7 +388,9 @@ export default function LandingPage() {
                 full_name: `${data?.firstName ?? ''} ${data?.lastName ?? ''}`.trim(),
                 email: String(data?.email || '').trim(),
                 phone: data?.phone ? String(data.phone) : null,
-                notes: `region=${data?.preferredRegion ?? ''}; hours=${data?.hoursPerWeek ?? ''}`
+                notes: `region=${data?.preferredRegion ?? ''}; hours=${data?.hoursPerWeek ?? ''}`,
+                // include detailed fields so backend can store them now
+                ...data
               })
             });
             const json = await res.json().catch(() => ({}));
