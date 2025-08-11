@@ -15,4 +15,15 @@ export async function getCurrentUserAndProfile() {
   return { user, profile } as const;
 }
 
+export async function requireAdmin() {
+  const { user, profile } = await getCurrentUserAndProfile();
+  if (!user || !profile) {
+    return { ok: false as const, reason: 'unauthorized' as const };
+  }
+  const isAdmin = profile.role === 'admin_of_admins' || profile.role === 'admin_staff';
+  return isAdmin
+    ? { ok: true as const, user, profile }
+    : { ok: false as const, reason: 'forbidden' as const };
+}
+
 
