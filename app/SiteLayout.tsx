@@ -100,7 +100,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
           .select('display_name')
           .eq('user_id', user.id)
           .maybeSingle();
-        const name = profile?.display_name || user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Promotor');
+        const name = profile?.display_name || user.user_metadata?.full_name || 'Promotor';
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
       } catch (e) {
