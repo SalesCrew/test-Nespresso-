@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     email,
     password,
     email_confirm: true,
+    user_metadata: { display_name: parsed.data.display_name },
   });
   if (signUpError || !authUser?.user) {
     return NextResponse.json({ error: signUpError?.message ?? 'failed to create user' }, { status: 500 });
