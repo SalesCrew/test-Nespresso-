@@ -276,23 +276,23 @@ export default function PromotorenPage() {
         <div className="space-y-3 pt-2">
           <div>
             <label className="text-sm text-gray-600">Name</label>
-            <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white" />
+            <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
           </div>
           <div>
             <label className="text-sm text-gray-600">E-Mail</label>
-            <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white" />
+            <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
           </div>
           <div>
             <label className="text-sm text-gray-600">Passwort</label>
-            <Input value={approveForm.password} onChange={(e) => setApproveForm(f => ({...f, password: e.target.value}))} className="bg-white" />
+            <Input value={approveForm.password} onChange={(e) => setApproveForm(f => ({...f, password: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
             <div className="mt-1 text-xs text-gray-500">Dieses Passwort wird für den neuen Account verwendet.</div>
           </div>
           {approveError && <p className="text-sm text-red-600">{approveError}</p>}
           {approveResultPw && <p className="text-sm text-green-600">Erstellt. Initiales Passwort: <strong>{approveResultPw}</strong></p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setApproveOpen(false)}>Schließen</Button>
-          <Button onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
+          <Button variant="outline" className="focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" onClick={() => setApproveOpen(false)}>Schließen</Button>
+          <Button className="text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}} onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
             {submitting ? 'Erstelle...' : 'Erstellen'}
           </Button>
         </DialogFooter>
