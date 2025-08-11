@@ -286,8 +286,8 @@ export default function PromotorenPage() {
       const json = await res.json();
       if (res.ok && Array.isArray(json.applications)) {
         // Map server shape to UI shape expected here
-        const mapped = json.applications.map((a: any, idx: number) => ({
-          id: idx + 1,
+        const mapped = json.applications.map((a: any) => ({
+          id: a.id, // keep DB id (uuid) for actions like approve
           submittedAt: a.created_at ?? new Date().toISOString(),
           firstName: (a.full_name ?? '').split(' ')[0] ?? '',
           lastName: (a.full_name ?? '').split(' ').slice(1).join(' ') ?? '',
