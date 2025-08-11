@@ -5,10 +5,10 @@ import { requireAdmin } from '@/lib/supabase/queries';
 import { z } from 'zod';
 
 const applicationSchema = z.object({
-  full_name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  notes: z.string().optional(),
+  full_name: z.preprocess((v) => (typeof v === 'string' ? v.trim() : v), z.string().min(1)),
+  email: z.preprocess((v) => (typeof v === 'string' ? v.trim() : v), z.string().email()),
+  phone: z.preprocess((v) => (v == null ? null : String(v)), z.string().optional().nullable()),
+  notes: z.preprocess((v) => (v == null ? null : String(v)), z.string().optional().nullable()),
 });
 
 export async function GET() {

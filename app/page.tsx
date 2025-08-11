@@ -385,13 +385,14 @@ export default function LandingPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                full_name: `${data.firstName} ${data.lastName}`.trim(),
-                email: data.email,
-                phone: data.phone,
-                notes: `region=${data.preferredRegion}; hours=${data.hoursPerWeek}`
+                full_name: `${data?.firstName ?? ''} ${data?.lastName ?? ''}`.trim(),
+                email: String(data?.email || '').trim(),
+                phone: data?.phone ? String(data.phone) : null,
+                notes: `region=${data?.preferredRegion ?? ''}; hours=${data?.hoursPerWeek ?? ''}`
               })
             });
-            if (!res.ok) throw new Error('Bewerbung konnte nicht gespeichert werden');
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(json?.error || 'Bewerbung konnte nicht gespeichert werden');
             alert('Bewerbung erfolgreich eingereicht!');
           } catch (e: any) {
             alert(e.message || 'Fehler beim Einreichen der Bewerbung');
