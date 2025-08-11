@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { requireAdmin } from '@/lib/supabase/queries';
 import { z } from 'zod';
 
@@ -26,7 +27,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const supabase = createSupabaseServerClient();
+  // Use service client to bypass RLS for unauthenticated/first-time submitters
+  const supabase = createSupabaseServiceClient();
   const { data, error } = await supabase.from('applications').insert({
     full_name: parsed.data.full_name,
     email: parsed.data.email,
@@ -34,7 +36,10 @@ export async function POST(req: NextRequest) {
     notes: parsed.data.notes ?? null,
     status: 'received',
   }).select('*').maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // Surface detailed message to help diagnose RLS or schema issues
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ application: data });
 }
 
