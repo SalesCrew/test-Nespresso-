@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +15,19 @@ export default function PromotorLoginPage() {
   });
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, redirect directly to dashboard
-    router.push('/dashboard');
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    // Default: promotor dashboard
+    router.push('/promotors/dashboard');
   };
 
   return (

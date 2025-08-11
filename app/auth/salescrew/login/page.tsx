@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +15,18 @@ export default function SalesCrewLoginPage() {
   });
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to admin dashboard for SalesCrew
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    // Default: admin dashboard (we'll refine by role after user_profiles exists)
     router.push('/admin/dashboard');
   };
 
