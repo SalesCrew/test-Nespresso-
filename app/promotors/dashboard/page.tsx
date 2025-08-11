@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import OnboardingModal from "@/components/OnboardingModal";
 import {
   Bell,
@@ -88,6 +89,7 @@ export default function DashboardPage() {
   const fullSubtitle = "Hier ist dein Überblick für heute.";
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join('')); 
   const [greeting, setGreeting] = useState("");
+  const [displayName, setDisplayName] = useState<string>("");
 
   // Add state for progress bar animations
   const [progressBarsVisible, setProgressBarsVisible] = useState(false);
@@ -208,19 +210,36 @@ export default function DashboardPage() {
   }, [showTodoHistory]);
 
   useEffect(() => {
-    const currentHour = new Date().getHours();
-    let newGreeting = "";
-    if (currentHour >= 5 && currentHour < 12) {
-      newGreeting = "Guten Morgen, Jan";
-    } else if (currentHour >= 12 && currentHour < 18) {
-      newGreeting = "Guten Tag, Jan";
-    } else if (currentHour >= 18 && currentHour < 22) {
-      newGreeting = "Guten Abend, Jan";
-    } else {
-      newGreeting = "Gute Nacht, Jan";
+    async function loadName() {
+      const cached = typeof window !== 'undefined' ? localStorage.getItem('displayName') : null;
+      if (cached) setDisplayName(cached);
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const name = profile?.display_name || user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Promotor');
+        setDisplayName(name);
+        try { localStorage.setItem('displayName', name); } catch {}
+      } catch {}
     }
-    setGreeting(newGreeting);
+    loadName();
   }, []);
+
+  useEffect(() => {
+    const currentHour = new Date().getHours();
+    const targetName = displayName || 'Promotor';
+    let newGreeting = "";
+    if (currentHour >= 5 && currentHour < 12) newGreeting = `Guten Morgen, ${targetName}`;
+    else if (currentHour >= 12 && currentHour < 18) newGreeting = `Guten Tag, ${targetName}`;
+    else if (currentHour >= 18 && currentHour < 22) newGreeting = `Guten Abend, ${targetName}`;
+    else newGreeting = `Gute Nacht, ${targetName}`;
+    setGreeting(newGreeting);
+  }, [displayName]);
 
   useEffect(() => {
     setAnimatedSubtitle(fullSubtitle.split('').map(() => '\u00A0').join(''));

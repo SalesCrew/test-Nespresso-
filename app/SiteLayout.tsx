@@ -49,6 +49,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
   // Training session detection
   const [isInTrainingSession, setIsInTrainingSession] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("");
   const [openPwPopover, setOpenPwPopover] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -85,6 +86,29 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       setIsInChat(false);
     }
   }, [pathname]);
+
+  // Load signed-in user's display name for header (promotor)
+  useEffect(() => {
+    async function loadName() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        // Try profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const name = profile?.display_name || user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Promotor');
+        setDisplayName(name);
+        try { localStorage.setItem('displayName', name); } catch {}
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadName();
+  }, []);
 
   // Pill Menu Indicator Logic
   useEffect(() => {
@@ -244,7 +268,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 font-medium">JP</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <p className="text-base font-semibold text-gray-800 dark:text-gray-200">Jan Promotor</p>
+              <p className="text-base font-semibold text-gray-800 dark:text-gray-200">{displayName || 'Promotor'}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {pathname === "/promotors/einsatz" ? "Einsatzplanung" : pathname === "/promotors/statistiken" ? "CA KPIs" : pathname === "/promotors/profil" ? "Profil" : "Dashboard"} {/* Dynamic subtitle */}
               </p>
@@ -267,21 +291,21 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   <div>
                     <label className="text-xs text-gray-600">Aktuelles Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} name="pw-current" autoComplete="current-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
                       <button type="button" aria-label="toggle current password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-600">Neues Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} name="pw-new" autoComplete="new-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
                       <button type="button" aria-label="toggle new password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, next: !s.next}))}>{showPw.next ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-600">Passwort wiederholen</label>
                     <div className="relative">
-                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} name="pw-confirm" autoComplete="new-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
                       <button type="button" aria-label="toggle confirm password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, confirm: !s.confirm}))}>{showPw.confirm ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
