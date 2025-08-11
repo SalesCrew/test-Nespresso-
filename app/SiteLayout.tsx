@@ -91,21 +91,14 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   useEffect(() => {
     async function loadName() {
       try {
-        const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        // Try profile
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('display_name')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        const name = profile?.display_name || user.user_metadata?.full_name || 'Promotor';
+        // Use a server-backed route to ensure cookies/session are respected and RLS applies correctly
+        const res = await fetch('/api/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const json = await res.json();
+        const name = json?.profile?.display_name || 'Promotor';
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
-      } catch (e) {
-        // ignore
-      }
+      } catch {}
     }
     loadName();
   }, []);
