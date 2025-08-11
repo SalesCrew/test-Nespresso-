@@ -40,8 +40,7 @@ import {
   ArrowLeft,
   Download,
   CreditCard,
-  Ruler,
-  Image as ImageIcon
+  Ruler
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -134,44 +133,8 @@ export default function PromotorenPage() {
   const regionDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const [showStammdatenblatt, setShowStammdatenblatt] = useState(false);
-  // Media (Fotos & PDFs) menu in detailed view
-  const [mediaMenu, setMediaMenu] = useState<{show: boolean; selectedTab: 'fotos'|'media'}>({show: false, selectedTab: 'fotos'});
-  const [mediaLibrary] = useState<{
-    photos: { url: string; date: string }[];
-    pdfs: { url: string; name: string; date: string }[];
-  }>(
-    () => ({
-      photos: [
-        { url: '/placeholder.jpg', date: '2025-05-16' },
-        { url: '/placeholder.jpg', date: '2025-05-16' },
-        { url: '/placeholder.jpg', date: '2025-05-12' },
-        { url: '/placeholder.jpg', date: '2025-05-01' }
-      ],
-      pdfs: [
-        { url: '/icons/Sommer Get-Together BSH.pdf', name: 'Sommer Get-Together BSH.pdf', date: '2025-05-12' },
-        { url: '/icons/Sommer Get-Together BSH.pdf', name: 'Event Agenda.pdf', date: '2025-05-01' }
-      ]
-    })
-  );
-
-  // Close media menu on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (
-        mediaMenu.show &&
-        !target.closest('[data-media-menu]') &&
-        !target.closest('[data-media-trigger]')
-      ) {
-        setMediaMenu(prev => ({ ...prev, show: false }));
-      }
-    };
-
-    if (mediaMenu.show) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [mediaMenu.show]);
+  const [submitting, setSubmitting] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   
   // Stammdatenblatt (submitted onboarding data)
   const [submittedOnboardingData, setSubmittedOnboardingData] = useState([
@@ -266,6 +229,53 @@ export default function PromotorenPage() {
       hoursPerWeek: "20"
     }
   ]);
+
+  // Submit application to backend
+  const submitApplication = async (entry: any) => {
+    try {
+      setSubmitting(true);
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: `${entry.firstName} ${entry.lastName}`.trim(),
+          email: entry.email,
+          phone: entry.phone,
+          notes: `region=${entry.preferredRegion}; hours=${entry.hoursPerWeek}`
+        })
+      });
+      if (!res.ok) throw new Error('Fehler beim Absenden des Stammdatenblatts');
+      setToastMsg('Stammdatenblatt gespeichert');
+    } catch (e: any) {
+      setToastMsg(e.message || 'Fehler');
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setToastMsg(null), 2500);
+    }
+  };
+
+  // Approve (Annehmen) → create promotor account from submission
+  const approveSubmission = async (entry: any) => {
+    try {
+      setSubmitting(true);
+      const res = await fetch('/api/auth/create-promotor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: entry.email,
+          display_name: `${entry.firstName} ${entry.lastName}`.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Fehler bei Annehmen');
+      setToastMsg('Promotor angelegt');
+    } catch (e: any) {
+      setToastMsg(e.message || 'Fehler');
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setToastMsg(null), 2500);
+    }
+  };
 
   // TODO: When database is implemented, replace with API call to load submissions
   // const loadSubmissions = async () => {
@@ -503,28 +513,20 @@ export default function PromotorenPage() {
   // Region colors for badges - matching admin dashboard popup styling
   const getRegionGradient = (region: string) => {
     switch (region) {
-      case "wien-noe-bgl": return "bg-[#E8F0FE]";
-      case "steiermark": return "bg-[#E7F5ED]";
-      case "salzburg": return "bg-[#F0E9FF]";
-      case "oberoesterreich": return "bg-[#FFF3E6]";
-      case "tirol": return "bg-[#FDEBF3]";
-      case "vorarlberg": return "bg-[#EAF8FF]";
-      case "kaernten": return "bg-[#EAF6FF]";
-      default: return "bg-gray-50";
+      case "wien-noe-bgl": return "bg-red-50/40";
+      case "steiermark": return "bg-green-50/40";
+      case "salzburg": return "bg-blue-50/40";
+      case "oberoesterreich": return "bg-yellow-50/40";
+      case "tirol": return "bg-purple-50/40";
+      case "vorarlberg": return "bg-orange-50/40";
+      case "kaernten": return "bg-teal-50/40";
+      default: return "bg-gray-50/40";
     }
   };
 
   const getRegionBorder = (region: string) => {
-    switch (region) {
-      case "wien-noe-bgl": return "border-[#CBD7F5]";
-      case "steiermark": return "border-[#CFECDD]";
-      case "salzburg": return "border-[#DDD4FF]";
-      case "oberoesterreich": return "border-[#FFE3C7]";
-      case "tirol": return "border-[#F8D5E5]";
-      case "vorarlberg": return "border-[#CFEFFF]";
-      case "kaernten": return "border-[#D6ECFF]";
-      default: return "border-gray-200";
-    }
+    // All pills get the same thin grey border
+    return "border-gray-200";
   };
 
   const getRegionPillColors = (region: string) => {
@@ -533,13 +535,13 @@ export default function PromotorenPage() {
 
   const getRegionHoverClass = (region: string) => {
     switch (region) {
-      case "wien-noe-bgl": return "hover:bg-[#DFE8FD]";
-      case "steiermark": return "hover:bg-[#DDF0E6]";
-      case "salzburg": return "hover:bg-[#E8E1FE]";
-      case "oberoesterreich": return "hover:bg-[#FFE9D4]";
-      case "tirol": return "hover:bg-[#F8D1E1]";
-      case "vorarlberg": return "hover:bg-[#E2F5FF]";
-      case "kaernten": return "hover:bg-[#E1F0FF]";
+      case "wien-noe-bgl": return "hover:bg-red-100/50";
+      case "steiermark": return "hover:bg-green-100/50";
+      case "salzburg": return "hover:bg-blue-100/50";
+      case "oberoesterreich": return "hover:bg-yellow-100/50";
+      case "tirol": return "hover:bg-purple-100/50";
+      case "vorarlberg": return "hover:bg-orange-100/50";
+      case "kaernten": return "hover:bg-teal-100/50";
       default: return "hover:bg-gray-50";
     }
   };
@@ -1714,173 +1716,11 @@ export default function PromotorenPage() {
                             </span>
                           </div>
                         </div>
-                        {/* Media icon to open Fotos & PDFs menu */}
-                        <div className="ml-auto flex items-center mt-6">
-                          <button
-                            className="p-2 rounded-md hover:bg-white/10 transition-colors"
-                            title="Fotos & PDFs"
-                            data-media-trigger
-                            onClick={(e) => { e.stopPropagation(); setMediaMenu(prev => ({...prev, show: !prev.show })); }}
-                          >
-                            <ImageIcon className="h-5 w-5 text-white/90" />
-                          </button>
-                        </div>
                       </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6 overflow-y-auto max-h-[calc(95vh-140px)] [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                      {/* Media Menu Dropdown (Fotos & Media) similar to chat */}
-                      {mediaMenu.show && (
-                        <div 
-                          className="absolute top-[92px] right-4 rounded-lg shadow-lg border border-gray-200 z-[80]"
-                          data-media-menu
-                          style={{ 
-                            width: '320px', 
-                            minHeight: '400px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.97)'
-                          }}
-                        >
-                          {/* Menu Header */}
-                          <div className="flex border-b border-gray-100 relative">
-                            <button
-                              onClick={() => setMediaMenu(prev => ({ ...prev, selectedTab: 'fotos' }))}
-                              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                                mediaMenu.selectedTab === 'fotos'
-                                  ? 'text-transparent'
-                                  : 'text-gray-600 hover:text-gray-800'
-                              }`}
-                              style={mediaMenu.selectedTab === 'fotos' ? {
-                                background: 'linear-gradient(135deg, #22C55E, #105F2D)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text'
-                              } : {}}
-                            >
-                              Fotos
-                            </button>
-                            <button
-                              onClick={() => setMediaMenu(prev => ({ ...prev, selectedTab: 'media' }))}
-                              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
-                                mediaMenu.selectedTab === 'media'
-                                  ? 'text-transparent'
-                                  : 'text-gray-600 hover:text-gray-800'
-                              }`}
-                              style={mediaMenu.selectedTab === 'media' ? {
-                                background: 'linear-gradient(135deg, #22C55E, #105F2D)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text'
-                              } : {}}
-                            >
-                              Media
-                            </button>
-                            {/* Sliding underline */}
-                            <div 
-                              className="absolute bottom-0 h-0.5 transition-all duration-300 ease-in-out"
-                              style={{
-                                background: 'linear-gradient(135deg, #22C55E, #105F2D)',
-                                width: '50%',
-                                transform: mediaMenu.selectedTab === 'fotos' ? 'translateX(0)' : 'translateX(100%)'
-                              }}
-                            />
-                          </div>
-                          
-                          {/* Menu Content */}
-                          <div className="p-4">
-                            {mediaMenu.selectedTab === 'fotos' && (
-                              <>
-                                {mediaLibrary.photos.length > 0 ? (
-                                  <div 
-                                    className="max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden"
-                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                                  >
-                                    <div className="grid grid-cols-4 gap-2">
-                                      {/* Group by date with separators */}
-                                      {mediaLibrary.photos
-                                        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                        .map((photo, index, arr) => {
-                                          const showSeparator = index === 0 || new Date(arr[index-1].date).toDateString() !== new Date(photo.date).toDateString();
-                                          return (
-                                            <>
-                                              {showSeparator && (
-                                                <div className="col-span-4 text-xs text-gray-500 py-1 mt-1">{new Date(photo.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-                                              )}
-                                              <button
-                                                key={`${photo.url}-${index}`}
-                                                onClick={() => {
-                                                  window.open(photo.url, '_blank');
-                                                  setMediaMenu(prev => ({ ...prev, show: false }));
-                                                }}
-                                                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
-                                              >
-                                                <img
-                                                  src={photo.url}
-                                                  alt={`Photo ${index + 1}`}
-                                                  className="w-full h-full object-cover"
-                                                />
-                                              </button>
-                                            </>
-                                          );
-                                        })}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="text-center text-gray-500 py-8">
-                                    <p>Keine Fotos vorhanden</p>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                            
-                            {mediaMenu.selectedTab === 'media' && (
-                              <>
-                                {mediaLibrary.pdfs.length > 0 ? (
-                                  <div 
-                                    className="max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden"
-                                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                                  >
-                                    <div className="grid grid-cols-4 gap-2">
-                                      {/* Group by date with separators */}
-                                      {mediaLibrary.pdfs
-                                        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                        .map((pdf, index, arr) => {
-                                          const showSeparator = index === 0 || new Date(arr[index-1].date).toDateString() !== new Date(pdf.date).toDateString();
-                                          return (
-                                            <>
-                                              {showSeparator && (
-                                                <div className="col-span-4 text-xs text-gray-500 py-1 mt-1">{new Date(pdf.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
-                                              )}
-                                              <div
-                                                key={`${pdf.url}-${index}`}
-                                                className="aspect-square rounded-lg overflow-hidden bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer flex flex-col items-center justify-center p-2"
-                                                onClick={() => {
-                                                  window.open(pdf.url, '_blank');
-                                                  setMediaMenu(prev => ({ ...prev, show: false }));
-                                                }}
-                                              >
-                                                <div className="flex-1 flex items-center justify-center">
-                                                  <FileText className="w-8 h-8 text-red-500" />
-                                                </div>
-                                                <div className="text-xs text-gray-700 text-center truncate w-full mt-1">
-                                                  {pdf.name}
-                                                </div>
-                                              </div>
-                                            </>
-                                          );
-                                        })}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="text-center text-gray-500 py-8">
-                                    <p>Keine PDF-Dateien vorhanden</p>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                         
                         {/* Left Column - Personal & Contact */}
