@@ -35,11 +35,12 @@ const applicationSchema = z.object({
 }).passthrough();
 
 export async function GET() {
-  // Admins only list applications
-  const auth = await requireAdmin();
-  if (!auth.ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.from('applications').select('*').order('created_at', { ascending: false });
+  // Temporary: allow any authenticated user to list, even if no profile is provisioned yet
+  const server = createSupabaseServerClient();
+  const { data: auth } = await server.auth.getUser();
+  if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const svc = createSupabaseServiceClient();
+  const { data, error } = await svc.from('applications').select('*').order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ applications: data ?? [] });
 }

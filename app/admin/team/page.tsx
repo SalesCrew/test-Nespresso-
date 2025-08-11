@@ -322,10 +322,11 @@ export default function PromotorenPage() {
   };
 
   useEffect(() => {
-    // When the Stammdatenblatt tab is opened, load latest
-    if (showStammdatenblatt) {
-      loadSubmissions();
-    }
+    // Always load initially and whenever toggled
+    loadSubmissions();
+  }, []);
+  useEffect(() => {
+    if (showStammdatenblatt) loadSubmissions();
   }, [showStammdatenblatt]);
 
 
