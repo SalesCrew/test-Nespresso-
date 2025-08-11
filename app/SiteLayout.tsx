@@ -12,6 +12,8 @@ import {
   MessagesSquare,
   X,
   Send,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -259,35 +261,35 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   <Settings className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" sideOffset={8} className="w-80 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-xl">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Passwort ändern</h3>
-                <div className="space-y-3">
+              <PopoverContent align="end" sideOffset={10} className="w-80 p-4 bg-white dark:bg-gray-900 border border-gray-200/70 dark:border-gray-800 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">Passwort ändern</h3>
+                <div className="space-y-2.5">
                   <div>
-                    <label className="text-sm text-gray-600">Aktuelles Passwort</label>
+                    <label className="text-xs text-gray-600">Aktuelles Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? 'Hide' : 'Show'}</button>
+                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" aria-label="toggle current password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Neues Passwort</label>
+                    <label className="text-xs text-gray-600">Neues Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, next: !s.next}))}>{showPw.next ? 'Hide' : 'Show'}</button>
+                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" aria-label="toggle new password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, next: !s.next}))}>{showPw.next ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-600">Passwort wiederholen</label>
+                    <label className="text-xs text-gray-600">Passwort wiederholen</label>
                     <div className="relative">
-                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-                      <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xs" onClick={() => setShowPw(s => ({...s, confirm: !s.confirm}))}>{showPw.confirm ? 'Hide' : 'Show'}</button>
+                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <button type="button" aria-label="toggle confirm password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, confirm: !s.confirm}))}>{showPw.confirm ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
-                  {pwError && <p className="text-sm text-red-600">{pwError}</p>}
-                  {pwSuccess && <p className="text-sm text-green-600">{pwSuccess}</p>}
-                  <div className="flex gap-2 pt-1">
+                  {pwError && <p className="text-xs text-red-600">{pwError}</p>}
+                  {pwSuccess && <p className="text-xs text-green-600">{pwSuccess}</p>}
+                  <div className="flex gap-2 pt-1.5">
                     <Button
-                      className="flex-1 text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="flex-1 text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-9 rounded-lg"
                       style={{ background: 'linear-gradient(to right, rgb(59,130,246), rgb(79,70,229))' }}
                       onClick={async () => {
                         try {
