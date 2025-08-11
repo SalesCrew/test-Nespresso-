@@ -370,7 +370,8 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   appearance: 'none',
                   // Ensure consistent light control styling on iOS/Safari which can auto-darken inputs
                   colorScheme: 'light',
-                  background: 'var(--input-bg, linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95)))',
+                  // Force consistent light grey gradient regardless of system dark mode
+                  background: 'linear-gradient(to bottom, rgba(243,244,246,0.95), rgba(249,250,251,0.95))',
                   backgroundColor: '#f9fafb',
                   WebkitTextFillColor: 'inherit'
                 }}
