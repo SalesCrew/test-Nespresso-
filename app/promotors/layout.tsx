@@ -13,8 +13,9 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     redirect("/auth/promotors/login");
   }
 
+  // If profile is missing but user is authenticated, allow access for now
   if (!profile) {
-    redirect("/auth/promotors/login");
+    return <SiteLayout>{children}</SiteLayout>;
   }
 
   if (profile.role === "promotor") {
