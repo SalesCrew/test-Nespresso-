@@ -137,7 +137,7 @@ export default function PromotorenPage() {
   const [submitting, setSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
-  const [approveForm, setApproveForm] = useState<{email: string; display_name: string; applicationId: string | null}>({ email: '', display_name: '', applicationId: null });
+  const [approveForm, setApproveForm] = useState<{email: string; display_name: string; password: string; applicationId: string | null}>({ email: '', display_name: '', password: '', applicationId: null });
   const [approveError, setApproveError] = useState<string | null>(null);
   const [approveResultPw, setApproveResultPw] = useState<string | null>(null);
   
@@ -259,28 +259,44 @@ export default function PromotorenPage() {
     }
   };
 
+  function generateRandomPassword(length: number = 12): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    let out = '';
+    for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  }
+
   // Approval Dialog UI
   const ApprovalDialog = () => (
     <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
-      <DialogHeader>
-        <DialogTitle>Promotor anlegen</DialogTitle>
-      </DialogHeader>
       <DialogContent>
-        <div className="space-y-2">
-          <label className="text-sm text-gray-600">Name</label>
-          <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white" />
-          <label className="text-sm text-gray-600">E-Mail</label>
-          <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white" />
+        <DialogHeader>
+          <DialogTitle>Promotor anlegen</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 pt-2">
+          <div>
+            <label className="text-sm text-gray-600">Name</label>
+            <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">E-Mail</label>
+            <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">Passwort</label>
+            <Input value={approveForm.password} onChange={(e) => setApproveForm(f => ({...f, password: e.target.value}))} className="bg-white" />
+            <div className="mt-1 text-xs text-gray-500">Dieses Passwort wird für den neuen Account verwendet.</div>
+          </div>
           {approveError && <p className="text-sm text-red-600">{approveError}</p>}
-          {approveResultPw && <p className="text-sm text-green-600">Initiales Passwort: <strong>{approveResultPw}</strong></p>}
+          {approveResultPw && <p className="text-sm text-green-600">Erstellt. Initiales Passwort: <strong>{approveResultPw}</strong></p>}
         </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setApproveOpen(false)}>Schließen</Button>
+          <Button onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
+            {submitting ? 'Erstelle...' : 'Erstellen'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => setApproveOpen(false)}>Schließen</Button>
-        <Button onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
-          {submitting ? 'Erstelle...' : 'Erstellen'}
-        </Button>
-      </DialogFooter>
     </Dialog>
   );
 
@@ -294,6 +310,7 @@ export default function PromotorenPage() {
         body: JSON.stringify({
           email: approveForm.email,
           display_name: approveForm.display_name,
+          password: approveForm.password?.trim() ? approveForm.password : undefined,
           applicationId: approveForm.applicationId ?? entry.id,
         })
       });
@@ -1380,7 +1397,7 @@ export default function PromotorenPage() {
                           size="sm"
                           className="flex-1 text-white text-xs"
                           style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
-                          onClick={() => { setApproveOpen(true); setApproveForm({ email: submission.email || '', display_name: `${submission.firstName} ${submission.lastName}`.trim(), applicationId: String(submission.id ?? '') }); setApproveResultPw(null); setApproveError(null); }}
+                          onClick={() => { setApproveOpen(true); setApproveForm({ email: submission.email || '', display_name: `${submission.firstName} ${submission.lastName}`.trim(), password: generateRandomPassword(12), applicationId: String(submission.id ?? '') }); setApproveResultPw(null); setApproveError(null); }}
                         >
                           Annehmen
                         </Button>
