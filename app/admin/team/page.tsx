@@ -551,21 +551,31 @@ export default function PromotorenPage() {
 
   // Region colors for badges - matching admin dashboard popup styling
   const getRegionGradient = (region: string) => {
+    // Match add-promotor window pastel colors (dashboard helper)
     switch (region) {
-      case "wien-noe-bgl": return "bg-red-50/40";
-      case "steiermark": return "bg-green-50/40";
-      case "salzburg": return "bg-blue-50/40";
-      case "oberoesterreich": return "bg-yellow-50/40";
-      case "tirol": return "bg-purple-50/40";
-      case "vorarlberg": return "bg-orange-50/40";
-      case "kaernten": return "bg-teal-50/40";
-      default: return "bg-gray-50/40";
+      case "wien-noe-bgl": return "bg-[#E8F0FE]"; // pastel blue
+      case "steiermark": return "bg-[#E7F5ED]"; // pastel green
+      case "salzburg": return "bg-[#F0E9FF]"; // pastel indigo
+      case "oberoesterreich": return "bg-[#FFF3E6]"; // pastel orange
+      case "tirol": return "bg-[#FDEBF3]"; // pastel pink
+      case "vorarlberg": return "bg-[#EAF8FF]"; // pastel cyan
+      case "kaernten": return "bg-[#EAF6FF]"; // soft sky
+      default: return "bg-gray-50";
     }
   };
 
   const getRegionBorder = (region: string) => {
-    // All pills get the same thin grey border
-    return "border-gray-200";
+    // Matching soft borders per cluster
+    switch (region) {
+      case "wien-noe-bgl": return "border-[#CBD7F5]";
+      case "steiermark": return "border-[#CFECDD]";
+      case "salzburg": return "border-[#DDD4FF]";
+      case "oberoesterreich": return "border-[#FFE3C7]";
+      case "tirol": return "border-[#F8D5E5]";
+      case "vorarlberg": return "border-[#CFEFFF]";
+      case "kaernten": return "border-[#D6ECFF]";
+      default: return "border-gray-200";
+    }
   };
 
   const getRegionPillColors = (region: string) => {
