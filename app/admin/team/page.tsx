@@ -438,7 +438,19 @@ export default function PromotorenPage() {
           },
           applicationId: inc.applicationId ?? null,
         }));
-        setPromotors(cards);
+        // Fetch onboarding status per promotor and compute progress
+        const withProgress = await Promise.all(cards.map(async (card: any) => {
+          try {
+            const r = await fetch(`/api/promotors/${card.id}/onboarding`, { cache: 'no-store' });
+            const j = await r.json();
+            const steps = Array.isArray(j.steps) ? j.steps : [];
+            if (!steps.length) return card;
+            const done = steps.filter((s: any) => s.status === 'done').length;
+            const progress = Math.round((done / steps.length) * 100);
+            return { ...card, onboardingProgress: progress };
+          } catch { return card; }
+        }));
+        setPromotors(withProgress);
       }
     } catch {}
   };
