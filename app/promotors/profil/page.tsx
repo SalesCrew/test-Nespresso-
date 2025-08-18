@@ -343,8 +343,9 @@ export default function ProfilPage() {
         })
         const upj = await up.json()
         const path = upj?.path
-        if (!path) return
-        const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
+        const token = upj?.token
+        if (!path || !token) return
+        const { error: upErr } = await supabase.storage.from('documents').uploadToSignedUrl(path, token, file)
         if (upErr) throw upErr
         await fetch(`/api/promotors/${uid}/documents/confirm`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

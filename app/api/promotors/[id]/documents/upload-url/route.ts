@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
-const ALLOWED_TYPES = new Set(['passport','citizenship','arbeitserlaubnis']);
+const ALLOWED_TYPES = new Set(['passport','citizenship','arbeitserlaubnis','strafregister','additional']);
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const server = createSupabaseServerClient();
@@ -17,10 +17,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const path = `${userId}/${doc_type}.${ext}`;
   const svc = createSupabaseServiceClient();
-  // We will use a signed URL for PUT via storage from the client; supabase-js v2 signed upload URLs are not universal,
-  // so we return the path and the client will do storage.from('documents').upload(path, file, { upsert: true })
-  // This endpoint exists mainly to agree on canonical path.
-  return NextResponse.json({ bucket: 'documents', path });
+  // Create short-lived signed upload URL (bypasses storage RLS issues on client)
+  const { data, error } = await svc.storage.from('documents').createSignedUploadUrl(path, 600);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ bucket: 'documents', path, token: data?.token });
 }
 
 
