@@ -1961,22 +1961,7 @@ export default function PromotorenPage() {
                                     <div key={index} className="flex items-center justify-between">
                                       <span className="text-sm text-gray-600 dark:text-gray-300">{docName}</span>
                                       <div className="flex items-center space-x-2">
-                                        {status === "approved" && (
-                                          <button
-                                            onClick={async () => {
-                                              const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
-                                              const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
-                                              if (!uid) return
-                                              const r = await fetch(`/api/promotors/${uid}/documents/signed-url?doc_type=${encodeURIComponent(type)}`)
-                                              const j = await r.json()
-                                              if (j?.url) window.open(j.url, '_blank')
-                                            }}
-                                            className="p-0 hover:bg-transparent transition-all duration-300 opacity-40 hover:opacity-80"
-                                          >
-                                            <Eye className="h-3 w-3 text-gray-400 hover:text-gray-600" />
-                                          </button>
-                                        )}
-                                                                                {status === "pending" ? (
+                                        {status === "pending" ? (
                                           <div className="flex items-center space-x-1">
                                             {documentsWithFiles[docName] && (
                                               <button
@@ -2012,21 +1997,6 @@ export default function PromotorenPage() {
                                               <X className="h-4 w-4 text-red-500 hover:text-red-600" />
                                             </button>
                                             <Loader2 className="h-4 w-4 text-orange-400 animate-spin ml-1" />
-                                          </div>
-                                        ) : status === "approved" && docName === "Strafregister" && !strafregisterDeactivated ? (
-                                          <div className="flex items-center space-x-1">
-                                            <button
-                                              onClick={() => handleStrafregisterAction('approve')}
-                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
-                                            >
-                                              <Check className="h-4 w-4 text-green-500 hover:text-green-600" />
-                                            </button>
-                                            <button
-                                              onClick={() => handleStrafregisterAction('decline')}
-                                              className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
-                                            >
-                                              <X className="h-4 w-4 text-red-500 hover:text-red-600" />
-                                            </button>
                                           </div>
                                         ) : status === "approved" ? (
                                           <div className="flex items-center space-x-1">
