@@ -15,46 +15,46 @@ export async function GET() {
     .eq('role', 'promotor');
   if (usersErr) return NextResponse.json({ error: usersErr.message }, { status: 500 });
 
-  // Link to promotor_profiles (optional) and applications for richer card data
+  // Pull canonical promotor_profiles and join back to applications for fallback
   const userIds = (users || []).map((u: { user_id: string }) => u.user_id);
-  const { data: links } = await svc
+  const { data: profiles } = await svc
     .from('promotor_profiles')
-    .select('user_id, application_id')
+    .select('*')
     .in('user_id', userIds);
-  const appIds = (links || []).map((l: { application_id: string | null }) => l.application_id).filter(Boolean) as string[];
+  const appIds = (profiles || []).map((p: any) => p.application_id).filter(Boolean) as string[];
   const { data: applications } = appIds.length
     ? await svc.from('applications').select('*').in('id', appIds)
     : ({ data: [] } as { data: any[] });
 
   const appById = new Map((applications || []).map((a: any) => [a.id, a]));
-  const linkByUser = new Map((links || []).map((l: any) => [l.user_id, l]));
+  const profileByUser = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
   const cards = (users || []).map((u: any) => {
-    const link: any = linkByUser.get(u.user_id);
-    const app: any = link?.application_id ? appById.get(link.application_id) : null;
+    const profile: any = profileByUser.get(u.user_id) || null;
+    const app: any = profile?.application_id ? appById.get(profile.application_id) : null;
     const fullName = (u.display_name || '').trim() || (app?.full_name || '');
     // Handle both camelCase and snake_case field names from applications table
     const address = [
-      app?.address,
-      app?.postalCode || app?.postal_code,
-      app?.city
+      profile?.address ?? app?.address,
+      profile?.postal_code ?? app?.postalCode ?? app?.postal_code,
+      profile?.city ?? app?.city
     ].filter(Boolean).join(', ');
     return {
       id: u.user_id,
       name: fullName,
       email: app?.email || null,
-      phone: u.phone || app?.phone || null,
+      phone: profile?.phone ?? u.phone ?? app?.phone ?? null,
       address,
-      birthDate: app?.birthDate || app?.birth_date || null,
-      region: app?.preferredRegion || app?.preferred_region || 'wien-noe-bgl',
-      workingDays: app?.workingDays || app?.working_days || [],
+      birthDate: profile?.birth_date ?? app?.birthDate ?? app?.birth_date ?? null,
+      region: profile?.region ?? app?.preferredRegion ?? app?.preferred_region ?? 'wien-noe-bgl',
+      workingDays: profile?.working_days ?? app?.workingDays ?? app?.working_days ?? [],
       status: 'active',
       avatar: '/placeholder.svg',
       clothingInfo: { 
-        height: app?.height || '', 
-        size: app?.clothingSize || app?.clothing_size || app?.clothingsize || '' 
+        height: profile?.height ?? app?.height ?? '', 
+        size: profile?.clothing_size ?? app?.clothingSize ?? app?.clothing_size ?? app?.clothingsize ?? '' 
       },
-      applicationId: link?.application_id || null,
+      applicationId: profile?.application_id || null,
     };
   });
 

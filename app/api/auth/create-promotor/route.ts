@@ -50,15 +50,29 @@ export async function POST(req: NextRequest) {
   }
 
   if (parsed.data.applicationId) {
-    // Mark application approved
-    await svc.from('applications').update({ status: 'approved' }).eq('id', parsed.data.applicationId);
-    // Try to create promotor_profiles linkage if table exists
-    try {
-      await svc.from('promotor_profiles').insert({
-        user_id: authUser.user.id,
-        application_id: parsed.data.applicationId,
-      });
-    } catch {}
+    // Mark application approved and copy core fields into promotor_profiles as canonical source
+    const applicationId = parsed.data.applicationId;
+    await svc.from('applications').update({ status: 'approved' }).eq('id', applicationId);
+    const { data: appRow } = await svc
+      .from('applications')
+      .select('*')
+      .eq('id', applicationId)
+      .maybeSingle();
+
+    // Upsert profile with mapped fields (field-level fallbacks; arrays preserved)
+    await svc.from('promotor_profiles').upsert({
+      user_id: authUser.user.id,
+      application_id: applicationId,
+      phone: appRow?.phone ?? null,
+      address: appRow?.address ?? null,
+      postal_code: appRow?.postalCode ?? null,
+      city: appRow?.city ?? null,
+      region: appRow?.preferredRegion ?? null,
+      working_days: Array.isArray(appRow?.workingDays) ? appRow?.workingDays : null,
+      height: appRow?.height ?? null,
+      clothing_size: appRow?.clothingSize ?? null,
+      birth_date: appRow?.birthDate ?? null,
+    });
   }
 
   return NextResponse.json({ ok: true, user_id: authUser.user.id, password });
