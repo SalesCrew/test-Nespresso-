@@ -50,7 +50,15 @@ export async function POST(req: NextRequest) {
   }
 
   if (parsed.data.applicationId) {
+    // Mark application approved
     await svc.from('applications').update({ status: 'approved' }).eq('id', parsed.data.applicationId);
+    // Try to create promotor_profiles linkage if table exists
+    try {
+      await svc.from('promotor_profiles').insert({
+        user_id: authUser.user.id,
+        application_id: parsed.data.applicationId,
+      });
+    } catch {}
   }
 
   return NextResponse.json({ ok: true, user_id: authUser.user.id, password });

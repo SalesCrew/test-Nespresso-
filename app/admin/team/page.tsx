@@ -373,6 +373,7 @@ export default function PromotorenPage() {
   useEffect(() => {
     // Always load initially and whenever toggled
     loadSubmissions();
+    loadPromotors();
   }, []);
   useEffect(() => {
     if (showStammdatenblatt) loadSubmissions();
@@ -380,8 +381,8 @@ export default function PromotorenPage() {
 
 
 
-  // Mock promotor data based on the app structure
-  const [promotors, setPromotors] = useState([
+  // Promotors state (will be hydrated from backend, with mock fallback)
+  const [promotors, setPromotors] = useState<any[]>([
     {
       id: 1,
       name: "Sarah Schmidt",
@@ -542,57 +543,33 @@ export default function PromotorenPage() {
       completedTrainings: 7,
       onboardingProgress: 75,
       ausfaelle: {
-        krankenstand: 1,
-        notfaelle: 1
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Anna Bauer",
-        bankName: "Oberbank",
-        iban: "AT151500000001234567",
-        bic: "OBKLAT2L"
-      },
-      clothingInfo: {
-        height: "170",
-        size: "M"
-      }
-    },
-    {
-      id: 6,
-      name: "Tom Fischer",
-      email: "tom.fischer@salescrew.de",
-      phone: "+43 676 678 9012",
-      address: "Innsbrucker Straße 15, 6020 Innsbruck",
-      birthDate: "18.01.1991",
-      region: "tirol",
-      workingDays: ["Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-      status: "active",
-      lastActivity: "2024-01-15",
-      performance: {
-        mcet: 4.1,
-        tma: 82,
-        vlshare: 14
-      },
-      assignments: 13,
-      completedTrainings: 9,
-      onboardingProgress: 90,
-      ausfaelle: {
         krankenstand: 0,
         notfaelle: 1
       },
       avatar: "/placeholder.svg",
       bankDetails: {
-        accountHolder: "Tom Fischer",
-        bankName: "Tiroler Sparkasse",
-        iban: "AT342050303000012345",
-        bic: "SPIHAT22"
+        accountHolder: "Anna Bauer",
+        bankName: "Oberösterreichische Bank",
+        iban: "AT123400000012345678",
+        bic: "OOBAATWW"
       },
       clothingInfo: {
-        height: "185",
-        size: "XL"
+        height: "168",
+        size: "M"
       }
     }
   ]);
+
+  // Load promotors from backend
+  const loadPromotors = async () => {
+    try {
+      const res = await fetch('/api/promotors', { cache: 'no-store' });
+      const json = await res.json();
+      if (res.ok && Array.isArray(json.promotors)) {
+        setPromotors(json.promotors);
+      }
+    } catch {}
+  };
 
   // Region mapping for display
   const regionNames = {
@@ -1595,7 +1572,7 @@ export default function PromotorenPage() {
                         <Avatar className="h-11 w-11 ring-2 ring-gray-100 ring-offset-2">
                           <AvatarImage src={promotor.avatar} alt={promotor.name} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-700 font-medium text-sm">
-                            {promotor.name.split(' ').map(n => n[0]).join('')}
+                            {promotor.name.split(' ').map((n: string) => (n && typeof n === 'string' ? n[0] : '')).join('')}
                           </AvatarFallback>
                         </Avatar>
                         {/* Status indicator dot */}
@@ -1918,7 +1895,7 @@ export default function PromotorenPage() {
                         <Avatar className="h-16 w-16 ring-4 ring-white/20">
                           <AvatarImage src={promotor.avatar} alt={promotor.name} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-medium">
-                            {promotor.name.split(' ').map(n => n[0]).join('')}
+                            {promotor.name.split(' ').map((n: string) => (n as string)[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                         

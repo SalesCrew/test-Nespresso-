@@ -94,3 +94,19 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ application: data });
 }
 
+export async function PATCH(req: NextRequest) {
+  const server = createSupabaseServerClient();
+  const { data: auth } = await server.auth.getUser();
+  if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const svc = createSupabaseServiceClient();
+  const body = await req.json().catch(() => ({} as any));
+  const id = body?.id;
+  const status = body?.status;
+  if (!id || !['received','review','approved','rejected'].includes(status)) {
+    return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
+  }
+  const { error } = await svc.from('applications').update({ status }).eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
