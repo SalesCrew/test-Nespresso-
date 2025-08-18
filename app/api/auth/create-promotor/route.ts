@@ -73,6 +73,25 @@ export async function POST(req: NextRequest) {
       clothing_size: appRow?.clothingSize ?? null,
       birth_date: appRow?.birthDate ?? null,
     });
+
+    // Seed onboarding steps for the new promotor (idempotent)
+    const defaultSteps = [
+      { step_key: 'profile_basics', label: 'Profil vervollständigen' },
+      { step_key: 'documents', label: 'Dokumente hochladen' },
+      { step_key: 'first_training', label: 'Erste Schulung starten' },
+      { step_key: 'bank_details', label: 'Bankdaten hinterlegen' },
+    ];
+    const { data: existingSteps } = await svc
+      .from('onboarding_steps')
+      .select('step_key')
+      .eq('user_id', authUser.user.id);
+    const existingKeys = new Set((existingSteps || []).map((r: any) => r.step_key));
+    const toInsert = defaultSteps
+      .filter(s => !existingKeys.has(s.step_key))
+      .map(s => ({ user_id: authUser.user.id, step_key: s.step_key, label: s.label, status: 'pending' as const }));
+    if (toInsert.length) {
+      await svc.from('onboarding_steps').insert(toInsert as any);
+    }
   }
 
   return NextResponse.json({ ok: true, user_id: authUser.user.id, password });
