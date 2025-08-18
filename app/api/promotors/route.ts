@@ -50,6 +50,12 @@ export async function GET() {
       workingDays: profile?.working_days ?? app?.workingDays ?? app?.working_days ?? [],
       status: 'active',
       avatar: '/placeholder.svg',
+      bankDetails: {
+        accountHolder: profile?.bank_holder ?? '',
+        bankName: '',
+        iban: profile?.bank_iban ?? '',
+        bic: profile?.bank_bic ?? ''
+      },
       clothingInfo: { 
         height: profile?.height ?? app?.height ?? '', 
         size: profile?.clothing_size ?? app?.clothingSize ?? app?.clothing_size ?? app?.clothingsize ?? '' 

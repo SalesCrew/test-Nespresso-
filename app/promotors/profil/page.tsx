@@ -62,10 +62,10 @@ export default function ProfilPage() {
     size: "L"
   })
   const [editableBankData, setEditableBankData] = useState({
-    accountHolder: "Jan Promotor",
-    bankName: "Erste Bank Austria",
-    iban: "AT611904300234573201",
-    bic: "EASYATW1"
+    accountHolder: "",
+    bankName: "",
+    iban: "",
+    bic: ""
   })
   const [editablePersonalData, setEditablePersonalData] = useState({
     birthday: "15.03.1995",
@@ -101,11 +101,25 @@ export default function ProfilPage() {
     setIsEditingClothing(!isEditingClothing)
   }
 
-  const handleBankEditToggle = () => {
+  const handleBankEditToggle = async () => {
     if (isEditingBank) {
-      // Save the data when exiting edit mode
-      // In a real app, this would make an API call
-      console.log("Saving bank data:", editableBankData)
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.id) {
+          await fetch(`/api/promotors/${user.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bank_holder: editableBankData.accountHolder,
+              bank_iban: editableBankData.iban,
+              bank_bic: editableBankData.bic
+            })
+          })
+        }
+      } catch (e) {
+        console.error('Failed to save bank data', e)
+      }
     }
     setIsEditingBank(!isEditingBank)
   }
@@ -311,6 +325,18 @@ export default function ProfilPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.id) {
           setUserId(user.id)
+          // load profile to prefill bank data if present
+          try {
+            const r = await fetch(`/api/promotors/${user.id}`)
+            const j = await r.json()
+            const p = j?.profile || {}
+            setEditableBankData(prev => ({
+              accountHolder: p.bank_holder || '',
+              bankName: prev.bankName || '',
+              iban: p.bank_iban || '',
+              bic: p.bank_bic || ''
+            }))
+          } catch {}
           await refreshDocuments(user.id)
         }
       } catch {}
@@ -865,7 +891,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.accountHolder}
+                        {editableBankData.accountHolder || 'Keine Daten'}
                       </p>
                     )}
                   </div>
@@ -885,7 +911,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.bankName}
+                        {editableBankData.bankName || 'Keine Daten'}
                       </p>
                     )}
                   </div>
@@ -905,7 +931,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {maskIban(editableBankData.iban)}
+                        {editableBankData.iban ? maskIban(editableBankData.iban) : 'Keine Daten'}
                       </p>
                     )}
                   </div>
@@ -925,7 +951,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editableBankData.bic}
+                        {editableBankData.bic || 'Keine Daten'}
                       </p>
                     )}
                   </div>
