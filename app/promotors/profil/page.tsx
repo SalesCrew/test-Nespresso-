@@ -112,6 +112,7 @@ export default function ProfilPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               bank_holder: editableBankData.accountHolder,
+              bank_name: editableBankData.bankName,
               bank_iban: editableBankData.iban,
               bank_bic: editableBankData.bic
             })
@@ -332,7 +333,7 @@ export default function ProfilPage() {
             const p = j?.profile || {}
             setEditableBankData(prev => ({
               accountHolder: p.bank_holder || '',
-              bankName: prev.bankName || '',
+              bankName: p.bank_name || '',
               iban: p.bank_iban || '',
               bic: p.bank_bic || ''
             }))

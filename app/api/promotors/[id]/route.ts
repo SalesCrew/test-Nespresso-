@@ -62,6 +62,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     bank_iban: typeof raw.bank_iban === 'string' ? raw.bank_iban : undefined,
     bank_bic: typeof raw.bank_bic === 'string' ? raw.bank_bic : undefined,
     bank_holder: typeof raw.bank_holder === 'string' ? raw.bank_holder : undefined,
+    bank_name: typeof raw.bank_name === 'string' ? raw.bank_name : undefined,
   } as any;
 
   const updates: any = { updated_at: new Date().toISOString() };

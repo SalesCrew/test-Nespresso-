@@ -52,7 +52,7 @@ export async function GET() {
       avatar: '/placeholder.svg',
       bankDetails: {
         accountHolder: profile?.bank_holder ?? '',
-        bankName: '',
+        bankName: profile?.bank_name ?? '',
         iban: profile?.bank_iban ?? '',
         bic: profile?.bank_bic ?? ''
       },
