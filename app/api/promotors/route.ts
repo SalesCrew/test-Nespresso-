@@ -52,7 +52,7 @@ export async function GET() {
       avatar: '/placeholder.svg',
       clothingInfo: { 
         height: app?.height || '', 
-        size: app?.clothingSize || app?.clothing_size || '' 
+        size: app?.clothingSize || app?.clothing_size || app?.clothingsize || '' 
       },
       applicationId: link?.application_id || null,
     };
