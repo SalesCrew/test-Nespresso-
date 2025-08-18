@@ -311,19 +311,30 @@ export default function ProfilPage() {
   }
 
   const handleUploadDocument = async (documentName: string) => {
-    if (!userId) return
     const doc_type = mapDocNameToType(documentName)
     // pick file
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*,application/pdf'
+    input.style.display = 'none'
+    document.body.appendChild(input)
     input.onchange = async () => {
       const file = input.files?.[0]
+      document.body.removeChild(input)
       if (!file) return
+      // ensure we have user id at selection time
+      let uid = userId
+      if (!uid) {
+        try {
+          const me = await (await fetch('/api/me', { cache: 'no-store' })).json()
+          if (me?.user_id) { setUserId(me.user_id); uid = me.user_id }
+        } catch {}
+      }
+      if (!uid) return
       const ext = (file.name.split('.').pop() || 'pdf').toLowerCase()
       try {
         // get canonical path
-        const up = await fetch(`/api/promotors/${userId}/documents/upload-url`, {
+        const up = await fetch(`/api/promotors/${uid}/documents/upload-url`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doc_type, file_ext: ext })
         })
@@ -333,7 +344,7 @@ export default function ProfilPage() {
         const supabase = createSupabaseBrowserClient()
         const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
         if (upErr) throw upErr
-        await fetch(`/api/promotors/${userId}/documents/confirm`, {
+        await fetch(`/api/promotors/${uid}/documents/confirm`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doc_type, path })
         })
