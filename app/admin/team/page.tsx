@@ -577,20 +577,63 @@ export default function PromotorenPage() {
           workingDays: Array.isArray(p.workingDays) ? p.workingDays : [],
           status: p.status || 'active',
           lastActivity: p.lastActivity || new Date().toISOString().slice(0, 10),
-          performance: p.performance || { mcet: 0, tma: 0, vlshare: 0 },
-          assignments: typeof p.assignments === 'number' ? p.assignments : 0,
-          completedTrainings: typeof p.completedTrainings === 'number' ? p.completedTrainings : 0,
-          onboardingProgress: typeof p.onboardingProgress === 'number' ? p.onboardingProgress : 0,
-          ausfaelle: p.ausfaelle || { krankenstand: 0, notfaelle: 0 },
-          avatar: p.avatar || '/placeholder.svg',
-          bankDetails: p.bankDetails || { accountHolder: '', bankName: '', iban: '', bic: '' },
-          clothingInfo: p.clothingInfo || { height: '', size: '' },
+          // keep UI-specific metrics from existing data; only set if provided
+          performance: p.performance && typeof p.performance === 'object' ? p.performance : undefined,
+          assignments: typeof p.assignments === 'number' ? p.assignments : undefined,
+          completedTrainings: typeof p.completedTrainings === 'number' ? p.completedTrainings : undefined,
+          onboardingProgress: typeof p.onboardingProgress === 'number' ? p.onboardingProgress : undefined,
+          ausfaelle: p.ausfaelle && typeof p.ausfaelle === 'object' ? p.ausfaelle : undefined,
+          avatar: p.avatar || undefined,
+          bankDetails: p.bankDetails && typeof p.bankDetails === 'object' ? p.bankDetails : undefined,
+          clothingInfo: p.clothingInfo && typeof p.clothingInfo === 'object' ? p.clothingInfo : undefined,
           applicationId: p.applicationId || null,
         }));
-        setPromotors(normalized);
+
+        // Merge by name (fallback) without losing rich mock data
+        const byName = new Map(normalized.map((p: any) => [String(p.name || '').toLowerCase(), p]));
+        setPromotors(prev => prev.map((existing: any) => {
+          const key = String(existing.name || '').toLowerCase();
+          const inc: any = byName.get(key) as any;
+          if (!inc) return existing;
+          return {
+            ...existing,
+            id: (inc && inc.id) || existing.id,
+            email: (inc && inc.email) || existing.email,
+            phone: (inc && inc.phone) || existing.phone,
+            address: (inc && inc.address) || existing.address,
+            birthDate: (inc && inc.birthDate) || existing.birthDate,
+            region: (inc && inc.region) || existing.region,
+            workingDays: (inc && inc.workingDays && inc.workingDays.length) ? inc.workingDays : existing.workingDays,
+            status: (inc && inc.status) || existing.status,
+            lastActivity: (inc && inc.lastActivity) || existing.lastActivity,
+            performance: existing.performance, // keep
+            assignments: existing.assignments,
+            completedTrainings: existing.completedTrainings,
+            onboardingProgress: existing.onboardingProgress,
+            ausfaelle: existing.ausfaelle,
+            avatar: (inc && inc.avatar) || existing.avatar,
+            bankDetails: existing.bankDetails,
+            clothingInfo: (inc && inc.clothingInfo) || existing.clothingInfo,
+            applicationId: (inc && inc.applicationId) ?? existing.applicationId ?? null,
+          };
+        }));
       }
     } catch {}
   };
+
+  // Link promotor -> stammdaten when both lists are available
+  useEffect(() => {
+    try {
+      const map: Record<string | number, any> = {};
+      promotors.forEach((p: any) => {
+        if (p?.applicationId) {
+          const s = submittedOnboardingData.find((x: any) => String(x.id) === String(p.applicationId));
+          if (s) map[p.id] = s;
+        }
+      });
+      if (Object.keys(map).length) setPromotorStammdaten((prev) => ({ ...prev, ...map }));
+    } catch {}
+  }, [promotors, submittedOnboardingData]);
 
   // Region mapping for display
   const regionNames = {
