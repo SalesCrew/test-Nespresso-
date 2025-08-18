@@ -2305,7 +2305,7 @@ export default function PromotorenPage() {
                                         className="text-sm font-medium text-gray-900 cursor-pointer"
                                         onClick={() => handleAccountHolderClick(promotor.id)}
                                       >
-                                        {promotor.bankDetails.accountHolder}
+                                        {promotor.bankDetails.accountHolder || 'Keine Daten'}
                                       </p>
                                       {accountHolderCopied[promotor.id] && (
                                         <Check className="h-3 w-3 text-green-500" />
@@ -2317,7 +2317,7 @@ export default function PromotorenPage() {
                                       Bankname
                                     </label>
                                     <p className="text-sm font-medium text-gray-900">
-                                      {promotor.bankDetails.bankName}
+                                      {promotor.bankDetails.bankName || 'Keine Daten'}
                                     </p>
                                   </div>
                                 </div>
@@ -2332,7 +2332,7 @@ export default function PromotorenPage() {
                                       className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
                                       onClick={() => handleIbanClick(promotor.id)}
                                     >
-                                      {ibanVisible[promotor.id] ? promotor.bankDetails.iban : maskIban(promotor.bankDetails.iban)}
+                                      {promotor.bankDetails.iban ? (ibanVisible[promotor.id] ? promotor.bankDetails.iban : maskIban(promotor.bankDetails.iban)) : 'Keine Daten'}
                                     </p>
                                     {ibanCopied[promotor.id] && (
                                       <Check className="h-3 w-3 text-green-500" />
@@ -2350,7 +2350,7 @@ export default function PromotorenPage() {
                                        className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
                                        onClick={() => handleBicClick(promotor.id)}
                                      >
-                                      {promotor.bankDetails.bic}
+                                      {promotor.bankDetails.bic || 'Keine Daten'}
                                     </p>
                                     {bicCopied[promotor.id] && (
                                       <Check className="h-3 w-3 text-green-500" />

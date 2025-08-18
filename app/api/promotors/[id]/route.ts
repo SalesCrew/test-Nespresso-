@@ -59,6 +59,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     height: typeof raw.height === 'string' ? raw.height : undefined,
     clothing_size: typeof raw.clothing_size === 'string' ? raw.clothing_size : undefined,
     birth_date: typeof raw.birth_date === 'string' ? raw.birth_date : undefined,
+    bank_iban: typeof raw.bank_iban === 'string' ? raw.bank_iban : undefined,
+    bank_bic: typeof raw.bank_bic === 'string' ? raw.bank_bic : undefined,
+    bank_holder: typeof raw.bank_holder === 'string' ? raw.bank_holder : undefined,
   } as any;
 
   const updates: any = { updated_at: new Date().toISOString() };
