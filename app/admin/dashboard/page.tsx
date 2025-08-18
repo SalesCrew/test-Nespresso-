@@ -47,7 +47,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
-export default function AdminDashboard() {
+ export default function AdminDashboard() {
   const router = useRouter();
   const pathname = usePathname();
   const [showMessageModal, setShowMessageModal] = useState(false);

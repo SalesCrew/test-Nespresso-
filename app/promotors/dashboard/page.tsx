@@ -210,7 +210,7 @@ export default function DashboardPage() {
   }, [showTodoHistory]);
 
   useEffect(() => {
-    async function loadName() {
+    async function initProfileAndOnboarding() {
       const cached = typeof window !== 'undefined' ? localStorage.getItem('displayName') : null;
       if (cached) setDisplayName(cached);
       try {
@@ -219,7 +219,7 @@ export default function DashboardPage() {
         if (!user) return;
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('display_name')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
         const profileName = profile?.display_name && String(profile.display_name).trim();
@@ -227,9 +227,17 @@ export default function DashboardPage() {
         const name = profileName || metaName || 'Promotor';
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
+
+        // Auto-start onboarding for first login using a per-user local flag
+        const onboardingKey = `onboarding_started:${user.id}`;
+        const hasStarted = typeof window !== 'undefined' ? localStorage.getItem(onboardingKey) : '1';
+        if (!hasStarted) {
+          setShowOnboarding(true);
+          try { localStorage.setItem(onboardingKey, '1'); } catch {}
+        }
       } catch {}
     }
-    loadName();
+    initProfileAndOnboarding();
   }, []);
 
   useEffect(() => {
@@ -465,10 +473,17 @@ export default function DashboardPage() {
     return "promotion"; // fallback
   };
 
-  const handleOnboardingComplete = (data: any) => {
+  const handleOnboardingComplete = async (data: any) => {
     console.log("Onboarding completed with data:", data);
     setShowOnboarding(false);
-    // Here you would typically save the data to your backend
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const onboardingKey = `onboarding_started:${user.id}`;
+        try { localStorage.setItem(onboardingKey, '1'); } catch {}
+      }
+    } catch {}
   };
 
   // Set initial assignment type based on current date

@@ -140,9 +140,11 @@ export default function PromotorenPage() {
   const [approveForm, setApproveForm] = useState<{email: string; display_name: string; password: string; applicationId: string | null}>({ email: '', display_name: '', password: '', applicationId: null });
   const [approveError, setApproveError] = useState<string | null>(null);
   const [approveResultPw, setApproveResultPw] = useState<string | null>(null);
+  const [promotorStammdaten, setPromotorStammdaten] = useState<Record<number, any>>({});
+  const [openStammdatenPreviewFor, setOpenStammdatenPreviewFor] = useState<number | null>(null);
   
   // Stammdatenblatt (submitted onboarding data)
-  const [submittedOnboardingData, setSubmittedOnboardingData] = useState([
+  const [submittedOnboardingData, setSubmittedOnboardingData] = useState<any[]>([
     {
       id: 1,
       submittedAt: "2024-01-15T10:30:00Z",
@@ -287,6 +289,33 @@ export default function PromotorenPage() {
       setApproveResultPw(data?.password ?? null);
       setApproveError(null);
       setToastMsg(`Promotor angelegt`);
+      // Create a promotor card locally from the matching Stammdaten submission
+      const applicationId = approveForm.applicationId ?? entry.id;
+      const matchedSubmission = submittedOnboardingData.find((s: any) => String(s.id) === String(applicationId));
+      if (matchedSubmission) {
+        const newPromotor = {
+          id: Date.now(),
+          name: `${matchedSubmission.firstName} ${matchedSubmission.lastName}`.trim() || approveForm.display_name,
+          email: matchedSubmission.email || approveForm.email,
+          phone: matchedSubmission.phone || '',
+          address: [matchedSubmission.address, matchedSubmission.postalCode, matchedSubmission.city].filter(Boolean).join(', '),
+          birthDate: matchedSubmission.birthDate || '',
+          region: matchedSubmission.preferredRegion || 'wien-noe-bgl',
+          workingDays: matchedSubmission.workingDays || [],
+          status: 'active',
+          lastActivity: new Date().toISOString().slice(0, 10),
+          performance: { mcet: 0, tma: 0, vlshare: 0 },
+          assignments: 0,
+          completedTrainings: 0,
+          onboardingProgress: 0,
+          ausfaelle: { krankenstand: 0, notfaelle: 0 },
+          avatar: "/placeholder.svg",
+          bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
+          clothingInfo: { height: matchedSubmission.height || '', size: matchedSubmission.clothingSize || '' }
+        } as any;
+        setPromotors(prev => [newPromotor, ...prev]);
+        setPromotorStammdaten(prev => ({ ...prev, [newPromotor.id]: matchedSubmission }));
+      }
       await loadSubmissions();
     } catch (e: any) {
       setApproveError(e.message || 'Fehler');
@@ -331,7 +360,8 @@ export default function PromotorenPage() {
           spontaneity: a.spontaneity ?? '',
           preferredRegion: a.preferredRegion ?? '',
           workingDays: a.workingDays ?? [],
-          hoursPerWeek: a.hoursPerWeek ?? ''
+          hoursPerWeek: a.hoursPerWeek ?? '',
+          status: a.status ?? 'received'
         }));
         setSubmittedOnboardingData(mapped);
       }
@@ -701,8 +731,8 @@ export default function PromotorenPage() {
     const matchesSearch = fullName.includes(searchQuery.toLowerCase()) ||
                          submission.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRegion = regionFilter === "all" || submission.preferredRegion === regionFilter;
-    
-    return matchesSearch && matchesRegion;
+    const notApproved = submission.status !== 'approved';
+    return matchesSearch && matchesRegion && notApproved;
   });
 
   // Format submitted date
@@ -1782,16 +1812,107 @@ export default function PromotorenPage() {
                   <>
                     {/* Header */}
                     <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 relative">
-                      <button
-                        onClick={() => {
-                          if (!showDienstvertragPopup && !showDienstvertragContent) {
-                            setDetailedViewOpen(null);
-                          }
-                        }}
-                        className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
+                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                        {/* Stammdaten Preview Toggle */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenStammdatenPreviewFor(prev => prev === promotor.id ? null : promotor.id);
+                          }}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                          title="Stammdatenblatt anzeigen"
+                        >
+                          <FileText className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!showDienstvertragPopup && !showDienstvertragContent) {
+                              setDetailedViewOpen(null);
+                            }
+                          }}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                      
+                      {/* Dropdown-like Stammdaten preview */}
+                      {openStammdatenPreviewFor === promotor.id && (
+                        <div className="absolute top-14 right-6 z-[80] w-[380px] max-w-[90vw]">
+                          <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-xl blur-md"></div>
+                            <div className="relative rounded-xl border border-white/20 bg-white text-gray-900 shadow-2xl overflow-hidden">
+                              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                                <div className="min-w-0">
+                                  <p className="text-xs text-gray-500">Stammdatenblatt</p>
+                                  <h3 className="text-sm font-semibold truncate">{promotor.name}</h3>
+                                </div>
+                                <button
+                                  className="p-1.5 rounded-md hover:bg-gray-50"
+                                  onClick={() => setOpenStammdatenPreviewFor(null)}
+                                >
+                                  <X className="h-4 w-4 text-gray-500" />
+                                </button>
+                              </div>
+                              <div className="p-4 max-h-[340px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                {(() => {
+                                  const s = promotorStammdaten[promotor.id];
+                                  if (!s) {
+                                    return <p className="text-sm text-gray-500">Keine Stammdaten verfügbar.</p>;
+                                  }
+                                  return (
+                                    <div className="space-y-3 text-sm">
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <p className="text-gray-500">Name</p>
+                                          <p className="font-medium">{s.firstName} {s.lastName}{s.title ? ` (${s.title})` : ''}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500">E-Mail</p>
+                                          <p className="font-medium truncate">{s.email || '-'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500">Telefon</p>
+                                          <p className="font-medium">{s.phone || '-'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500">Geburtsdatum</p>
+                                          <p className="font-medium">{s.birthDate || '-'}</p>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Adresse</p>
+                                        <p className="font-medium">{[s.address, s.postalCode, s.city].filter(Boolean).join(', ') || '-'}</p>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <p className="text-gray-500">Region</p>
+                                          <p className="font-medium">{s.preferredRegion || '-'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500">Kleidergröße</p>
+                                          <p className="font-medium">{s.clothingSize || '-'}</p>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-gray-500">Arbeitstage</p>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {(s.workingDays || []).map((d: string) => (
+                                            <span key={d} className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200">{d}</span>
+                                          ))}
+                                          {(!s.workingDays || s.workingDays.length === 0) && (
+                                            <span className="text-gray-400">-</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="flex items-center space-x-4">
                         <Avatar className="h-16 w-16 ring-4 ring-white/20">
