@@ -432,7 +432,10 @@ export default function PromotorenPage() {
           ausfaelle: { krankenstand: 0, notfaelle: 0 },
           avatar: inc.avatar || '/placeholder.svg',
           bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
-          clothingInfo: inc.clothingInfo || { height: '', size: '' },
+          clothingInfo: {
+            height: inc.clothingInfo?.height ?? '',
+            size: inc.clothingInfo?.size ?? ''
+          },
           applicationId: inc.applicationId ?? null,
         }));
         setPromotors(cards);
@@ -475,7 +478,10 @@ export default function PromotorenPage() {
           birthDate: p.birthDate || s.birthDate || '',
           region: p.region || s.preferredRegion || p.region,
           workingDays: (p.workingDays && p.workingDays.length) ? p.workingDays : (s.workingDays || []),
-          clothingInfo: p.clothingInfo || { height: s.height || '', size: s.clothingSize || '' },
+          clothingInfo: {
+            height: p.clothingInfo?.height ?? s?.height ?? '',
+            size: p.clothingInfo?.size ?? s?.clothingSize ?? ''
+          },
         };
         if (
           next.email !== p.email ||
@@ -1203,11 +1209,11 @@ export default function PromotorenPage() {
                             <p className="font-medium text-gray-900">{submission.birthDate}</p>
                           </div>
                           <div>
-                            <span className="text-gray-500">Größe</span>
+                            <span className="text-gray-500">Körpergröße</span>
                             <p className="font-medium text-gray-900">{submission.height} cm</p>
                           </div>
                           <div>
-                            <span className="text-gray-500">Größe</span>
+                            <span className="text-gray-500">Kleidergröße</span>
                             <p className="font-medium text-gray-900">{submission.clothingSize}</p>
                           </div>
                         </div>
