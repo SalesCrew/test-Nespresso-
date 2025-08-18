@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   // Register/Upsert uploaded doc as 'uploaded'
   const { data, error } = await svc
     .from('documents')
-    .upsert({ user_id: userId, doc_type, status: 'uploaded', file_path: path }, { onConflict: 'user_id,doc_type' })
+    .upsert({ user_id: userId, doc_type, status: 'uploaded', file_path: path }, { onConflict: 'user_id,doc_type', ignoreDuplicates: false })
     .select('*')
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

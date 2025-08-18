@@ -364,6 +364,16 @@ export default function PromotorenPage() {
     loadPromotors();
   }, []);
 
+  // When a detailed promotor view opens, load their document statuses from backend
+  useEffect(() => {
+    if (detailedViewOpen) {
+      try {
+        const uid = String(detailedViewOpen)
+        loadPromotorDocuments(uid)
+      } catch {}
+    }
+  }, [detailedViewOpen]);
+
   // Load documents for selected promotor into the documentStatuses/withFiles maps
   const loadPromotorDocuments = async (uid: string) => {
     try {
