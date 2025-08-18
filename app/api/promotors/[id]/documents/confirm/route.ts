@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { recomputeOnboarding } from '@/lib/onboarding/recompute';
 
-const ALLOWED_TYPES = new Set(['passport','citizenship','arbeitserlaubnis']);
+const ALLOWED_TYPES = new Set(['passport','citizenship','arbeitserlaubnis','strafregister','additional']);
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const server = createSupabaseServerClient();
