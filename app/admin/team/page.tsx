@@ -297,7 +297,7 @@ export default function PromotorenPage() {
           completedTrainings: 0,
           onboardingProgress: 0,
           ausfaelle: { krankenstand: 0, notfaelle: 0 },
-          avatar: "/placeholder.svg",
+      avatar: "/placeholder.svg",
           bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
           clothingInfo: { height: matchedSubmission.height || '', size: matchedSubmission.clothingSize || '' }
         } as any;
@@ -385,8 +385,16 @@ export default function PromotorenPage() {
       const files: Record<string, boolean> = {}
       for (const r of rows) {
         const name = nameFromType(r.doc_type)
-        statuses[name] = r.status === 'approved' ? 'approved' : 'pending'
-        files[name] = !!r.file_path
+        if (r.status === 'approved') {
+          statuses[name] = 'approved'
+          files[name] = !!r.file_path
+        } else if (r.status === 'uploaded') {
+          statuses[name] = 'pending'
+          files[name] = !!r.file_path
+        } else if (r.status === 'rejected') {
+          statuses[name] = 'missing'
+          files[name] = false
+        }
       }
       setDocumentStatuses(statuses)
       setDocumentsWithFiles(files)
@@ -449,7 +457,7 @@ export default function PromotorenPage() {
           ausfaelle: { krankenstand: 0, notfaelle: 0 },
           avatar: inc.avatar || '/placeholder.svg',
           bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
-          clothingInfo: {
+      clothingInfo: {
             height: inc.clothingInfo?.height ?? '',
             size: inc.clothingInfo?.size ?? ''
           },
@@ -1341,7 +1349,7 @@ export default function PromotorenPage() {
 
                       {/* Citizenship & Work Permit */}
               {/* Approval dialog is mounted at root to preserve input focus state */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="grid grid-cols-2 gap-3 text-xs">
                         <div>
                           <span className="text-gray-500">Staatsbürgerschaft:</span>
                           <p className="font-medium text-gray-900">{submission.citizenship}</p>
@@ -1760,16 +1768,16 @@ export default function PromotorenPage() {
                         >
                           <FileText className="h-5 w-5" />
                         </button>
-                        <button
-                          onClick={() => {
-                            if (!showDienstvertragPopup && !showDienstvertragContent) {
-                              setDetailedViewOpen(null);
-                            }
-                          }}
+                      <button
+                        onClick={() => {
+                          if (!showDienstvertragPopup && !showDienstvertragContent) {
+                            setDetailedViewOpen(null);
+                          }
+                        }}
                           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                        >
-                          <X className="h-5 w-5" />
-                        </button>
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
                       </div>
                       
                       {/* Dropdown-like Stammdaten preview */}
