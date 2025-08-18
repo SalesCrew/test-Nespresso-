@@ -448,9 +448,48 @@ export default function PromotorenPage() {
         if (p?.applicationId) {
           const s = submittedOnboardingData.find((x: any) => String(x.id) === String(p.applicationId));
           if (s) map[p.id] = s;
+        } else {
+          // Fallback matching by email or name when no explicit link exists
+          const byEmail = p.email ? submittedOnboardingData.find((x: any) => String(x.email || '').toLowerCase() === String(p.email || '').toLowerCase()) : null;
+          if (byEmail) {
+            map[p.id] = byEmail;
+          } else {
+            const pName = String(p.name || '').trim().toLowerCase();
+            const byName = submittedOnboardingData.find((x: any) => `${String(x.firstName||'').trim()} ${String(x.lastName||'').trim()}`.toLowerCase() === pName);
+            if (byName) map[p.id] = byName;
+          }
         }
       });
       if (Object.keys(map).length) setPromotorStammdaten((prev) => ({ ...prev, ...map }));
+      // Also enrich promotor cards with contact/address fields from matched stammdaten
+      let needsUpdate = false;
+      const updated = promotors.map((p: any) => {
+        const s = map[p.id];
+        if (!s) return p;
+        const mergedAddress = [s.address, s.postalCode, s.city].filter(Boolean).join(', ');
+        const next = {
+          ...p,
+          email: p.email || s.email || '',
+          phone: p.phone || s.phone || '',
+          address: p.address || mergedAddress,
+          birthDate: p.birthDate || s.birthDate || '',
+          region: p.region || s.preferredRegion || p.region,
+          workingDays: (p.workingDays && p.workingDays.length) ? p.workingDays : (s.workingDays || []),
+          clothingInfo: p.clothingInfo || { height: s.height || '', size: s.clothingSize || '' },
+        };
+        if (
+          next.email !== p.email ||
+          next.phone !== p.phone ||
+          next.address !== p.address ||
+          next.birthDate !== p.birthDate ||
+          next.region !== p.region ||
+          (Array.isArray(next.workingDays) && Array.isArray(p.workingDays) && next.workingDays.join(',') !== p.workingDays.join(','))
+        ) {
+          needsUpdate = true;
+        }
+        return next;
+      });
+      if (needsUpdate) setPromotors(updated);
     } catch {}
   }, [promotors, submittedOnboardingData]);
 
