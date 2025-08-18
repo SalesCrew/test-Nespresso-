@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { DienstvertragTemplate } from "@/components/DienstvertragTemplate"
 import { 
   MapPin, 
@@ -242,25 +243,107 @@ export default function ProfilPage() {
     }
   }
 
-  // Mock documents data
-  const documents = [
-    { id: 1, name: "Staatsbürgerschaftsnachweis", status: "approved", required: true },
-    { id: 2, name: "Pass", status: "pending", required: true },
-    { id: 3, name: "Strafregister Erscheinung", status: "missing", required: true },
-    { id: 4, name: "Arbeitserlaubnis", status: "missing", required: false },
-    { id: 5, name: "Zusätzliche Dokumente", status: "missing", required: false },
-  ]
+  // Promotor documents state (live)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [needsWorkPermit, setNeedsWorkPermit] = useState<boolean>(false)
+  const [documents, setDocuments] = useState<Array<{ id: number; name: string; status: 'missing'|'pending'|'approved'; required: boolean }>>([
+    { id: 1, name: 'Staatsbürgerschaftsnachweis', status: 'missing', required: true },
+    { id: 2, name: 'Pass', status: 'missing', required: true },
+    { id: 3, name: 'Strafregister Erscheinung', status: 'missing', required: false },
+    { id: 4, name: 'Arbeitserlaubnis', status: 'missing', required: false },
+    { id: 5, name: 'Zusätzliche Dokumente', status: 'missing', required: false },
+  ])
+
+  const mapDocNameToType = (name: string): string => {
+    if (name === 'Staatsbürgerschaftsnachweis') return 'citizenship'
+    if (name === 'Pass') return 'passport'
+    if (name.startsWith('Strafregister')) return 'strafregister'
+    if (name === 'Arbeitserlaubnis') return 'arbeitserlaubnis'
+    return 'additional'
+  }
+
+  const refreshDocuments = async (uid: string) => {
+    try {
+      // profile for needsWorkPermit
+      const profRes = await fetch(`/api/promotors/${uid}`)
+      const profJson = await profRes.json()
+      const needsWP = !!profJson?.profile?.needs_work_permit
+      setNeedsWorkPermit(needsWP)
+
+      const res = await fetch(`/api/promotors/${uid}/documents`, { cache: 'no-store' })
+      const json = await res.json()
+      const rows: Array<{ doc_type: string; status: string; file_path?: string }> = Array.isArray(json.documents) ? json.documents : []
+      const map = new Map(rows.map(r => [r.doc_type, r.status]))
+      setDocuments(prev => prev.map(d => {
+        const type = mapDocNameToType(d.name)
+        let status: 'missing'|'pending'|'approved' = 'missing'
+        const st = map.get(type)
+        if (st === 'approved') status = 'approved'
+        else if (st === 'uploaded') status = 'pending'
+        else status = 'missing'
+        // Arbeitserlaubnis optional depending on profile
+        const required = d.name === 'Arbeitserlaubnis' ? needsWP : d.required
+        return { ...d, status, required }
+      }))
+    } catch {}
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const me = await (await fetch('/api/me', { cache: 'no-store' })).json()
+        if (me?.user_id) {
+          setUserId(me.user_id)
+          await refreshDocuments(me.user_id)
+        }
+      } catch {}
+    })()
+  }, [])
 
   const visibleDocuments = isDocumentsExpanded ? documents : documents.slice(0, 3)
 
-  const handleViewDocument = (documentName: string) => {
-    // In a real app, this would open a modal or navigate to view the document
-    console.log("Viewing document:", documentName)
+  const handleViewDocument = async (documentName: string) => {
+    if (!userId) return
+    const doc_type = mapDocNameToType(documentName)
+    const res = await fetch(`/api/promotors/${userId}/documents/signed-url?doc_type=${encodeURIComponent(doc_type)}`)
+    const json = await res.json()
+    if (json?.url) window.open(json.url, '_blank')
   }
 
-  const handleUploadDocument = (documentName: string) => {
-    // In a real app, this would open a file picker or upload modal
-    console.log("Uploading document:", documentName)
+  const handleUploadDocument = async (documentName: string) => {
+    if (!userId) return
+    const doc_type = mapDocNameToType(documentName)
+    // pick file
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*,application/pdf'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      const ext = (file.name.split('.').pop() || 'pdf').toLowerCase()
+      try {
+        // get canonical path
+        const up = await fetch(`/api/promotors/${userId}/documents/upload-url`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_type, file_ext: ext })
+        })
+        const upj = await up.json()
+        const path = upj?.path
+        if (!path) return
+        const supabase = createSupabaseBrowserClient()
+        const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
+        if (upErr) throw upErr
+        await fetch(`/api/promotors/${userId}/documents/confirm`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_type, path })
+        })
+        // show pending and eye
+        setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'pending' } : d))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    input.click()
   }
 
   // Payroll countdown logic

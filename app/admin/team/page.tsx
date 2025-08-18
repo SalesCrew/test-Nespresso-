@@ -110,25 +110,13 @@ export default function PromotorenPage() {
   const [statusChangePromotorId, setStatusChangePromotorId] = useState<number | null>(null);
   
   // Document management state
-  const [documentStatuses, setDocumentStatuses] = useState<Record<string, string>>({
-    "Staatsbürgerschaftsnachweis": "approved",
-    "Pass": "pending", 
-    "Arbeitserlaubnis": "approved",
-    "Dienstvertrag": "approved",
-    "Strafregister": "approved" // Strafregister starts as approved by default
-  });
+  const [documentStatuses, setDocumentStatuses] = useState<Record<string, string>>({});
   
   // Track if Strafregister is deactivated
   const [strafregisterDeactivated, setStrafregisterDeactivated] = useState(false);
   
   // Track which documents have files submitted (variable based on actual submissions)
-  const [documentsWithFiles, setDocumentsWithFiles] = useState<Record<string, boolean>>({
-    "Staatsbürgerschaftsnachweis": true, // Has file
-    "Pass": true, // Has file (pending review)
-    "Arbeitserlaubnis": true, // Has file
-    "Dienstvertrag": false, // No file yet
-    "Strafregister": false // No file (approved by default)
-  });
+  const [documentsWithFiles, setDocumentsWithFiles] = useState<Record<string, boolean>>({});
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const regionDropdownRef = useRef<HTMLDivElement>(null);
@@ -375,6 +363,25 @@ export default function PromotorenPage() {
     loadSubmissions();
     loadPromotors();
   }, []);
+
+  // Load documents for selected promotor into the documentStatuses/withFiles maps
+  const loadPromotorDocuments = async (uid: string) => {
+    try {
+      const res = await fetch(`/api/promotors/${uid}/documents`, { cache: 'no-store' })
+      const json = await res.json()
+      const rows: Array<{ doc_type: string; status: string; file_path?: string }> = Array.isArray(json.documents) ? json.documents : []
+      const nameFromType = (t: string) => t === 'citizenship' ? 'Staatsbürgerschaftsnachweis' : t === 'passport' ? 'Pass' : t === 'arbeitserlaubnis' ? 'Arbeitserlaubnis' : t === 'strafregister' ? 'Strafregister' : 'Zusätzliche Dokumente'
+      const statuses: Record<string, string> = {}
+      const files: Record<string, boolean> = {}
+      for (const r of rows) {
+        const name = nameFromType(r.doc_type)
+        statuses[name] = r.status === 'approved' ? 'approved' : 'pending'
+        files[name] = !!r.file_path
+      }
+      setDocumentStatuses(statuses)
+      setDocumentsWithFiles(files)
+    } catch {}
+  }
   useEffect(() => {
     if (showStammdatenblatt) loadSubmissions();
   }, [showStammdatenblatt]);
@@ -1938,7 +1945,14 @@ export default function PromotorenPage() {
                                       <div className="flex items-center space-x-2">
                                         {status === "approved" && (
                                           <button
-                                            onClick={() => handleViewDocument(docName)}
+                                            onClick={async () => {
+                                              const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
+                                              const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                              if (!uid) return
+                                              const r = await fetch(`/api/promotors/${uid}/documents/signed-url?doc_type=${encodeURIComponent(type)}`)
+                                              const j = await r.json()
+                                              if (j?.url) window.open(j.url, '_blank')
+                                            }}
                                             className="p-0 hover:bg-transparent transition-all duration-300 opacity-40 hover:opacity-80"
                                           >
                                             <Eye className="h-3 w-3 text-gray-400 hover:text-gray-600" />
@@ -1955,13 +1969,26 @@ export default function PromotorenPage() {
                                               </button>
                                             )}
                                             <button
-                                              onClick={() => handleDocumentApprove(docName)}
+                                              onClick={async () => {
+                                                // Admin approve
+                                                const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
+                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                                if (!uid) return
+                                                await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'approved' })})
+                                                await loadPromotorDocuments(uid)
+                                              }}
                                               className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
                                             >
                                               <Check className="h-4 w-4 text-green-500 hover:text-green-600" />
                                             </button>
                                             <button
-                                              onClick={() => handleDocumentDecline(docName)}
+                                              onClick={async () => {
+                                                const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
+                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                                if (!uid) return
+                                                await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'rejected' })})
+                                                await loadPromotorDocuments(uid)
+                                              }}
                                               className="p-0 hover:bg-transparent transition-all duration-300 opacity-60 hover:opacity-100"
                                             >
                                               <X className="h-4 w-4 text-red-500 hover:text-red-600" />
