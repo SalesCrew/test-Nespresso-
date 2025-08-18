@@ -1965,7 +1965,7 @@ export default function PromotorenPage() {
                                           <button
                                             onClick={async () => {
                                               const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
-                                              const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                              const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
                                               if (!uid) return
                                               const r = await fetch(`/api/promotors/${uid}/documents/signed-url?doc_type=${encodeURIComponent(type)}`)
                                               const j = await r.json()
@@ -1990,7 +1990,7 @@ export default function PromotorenPage() {
                                               onClick={async () => {
                                                 // Admin approve
                                                 const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
-                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
                                                 if (!uid) return
                                                 await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'approved' })})
                                                 await loadPromotorDocuments(uid)
@@ -2002,7 +2002,7 @@ export default function PromotorenPage() {
                                             <button
                                               onClick={async () => {
                                                 const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : 'additional'
-                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || '')
+                                                const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
                                                 if (!uid) return
                                                 await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'rejected' })})
                                                 await loadPromotorDocuments(uid)

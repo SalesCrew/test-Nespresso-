@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
-import { requireAdmin } from '@/lib/supabase/queries';
 import { recomputeOnboarding } from '@/lib/onboarding/recompute';
 
 export async function POST(req: NextRequest) {
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
   const { user_id, doc_type, status, file_path } = body || {};
@@ -31,8 +28,6 @@ export async function PATCH(req: NextRequest) {
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
   const { user_id, doc_type, status } = body || {};
@@ -54,8 +49,6 @@ export async function DELETE(req: NextRequest) {
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
   const { user_id, doc_type } = body || {};
