@@ -72,11 +72,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const svc = createSupabaseServiceClient();
-  const { error } = await svc
+  let { error } = await svc
     .from('promotor_profiles')
     .update(updates)
     .eq('user_id', params.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // Fallback: if project used an alternative column name like 'bankname'
+    // try again by mapping bank_name -> bankname
+    const bankNameValue = (updates as any).bank_name;
+    if (bankNameValue !== undefined && /bank_name/.test(error.message || '')) {
+      const alt: any = { ...updates };
+      delete alt.bank_name;
+      alt.bankname = bankNameValue;
+      const retry = await svc.from('promotor_profiles').update(alt).eq('user_id', params.id);
+      if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+    } else {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
   // Recompute onboarding after profile change
   try { await recomputeOnboarding(svc as any, params.id); } catch {}
   return NextResponse.json({ ok: true });
