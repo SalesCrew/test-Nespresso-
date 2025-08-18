@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
+import { recomputeOnboarding } from '@/lib/onboarding/recompute';
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const server = createSupabaseServerClient();
@@ -8,13 +9,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const svc = createSupabaseServiceClient();
   const userId = params.id;
-  const { data, error } = await svc
-    .from('onboarding_steps')
-    .select('id, step_key, label, status, payload, created_at, updated_at, completed_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: true });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ steps: data || [] });
+  const steps = await recomputeOnboarding(svc as any, userId);
+  return NextResponse.json({ steps });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
+import { recomputeOnboarding } from '@/lib/onboarding/recompute';
 import { requireAdmin } from '@/lib/supabase/queries';
 
 function isSelfOrAdmin(requestingUserId: string, targetUserId: string, isAdmin: boolean) {
@@ -72,6 +73,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .update(updates)
     .eq('user_id', params.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  // Recompute onboarding after profile change
+  try { await recomputeOnboarding(svc as any, params.id); } catch {}
   return NextResponse.json({ ok: true });
 }
 
