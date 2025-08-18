@@ -322,12 +322,13 @@ export default function ProfilPage() {
       const file = input.files?.[0]
       document.body.removeChild(input)
       if (!file) return
-      // ensure we have user id at selection time
+      // ensure we have user id at selection time (client auth)
       let uid = userId
+      const supabase = createSupabaseBrowserClient()
       if (!uid) {
         try {
-          const me = await (await fetch('/api/me', { cache: 'no-store' })).json()
-          if (me?.user_id) { setUserId(me.user_id); uid = me.user_id }
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user?.id) { setUserId(user.id); uid = user.id }
         } catch {}
       }
       if (!uid) return
@@ -343,7 +344,6 @@ export default function ProfilPage() {
         const upj = await up.json()
         const path = upj?.path
         if (!path) return
-        const supabase = createSupabaseBrowserClient()
         const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true })
         if (upErr) throw upErr
         await fetch(`/api/promotors/${uid}/documents/confirm`, {
