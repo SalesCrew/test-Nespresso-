@@ -291,10 +291,11 @@ export default function ProfilPage() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await (await fetch('/api/me', { cache: 'no-store' })).json()
-        if (me?.user_id) {
-          setUserId(me.user_id)
-          await refreshDocuments(me.user_id)
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.id) {
+          setUserId(user.id)
+          await refreshDocuments(user.id)
         }
       } catch {}
     })()
