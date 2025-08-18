@@ -456,7 +456,12 @@ export default function PromotorenPage() {
           onboardingProgress: 0,
           ausfaelle: { krankenstand: 0, notfaelle: 0 },
           avatar: inc.avatar || '/placeholder.svg',
-          bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
+          bankDetails: {
+            accountHolder: inc.bankDetails?.accountHolder ?? '',
+            bankName: inc.bankDetails?.bankName ?? '',
+            iban: inc.bankDetails?.iban ?? '',
+            bic: inc.bankDetails?.bic ?? ''
+          },
       clothingInfo: {
             height: inc.clothingInfo?.height ?? '',
             size: inc.clothingInfo?.size ?? ''
@@ -1978,7 +1983,7 @@ export default function PromotorenPage() {
                                     <div key={index} className="flex items-center justify-between">
                                       <span className="text-sm text-gray-600 dark:text-gray-300">{docName}</span>
                                       <div className="flex items-center space-x-2">
-                                        {status === "pending" ? (
+                                                                                {status === "pending" ? (
                                           <div className="flex items-center space-x-1">
                                             {documentsWithFiles[docName] && (
                                               <button
