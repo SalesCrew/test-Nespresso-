@@ -274,7 +274,8 @@ export default function ProfilPage() {
       const json = await res.json()
       const rows: Array<{ doc_type: string; status: string; file_path?: string }> = Array.isArray(json.documents) ? json.documents : []
       const map = new Map(rows.map(r => [r.doc_type, r.status]))
-      setDocuments(prev => prev.map(d => {
+      let nextDocs = documents
+      nextDocs = nextDocs.map(d => {
         const type = mapDocNameToType(d.name)
         let status: 'missing'|'pending'|'approved' = 'missing'
         const st = map.get(type)
@@ -284,7 +285,22 @@ export default function ProfilPage() {
         // Arbeitserlaubnis optional depending on profile
         const required = d.name === 'Arbeitserlaubnis' ? needsWP : d.required
         return { ...d, status, required }
-      }))
+      })
+
+      // Fallback: if a file exists in storage for a doc but DB row missing, keep it pending
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const { data: items } = await supabase.storage.from('documents').list(`${uid}`)
+        const names = (items || []).map((i: any) => i.name as string)
+        nextDocs = nextDocs.map(d => {
+          if (d.status !== 'missing') return d
+          const t = mapDocNameToType(d.name)
+          const hasFile = names.some((n: string) => n.startsWith(`${t}.`))
+          return hasFile ? { ...d, status: 'pending' } : d
+        })
+      } catch {}
+
+      setDocuments(nextDocs)
     } catch {}
   }
 
