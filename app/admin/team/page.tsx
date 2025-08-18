@@ -566,7 +566,28 @@ export default function PromotorenPage() {
       const res = await fetch('/api/promotors', { cache: 'no-store' });
       const json = await res.json();
       if (res.ok && Array.isArray(json.promotors)) {
-        setPromotors(json.promotors);
+        const normalized = json.promotors.map((p: any) => ({
+          id: p.id,
+          name: p.name || 'Unbekannt',
+          email: p.email || '',
+          phone: p.phone || '',
+          address: p.address || '',
+          birthDate: p.birthDate || '',
+          region: p.region || 'wien-noe-bgl',
+          workingDays: Array.isArray(p.workingDays) ? p.workingDays : [],
+          status: p.status || 'active',
+          lastActivity: p.lastActivity || new Date().toISOString().slice(0, 10),
+          performance: p.performance || { mcet: 0, tma: 0, vlshare: 0 },
+          assignments: typeof p.assignments === 'number' ? p.assignments : 0,
+          completedTrainings: typeof p.completedTrainings === 'number' ? p.completedTrainings : 0,
+          onboardingProgress: typeof p.onboardingProgress === 'number' ? p.onboardingProgress : 0,
+          ausfaelle: p.ausfaelle || { krankenstand: 0, notfaelle: 0 },
+          avatar: p.avatar || '/placeholder.svg',
+          bankDetails: p.bankDetails || { accountHolder: '', bankName: '', iban: '', bic: '' },
+          clothingInfo: p.clothingInfo || { height: '', size: '' },
+          applicationId: p.applicationId || null,
+        }));
+        setPromotors(normalized);
       }
     } catch {}
   };
