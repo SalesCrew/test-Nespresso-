@@ -381,184 +381,8 @@ export default function PromotorenPage() {
 
 
 
-  // Promotors state (will be hydrated from backend, with mock fallback)
-  const [promotors, setPromotors] = useState<any[]>([
-    {
-      id: 1,
-      name: "Sarah Schmidt",
-      email: "sarah.schmidt@salescrew.de",
-      phone: "+43 664 123 4567",
-      address: "Hauptstraße 12, 1010 Wien",
-      birthDate: "15.03.1995",
-      region: "wien-noe-bgl",
-      workingDays: ["Mo", "Di", "Mi", "Do", "Fr"],
-      status: "active",
-      lastActivity: "2024-01-15",
-      performance: {
-        mcet: 4.8,
-        tma: 92,
-        vlshare: 18
-      },
-      assignments: 12,
-      completedTrainings: 8,
-      onboardingProgress: 85,
-      ausfaelle: {
-        krankenstand: 2,
-        notfaelle: 1
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Sarah Schmidt",
-        bankName: "Erste Bank Austria",
-        iban: "AT611904300234573201",
-        bic: "EASYATW1"
-      },
-      clothingInfo: {
-        height: "165",
-        size: "M"
-      }
-    },
-    {
-      id: 2,
-      name: "Michael Weber",
-      email: "michael.weber@salescrew.de",
-      phone: "+43 676 234 5678",
-      address: "Grazergasse 5, 8010 Graz",
-      birthDate: "22.07.1992",
-      region: "steiermark",
-      workingDays: ["Mo", "Di", "Mi", "Do"],
-      status: "active",
-      lastActivity: "2024-01-14",
-      performance: {
-        mcet: 3.9,
-        tma: 78,
-        vlshare: 12
-      },
-      assignments: 8,
-      completedTrainings: 6,
-      onboardingProgress: 60,
-      ausfaelle: {
-        krankenstand: 1,
-        notfaelle: 0
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Michael Weber",
-        bankName: "Raiffeisen Bank",
-        iban: "AT331200000012345678",
-        bic: "RLNWATWW"
-      },
-      clothingInfo: {
-        height: "180",
-        size: "L"
-      }
-    },
-    {
-      id: 3,
-      name: "Jan Müller",
-      email: "jan.mueller@salescrew.de",
-      phone: "+43 650 345 6789",
-      address: "Mozartstraße 8, 5020 Salzburg",
-      birthDate: "10.11.1990",
-      region: "salzburg",
-      workingDays: ["Di", "Mi", "Do", "Fr", "Sa"],
-      status: "active",
-      lastActivity: "2024-01-15",
-      performance: {
-        mcet: 5.2,
-        tma: 88,
-        vlshare: 22
-      },
-      assignments: 15,
-      completedTrainings: 10,
-      onboardingProgress: 100,
-      ausfaelle: {
-        krankenstand: 0,
-        notfaelle: 0
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Jan Müller",
-        bankName: "Salzburger Bank",
-        iban: "AT485200000012345678",
-        bic: "SBGAAT2S"
-      },
-      clothingInfo: {
-        height: "175",
-        size: "M"
-      }
-    },
-    {
-      id: 4,
-      name: "Lisa König",
-      email: "lisa.koenig@salescrew.de",
-      phone: "+43 699 456 7890",
-      address: "Ringstraße 23, 1010 Wien",
-      birthDate: "28.05.1993",
-      region: "wien-noe-bgl",
-      workingDays: ["Mo", "Mi", "Fr"],
-      status: "inactive",
-      lastActivity: "2024-01-10",
-      performance: {
-        mcet: 3.2,
-        tma: 65,
-        vlshare: 8
-      },
-      assignments: 5,
-      completedTrainings: 4,
-      onboardingProgress: 40,
-      ausfaelle: {
-        krankenstand: 3,
-        notfaelle: 2
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Lisa König",
-        bankName: "Bank Austria",
-        iban: "AT611100000012345678",
-        bic: "BKAUATWW"
-      },
-      clothingInfo: {
-        height: "162",
-        size: "S"
-      }
-    },
-    {
-      id: 5,
-      name: "Anna Bauer",
-      email: "anna.bauer@salescrew.de",
-      phone: "+43 664 567 8901",
-      address: "Linzer Straße 42, 4020 Linz",
-      birthDate: "03.09.1994",
-      region: "oberoesterreich",
-      workingDays: ["Mo", "Di", "Do", "Fr"],
-      status: "active",
-      lastActivity: "2024-01-15",
-      performance: {
-        mcet: 4.5,
-        tma: 85,
-        vlshare: 16
-      },
-      assignments: 11,
-      completedTrainings: 7,
-      onboardingProgress: 75,
-      ausfaelle: {
-        krankenstand: 0,
-        notfaelle: 1
-      },
-      avatar: "/placeholder.svg",
-      bankDetails: {
-        accountHolder: "Anna Bauer",
-        bankName: "Oberösterreichische Bank",
-        iban: "AT123400000012345678",
-        bic: "OOBAATWW"
-      },
-      clothingInfo: {
-        height: "168",
-        size: "M"
-      }
-    }
-  ]);
+  // Promotors state (real data only; no mock fallback)
+  const [promotors, setPromotors] = useState<any[]>([]);
 
   // Load promotors from backend
   const loadPromotors = async () => {
@@ -589,34 +413,29 @@ export default function PromotorenPage() {
           applicationId: p.applicationId || null,
         }));
 
-        // Merge by name (fallback) without losing rich mock data
-        const byName = new Map(normalized.map((p: any) => [String(p.name || '').toLowerCase(), p]));
-        setPromotors(prev => prev.map((existing: any) => {
-          const key = String(existing.name || '').toLowerCase();
-          const inc: any = byName.get(key) as any;
-          if (!inc) return existing;
-          return {
-            ...existing,
-            id: (inc && inc.id) || existing.id,
-            email: (inc && inc.email) || existing.email,
-            phone: (inc && inc.phone) || existing.phone,
-            address: (inc && inc.address) || existing.address,
-            birthDate: (inc && inc.birthDate) || existing.birthDate,
-            region: (inc && inc.region) || existing.region,
-            workingDays: (inc && inc.workingDays && inc.workingDays.length) ? inc.workingDays : existing.workingDays,
-            status: (inc && inc.status) || existing.status,
-            lastActivity: (inc && inc.lastActivity) || existing.lastActivity,
-            performance: existing.performance, // keep
-            assignments: existing.assignments,
-            completedTrainings: existing.completedTrainings,
-            onboardingProgress: existing.onboardingProgress,
-            ausfaelle: existing.ausfaelle,
-            avatar: (inc && inc.avatar) || existing.avatar,
-            bankDetails: existing.bankDetails,
-            clothingInfo: (inc && inc.clothingInfo) || existing.clothingInfo,
-            applicationId: (inc && inc.applicationId) ?? existing.applicationId ?? null,
-          };
+        // Use backend data only; map to UI shape with safe KPI defaults
+        const cards = normalized.map((inc: any) => ({
+          id: inc.id,
+          name: inc.name,
+          email: inc.email,
+          phone: inc.phone,
+          address: inc.address,
+          birthDate: inc.birthDate,
+          region: inc.region,
+          workingDays: inc.workingDays,
+          status: inc.status,
+          lastActivity: inc.lastActivity,
+          performance: { mcet: 0, tma: 0, vlshare: 0 },
+          assignments: 0,
+          completedTrainings: 0,
+          onboardingProgress: 0,
+          ausfaelle: { krankenstand: 0, notfaelle: 0 },
+          avatar: inc.avatar || '/placeholder.svg',
+          bankDetails: { accountHolder: '', bankName: '', iban: '', bic: '' },
+          clothingInfo: inc.clothingInfo || { height: '', size: '' },
+          applicationId: inc.applicationId ?? null,
         }));
+        setPromotors(cards);
       }
     } catch {}
   };
