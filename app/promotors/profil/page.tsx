@@ -333,6 +333,8 @@ export default function ProfilPage() {
       if (!uid) return
       const ext = (file.name.split('.').pop() || 'pdf').toLowerCase()
       try {
+        // Immediately reflect submitting state
+        setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'pending' } : d))
         // get canonical path
         const up = await fetch(`/api/promotors/${uid}/documents/upload-url`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -348,10 +350,12 @@ export default function ProfilPage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doc_type, path })
         })
-        // show pending and eye
-        setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'pending' } : d))
+        // refresh from server to be safe (should return 'uploaded' -> pending in UI)
+        await refreshDocuments(uid)
       } catch (e) {
         console.error(e)
+        // revert to missing on error
+        setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'missing' } : d))
       }
     }
     input.click()
