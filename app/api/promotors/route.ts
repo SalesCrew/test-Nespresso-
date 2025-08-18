@@ -33,19 +33,27 @@ export async function GET() {
     const link: any = linkByUser.get(u.user_id);
     const app: any = link?.application_id ? appById.get(link.application_id) : null;
     const fullName = (u.display_name || '').trim() || (app?.full_name || '');
-    const address = [app?.address, app?.postalCode, app?.city].filter(Boolean).join(', ');
+    // Handle both camelCase and snake_case field names from applications table
+    const address = [
+      app?.address,
+      app?.postalCode || app?.postal_code,
+      app?.city
+    ].filter(Boolean).join(', ');
     return {
       id: u.user_id,
       name: fullName,
       email: app?.email || null,
       phone: u.phone || app?.phone || null,
       address,
-      birthDate: app?.birthDate || null,
-      region: app?.preferredRegion || 'wien-noe-bgl',
-      workingDays: app?.workingDays || [],
+      birthDate: app?.birthDate || app?.birth_date || null,
+      region: app?.preferredRegion || app?.preferred_region || 'wien-noe-bgl',
+      workingDays: app?.workingDays || app?.working_days || [],
       status: 'active',
       avatar: '/placeholder.svg',
-      clothingInfo: { height: app?.height || '', size: app?.clothingSize || '' },
+      clothingInfo: { 
+        height: app?.height || '', 
+        size: app?.clothingSize || app?.clothing_size || '' 
+      },
       applicationId: link?.application_id || null,
     };
   });
