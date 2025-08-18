@@ -483,7 +483,8 @@ export default function PromotorenPage() {
           next.address !== p.address ||
           next.birthDate !== p.birthDate ||
           next.region !== p.region ||
-          (Array.isArray(next.workingDays) && Array.isArray(p.workingDays) && next.workingDays.join(',') !== p.workingDays.join(','))
+          (Array.isArray(next.workingDays) && Array.isArray(p.workingDays) && next.workingDays.join(',') !== p.workingDays.join(',')) ||
+          JSON.stringify(next.clothingInfo) !== JSON.stringify(p.clothingInfo)
         ) {
           needsUpdate = true;
         }
