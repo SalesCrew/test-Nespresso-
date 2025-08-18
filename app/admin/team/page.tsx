@@ -775,8 +775,15 @@ export default function PromotorenPage() {
     setDocumentStatuses(prev => ({ ...prev, [documentName]: "pending" }));
   };
 
-  const handleViewDocument = (documentName: string) => {
-    console.log("Viewing document:", documentName);
+  const handleViewDocument = async (documentName: string) => {
+    try {
+      const type = documentName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : documentName === 'Pass' ? 'passport' : documentName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : documentName === 'Strafregister' ? 'strafregister' : 'additional'
+      const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
+      if (!uid) return
+      const r = await fetch(`/api/promotors/${uid}/documents/signed-url?doc_type=${encodeURIComponent(type)}`)
+      const j = await r.json()
+      if (j?.url) window.open(j.url, '_blank')
+    } catch {}
   };
 
   // Dienstvertrag handler functions
