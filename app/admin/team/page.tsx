@@ -409,7 +409,7 @@ export default function PromotorenPage() {
           ausfaelle: p.ausfaelle && typeof p.ausfaelle === 'object' ? p.ausfaelle : undefined,
           avatar: p.avatar || undefined,
           bankDetails: p.bankDetails && typeof p.bankDetails === 'object' ? p.bankDetails : undefined,
-          clothingInfo: p.clothingInfo && typeof p.clothingInfo === 'object' ? p.clothingInfo : undefined,
+          clothingInfo: p.clothingInfo || undefined,
           applicationId: p.applicationId || null,
         }));
 
