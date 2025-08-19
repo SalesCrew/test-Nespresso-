@@ -456,12 +456,12 @@ export default function PromotorenPage() {
           onboardingProgress: 0,
           ausfaelle: { krankenstand: 0, notfaelle: 0 },
           avatar: inc.avatar || '/placeholder.svg',
-          bankDetails: {
+      bankDetails: {
             accountHolder: inc.bankDetails?.accountHolder ?? '',
             bankName: inc.bankDetails?.bankName ?? '',
             iban: inc.bankDetails?.iban ?? '',
             bic: inc.bankDetails?.bic ?? ''
-          },
+      },
       clothingInfo: {
             height: inc.clothingInfo?.height ?? '',
             size: inc.clothingInfo?.size ?? ''

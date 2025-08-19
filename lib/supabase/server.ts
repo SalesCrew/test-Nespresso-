@@ -1,6 +1,10 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
+// Create a Supabase client for Server Components / layouts.
+// Next.js does not allow mutating cookies during a Server Component render.
+// We therefore expose read-only cookie access here and make set/remove no-ops
+// to prevent runtime crashes when Supabase attempts to refresh tokens.
 export function createSupabaseServerClient() {
   const cookieStore = cookies();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,11 +17,12 @@ export function createSupabaseServerClient() {
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
-      set(name: string, value: string, options: any) {
-        cookieStore.set({ name, value, ...options });
+      // No-ops to avoid "Cookies can only be modified in a Server Action or Route Handler"
+      set() {
+        /* intentionally noop in Server Components */
       },
-      remove(name: string, options: any) {
-        cookieStore.set({ name, value: "", ...options });
+      remove() {
+        /* intentionally noop in Server Components */
       },
     },
   });
