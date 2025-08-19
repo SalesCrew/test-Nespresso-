@@ -1233,6 +1233,60 @@ export default function ProfilPage() {
                 Keine Dienstverträge verfügbar
               </div>
 
+              {/* Upload a signed contract (promotor action) */}
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Unterschriebenen Vertrag hochladen</span>
+                  <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Ausstehend</span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">Nach dem Download und der Unterschrift bitte hier als PDF oder Foto hochladen.</div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 p-0"
+                    onClick={async () => {
+                      if (!userId) return;
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'application/pdf,image/*';
+                      input.style.display = 'none';
+                      document.body.appendChild(input);
+                      input.onchange = async () => {
+                        const file = input.files?.[0];
+                        document.body.removeChild(input);
+                        if (!file) return;
+                        const supabase = createSupabaseBrowserClient();
+                        const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+                        const upRes = await fetch(`/api/promotors/${userId}/contracts/upload-url`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_ext: ext }) });
+                        const up = await upRes.json();
+                        if (!up?.path) return;
+                        const { error: upErr } = await supabase.storage.from('contracts').upload(up.path, file);
+                        if (upErr) return;
+                        await fetch(`/api/promotors/${userId}/contracts/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: up.path }) });
+                      };
+                      input.click();
+                    }}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 p-0"
+                    onClick={async () => {
+                      if (!userId) return;
+                      const r = await fetch(`/api/promotors/${userId}/contracts/signed-url?latest=1`);
+                      const j = await r.json();
+                      if (j?.url) window.open(j.url, '_blank');
+                    }}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
+                  <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                </div>
+              </div>
+
               {/* Current Active Contract */}
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
