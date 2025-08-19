@@ -814,57 +814,72 @@ export default function ProfilPage() {
           </Card>
 
           {/* Employment Information */}
-          <Card className="relative border-none bg-white dark:bg-gray-900 shadow-[0_12px_30px_-10px_rgba(0,0,0,0.25)] overflow-hidden">
-            {/* Minimal countdown pill in the corner */}
-            <div className="absolute top-3 right-3">
-              {payrollCountdown.isPayday ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  🎉 Heute Zahltag
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300">
-                  <Clock className="h-3.5 w-3.5" /> {payrollCountdown.days}d {String(payrollCountdown.hours).padStart(2,'0')}h {String(payrollCountdown.minutes).padStart(2,'0')}m
-                </span>
-              )}
-            </div>
-
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold tracking-tight flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-300">
-                  <Briefcase className="h-3.5 w-3.5" />
-                </span>
+          <Card className="relative border-none shadow-lg shadow-orange-500/20 bg-white dark:bg-gray-900 overflow-hidden">
+            {/* Minimal countdown chip in the top-right corner */}
+            {!payrollCountdown.isPayday && (
+              <div className="absolute top-3 right-3">
+                <div className="px-2.5 py-1 rounded-full border border-orange-200/60 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-900/20 backdrop-blur-sm shadow-sm flex items-center gap-1 text-[10px] font-mono tabular-nums text-orange-600 dark:text-orange-300">
+                  <Clock className="h-3 w-3 opacity-70" />
+                  <span>{payrollCountdown.days}d</span>
+                  <span>·</span>
+                  <span>{String(payrollCountdown.hours).padStart(2, '0')}h</span>
+                  <span>·</span>
+                  <span>{String(payrollCountdown.minutes).padStart(2, '0')}m</span>
+                </div>
+              </div>
+            )}
+            {payrollCountdown.isPayday && (
+              <div className="absolute top-3 right-3">
+                <div className="px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 backdrop-blur-sm shadow-sm text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Gehalt ist da 🎉</div>
+              </div>
+            )}
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Briefcase className="h-5 w-5 mr-2 text-orange-500" />
                 Anstellung
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-0 pb-5">
+            <CardContent className="space-y-4">
               {/* Employment Type */}
-              <div className="space-y-1">
-                <div className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Anstellungsart</div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Anstellungs Art
+                </label>
                 <div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-2.5 py-1 text-xs font-medium">
+                  <Badge variant="secondary" className="px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
                     geringfügig
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
               {/* Weekly Hours */}
-              <div className="space-y-1">
-                <div className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Wochenstunden</div>
-                <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">8</div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Wochenstunden
+                </label>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  8
+                </p>
               </div>
 
               {/* Employment Status */}
-              <div className="space-y-1">
-                <div className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</div>
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">unbefristet</div>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Status
+                </label>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  unbefristet
+                </p>
               </div>
 
               {/* Working Days */}
-              <div className="space-y-1">
-                <div className="text-2xs uppercase tracking-wider text-gray-500 dark:text-gray-400">Arbeitstage</div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center rounded-full border border-gray-300/70 dark:border-gray-600 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-transparent">Mo</span>
-                  <span className="inline-flex items-center rounded-full border border-gray-300/70 dark:border-gray-600 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-transparent">Mi</span>
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Arbeitstage
+                </label>
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mo</span>
+                  <span className="px-3 py-1 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mi</span>
                 </div>
               </div>
             </CardContent>
