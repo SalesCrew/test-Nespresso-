@@ -2742,34 +2742,38 @@ export default function PromotorenPage() {
                   {/* Pending Contract (dynamic) */}
                   {(() => {
                     const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                    const pendingContracts = contracts.filter(c => !c.is_active);
-                    if (pendingContracts.length === 0) return null;
-                    
-                    return pendingContracts.map((contract) => (
+                    // Show only the newest non-active contract; older inactive ones belong under "Frühere Verträge"
+                    const newestPending = contracts
+                      .filter((c: any) => !c.is_active)
+                      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                    if (!newestPending) return null;
+
+                    const contract = newestPending;
+                    return (
                       <div key={contract.id} className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-orange-700">Ausstehender Vertrag</span>
-                  <div className="flex items-center space-x-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-orange-700">Ausstehender Vertrag</span>
+                          <div className="flex items-center space-x-2">
                             {contract.file_path ? (
                               <CheckCircle className="h-4 w-4 text-green-500" />
                             ) : (
-                        <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
+                              <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
                             )}
                             <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
                               {contract.file_path ? 'Unterschrieben' : 'Warte auf Unterschrift'}
                             </span>
-                  </div>
-                </div>
+                          </div>
+                        </div>
                         <div className="text-xs text-gray-600 mb-3">
                           <div>Wochenstunden: {contract.hours_per_week || 'N/A'}</div>
                           <div>Monatsgehalt: {contract.monthly_gross ? `€ ${contract.monthly_gross},-- brutto` : 'N/A'}</div>
                           <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
                           <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
-                </div>
-                    <div className="flex space-x-2">
+                        </div>
+                        <div className="flex space-x-2">
                           {contract.file_path ? (
                             <>
-                <button 
+                              <button 
                                 className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
                                 onClick={async () => {
                                   try {
@@ -2788,8 +2792,8 @@ export default function PromotorenPage() {
                                 }}
                               >
                                 Vertrag annehmen
-                      </button>
-                      <button 
+                              </button>
+                              <button 
                                 className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 border border-gray-300"
                                 onClick={async () => {
                                   try {
@@ -2805,7 +2809,7 @@ export default function PromotorenPage() {
                                 title="Unterschriebenen Vertrag ansehen"
                               >
                                 <Eye className="h-4 w-4" />
-                </button>
+                              </button>
                             </>
                           ) : (
                             <button 
@@ -2815,9 +2819,9 @@ export default function PromotorenPage() {
                               Details anzeigen
                             </button>
                           )}
-                    </div>
-              </div>
-                    ));
+                        </div>
+                      </div>
+                    );
                   })()}
 
               {/* Current Active Contract */}
