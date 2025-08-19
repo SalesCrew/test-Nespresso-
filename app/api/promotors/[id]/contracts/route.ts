@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const svc = createSupabaseServiceClient();
   const { data, error } = await svc
     .from('contracts')
-    .select('id, user_id, file_path, is_active, created_at, updated_at')
+    .select('*')
     .eq('user_id', params.id)
     .order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
