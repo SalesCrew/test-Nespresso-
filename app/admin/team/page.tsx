@@ -2742,10 +2742,21 @@ export default function PromotorenPage() {
                   {/* Pending Contract (dynamic) */}
                   {(() => {
                     const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                    // Show only the newest non-active contract; older inactive ones belong under "Frühere Verträge"
-                    const newestPending = contracts
-                      .filter((c: any) => !c.is_active)
-                      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                    const activeContract = contracts.find((c: any) => c.is_active);
+                    const nonActive = contracts.filter((c: any) => !c.is_active);
+                    const sortedNonActive = [...nonActive].sort(
+                      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                    );
+
+                    let newestPending: any | null = null;
+                    if (activeContract?.created_at) {
+                      // Only treat as pending if it is newer than the current active contract
+                      newestPending = sortedNonActive.find(
+                        (c: any) => new Date(c.created_at).getTime() > new Date(activeContract.created_at).getTime()
+                      ) || null;
+                    } else {
+                      newestPending = sortedNonActive[0] || null;
+                    }
                     if (!newestPending) return null;
 
                     const contract = newestPending;
@@ -2878,24 +2889,43 @@ export default function PromotorenPage() {
               {/* Previous Contracts */}
               {(() => {
                 const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                const previousContracts = contracts.filter(c => c.is_active === false && c.file_path);
+                const activeContract = contracts.find((c: any) => c.is_active);
+                const nonActiveWithFile = contracts.filter((c: any) => !c.is_active && c.file_path);
+
+                let newestPendingId: string | null = null;
+                if (activeContract?.created_at) {
+                  const pending = [...nonActiveWithFile]
+                    .filter((c: any) => new Date(c.created_at).getTime() > new Date(activeContract.created_at).getTime())
+                    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                  newestPendingId = pending?.id || null;
+                }
+
+                const previousContracts = nonActiveWithFile
+                  .filter((c: any) => {
+                    if (newestPendingId && c.id === newestPendingId) return false; // exclude the current awaiting contract
+                    if (activeContract?.created_at) {
+                      return new Date(c.created_at).getTime() <= new Date(activeContract.created_at).getTime();
+                    }
+                    return true;
+                  })
+                  .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
                 if (previousContracts.length === 0) return null;
-                
+
                 return (
-              <div className="space-y-2">
+                  <div className="space-y-2">
                     <h5 className="text-sm font-medium text-gray-700">Frühere Verträge</h5>
-                
-                    {previousContracts.map((contract, index) => (
+                    {previousContracts.map((contract: any, index: number) => (
                       <div key={contract.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">
                             Vertrag v{previousContracts.length - index}.0
                           </span>
-                    <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2">
                             {contract.file_path && (
-                      <button 
+                              <button 
                                 className="p-1 hover:bg-gray-200/50 rounded transition-colors"
-                        title="Unterschriebenen Vertrag ansehen"
+                                title="Unterschriebenen Vertrag ansehen"
                                 onClick={async () => {
                                   try {
                                     const res = await fetch(`/api/admin/promotors/${selectedPromotorForContract}/contracts/signed-url?contract_id=${contract.id}`, {
@@ -2907,26 +2937,26 @@ export default function PromotorenPage() {
                                     console.error(e);
                                   }
                                 }}
-                      >
-                        <Eye className="h-3 w-3 text-gray-600" />
-                      </button>
+                              >
+                                <Eye className="h-3 w-3 text-gray-600" />
+                              </button>
                             )}
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 mb-2">
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2">
                           <div>Wochenstunden: {contract.hours_per_week || 'N/A'} • {contract.monthly_gross ? `€ ${contract.monthly_gross},--/Monat` : 'N/A'}</div>
                           <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'N/A'}</div>
-                  </div>
-                  <button 
-                        className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
-                    onClick={handleDienstvertragSelect}
-                  >
-                    Archiv ansehen
-                  </button>
-                </div>
+                        </div>
+                        <button 
+                          className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
+                          onClick={handleDienstvertragSelect}
+                        >
+                          Archiv ansehen
+                        </button>
+                      </div>
                     ))}
-                    </div>
+                  </div>
                 );
               })()}
                   </div>
