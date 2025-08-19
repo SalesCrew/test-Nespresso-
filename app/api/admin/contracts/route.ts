@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
   if (start_date) insertPayload.start_date = start_date;
   if (end_date) insertPayload.end_date = end_date;
   if (typeof is_temporary === 'boolean') insertPayload.is_temporary = is_temporary;
+  if (!insertPayload.created_at) insertPayload.created_at = new Date().toISOString();
 
   // Try with full payload; if columns are missing in DB, fall back to minimal insert
   let insertRes = await svc
@@ -89,9 +90,12 @@ export async function PATCH(req: NextRequest) {
     if (demoteErr) return NextResponse.json({ error: demoteErr.message }, { status: 500 });
   }
 
+  const updates: any = { is_active, updated_at: new Date().toISOString() };
+  if (is_active) updates.accepted_at = new Date().toISOString();
+
   const { error: activateErr } = await svc
     .from('contracts')
-    .update({ is_active, updated_at: new Date().toISOString() })
+    .update(updates)
     .eq('id', id);
   if (activateErr) return NextResponse.json({ error: activateErr.message }, { status: 500 });
 

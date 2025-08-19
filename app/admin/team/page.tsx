@@ -3022,16 +3022,24 @@ export default function PromotorenPage() {
                   const promotorBirthDate = promotor?.birthDate || "Tag.Monat.Jahr";
                   const promotorAddress = promotor?.address || "Adresse";
                   
+                  // pick which contract to render in template: prefer newest pending if present, else active
+                  const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                  const active = contracts.find((c: any) => c.is_active);
+                  const newestPending = [...contracts]
+                    .filter((c: any) => !c.is_active)
+                    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                  const selected = newestPending || active || {} as any;
+
                   return (
                     <DienstvertragTemplate
                       promotorName={promotorName}
                       promotorBirthDate={promotorBirthDate}
                       promotorAddress={promotorAddress}
-                      hoursPerWeek={contractForm.hoursPerWeek}
-                      monthlyGross={contractForm.monthlyGross}
-                      startDate={contractForm.startDate}
-                      endDate={contractForm.endDate}
-                      isTemporary={contractForm.isTemporary}
+                      hoursPerWeek={String(selected?.hours_per_week || '')}
+                      monthlyGross={String(selected?.monthly_gross || '')}
+                      startDate={selected?.start_date ? new Date(selected.start_date).toLocaleDateString('de-DE') : ''}
+                      endDate={selected?.end_date ? new Date(selected.end_date).toLocaleDateString('de-DE') : ''}
+                      isTemporary={!!selected?.is_temporary}
                     />
                   );
                 })()}
