@@ -826,13 +826,13 @@ export default function ProfilPage() {
                   <span>{String(payrollCountdown.hours).padStart(2, '0')}h</span>
                   <span>·</span>
                   <span>{String(payrollCountdown.minutes).padStart(2, '0')}m</span>
-                </div>
-              </div>
-            )}
+                      </div>
+                    </div>
+                  )}
             {payrollCountdown.isPayday && (
               <div className="absolute top-3 right-3">
                 <div className="px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 backdrop-blur-sm shadow-sm text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Gehalt ist da 🎉</div>
-              </div>
+                </div>
             )}
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
@@ -1228,25 +1228,9 @@ export default function ProfilPage() {
             </div>
             
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* New Contract Available */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-500 text-lg font-black animate-pulse">!</span>
-                    <span className="text-sm font-semibold text-green-700 dark:text-green-300">Neuer Vertrag verfügbar</span>
-                  </div>
-                  <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Bereit</span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  <div>Wochenstunden: 20h → 32h</div>
-                  <div>Gültig ab: 01.12.2024</div>
-                </div>
-                <button 
-                  className="w-full p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                  onClick={handleDienstvertragSelect}
-                >
-                  Ansehen & Unterschreiben
-                </button>
+              {/* Empty state by default (until an admin sends a contract) */}
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center text-sm text-gray-600 dark:text-gray-300">
+                Keine Dienstverträge verfügbar
               </div>
 
               {/* Current Active Contract */}
@@ -1260,50 +1244,32 @@ export default function ProfilPage() {
                   <div>Laufzeit: 01.08.2024 - unbefristet</div>
                   <div>Status: geringfügig</div>
                 </div>
-                <button 
-                  className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                  onClick={handleDienstvertragSelect}
-                >
-                  Vertrag ansehen
-                </button>
-              </div>
-
-              {/* Previous Contracts */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
-                
-                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vertrag v2.0</span>
-                    <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">Beendet</span>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
-                    <div>Wochenstunden: 8h</div>
-                    <div>Laufzeit: 01.02.2024 - 31.07.2024</div>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <button
+                    className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    onClick={async () => {
+                      if (!userId) return;
+                      const r = await fetch(`/api/promotors/${userId}/contracts/signed-url`);
+                      const j = await r.json();
+                      if (j?.url) window.open(j.url, '_blank');
+                    }}
+                  >
+                    Signiert ansehen
+                  </button>
                   <button 
-                    className="w-full p-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-all duration-200"
+                    className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                     onClick={handleDienstvertragSelect}
                   >
-                    Archiv ansehen
+                    Vertrag ansehen
                   </button>
                 </div>
+              </div>
 
-                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Vertrag v1.0</span>
-                    <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">Beendet</span>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mb-2">
-                    <div>Wochenstunden: 8h</div>
-                    <div>Laufzeit: 01.02.2023 - 31.01.2024</div>
-                  </div>
-                  <button 
-                    className="w-full p-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-all duration-200"
-                    onClick={handleDienstvertragSelect}
-                  >
-                    Archiv ansehen
-                  </button>
+              {/* Previous Contracts (static placeholder remains until wired to data) */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-xs text-gray-500 dark:text-gray-400">
+                  Hier erscheinen frühere, inaktive Verträge, sobald ein neuer Vertrag aktiv wird.
                 </div>
               </div>
             </div>

@@ -95,7 +95,8 @@ export default function PromotorenPage() {
     monthlyGross: '',
     startDate: '',
     endDate: '',
-    isTemporary: false
+    isTemporary: false,
+    employmentType: 'geringfügig' as 'geringfügig' | 'teilzeit' | 'vollzeit' | 'freelancer'
   });
   
   // Bank details functionality - for showing/hiding IBAN
@@ -2496,7 +2497,8 @@ export default function PromotorenPage() {
                 monthlyGross: '',
                 startDate: '',
                 endDate: '',
-                isTemporary: false
+                isTemporary: false,
+                employmentType: 'geringfügig'
               });
             }}
           ></div>
@@ -2514,7 +2516,8 @@ export default function PromotorenPage() {
                       monthlyGross: '',
                       startDate: '',
                       endDate: '',
-                      isTemporary: false
+                      isTemporary: false,
+                      employmentType: 'geringfügig'
                     });
                   }}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -2591,6 +2594,24 @@ export default function PromotorenPage() {
                         />
                       </div>
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Anstellungsart
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none bg-white"
+                          value={contractForm.employmentType}
+                          onChange={(e) => setContractForm({ ...contractForm, employmentType: e.target.value as any })}
+                        >
+                          <option value="geringfügig">geringfügig</option>
+                          <option value="teilzeit">teilzeit</option>
+                          <option value="vollzeit">vollzeit</option>
+                          <option value="freelancer">freelancer</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -2635,16 +2656,31 @@ export default function PromotorenPage() {
 
                 {/* Send Button */}
                 <button
-                  onClick={() => {
-                    // Handle contract creation
-                    console.log('Creating contract:', contractForm);
+                  onClick={async () => {
+                    const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
+                    if (!promotorId) return;
+                    try {
+                      // Create a pending contract row (no file yet)
+                      const res = await fetch('/api/admin/contracts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: promotorId })
+                      });
+                      if (!res.ok) {
+                        const j = await res.json().catch(() => ({}));
+                        throw new Error(j?.error || 'Fehler beim Erstellen des Vertrags');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
                     // Reset form and close modal
                     setContractForm({
                       hoursPerWeek: '',
                       monthlyGross: '',
                       startDate: '',
                       endDate: '',
-                      isTemporary: false
+                      isTemporary: false,
+                      employmentType: 'geringfügig'
                     });
                     setShowDienstvertragPopup(false);
                     setSelectedPromotorForContract(null);
@@ -2700,9 +2736,20 @@ export default function PromotorenPage() {
                       </button>
                       <button 
                         className="flex-1 py-2 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                        style={{background: 'linear-gradient(135deg, #FB923C, #EA580C)'}}
+                        style={{background: 'linear-gradient(135deg, #22C55E, #16A34A)'}}
+                        onClick={async () => {
+                          const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+                          if (!promotor) return;
+                          try {
+                            const res = await fetch(`/api/promotors/${promotor.id}/contracts`);
+                            const j = await res.json();
+                            const latest = Array.isArray(j.contracts) ? j.contracts[0] : null;
+                            if (!latest) return;
+                            await fetch('/api/admin/contracts', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: latest.id, is_active: true })});
+                          } catch (e) { console.error(e); }
+                        }}
                       >
-                        Erinnerung senden
+                        Vertrag annehmen
                 </button>
                     </div>
               </div>

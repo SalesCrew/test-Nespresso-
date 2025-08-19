@@ -13,11 +13,12 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({} as any));
   const { user_id, file_path, is_active } = body || {};
-  if (!user_id || !file_path) return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
+  // If file_path is missing, we treat this as sending an offer (no uploaded file yet)
+  if (!user_id) return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
   const svc = createSupabaseServiceClient();
   const { data, error } = await svc
     .from('contracts')
-    .insert({ user_id, file_path, is_active: is_active ?? true })
+    .insert({ user_id, file_path: file_path ?? null, is_active: !!is_active && !!file_path })
     .select('*')
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
