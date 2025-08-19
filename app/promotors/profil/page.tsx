@@ -1324,9 +1324,16 @@ export default function ProfilPage() {
 
               {/* Pending contracts with file (awaiting admin acceptance) */}
               {(() => {
-                const awaitingAcceptance = promotorContracts
-                  .filter(c => !c.is_active && !!c.file_path)
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const active = promotorContracts.find(c => c.is_active);
+                // candidates: non-active contracts that have a file
+                const candidates = promotorContracts.filter(c => !c.is_active && !!c.file_path);
+                // pick only those newer than the active (if there is one)
+                const newerThanActive = active?.created_at
+                  ? candidates.filter(c => new Date(c.created_at).getTime() > new Date(active.created_at).getTime())
+                  : candidates;
+                const awaitingAcceptance = newerThanActive
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .slice(0, 1); // show only newest awaiting
                 if (awaitingAcceptance.length === 0) return null;
                 return awaitingAcceptance.map((contract) => (
                   <div key={contract.id} className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
@@ -1403,10 +1410,17 @@ export default function ProfilPage() {
 
               {/* Previous Contracts */}
               {(() => {
-                const latestAwaiting = promotorContracts
-                  .filter(c => !c.is_active && !!c.file_path)
+                const active = promotorContracts.find(c => c.is_active);
+                const candidates = promotorContracts.filter(c => !c.is_active && !!c.file_path);
+                // determine newest awaiting contract like above
+                const newerThanActive = active?.created_at
+                  ? candidates.filter(c => new Date(c.created_at).getTime() > new Date(active.created_at).getTime())
+                  : candidates;
+                const latestAwaiting = newerThanActive
                   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-                const previousContracts = promotorContracts.filter(c => c.is_active === false && c.file_path && (!latestAwaiting || c.id !== latestAwaiting.id));
+                const previousContracts = candidates
+                  .filter(c => (!latestAwaiting || c.id !== latestAwaiting.id) && (!active?.created_at || new Date(c.created_at).getTime() <= new Date(active.created_at).getTime()))
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (previousContracts.length === 0) return null;
                 
                 return (
