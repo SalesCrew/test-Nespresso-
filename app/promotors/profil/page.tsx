@@ -54,12 +54,12 @@ export default function ProfilPage() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [editableProfile, setEditableProfile] = useState({
-    email: "jan.promotor@salescrew.de",
-    phone: "+49 176 12345678"
+    email: "",
+    phone: ""
   })
   const [editableClothing, setEditableClothing] = useState({
-    height: "178",
-    size: "L"
+    height: "",
+    size: ""
   })
   const [editableBankData, setEditableBankData] = useState({
     accountHolder: "",
@@ -68,18 +68,18 @@ export default function ProfilPage() {
     bic: ""
   })
   const [editablePersonalData, setEditablePersonalData] = useState({
-    birthday: "15.03.1995",
-    socialSecurityNumber: "1234 150395",
-    citizenship: "Österreich"
+    birthday: "",
+    socialSecurityNumber: "",
+    citizenship: ""
   })
+
+  // Header profile info (name, address, join date) sourced from DB/auth
+  const [headerName, setHeaderName] = useState<string>("")
+  const [headerLocation, setHeaderLocation] = useState<string>("")
+  const [headerJoinDate, setHeaderJoinDate] = useState<string>("")
 
   // Mock user data
   const userProfile = {
-    name: "Jan Promotor",
-    email: "jan.promotor@salescrew.de",
-    phone: "+49 176 12345678",
-    location: "Berlin, Deutschland",
-    joinDate: "März 2023",
     avatar: "/placeholder.svg?height=80&width=80"
   }
 
@@ -149,7 +149,7 @@ export default function ProfilPage() {
     const element = document.getElementById('dienstvertrag-content');
     if (!element) return;
 
-    const filename = `Dienstvertrag_${userProfile.name.replace(/\s+/g, '_')}.pdf`;
+    const filename = `Dienstvertrag_${(headerName || 'Promotor').replace(/\s+/g, '_')}.pdf`;
 
     const opt = {
       margin: 15,
@@ -326,11 +326,53 @@ export default function ProfilPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.id) {
           setUserId(user.id)
+          // header join date from auth
+          try {
+            if (user.created_at) {
+              const jd = new Date(user.created_at).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+              setHeaderJoinDate(jd)
+            }
+          } catch {}
+          // load display name from user_profiles with auth metadata fallback
+          try {
+            const { data: up } = await supabase
+              .from('user_profiles')
+              .select('display_name')
+              .eq('user_id', user.id)
+              .maybeSingle()
+            const dn = (up?.display_name && String(up.display_name).trim()) || user.user_metadata?.display_name || user.user_metadata?.full_name || ''
+            setHeaderName(dn)
+          } catch {}
           // load profile to prefill bank data if present
           try {
             const r = await fetch(`/api/promotors/${user.id}`)
             const j = await r.json()
             const p = j?.profile || {}
+            const app = j?.application || {}
+            // header location from address fields (profile first, then application)
+            try {
+              const addr = p.address ?? app.address
+              const plz = p.postal_code ?? app.postalCode ?? app.postal_code
+              const city = p.city ?? app.city
+              const loc = [addr, [plz, city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+              setHeaderLocation(loc)
+            } catch {}
+            // contact data
+            setEditableProfile({
+              email: (app?.email || user.email || ''),
+              phone: p.phone || ''
+            })
+            // clothing
+            setEditableClothing({
+              height: p.height || app.height || '',
+              size: p.clothing_size || app.clothingSize || app.clothing_size || app.clothingsize || ''
+            })
+            // personal
+            setEditablePersonalData({
+              birthday: p.birth_date || app.birthDate || app.birth_date || '',
+              socialSecurityNumber: app.socialSecurityNumber || app.social_security_number || '',
+              citizenship: app.citizenship || ''
+            })
             setEditableBankData(prev => ({
               accountHolder: p.bank_holder || '',
               bankName: p.bank_name || '',
@@ -466,22 +508,22 @@ export default function ProfilPage() {
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20 border-4 border-blue-200 dark:border-blue-900">
-              <AvatarImage src={userProfile.avatar} alt={userProfile.name} />
+              <AvatarImage src={userProfile.avatar} alt={headerName || 'Promotor'} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 text-lg font-medium">
                 JP
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {userProfile.name}
+                {headerName || 'Promotor'}
               </h1>
               <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                 <MapPin className="h-4 w-4 mr-1" />
-                {userProfile.location}
+                {headerLocation}
               </div>
               <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                 <Calendar className="h-4 w-4 mr-1" />
-                Dabei seit {userProfile.joinDate}
+                Dabei seit {headerJoinDate}
               </div>
             </div>
           </div>
@@ -892,7 +934,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.accountHolder || 'Keine Daten'}
+                        {editableBankData.accountHolder}
                       </p>
                     )}
                   </div>
@@ -912,7 +954,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.bankName || 'Keine Daten'}
+                        {editableBankData.bankName}
                       </p>
                     )}
                   </div>
@@ -932,7 +974,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editableBankData.iban ? maskIban(editableBankData.iban) : 'Keine Daten'}
+                        {editableBankData.iban ? maskIban(editableBankData.iban) : ''}
                       </p>
                     )}
                   </div>
@@ -952,7 +994,7 @@ export default function ProfilPage() {
                       />
                     ) : (
                       <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editableBankData.bic || 'Keine Daten'}
+                        {editableBankData.bic}
                       </p>
                     )}
                   </div>
@@ -1324,9 +1366,9 @@ export default function ProfilPage() {
               <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
                 <div id="dienstvertrag-content">
                   <DienstvertragTemplate
-                    promotorName={userProfile.name}
+                    promotorName={headerName || 'Promotor'}
                     promotorBirthDate={editablePersonalData.birthday}
-                    promotorAddress={userProfile.location}
+                    promotorAddress={headerLocation}
                     hoursPerWeek={"32"}
                     monthlyGross={"2000"}
                     startDate={"01.02.2023"}
