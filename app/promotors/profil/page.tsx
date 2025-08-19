@@ -1305,6 +1305,46 @@ export default function ProfilPage() {
                 ));
               })()}
 
+              {/* Pending contracts with file (awaiting admin acceptance) */}
+              {(() => {
+                const awaitingAcceptance = promotorContracts
+                  .filter(c => !c.is_active && !!c.file_path)
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                if (awaitingAcceptance.length === 0) return null;
+                return awaitingAcceptance.map((contract) => (
+                  <div key={contract.id} className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Gesendet – Ausstehend</span>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Warte auf Freigabe</span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      <div>Wochenstunden: {contract.hours_per_week || 'N/A'}</div>
+                      <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
+                      <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {contract.file_path && (
+                        <button
+                          className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                          onClick={async () => {
+                            if (!userId) return;
+                            const r = await fetch(`/api/promotors/${userId}/contracts/signed-url?contract_id=${contract.id}`);
+                            const j = await r.json();
+                            if (j?.url) window.open(j.url, '_blank');
+                          }}
+                          title="Hochgeladenen Vertrag ansehen"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ));
+              })()}
+
               {/* Active Contract */}
               {(() => {
                 const activeContract = promotorContracts.find(c => c.is_active);
@@ -1346,7 +1386,10 @@ export default function ProfilPage() {
 
               {/* Previous Contracts */}
               {(() => {
-                const previousContracts = promotorContracts.filter(c => c.is_active === false && c.file_path);
+                const latestAwaiting = promotorContracts
+                  .filter(c => !c.is_active && !!c.file_path)
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                const previousContracts = promotorContracts.filter(c => c.is_active === false && c.file_path && (!latestAwaiting || c.id !== latestAwaiting.id));
                 if (previousContracts.length === 0) return null;
                 
                 return (
