@@ -55,6 +55,7 @@ export default function ProfilPage() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [promotorContracts, setPromotorContracts] = useState<any[]>([])
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null)
   const [editableProfile, setEditableProfile] = useState({
     email: "",
     phone: ""
@@ -141,7 +142,8 @@ export default function ProfilPage() {
     return "x".repeat(iban.length - 5) + iban.slice(-5)
   }
 
-  const handleDienstvertragSelect = () => {
+  const handleDienstvertragSelect = (contractId?: string) => {
+    if (contractId) setSelectedContractId(contractId)
     setShowDienstvertragPopup(false)
     setShowDienstvertragContent(true)
   }
@@ -1282,7 +1284,7 @@ export default function ProfilPage() {
                     <div className="flex items-center gap-2">
                       <button 
                         className="flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
-                        onClick={handleDienstvertragSelect}
+                        onClick={() => handleDienstvertragSelect(contract.id)}
                       >
                         Ansehen & Unterschreiben
                       </button>
@@ -1399,7 +1401,7 @@ export default function ProfilPage() {
                       </button>
                       <button 
                         className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                        onClick={handleDienstvertragSelect}
+                        onClick={() => handleDienstvertragSelect(activeContract.id)}
                       >
                         Vertrag ansehen
                       </button>
@@ -1456,7 +1458,7 @@ export default function ProfilPage() {
                         <div className="flex items-center gap-2">
                           <button
                             className="flex-1 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200"
-                            onClick={handleDienstvertragSelect}
+                            onClick={() => handleDienstvertragSelect(contract.id)}
                           >
                             Archiv ansehen
                           </button>
@@ -1523,7 +1525,7 @@ export default function ProfilPage() {
                     
                     {/* Close Button */}
                     <button 
-                      onClick={() => setShowDienstvertragContent(false)}
+                      onClick={() => { setShowDienstvertragContent(false); setSelectedContractId(null) }}
                       className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                     >
                       <X className="h-5 w-5" />
@@ -1536,13 +1538,17 @@ export default function ProfilPage() {
               <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
                 <div id="dienstvertrag-content">
                   {(() => {
-                    // Prefer latest contract if exists
-                    const latest = (promotorContracts || [])[0] || {} as any;
-                    const h = String(latest?.hours_per_week ?? '').trim();
-                    const m = String(latest?.monthly_gross ?? '').trim();
-                    const sd = latest?.start_date ? new Date(latest.start_date).toLocaleDateString('de-DE') : '';
-                    const ed = latest?.end_date ? new Date(latest.end_date).toLocaleDateString('de-DE') : '';
-                    const tmp = !!latest?.is_temporary;
+                    const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                    const fromId = selectedContractId ? contracts.find((c: any) => c.id === selectedContractId) : null;
+                    const fallbackActive = contracts.find((c: any) => c.is_active);
+                    const fallbackPending = [...contracts].filter((c: any) => !c.is_active)
+                      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                    const useC: any = fromId || fallbackPending || fallbackActive || {};
+                    const h = String(useC?.hours_per_week ?? '').trim();
+                    const m = String(useC?.monthly_gross ?? '').trim();
+                    const sd = useC?.start_date ? new Date(useC.start_date).toLocaleDateString('de-DE') : '';
+                    const ed = useC?.end_date ? new Date(useC.end_date).toLocaleDateString('de-DE') : '';
+                    const tmp = !!useC?.is_temporary;
                     return (
                       <DienstvertragTemplate
                         promotorName={headerName || ''}
