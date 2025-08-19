@@ -1445,16 +1445,27 @@ export default function ProfilPage() {
               {/* Content */}
               <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
                 <div id="dienstvertrag-content">
-                  <DienstvertragTemplate
-                    promotorName={headerName || 'Promotor'}
-                    promotorBirthDate={editablePersonalData.birthday}
-                    promotorAddress={headerLocation}
-                    hoursPerWeek={"32"}
-                    monthlyGross={"2000"}
-                    startDate={"01.02.2023"}
-                    endDate={"30.06.2023"}
-                    isTemporary={true}
-                  />
+                  {(() => {
+                    // Prefer latest contract if exists
+                    const latest = (promotorContracts || [])[0] || {} as any;
+                    const h = String(latest?.hours_per_week ?? '').trim();
+                    const m = String(latest?.monthly_gross ?? '').trim();
+                    const sd = latest?.start_date ? new Date(latest.start_date).toLocaleDateString('de-DE') : '';
+                    const ed = latest?.end_date ? new Date(latest.end_date).toLocaleDateString('de-DE') : '';
+                    const tmp = !!latest?.is_temporary;
+                    return (
+                      <DienstvertragTemplate
+                        promotorName={headerName || ''}
+                        promotorBirthDate={editablePersonalData.birthday || ''}
+                        promotorAddress={headerLocation || ''}
+                        hoursPerWeek={h}
+                        monthlyGross={m}
+                        startDate={sd}
+                        endDate={ed}
+                        isTemporary={tmp}
+                      />
+                    );
+                  })()}
                 </div>
               </div>
             </div>

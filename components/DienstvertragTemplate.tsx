@@ -42,13 +42,13 @@ export function DienstvertragTemplate({
         <div className="mt-8 ml-8">
           <div className="grid grid-cols-[150px_1fr] gap-4">
             <p>Frau/Herr:</p>
-            <p className="font-semibold">{promotorName || "Vorname Nachname"}</p>
-            
+            <p className="font-semibold">{promotorName || "Keine Daten gefunden"}</p>
+
             <p>geboren am:</p>
-            <p className="font-semibold">{promotorBirthDate || "Tag.Monat.Jahr"}</p>
-            
+            <p className="font-semibold">{promotorBirthDate || "Keine Daten gefunden"}</p>
+
             <p>wohnhaft in:</p>
-            <p className="font-semibold">{promotorAddress || "Adresse"}</p>
+            <p className="font-semibold">{promotorAddress || "Keine Daten gefunden"}</p>
           </div>
         </div>
         
@@ -66,7 +66,7 @@ export function DienstvertragTemplate({
       {/* Section 2 */}
       <div className="space-y-3">
         <h3 className="font-bold">2. Arbeitszeit</h3>
-        <p className="indent-8">Das zeitliche Ausmaß der Arbeitsverpflichtung beträgt <span className="font-semibold">{hoursPerWeek || "32"}</span> Wochenstunden.</p>
+        <p className="indent-8">Das zeitliche Ausmaß der Arbeitsverpflichtung beträgt <span className="font-semibold">{hoursPerWeek || "Keine Daten gefunden"}</span> Wochenstunden.</p>
         <p>Die Aufteilung dieser Arbeitszeit auf die einzelnen Wochentage wird zwischen dem Arbeitgeber und dem Arbeitnehmer vereinbart Der Arbeitnehmer erklärt sich ausdrücklich mit der jederzeitigen Änderung der vereinbarten Arbeitszeiteinteilung durch den Arbeitgeber unter Beachtung der arbeitszeitrechtlichen Grenzen und Beschränkungen des § 19 c Abs. 2 und 3 AZG (bei Teilzeitarbeit § 19 d AZG) einverstanden.</p>
         <p>Mehr- und Überstunden sind nur über ausdrückliche Anordnung des Arbeitgebers oder des Dienstgebers zu leisten. Der Arbeitnehmer erklärt sich zur Leistung von Mehr- und Überstunden auf Verlangen des Arbeitgebers bereit.</p>
         <p>Der Arbeitnehmer ist zudem verpflichtet, die geleisteten Arbeitsstunden inkl. aller Mehr- und Überstunden sowie die Fehl- und Zeitausgleichstunden aufzuzeichnen und auf Nachfrage an den Arbeitgeber zu übermitteln. Für den Fall, dass der Arbeitnehmer gar keine Zeitbestätigungen oder unkorrekte oder unvollständige Zeitbestätigungen abgibt, wird daher bereits vorab festgehalten, dass der Arbeitgeber nicht zur Bezahlung der davon betroffenen Zeiten verpflichtet ist.</p>
@@ -77,7 +77,7 @@ export function DienstvertragTemplate({
         <h3 className="font-bold">3. Einstufung und Entgelt</h3>
         <p>Die Einstufung des Arbeitnehmers erfolgt nach den Bestimmungen des Kollektivvertrages für Angestellte in Werbung und Marktkommunikation Wien in die Verwendungsgruppe II.</p>
         <p>Der Arbeitnehmer bestätigt ausdrücklich, dass er vom Arbeitgeber ausdrücklich aufgefordert wurde, allfällige Vordienstzeiten (Verwendungsgruppenjahre) bekannt zu geben bzw. nachzuweisen sowie allfällige Ausbildungsnachweise vorzulegen. Der Arbeitnehmer erklärt, dass er auf Basis der von ihm dem Arbeitgeber mitgeteilten Informationen richtig eingestuft ist.</p>
-        <p>Das Gehalt beträgt Brutto <span className="font-semibold">{monthlyGross ? `€ ${monthlyGross},--` : "€ 2.000,--"}</span> pro Kalendermonat.</p>
+        <p>Das Gehalt beträgt Brutto <span className="font-semibold">{monthlyGross ? `€ ${monthlyGross},--` : "Keine Daten gefunden"}</span> pro Kalendermonat.</p>
         <p>Die Abrechnung und Auszahlung des Gehalts erfolgt jeweils zum 30. des aktuellen Monats. Die Zahlung allfälliger variabler Entgeltbestandteile einschließlich Verkaufsprovision erfolgt mit der Abrechnung des Folgemonats.</p>
         <p>Sonderzahlungen gebühren nach Maßgabe des Kollektivvertrages für Angestellte in Werbung und Marktkommunikation. Die Auszahlung der Weihnachtsremuneration und des Urlaubsgeldes erfolgt halbjährlich.</p>
         <p>Bei unterjährigem Eintritt und/oder Austritt des Arbeitnehmers gebühren die Sonderzahlungen gemäß den kollektivvertraglichen Bestimmungen bloß zeitanteilig; anteilsmäßig zu viel ausbezahlte Sonderzahlungen können vom Arbeitgeber zurückverrechnet bzw. zurückgefordert werden.</p>
@@ -89,7 +89,7 @@ export function DienstvertragTemplate({
       {/* Section 4 */}
       <div className="space-y-3">
         <h3 className="font-bold">4. Vertragsdauer/Beendigung</h3>
-        <p className="pdf-break-after">Das Dienstverhältnis beginnt am <span className="font-semibold">{startDate || "01.02.2023"}</span>. {isTemporary ? `Das Dienstverhältnis ist bis zum ${endDate || "30.06.2023"} befristet; wird es auch darüber hinaus fortgesetzt, geht es in ein unbefristetes über.` : 'Das Dienstverhältnis wird auf unbestimmte Zeit abgeschlossen.'}</p>
+        <p className="pdf-break-after">Das Dienstverhältnis beginnt am <span className="font-semibold">{startDate || "Keine Daten gefunden"}</span>. {isTemporary ? `Das Dienstverhältnis ist bis zum ${endDate || "Keine Daten gefunden"} befristet; wird es auch darüber hinaus fortgesetzt, geht es in ein unbefristetes über.` : 'Das Dienstverhältnis wird auf unbestimmte Zeit abgeschlossen.'}</p>
         <p>Der Arbeitnehmer kann das Dienstverhältnis unter Einhaltung einer einmonatigen Kündigungsfrist jeweils zum Letzten jeden Monats aufkündigen. Der Arbeitgeber kann das Dienstverhältnis unter Einhaltung der gesetzlichen Kündigungsfrist gemäß § 20 Abs 3 Angestelltengesetz jeweils zum Fünfzehnten oder Monatsletzten beenden.</p>
         <p>Während der gesetzlichen Kündigungsfrist ist nach Möglichkeit ein allenfalls vorhandener Resturlaub sowie ein allenfalls vorhandenes Zeitguthaben zu konsumieren</p>
       </div>
@@ -199,13 +199,13 @@ export function DienstvertragTemplate({
         <p>In Ergänzung zum bestehenden Dienstvertrag wird zwischen der</p>
         <p className="font-semibold">Sales Crew Verkaufsförderung GmbH, Wagenseilgasse 5, 1120 Wien</p>
         <p>(nachstehend „Arbeitgeber/in" genannt)</p>
-        <p>und <span className="font-semibold">Frau {promotorName}, {promotorAddress}</span></p>
+        <p>und <span className="font-semibold">Frau {promotorName || 'Keine Daten gefunden'}, {promotorAddress || 'Keine Daten gefunden'}</span></p>
         <h3 className="font-bold text-center">Vereinbarung über durchrechenbare Arbeitszeit (Teilzeit)</h3>
         <p>geschlossen:</p>
         
         <div className="space-y-3">
           <h4 className="font-semibold">Durchrechnungsmodell</h4>
-          <p>Es wird eine regelmäßige Arbeitszeit von <span className="font-semibold">{hoursPerWeek || "32"}</span> Stunden pro Woche vereinbart. Die Arbeitszeiteinteilung erfolgt durch Dienstplan auf Grundlage einer Arbeitszeitdurchrechnung gemäß § 19d Abs. 3b Z. 1 AZG.</p>
+          <p>Es wird eine regelmäßige Arbeitszeit von <span className="font-semibold">{hoursPerWeek || "Keine Daten gefunden"}</span> Stunden pro Woche vereinbart. Die Arbeitszeiteinteilung erfolgt durch Dienstplan auf Grundlage einer Arbeitszeitdurchrechnung gemäß § 19d Abs. 3b Z. 1 AZG.</p>
         </div>
         
         <div className="space-y-3">
