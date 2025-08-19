@@ -1411,15 +1411,11 @@ export default function ProfilPage() {
               {/* Previous Contracts */}
               {(() => {
                 const active = promotorContracts.find(c => c.is_active);
+                if (!active) return null; // only show previous when an active exists
                 const candidates = promotorContracts.filter(c => !c.is_active && !!c.file_path);
-                // determine newest awaiting contract like above
-                const newerThanActive = active?.created_at
-                  ? candidates.filter(c => new Date(c.created_at).getTime() > new Date(active.created_at).getTime())
-                  : candidates;
-                const latestAwaiting = newerThanActive
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                // newest awaiting (newer than active) is excluded by definition; we only include strictly older ones here
                 const previousContracts = candidates
-                  .filter(c => (!latestAwaiting || c.id !== latestAwaiting.id) && (!active?.created_at || new Date(c.created_at).getTime() <= new Date(active.created_at).getTime()))
+                  .filter(c => new Date(c.created_at).getTime() < new Date(active.created_at).getTime())
                   .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 if (previousContracts.length === 0) return null;
                 
