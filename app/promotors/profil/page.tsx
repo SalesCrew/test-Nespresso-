@@ -815,10 +815,11 @@ export default function ProfilPage() {
 
           {/* Employment Information */}
           <Card className="relative border-none shadow-lg shadow-orange-500/20 bg-white dark:bg-gray-900 overflow-hidden">
-            {/* Minimal countdown chip in the top-right corner */}
+            {/* Minimal countdown chip in the top-right corner with subtle label */}
             {!payrollCountdown.isPayday && (
-              <div className="absolute top-3 right-3">
-                <div className="px-2.5 py-1 rounded-full border border-orange-200/60 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-900/20 backdrop-blur-sm shadow-sm flex items-center gap-1 text-[10px] font-mono tabular-nums text-orange-600 dark:text-orange-300">
+              <div className="absolute top-2.5 right-3 flex flex-col items-end gap-1">
+                <span className="text-[10px] leading-none text-gray-500/70 dark:text-gray-400/70">Nächstes Gehalt in</span>
+                <div className="px-2 py-0.5 rounded-full border border-orange-200/60 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-900/20 backdrop-blur-sm shadow-sm flex items-center gap-1 text-[10px] font-mono tabular-nums text-orange-600 dark:text-orange-300">
                   <Clock className="h-3 w-3 opacity-70" />
                   <span>{payrollCountdown.days}d</span>
                   <span>·</span>
@@ -833,38 +834,38 @@ export default function ProfilPage() {
                 <div className="px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 backdrop-blur-sm shadow-sm text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Gehalt ist da 🎉</div>
               </div>
             )}
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
                 <Briefcase className="h-5 w-5 mr-2 text-orange-500" />
                 Anstellung
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {/* Employment Type */}
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
                   Anstellungs Art
                 </label>
                 <div>
-                  <Badge variant="secondary" className="px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
+                  <Badge variant="secondary" className="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
                     geringfügig
                   </Badge>
                 </div>
               </div>
 
               {/* Weekly Hours */}
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
                   Wochenstunden
                 </label>
-                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
                   8
                 </p>
               </div>
 
               {/* Employment Status */}
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
                   Status
                 </label>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -873,13 +874,13 @@ export default function ProfilPage() {
               </div>
 
               {/* Working Days */}
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
                   Arbeitstage
                 </label>
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mo</span>
-                  <span className="px-3 py-1 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mi</span>
+                <div className="flex gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mo</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mi</span>
                 </div>
               </div>
             </CardContent>
