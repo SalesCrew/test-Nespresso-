@@ -2727,120 +2727,206 @@ export default function PromotorenPage() {
 
                 {/* Contracts List */}
                 <div className="space-y-3">
+                  {/* No contracts state */}
+                  {(() => {
+                    const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                    if (contracts.length === 0) {
+                      return (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                          <span className="text-sm text-gray-600">Kein Dienstvertrag verfügbar</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  
                   {/* Pending Contract (dynamic) */}
                   {(() => {
                     const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                    const latest = contracts[0];
-                    if (!latest || latest.file_path) return null;
-                    return (
-                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
+                    const pendingContracts = contracts.filter(c => !c.is_active);
+                    if (pendingContracts.length === 0) return null;
+                    
+                    return pendingContracts.map((contract) => (
+                      <div key={contract.id} className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-semibold text-orange-700">Ausstehender Vertrag</span>
                           <div className="flex items-center space-x-2">
-                            <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
-                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Warte auf Unterschrift</span>
+                            {contract.file_path ? (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />
+                            )}
+                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                              {contract.file_path ? 'Unterschrieben' : 'Warte auf Unterschrift'}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-600 mb-3">Promotor hat den Vertrag noch nicht hochgeladen.</div>
-                        <div className="flex space-x-2">
-                          <button 
-                            className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200 border border-gray-300"
-                            onClick={handleDienstvertragSelect}
-                          >
-                            Details anzeigen
-                          </button>
+                        <div className="text-xs text-gray-600 mb-3">
+                          <div>Wochenstunden: {contract.hours_per_week || 'N/A'}</div>
+                          <div>Monatsgehalt: {contract.monthly_gross ? `€ ${contract.monthly_gross},-- brutto` : 'N/A'}</div>
+                          <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
+                          <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
                         </div>
+                        <div className="flex space-x-2">
+                          {contract.file_path ? (
+                            <>
+                              <button 
+                                className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch('/api/admin/contracts', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ id: contract.id, is_active: true }),
+                                    });
+                                    if (!res.ok) throw new Error('Fehler beim Annehmen des Vertrags');
+                                    await refreshPromotorContracts(selectedPromotorForContract!);
+                                    setToastMsg('Vertrag erfolgreich angenommen!');
+                                  } catch (e: any) {
+                                    setToastMsg(e.message || 'Fehler beim Annehmen des Vertrags');
+                                    console.error(e);
+                                  }
+                                }}
+                              >
+                                Vertrag annehmen
+                              </button>
+                              <button 
+                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 border border-gray-300"
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/admin/promotors/${selectedPromotorForContract}/contracts/signed-url?contract_id=${contract.id}`, {
+                                      cache: 'no-store'
+                                    });
+                                    const j = await res.json();
+                                    if (j?.url) window.open(j.url, '_blank');
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }}
+                                title="Unterschriebenen Vertrag ansehen"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button 
+                              className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200 border border-gray-300"
+                              onClick={handleDienstvertragSelect}
+                            >
+                              Details anzeigen
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+
+              {/* Current Active Contract */}
+                  {(() => {
+                    const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                    const activeContract = contracts.find(c => c.is_active);
+                    if (!activeContract) return null;
+                    
+                    return (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-green-700">Aktiver Vertrag</span>
+                          <div className="flex items-center space-x-2">
+                            {activeContract.file_path && (
+                              <button 
+                                className="p-1 hover:bg-green-100/50 rounded transition-colors"
+                                title="Unterschriebenen Vertrag ansehen"
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/admin/promotors/${selectedPromotorForContract}/contracts/signed-url?contract_id=${activeContract.id}`, {
+                                      cache: 'no-store'
+                                    });
+                                    const j = await res.json();
+                                    if (j?.url) window.open(j.url, '_blank');
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }}
+                              >
+                                <Eye className="h-3 w-3 text-green-600" />
+                              </button>
+                            )}
+                            <Check className="h-4 w-4 text-green-500" />
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Aktiv</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-3">
+                          <div>Wochenstunden: {activeContract.hours_per_week || 'N/A'}</div>
+                          <div>Monatsgehalt: {activeContract.monthly_gross ? `€ ${activeContract.monthly_gross},-- brutto` : 'N/A'}</div>
+                          <div>Laufzeit: {activeContract.start_date ? new Date(activeContract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {activeContract.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
+                          <div>Anstellungsart: {activeContract.employment_type || 'N/A'}</div>
+                        </div>
+                        <button 
+                          className="w-full py-2 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                          style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
+                          onClick={handleDienstvertragSelect}
+                        >
+                          Vertrag ansehen
+                        </button>
                       </div>
                     );
                   })()}
 
-                  {/* Current Active Contract */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-green-700">Aktiver Vertrag</span>
-                      <div className="flex items-center space-x-2">
-                        <button 
-                          className="p-1 hover:bg-green-100/50 rounded transition-colors opacity-50 hover:opacity-75"
-                          title="Unterschriebenen Vertrag ansehen"
-                        >
-                          <Eye className="h-3 w-3 text-green-600" />
-                        </button>
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Aktiv</span>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600 mb-3">
-                      <div>Wochenstunden: 20h</div>
-                      <div>Monatsgehalt: € 1.800,-- brutto</div>
-                      <div>Laufzeit: 01.08.2024 - unbefristet</div>
-                      <div>Status: geringfügig</div>
-                    </div>
-                    <button 
-                      className="w-full py-2 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                      style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
-                      onClick={handleDienstvertragSelect}
-                    >
-                      Vertrag ansehen
-                    </button>
-                  </div>
-
-                  {/* Previous Contracts */}
+              {/* Previous Contracts */}
+              {(() => {
+                const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                const previousContracts = contracts.filter(c => c.is_active === false && c.file_path);
+                if (previousContracts.length === 0) return null;
+                
+                return (
                   <div className="space-y-2">
                     <h5 className="text-sm font-medium text-gray-700">Frühere Verträge</h5>
-                
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">Vertrag v2.0</span>
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            className="p-1 hover:bg-gray-200/50 rounded transition-colors opacity-50 hover:opacity-75"
-                            title="Unterschriebenen Vertrag ansehen"
-                          >
-                            <Eye className="h-3 w-3 text-gray-600" />
-                          </button>
-                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                    
+                    {previousContracts.map((contract, index) => (
+                      <div key={contract.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">
+                            Vertrag v{previousContracts.length - index}.0
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            {contract.file_path && (
+                              <button 
+                                className="p-1 hover:bg-gray-200/50 rounded transition-colors"
+                                title="Unterschriebenen Vertrag ansehen"
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/admin/promotors/${selectedPromotorForContract}/contracts/signed-url?contract_id=${contract.id}`, {
+                                      cache: 'no-store'
+                                    });
+                                    const j = await res.json();
+                                    if (j?.url) window.open(j.url, '_blank');
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                }}
+                              >
+                                <Eye className="h-3 w-3 text-gray-600" />
+                              </button>
+                            )}
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-xs text-gray-500 mb-2">
-                            <div>Wochenstunden: 8h • € 800,--/Monat</div>
-                        <div>Laufzeit: 01.02.2024 - 31.07.2024</div>
-                      </div>
-                      <button 
-                            className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
-                        onClick={handleDienstvertragSelect}
-                      >
-                        Archiv ansehen
-                      </button>
-                    </div>
-
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-600">Vertrag v1.0</span>
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            className="p-1 hover:bg-gray-200/50 rounded transition-colors opacity-50 hover:opacity-75"
-                            title="Unterschriebenen Vertrag ansehen"
-                          >
-                            <Eye className="h-3 w-3 text-gray-600" />
-                          </button>
-                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Beendet</span>
+                        <div className="text-xs text-gray-500 mb-2">
+                          <div>Wochenstunden: {contract.hours_per_week || 'N/A'} • {contract.monthly_gross ? `€ ${contract.monthly_gross},--/Monat` : 'N/A'}</div>
+                          <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'N/A'}</div>
                         </div>
+                        <button 
+                          className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
+                          onClick={handleDienstvertragSelect}
+                        >
+                          Archiv ansehen
+                        </button>
                       </div>
-                      <div className="text-xs text-gray-500 mb-2">
-                            <div>Wochenstunden: 8h • € 800,--/Monat</div>
-                        <div>Laufzeit: 01.02.2023 - 31.01.2024</div>
-                      </div>
-                      <button 
-                            className="w-full py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded-lg transition-all duration-200"
-                        onClick={handleDienstvertragSelect}
-                      >
-                        Archiv ansehen
-                      </button>
-                    </div>
+                    ))}
                   </div>
+                );
+              })()}
                 </div>
-              </div>
-            </div>
               </div>
             </div>
           </div>

@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const server = createSupabaseServerClient();
+  const { data: auth } = await server.auth.getUser();
+  if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const contractId = req.nextUrl.searchParams.get('contract_id');
+  if (!contractId) return NextResponse.json({ error: 'contract_id missing' }, { status: 400 });
+
+  const svc = createSupabaseServiceClient();
+  
+  // Verify admin status
+  const { data: profile } = await svc
+    .from('user_profiles')
+    .select('role')
+    .eq('user_id', auth.user.id)
+    .single();
+  
+  if (profile?.role !== 'admin') {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
+
+  // Get contract file path
+  const { data: row, error } = await svc
+    .from('contracts')
+    .select('file_path')
+    .eq('id', contractId)
+    .eq('user_id', params.id) // Ensure contract belongs to the specified promotor
+    .maybeSingle();
+    
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!row?.file_path) return NextResponse.json({ error: 'not found' }, { status: 404 });
+
+  const { data: signed, error: sErr } = await svc.storage
+    .from('contracts')
+    .createSignedUrl(row.file_path, 300); // 5 minutes validity
+    
+  if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });
+  return NextResponse.json({ url: signed?.signedUrl || null });
+}

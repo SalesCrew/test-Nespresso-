@@ -54,6 +54,7 @@ export default function ProfilPage() {
   const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
+  const [promotorContracts, setPromotorContracts] = useState<any[]>([])
   const [editableProfile, setEditableProfile] = useState({
     email: "",
     phone: ""
@@ -382,10 +383,22 @@ export default function ProfilPage() {
             }))
           } catch {}
           await refreshDocuments(user.id)
+          await loadPromotorContracts(user.id)
         }
       } catch {}
     })()
   }, [])
+
+  const loadPromotorContracts = async (uid: string) => {
+    try {
+      const res = await fetch(`/api/promotors/${uid}/contracts`, { cache: 'no-store' });
+      const json = await res.json();
+      setPromotorContracts(json.contracts || []);
+    } catch (e) {
+      console.error('Failed to load promotor contracts:', e);
+      setPromotorContracts([]);
+    }
+  };
 
   const visibleDocuments = isDocumentsExpanded ? documents : documents.slice(0, 3)
 
@@ -1228,104 +1241,155 @@ export default function ProfilPage() {
             </div>
             
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* Empty state by default (until an admin sends a contract) */}
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center text-sm text-gray-600 dark:text-gray-300">
-                Keine Dienstverträge verfügbar
-              </div>
+              {/* Empty state */}
+              {promotorContracts.length === 0 && (
+                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center text-sm text-gray-600 dark:text-gray-300">
+                  Keine Dienstverträge verfügbar
+                </div>
+              )}
 
-              {/* Upload a signed contract (promotor action) */}
-              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Unterschriebenen Vertrag hochladen</span>
-                  <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Ausstehend</span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">Nach dem Download und der Unterschrift bitte hier als PDF oder Foto hochladen.</div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 p-0"
-                    onClick={async () => {
-                      if (!userId) return;
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'application/pdf,image/*';
-                      input.style.display = 'none';
-                      document.body.appendChild(input);
-                      input.onchange = async () => {
-                        const file = input.files?.[0];
-                        document.body.removeChild(input);
-                        if (!file) return;
-                        const supabase = createSupabaseBrowserClient();
-                        const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-                        const upRes = await fetch(`/api/promotors/${userId}/contracts/upload-url`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_ext: ext }) });
-                        const up = await upRes.json();
-                        if (!up?.path) return;
-                        const { error: upErr } = await supabase.storage.from('contracts').upload(up.path, file);
-                        if (upErr) return;
-                        await fetch(`/api/promotors/${userId}/contracts/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: up.path }) });
-                      };
-                      input.click();
-                    }}
-                  >
-                    <Upload className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 p-0"
-                    onClick={async () => {
-                      if (!userId) return;
-                      const r = await fetch(`/api/promotors/${userId}/contracts/signed-url?latest=1`);
-                      const j = await r.json();
-                      if (j?.url) window.open(j.url, '_blank');
-                    }}
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                  </Button>
-                  <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
-                </div>
-              </div>
+              {/* Pending contracts without file */}
+              {(() => {
+                const pendingContracts = promotorContracts.filter(c => !c.is_active && !c.file_path);
+                return pendingContracts.map((contract) => (
+                  <div key={contract.id} className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Neuer Vertrag verfügbar</span>
+                      <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Ausstehend</span>
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      <div>Wochenstunden: {contract.hours_per_week || 'N/A'}</div>
+                      <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
+                      <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        className="flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
+                        onClick={handleDienstvertragSelect}
+                      >
+                        Ansehen & Unterschreiben
+                      </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 p-0"
+                        onClick={async () => {
+                          if (!userId) return;
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'application/pdf,image/*';
+                          input.style.display = 'none';
+                          document.body.appendChild(input);
+                          input.onchange = async () => {
+                            const file = input.files?.[0];
+                            document.body.removeChild(input);
+                            if (!file) return;
+                            const supabase = createSupabaseBrowserClient();
+                            const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+                            const upRes = await fetch(`/api/promotors/${userId}/contracts/upload-url`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_ext: ext }) });
+                            const up = await upRes.json();
+                            if (!up?.path || !up?.token) return;
+                            const { error: upErr } = await supabase.storage.from('contracts').uploadToSignedUrl(up.path, up.token, file);
+                            if (upErr) return;
+                            await fetch(`/api/promotors/${userId}/contracts/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract_id: contract.id, file_path: up.path }) });
+                            await loadPromotorContracts(userId);
+                          };
+                          input.click();
+                        }}
+                        title="Unterschriebenen Vertrag hochladen"
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ));
+              })()}
 
-              {/* Current Active Contract */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Aktiver Vertrag</span>
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Aktiv</span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  <div>Wochenstunden: 20h</div>
-                  <div>Laufzeit: 01.08.2024 - unbefristet</div>
-                  <div>Status: geringfügig</div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <button
-                    className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                    onClick={async () => {
-                      if (!userId) return;
-                      const r = await fetch(`/api/promotors/${userId}/contracts/signed-url`);
-                      const j = await r.json();
-                      if (j?.url) window.open(j.url, '_blank');
-                    }}
-                  >
-                    Signiert ansehen
-                  </button>
-                  <button 
-                    className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                    onClick={handleDienstvertragSelect}
-                  >
-                    Vertrag ansehen
-                  </button>
-                </div>
-              </div>
+              {/* Active Contract */}
+              {(() => {
+                const activeContract = promotorContracts.find(c => c.is_active);
+                if (!activeContract) return null;
+                
+                return (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Aktiver Vertrag</span>
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Aktiv</span>
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      <div>Wochenstunden: {activeContract.hours_per_week || 'N/A'}</div>
+                      <div>Laufzeit: {activeContract.start_date ? new Date(activeContract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {activeContract.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
+                      <div>Anstellungsart: {activeContract.employment_type || 'N/A'}</div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <button
+                        className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                        onClick={async () => {
+                          if (!userId || !activeContract.file_path) return;
+                          const r = await fetch(`/api/promotors/${userId}/contracts/signed-url?contract_id=${activeContract.id}`);
+                          const j = await r.json();
+                          if (j?.url) window.open(j.url, '_blank');
+                        }}
+                      >
+                        Signiert ansehen
+                      </button>
+                      <button 
+                        className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                        onClick={handleDienstvertragSelect}
+                      >
+                        Vertrag ansehen
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
-              {/* Previous Contracts (static placeholder remains until wired to data) */}
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
-                <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-xs text-gray-500 dark:text-gray-400">
-                  Hier erscheinen frühere, inaktive Verträge, sobald ein neuer Vertrag aktiv wird.
-                </div>
-              </div>
+              {/* Previous Contracts */}
+              {(() => {
+                const previousContracts = promotorContracts.filter(c => c.is_active === false && c.file_path);
+                if (previousContracts.length === 0) return null;
+                
+                return (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
+                    {previousContracts.map((contract, index) => (
+                      <div key={contract.id} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            Vertrag {previousContracts.length - index}
+                          </span>
+                          <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">Beendet</span>
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'N/A'}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="flex-1 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200"
+                            onClick={handleDienstvertragSelect}
+                          >
+                            Archiv ansehen
+                          </button>
+                          {contract.file_path && (
+                            <button
+                              className="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded-lg"
+                              onClick={async () => {
+                                if (!userId) return;
+                                const r = await fetch(`/api/promotors/${userId}/contracts/signed-url?contract_id=${contract.id}`);
+                                const j = await r.json();
+                                if (j?.url) window.open(j.url, '_blank');
+                              }}
+                              title="Unterschriebenen Vertrag ansehen"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
             
             <div className="border-t border-gray-200 dark:border-gray-700 p-4">
