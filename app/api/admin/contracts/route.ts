@@ -12,13 +12,35 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
-  const { user_id, file_path, is_active } = body || {};
+  const {
+    user_id,
+    file_path,
+    is_active,
+    employment_type,
+    hours_per_week,
+    monthly_gross,
+    start_date,
+    end_date,
+    is_temporary,
+  } = body || {};
   // If file_path is missing, we treat this as sending an offer (no uploaded file yet)
   if (!user_id) return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
   const svc = createSupabaseServiceClient();
+  const insertPayload: any = {
+    user_id,
+    file_path: file_path ?? null,
+    is_active: !!is_active && !!file_path,
+  };
+  if (employment_type) insertPayload.employment_type = String(employment_type);
+  if (hours_per_week !== undefined && hours_per_week !== '') insertPayload.hours_per_week = Number(hours_per_week);
+  if (monthly_gross !== undefined && monthly_gross !== '') insertPayload.monthly_gross = Number(monthly_gross);
+  if (start_date) insertPayload.start_date = start_date;
+  if (end_date) insertPayload.end_date = end_date;
+  if (typeof is_temporary === 'boolean') insertPayload.is_temporary = is_temporary;
+
   const { data, error } = await svc
     .from('contracts')
-    .insert({ user_id, file_path: file_path ?? null, is_active: !!is_active && !!file_path })
+    .insert(insertPayload)
     .select('*')
     .maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
