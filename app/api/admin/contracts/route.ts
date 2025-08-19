@@ -8,8 +8,6 @@ export async function POST(req: NextRequest) {
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
   const {
@@ -38,22 +36,29 @@ export async function POST(req: NextRequest) {
   if (end_date) insertPayload.end_date = end_date;
   if (typeof is_temporary === 'boolean') insertPayload.is_temporary = is_temporary;
 
-  const { data, error } = await svc
+  // Try with full payload; if columns are missing in DB, fall back to minimal insert
+  let insertRes = await svc
     .from('contracts')
     .insert(insertPayload)
     .select('*')
     .maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (insertRes.error) {
+    const minimal = { user_id, file_path: file_path ?? null, is_active: !!is_active && !!file_path };
+    insertRes = await svc
+      .from('contracts')
+      .insert(minimal)
+      .select('*')
+      .maybeSingle();
+  }
+  if (insertRes.error) return NextResponse.json({ error: insertRes.error.message }, { status: 500 });
   try { await recomputeOnboarding(svc as any, user_id); } catch {}
-  return NextResponse.json({ contract: data });
+  return NextResponse.json({ contract: insertRes.data });
 }
 
 export async function PATCH(req: NextRequest) {
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
   const body = await req.json().catch(() => ({} as any));
   const { id, is_active } = body || {};

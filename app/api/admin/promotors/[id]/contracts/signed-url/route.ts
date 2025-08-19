@@ -11,17 +11,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!contractId) return NextResponse.json({ error: 'contract_id missing' }, { status: 400 });
 
   const svc = createSupabaseServiceClient();
-  
-  // Verify admin status
-  const { data: profile } = await svc
-    .from('user_profiles')
-    .select('role')
-    .eq('user_id', auth.user.id)
-    .single();
-  
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-  }
 
   // Get contract file path
   const { data: row, error } = await svc

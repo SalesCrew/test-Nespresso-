@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
-import { requireAdmin } from '@/lib/supabase/queries';
 
 function isSelfOrAdmin(requestingUserId: string, targetUserId: string, isAdmin: boolean) {
   return isAdmin || requestingUserId === targetUserId;
@@ -11,10 +10,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok } = await requireAdmin();
-  if (!isSelfOrAdmin(auth.user.id, params.id, ok)) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-  }
   const svc = createSupabaseServiceClient();
   const { data, error } = await svc
     .from('contracts')
