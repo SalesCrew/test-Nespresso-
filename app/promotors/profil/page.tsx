@@ -1410,13 +1410,33 @@ export default function ProfilPage() {
 
               {/* Previous Contracts */}
               {(() => {
-                const active = promotorContracts.find(c => c.is_active);
-                if (!active) return null; // only show previous when an active exists
-                const candidates = promotorContracts.filter(c => !c.is_active && !!c.file_path);
-                // newest awaiting (newer than active) is excluded by definition; we only include strictly older ones here
-                const previousContracts = candidates
-                  .filter(c => new Date(c.created_at).getTime() < new Date(active.created_at).getTime())
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+                const active = contracts.find((c: any) => c.is_active);
+                const nonActiveWithFile = contracts.filter((c: any) => !c.is_active && c.file_path);
+
+                // Find newest pending (awaiting) contract id
+                let newestPendingId: string | null = null;
+                if (active?.created_at) {
+                  const pending = [...nonActiveWithFile]
+                    .filter((c: any) => new Date(c.created_at).getTime() > new Date(active.created_at).getTime())
+                    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                  newestPendingId = pending?.id || null;
+                } else {
+                  const top = [...nonActiveWithFile].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                  newestPendingId = top?.id || null;
+                }
+
+                const previousContracts = nonActiveWithFile
+                  .filter((c: any) => {
+                    if (newestPendingId && c.id === newestPendingId) return false; // exclude the currently pending contract
+                    if (active?.created_at) {
+                      return new Date(c.created_at).getTime() <= new Date(active.created_at).getTime();
+                    }
+                    // If no active exists, show all non-active-with-file except newest pending (above)
+                    return true;
+                  })
+                  .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
                 if (previousContracts.length === 0) return null;
                 
                 return (
