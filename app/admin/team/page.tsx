@@ -2892,17 +2892,22 @@ export default function PromotorenPage() {
                 const activeContract = contracts.find((c: any) => c.is_active);
                 const nonActiveWithFile = contracts.filter((c: any) => !c.is_active && c.file_path);
 
+                // Determine the newest pending (awaiting acceptance) contract id
                 let newestPendingId: string | null = null;
                 if (activeContract?.created_at) {
                   const pending = [...nonActiveWithFile]
                     .filter((c: any) => new Date(c.created_at).getTime() > new Date(activeContract.created_at).getTime())
                     .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
                   newestPendingId = pending?.id || null;
+                } else {
+                  // No active contract yet → the topmost non-active-with-file is the one in the pending box
+                  const top = [...nonActiveWithFile].sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                  newestPendingId = top?.id || null;
                 }
 
                 const previousContracts = nonActiveWithFile
                   .filter((c: any) => {
-                    if (newestPendingId && c.id === newestPendingId) return false; // exclude the current awaiting contract
+                    if (newestPendingId && c.id === newestPendingId) return false; // exclude the contract currently shown as pending
                     if (activeContract?.created_at) {
                       return new Date(c.created_at).getTime() <= new Date(activeContract.created_at).getTime();
                     }

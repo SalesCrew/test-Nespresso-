@@ -400,6 +400,23 @@ export default function ProfilPage() {
     }
   };
 
+  // When opening the modal, opportunistically refresh a few times to catch admin acceptance
+  useEffect(() => {
+    if (!showDienstvertragPopup || !userId) return;
+    let cancelled = false;
+    const run = async () => {
+      // Quick initial refresh
+      await loadPromotorContracts(userId);
+      // Then a short follow-up refresh after 2s to catch fast admin actions
+      setTimeout(async () => {
+        if (cancelled) return;
+        await loadPromotorContracts(userId);
+      }, 2000);
+    };
+    run();
+    return () => { cancelled = true };
+  }, [showDienstvertragPopup, userId])
+
   const visibleDocuments = isDocumentsExpanded ? documents : documents.slice(0, 3)
 
   const handleViewDocument = async (documentName: string) => {
