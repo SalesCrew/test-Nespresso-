@@ -2360,7 +2360,7 @@ export default function EinsatzplanPage() {
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="Offen" className="focus:bg-gray-100">Offen</SelectItem>
                           <SelectItem value="Verplant" className="focus:bg-green-100">Verplant</SelectItem>
-                          <SelectItem value="bestätigt" className="focus:bg-green-50">Bestätigt</SelectItem>
+                          
                           <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
                           <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
                           <SelectItem value="Zeitausgleich" className="focus:bg-yellow-100">Zeitausgleich</SelectItem>
