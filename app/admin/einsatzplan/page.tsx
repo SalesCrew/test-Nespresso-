@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import * as XLSX from 'xlsx';
+import { debugProcessRohExcel } from './debug-import';
 import { 
   Home, 
   Briefcase, 
@@ -590,14 +591,20 @@ export default function EinsatzplanPage() {
 
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
+    console.log('🔵 processRohExcel START - file:', file.name, 'size:', file.size);
     const reader = new FileReader();
     reader.onload = async (e) => {
+      console.log('🔵 FileReader.onload triggered');
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        console.log('🔵 ArrayBuffer size:', data.length);
         const workbook = XLSX.read(data, { type: 'array' });
+        console.log('🔵 Workbook sheets:', workbook.SheetNames);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        console.log('🔵 Excel parsed. Total rows:', jsonData.length);
+        console.log('🔵 First 3 rows:', jsonData.slice(0, 3));
         // Expected layout:
         // Col A: location name (used as address text)
         // Col B: PLZ
@@ -649,14 +656,21 @@ export default function EinsatzplanPage() {
             if (val === 2) rows.push(base);
           }
         }
+        console.log('🔵 Assignments to import:', rows.length);
+        console.log('🔵 First assignment:', rows[0]);
         const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        console.log('🔵 Import response:', res.status);
         if (!res.ok) {
           const t = await res.text();
           throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
         }
+        const importResult = await res.json();
+        console.log('🔵 Import result:', importResult);
         setShowImportModal(false)
         // Load ALL assignments after import to see the new ones
+        console.log('🔵 Calling loadAssignments...');
         await loadAssignments(true)
+        console.log('🔵 Import complete!');
       } catch (error: any) {
         console.error('Error processing Roh Excel:', error);
         alert(error?.message || 'Fehler beim Verarbeiten');
@@ -743,6 +757,9 @@ export default function EinsatzplanPage() {
     console.log('File selected:', file?.name, 'Import type:', importType);
     if (file) {
       if (importType === 'roh') {
+        // Use debug version
+        const result = debugProcessRohExcel(file, XLSX, getRegionFromPLZ);
+        console.log('🔵 Debug result received (sync). Using original processRohExcel...');
         processRohExcel(file);
       } else if (importType === 'intern') {
         processInternExcel(file);
@@ -897,6 +914,7 @@ export default function EinsatzplanPage() {
   });
 
   const loadAssignments = async (skipFilters = false) => {
+    console.log('🟢 loadAssignments called, skipFilters:', skipFilters);
     try {
       const params = new URLSearchParams();
       // Only apply filters if not skipping (e.g., after import we want to see all)
@@ -906,13 +924,17 @@ export default function EinsatzplanPage() {
         if (regionFilter && regionFilter !== 'ALLE') params.set('region', regionFilter);
         if (statusFilter) params.set('status', statusFilter);
       }
+      console.log('🟢 Fetching from /api/assignments with params:', params.toString());
       const res = await fetch(`/api/assignments?${params.toString()}`, { cache: 'no-store' });
+      console.log('🟢 Response status:', res.status);
       if (!res.ok) {
         const t = await res.text();
         throw new Error(`Laden fehlgeschlagen: ${res.status} ${t}`);
       }
       const j = await res.json();
+      console.log('🟢 Response data:', j);
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
+      console.log('🟢 Assignments count:', rows.length);
       const mapped = rows.map((r) => ({
         id: r.id,
         date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
@@ -925,9 +947,12 @@ export default function EinsatzplanPage() {
         promotorCount: 0,
         promotions: [{ id: r.id }],
       }));
+      console.log('🟢 Mapped data:', mapped.length, 'items');
+      console.log('🟢 First mapped item:', mapped[0]);
       setEinsatzplanData(mapped);
+      console.log('🟢 State updated with', mapped.length, 'assignments');
     } catch (e: any) {
-      console.error(e);
+      console.error('🔴 loadAssignments error:', e);
       alert(e?.message || 'Fehler beim Laden der Einsätze');
     }
   };
