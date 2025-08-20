@@ -2708,14 +2708,14 @@ export default function PromotorenPage() {
                         Anstellungsart
                       </label>
                       <Select value={contractForm.employmentType} onValueChange={(v) => setContractForm({ ...contractForm, employmentType: v as any })}>
-                        <SelectTrigger className="w-full h-10 rounded-lg border border-gray-200 bg-white/80 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none">
+                        <SelectTrigger className="w-full h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:outline-none">
                           <SelectValue placeholder="Anstellungsart wählen" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-md border border-gray-200 bg-white shadow-lg">
-                          <SelectItem value="geringfügig" className="text-sm text-gray-900">geringfügig</SelectItem>
-                          <SelectItem value="teilzeit" className="text-sm text-gray-900">teilzeit</SelectItem>
-                          <SelectItem value="vollzeit" className="text-sm text-gray-900">vollzeit</SelectItem>
-                          <SelectItem value="freelancer" className="text-sm text-gray-900">freelancer</SelectItem>
+                        <SelectContent className="z-[100] rounded-md border border-gray-200 bg-white shadow-xl">
+                          <SelectItem value="geringfügig" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">geringfügig</SelectItem>
+                          <SelectItem value="teilzeit" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">teilzeit</SelectItem>
+                          <SelectItem value="vollzeit" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">vollzeit</SelectItem>
+                          <SelectItem value="freelancer" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">freelancer</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
