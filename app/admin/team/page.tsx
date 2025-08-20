@@ -49,6 +49,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DienstvertragTemplate } from "@/components/DienstvertragTemplate";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
@@ -2706,19 +2707,17 @@ export default function PromotorenPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Anstellungsart
                       </label>
-                      <div className="relative">
-                        <select
-                          className="w-full pl-3 pr-9 py-2.5 border border-gray-200 rounded-lg bg-white/80 text-gray-900 appearance-none focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 transition"
-                          value={contractForm.employmentType}
-                          onChange={(e) => setContractForm({ ...contractForm, employmentType: e.target.value as any })}
-                        >
-                          <option value="geringfügig">geringfügig</option>
-                          <option value="teilzeit">teilzeit</option>
-                          <option value="vollzeit">vollzeit</option>
-                          <option value="freelancer">freelancer</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-                      </div>
+                      <Select value={contractForm.employmentType} onValueChange={(v) => setContractForm({ ...contractForm, employmentType: v as any })}>
+                        <SelectTrigger className="w-full h-10 rounded-lg border border-gray-200 bg-white/80 px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none">
+                          <SelectValue placeholder="Anstellungsart wählen" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-md border border-gray-200 bg-white shadow-lg">
+                          <SelectItem value="geringfügig" className="text-sm text-gray-900">geringfügig</SelectItem>
+                          <SelectItem value="teilzeit" className="text-sm text-gray-900">teilzeit</SelectItem>
+                          <SelectItem value="vollzeit" className="text-sm text-gray-900">vollzeit</SelectItem>
+                          <SelectItem value="freelancer" className="text-sm text-gray-900">freelancer</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
