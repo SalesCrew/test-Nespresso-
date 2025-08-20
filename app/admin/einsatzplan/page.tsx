@@ -627,15 +627,28 @@ export default function EinsatzplanPage() {
             const cell = row[c];
             const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
             if (![1, 2, 0.75].includes(val)) continue;
-            const parts = label.split('.');
-            if (parts.length < 2) continue;
-            const day = parseInt(parts[0], 10);
-            const monthName = parts[1];
-            const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
-            const month = months[monthName as keyof typeof months];
-            if (month == null || isNaN(day)) continue;
-            const year = new Date().getFullYear();
-            const start = new Date(Date.UTC(year, month, day, 9, 30));
+            
+            // Handle Excel serial dates or text dates
+            let start: Date;
+            const numericLabel = parseInt(label, 10);
+            
+            if (!isNaN(numericLabel) && numericLabel > 40000) {
+              // Excel serial date (days since 1900-01-01, but with leap year bug)
+              const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+              start = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
+              start.setUTCHours(9, 30, 0, 0);
+            } else {
+              // Try parsing as text date (e.g., "04.Aug")
+              const parts = label.split('.');
+              if (parts.length < 2) continue;
+              const day = parseInt(parts[0], 10);
+              const monthName = parts[1];
+              const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
+              const month = months[monthName as keyof typeof months];
+              if (month == null || isNaN(day)) continue;
+              const year = new Date().getFullYear();
+              start = new Date(Date.UTC(year, month, day, 9, 30));
+            }
             const end = new Date(start);
             if (val === 1 || val === 2) {
               end.setUTCHours(18, 30, 0, 0);
@@ -657,7 +670,10 @@ export default function EinsatzplanPage() {
           }
         }
         console.log('🔵 Assignments to import:', rows.length);
-        console.log('🔵 First assignment:', rows[0]);
+        if (rows.length > 0) {
+          console.log('🔵 First assignment:', rows[0]);
+          console.log('🔵 Sample dates:', rows.slice(0, 3).map(r => r.start_ts));
+        }
         const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
         console.log('🔵 Import response:', res.status);
         if (!res.ok) {
@@ -706,15 +722,28 @@ export default function EinsatzplanPage() {
             const cell = row[c];
             const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
             if (![1, 2, 0.75].includes(val)) continue;
-            const parts = label.split('.');
-            if (parts.length < 2) continue;
-            const day = parseInt(parts[0], 10);
-            const monthName = parts[1];
-            const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
-            const month = months[monthName as keyof typeof months];
-            if (month == null || isNaN(day)) continue;
-            const year = new Date().getFullYear();
-            const start = new Date(Date.UTC(year, month, day, 9, 30));
+            
+            // Handle Excel serial dates or text dates
+            let start: Date;
+            const numericLabel = parseInt(label, 10);
+            
+            if (!isNaN(numericLabel) && numericLabel > 40000) {
+              // Excel serial date (days since 1900-01-01, but with leap year bug)
+              const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+              start = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
+              start.setUTCHours(9, 30, 0, 0);
+            } else {
+              // Try parsing as text date (e.g., "04.Aug")
+              const parts = label.split('.');
+              if (parts.length < 2) continue;
+              const day = parseInt(parts[0], 10);
+              const monthName = parts[1];
+              const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
+              const month = months[monthName as keyof typeof months];
+              if (month == null || isNaN(day)) continue;
+              const year = new Date().getFullYear();
+              start = new Date(Date.UTC(year, month, day, 9, 30));
+            }
             const end = new Date(start);
             if (val === 1 || val === 2) {
               end.setUTCHours(18, 30, 0, 0);
