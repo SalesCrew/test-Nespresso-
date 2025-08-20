@@ -109,22 +109,20 @@ export default function EinsatzplanPage() {
 
   
   // Function to assign promotion to a promotor
-  const assignPromotionToPromotor = (promotorName: string) => {
+  const assignPromotionToPromotor = async (promotorName: string, promotorId?: string) => {
     if (!editingEinsatz) return;
-    
-    // Update the editing einsatz with the promotor and set status to Verplant
-    setEditingEinsatz({
-      ...editingEinsatz,
-      promotor: promotorName,
-      status: 'Verplant'
-    });
-
-    // Also update the main data immediately
-    setEinsatzplanData(prev => prev.map(item => 
-      item.id === editingEinsatz.id 
-        ? { ...item, promotor: promotorName, status: 'Verplant' }
-        : item
-    ));
+    try {
+      if (promotorId) {
+        await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: promotorId, role: 'lead' })
+        })
+      }
+    } catch {}
+    // optimistic UI
+    setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, status: 'Verplant' })
+    setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: promotorName, status: 'Verplant' } : item))
   };
 
   const weeksContainerRef = useRef<HTMLDivElement>(null);
