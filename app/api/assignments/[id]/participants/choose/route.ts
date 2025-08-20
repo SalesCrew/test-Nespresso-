@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   try {
-    const svc = await createSupabaseServerClient()
+    const svc = createSupabaseServiceClient()
     const body = await _req.json().catch(() => ({}))
     const user_id = String(body.user_id || '')
     const role = String(body.role || 'lead')

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
-    const svc = await createSupabaseServerClient()
+    const svc = createSupabaseServiceClient()
     // Expect JSON rows already parsed client side for now
     const body = await req.json().catch(() => null)
     if (!body || !Array.isArray(body.rows)) {
