@@ -979,18 +979,27 @@ export default function EinsatzplanPage() {
       console.log('🟢 Response data:', j);
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
       console.log('🟢 Assignments count:', rows.length);
-      const mapped = rows.map((r) => ({
-        id: r.id,
-        date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
-        time: '09:30',
-        city: r.city || r.location_text || '',
-        plz: r.postal_code || '',
-        region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
-        status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
-        promotionCount: 1,
-        promotorCount: 0,
-        promotions: [{ id: r.id }],
-      }));
+      const mapped = rows.map((r) => {
+        const startIso: string = r.start_ts || ''
+        const endIso: string = r.end_ts || r.start_ts || ''
+        const timeStart = startIso ? startIso.substring(11, 16) : '09:30'
+        const timeEnd = endIso ? endIso.substring(11, 16) : ''
+        const timeText = timeEnd ? `${timeStart}-${timeEnd}` : timeStart
+
+        return {
+          id: r.id,
+          date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
+          time: timeText,
+          city: r.city || r.location_text || '',
+          address: [r.location_text, r.postal_code].filter(Boolean).join(' '),
+          plz: r.postal_code || '',
+          region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
+          status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
+          promotionCount: 1,
+          promotorCount: 0,
+          promotions: [{ id: r.id }],
+        }
+      });
       console.log('🟢 Mapped data:', mapped.length, 'items');
       console.log('🟢 First mapped item:', mapped[0]);
       setEinsatzplanData(mapped);
