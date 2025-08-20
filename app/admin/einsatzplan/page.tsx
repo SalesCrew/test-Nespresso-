@@ -592,6 +592,12 @@ export default function EinsatzplanPage() {
   const processRohExcel = (file: File) => {
     console.log('🔵 processRohExcel START - file:', file.name, 'size:', file.size);
     const reader = new FileReader();
+    
+    reader.onerror = (error) => {
+      console.error('🔴 FileReader error:', error);
+      alert('Fehler beim Lesen der Datei');
+    };
+    
     reader.onload = async (e) => {
       console.log('🔵 FileReader.onload triggered');
       try {
@@ -603,7 +609,9 @@ export default function EinsatzplanPage() {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         console.log('🔵 Excel parsed. Total rows:', jsonData.length);
-        console.log('🔵 First 3 rows:', jsonData.slice(0, 3));
+        console.log('🔵 First row (header):', jsonData[0]);
+        console.log('🔵 Second row (data):', jsonData[1]);
+        console.log('🔵 Date columns from header:', jsonData[0]?.slice(4, 10));
         // Expected layout:
         // Col A: location name (used as address text)
         // Col B: PLZ
@@ -612,7 +620,10 @@ export default function EinsatzplanPage() {
         // Body from Col E onwards: values 1, 2, or 0.75 meaning shifts per rules
         const header = jsonData[0] || [];
         const rows: any[] = [];
+        console.log('🔵 Header length:', header.length);
         if (header.length < 5) throw new Error('Excel-Format unerwartet (Header fehlt)');
+        
+        console.log('🔵 Starting row processing...');
         for (let r = 1; r < jsonData.length; r++) {
           const row = jsonData[r] || [];
           const location_text = String(row[0] || '').trim();
@@ -620,12 +631,17 @@ export default function EinsatzplanPage() {
           if (!location_text || !postal_code) continue;
           const city = '';
           const region = getRegionFromPLZ(postal_code);
+          let assignmentsForRow = 0;
           for (let c = 4; c < header.length; c++) { // E onwards (0-indexed)
             const label = String(header[c] || '').trim();
             if (!label) continue;
             const cell = row[c];
             const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
             if (![1, 2, 0.75].includes(val)) continue;
+            
+            if (r === 1 && assignmentsForRow === 0) {
+              console.log(`🔵 First valid cell - Col ${c}: label="${label}", value=${val}`);
+            }
             
             // Handle Excel serial dates or text dates
             let start: Date;
@@ -688,7 +704,8 @@ export default function EinsatzplanPage() {
         await loadAssignments(true)
         console.log('🔵 Import complete!');
       } catch (error: any) {
-        console.error('Error processing Roh Excel:', error);
+        console.error('🔴 Error processing Roh Excel:', error);
+        console.error('🔴 Stack trace:', error?.stack);
         alert(error?.message || 'Fehler beim Verarbeiten');
       }
     };
