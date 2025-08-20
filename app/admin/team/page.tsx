@@ -1842,7 +1842,7 @@ export default function PromotorenPage() {
                                   <X className="h-4 w-4 text-gray-500" />
                                 </button>
                               </div>
-                              <div className="p-4 max-h-[340px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                              <div className="p-4 max-h-[520px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                 {(() => {
                                   const s = promotorStammdaten[promotor.id];
                                   if (!s) {
@@ -1881,6 +1881,14 @@ export default function PromotorenPage() {
                                           <p className="text-gray-500">Kleidergröße</p>
                                           <p className="font-medium">{s.clothingSize || '-'}</p>
                                         </div>
+                                        <div>
+                                          <p className="text-gray-500">Körpergröße</p>
+                                          <p className="font-medium">{s.height ? `${s.height} cm` : '-'}</p>
+                                        </div>
+                                        <div>
+                                          <p className="text-gray-500">Geschlecht</p>
+                                          <p className="font-medium capitalize">{s.gender || '-'}</p>
+                                        </div>
                                       </div>
                                       <div>
                                         <p className="text-gray-500">Arbeitstage</p>
@@ -1892,6 +1900,84 @@ export default function PromotorenPage() {
                                             <span className="text-gray-400">-</span>
                                           )}
                                         </div>
+                                      </div>
+                                      {/* Mobility */}
+                                      <div className="grid grid-cols-3 gap-2">
+                                        <div className="text-center">
+                                          <span className="text-xs text-gray-500 block mb-1">Führerschein</span>
+                                          <div 
+                                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!s.drivingLicense ? 'bg-gray-400' : ''}`}
+                                            style={s.drivingLicense ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                                          >
+                                            {s.drivingLicense ? '✓' : '✗'}
+                                          </div>
+                                        </div>
+                                        <div className="text-center">
+                                          <span className="text-xs text-gray-500 block mb-1">Auto</span>
+                                          <div 
+                                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!s.carAvailable ? 'bg-gray-400' : ''}`}
+                                            style={s.carAvailable ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                                          >
+                                            {s.carAvailable ? '✓' : '✗'}
+                                          </div>
+                                        </div>
+                                        <div className="text-center">
+                                          <span className="text-xs text-gray-500 block mb-1">Fahrbereit</span>
+                                          <div 
+                                            className={`w-5 h-5 rounded-full mx-auto flex items-center justify-center text-xs font-bold text-white ${!s.willingToDrive ? 'bg-gray-400' : ''}`}
+                                            style={s.willingToDrive ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}}
+                                          >
+                                            {s.willingToDrive ? '✓' : '✗'}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {/* Education & Experience */}
+                                      <div className="space-y-1 text-xs">
+                                        <div>
+                                          <span className="text-gray-500">Ausbildung:</span>
+                                          <p className="font-medium text-gray-900">{s.education || '-'}</p>
+                                        </div>
+                                        {s.qualifications && (
+                                          <div>
+                                            <span className="text-gray-500">Qualifikationen:</span>
+                                            <p className="font-medium text-gray-900">{s.qualifications}</p>
+                                          </div>
+                                        )}
+                                        {s.currentJob && (
+                                          <div>
+                                            <span className="text-gray-500">Aktueller Job:</span>
+                                            <p className="font-medium text-gray-900">{s.currentJob}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Work Preferences */}
+                                      <div className="flex justify-between text-xs">
+                                        <span className="text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full font-medium">
+                                          {s.hoursPerWeek ? `${s.hoursPerWeek}h/Woche` : 'Stunden unbekannt'}
+                                        </span>
+                                        <span className={`px-2.5 py-1 rounded-full font-medium ${
+                                          s.spontaneity === 'oft' ? 'text-green-700 bg-green-50' :
+                                          s.spontaneity === 'selten' ? 'text-orange-700 bg-orange-50' :
+                                          s.spontaneity === 'nie' ? 'text-red-700 bg-red-50' :
+                                          'text-gray-600 bg-gray-50'
+                                        }`}>
+                                          {s.spontaneity === 'oft' ? 'Oft spontan' : s.spontaneity === 'selten' ? 'Selten spontan' : s.spontaneity === 'nie' ? 'Nie spontan' : 'Spontanität unbekannt'}
+                                        </span>
+                                      </div>
+                                      {/* Citizenship & Work Permit */}
+                                      <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                          <span className="text-gray-500">Staatsbürgerschaft:</span>
+                                          <p className="font-medium text-gray-900">{s.citizenship || '-'}</p>
+                                        </div>
+                                        {s.workPermit !== null && (
+                                          <div>
+                                            <span className="text-gray-500">Arbeitserlaubnis:</span>
+                                            <p className={`font-medium ${s.workPermit ? 'text-green-600' : 'text-red-600'}`}>
+                                              {s.workPermit ? 'Ja' : 'Nein'}
+                                            </p>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   );
