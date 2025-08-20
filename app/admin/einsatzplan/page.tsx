@@ -606,10 +606,12 @@ export default function EinsatzplanPage() {
         // Body from Col E onwards: values 1, 2, or 0.75 meaning shifts per rules
         const header = jsonData[0] || [];
         const rows: any[] = [];
+        if (header.length < 5) throw new Error('Excel-Format unerwartet (Header fehlt)');
         for (let r = 1; r < jsonData.length; r++) {
           const row = jsonData[r] || [];
           const location_text = String(row[0] || '').trim();
           const postal_code = String(row[1] || '').trim();
+          if (!location_text || !postal_code) continue;
           const city = '';
           const region = getRegionFromPLZ(postal_code);
           for (let c = 4; c < header.length; c++) { // E onwards (0-indexed)
@@ -618,7 +620,6 @@ export default function EinsatzplanPage() {
             const cell = row[c];
             const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
             if (![1, 2, 0.75].includes(val)) continue;
-            // Parse date label like '04.Aug' → assume current year
             const parts = label.split('.');
             if (parts.length < 2) continue;
             const day = parseInt(parts[0], 10);
@@ -627,13 +628,12 @@ export default function EinsatzplanPage() {
             const month = months[monthName as keyof typeof months];
             if (month == null || isNaN(day)) continue;
             const year = new Date().getFullYear();
-            // Build start/end by rules
             const start = new Date(Date.UTC(year, month, day, 9, 30));
             const end = new Date(start);
             if (val === 1 || val === 2) {
-              end.setUTCHours(18, 30, 0, 0); // 9:30-18:30
+              end.setUTCHours(18, 30, 0, 0);
             } else if (val === 0.75) {
-              end.setUTCHours(15, 30, 0, 0); // 9:30-15:30
+              end.setUTCHours(15, 30, 0, 0);
             }
             const base = {
               title: 'Promotion',
@@ -646,18 +646,19 @@ export default function EinsatzplanPage() {
               type: 'promotion' as const,
             };
             rows.push(base);
-            if (val === 2) {
-              // second parallel shift
-              rows.push(base);
-            }
+            if (val === 2) rows.push(base);
           }
         }
-        await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        }
         setShowImportModal(false)
         await loadAssignments()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error processing Roh Excel:', error);
-        alert(`Fehler beim Verarbeiten: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+        alert(error?.message || 'Fehler beim Verarbeiten');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -676,10 +677,12 @@ export default function EinsatzplanPage() {
         // Reuse the same parsing as Roh: header row contains dates E→, body has counts
         const header = jsonData[0] || [];
         const rows: any[] = [];
+        if (header.length < 5) throw new Error('Excel-Format unerwartet (Header fehlt)');
         for (let r = 1; r < jsonData.length; r++) {
           const row = jsonData[r] || [];
           const location_text = String(row[0] || '').trim();
           const postal_code = String(row[1] || '').trim();
+          if (!location_text || !postal_code) continue;
           const city = '';
           const region = getRegionFromPLZ(postal_code);
           for (let c = 4; c < header.length; c++) {
@@ -717,12 +720,16 @@ export default function EinsatzplanPage() {
             if (val === 2) rows.push(base);
           }
         }
-        await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        }
         setShowImportModal(false)
         await loadAssignments()
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error processing EP intern Excel file:', error);
-        alert(`Fehler beim Verarbeiten der EP intern Excel-Datei: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+        alert(error?.message || 'Fehler beim Verarbeiten der EP intern Excel-Datei');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -895,6 +902,10 @@ export default function EinsatzplanPage() {
       if (regionFilter && regionFilter !== 'ALLE') params.set('region', regionFilter);
       if (statusFilter) params.set('status', statusFilter);
       const res = await fetch(`/api/assignments?${params.toString()}`, { cache: 'no-store' });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`Laden fehlgeschlagen: ${res.status} ${t}`);
+      }
       const j = await res.json();
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
       const mapped = rows.map((r) => ({
@@ -910,7 +921,10 @@ export default function EinsatzplanPage() {
         promotions: [{ id: r.id }],
       }));
       setEinsatzplanData(mapped);
-    } catch {}
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message || 'Fehler beim Laden der Einsätze');
+    }
   };
 
   useEffect(() => { loadAssignments(); }, []);
