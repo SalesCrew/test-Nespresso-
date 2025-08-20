@@ -655,7 +655,8 @@ export default function EinsatzplanPage() {
           throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
         }
         setShowImportModal(false)
-        await loadAssignments()
+        // Load ALL assignments after import to see the new ones
+        await loadAssignments(true)
       } catch (error: any) {
         console.error('Error processing Roh Excel:', error);
         alert(error?.message || 'Fehler beim Verarbeiten');
@@ -726,7 +727,8 @@ export default function EinsatzplanPage() {
           throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
         }
         setShowImportModal(false)
-        await loadAssignments()
+        // Load ALL assignments after import to see the new ones
+        await loadAssignments(true)
       } catch (error: any) {
         console.error('Error processing EP intern Excel file:', error);
         alert(error?.message || 'Fehler beim Verarbeiten der EP intern Excel-Datei');
@@ -894,13 +896,16 @@ export default function EinsatzplanPage() {
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
 
-  const loadAssignments = async () => {
+  const loadAssignments = async (skipFilters = false) => {
     try {
       const params = new URLSearchParams();
-      if (dateRange.start) params.set('from', new Date(dateRange.start).toISOString());
-      if (dateRange.end) params.set('to', new Date(dateRange.end).toISOString());
-      if (regionFilter && regionFilter !== 'ALLE') params.set('region', regionFilter);
-      if (statusFilter) params.set('status', statusFilter);
+      // Only apply filters if not skipping (e.g., after import we want to see all)
+      if (!skipFilters) {
+        if (dateRange.start) params.set('from', new Date(dateRange.start).toISOString());
+        if (dateRange.end) params.set('to', new Date(dateRange.end).toISOString());
+        if (regionFilter && regionFilter !== 'ALLE') params.set('region', regionFilter);
+        if (statusFilter) params.set('status', statusFilter);
+      }
       const res = await fetch(`/api/assignments?${params.toString()}`, { cache: 'no-store' });
       if (!res.ok) {
         const t = await res.text();
@@ -912,7 +917,7 @@ export default function EinsatzplanPage() {
         id: r.id,
         date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
         time: '09:30',
-        city: r.city || '',
+        city: r.city || r.location_text || '',
         plz: r.postal_code || '',
         region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
         status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
@@ -927,7 +932,7 @@ export default function EinsatzplanPage() {
     }
   };
 
-  useEffect(() => { loadAssignments(); }, []);
+  useEffect(() => { loadAssignments(true); }, []);
 
   return (
     <div className="min-h-screen bg-gray-50/30">
