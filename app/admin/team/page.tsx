@@ -2708,7 +2708,7 @@ export default function PromotorenPage() {
                         Anstellungsart
                       </label>
                       <Select value={contractForm.employmentType} onValueChange={(v) => setContractForm({ ...contractForm, employmentType: v as any })}>
-                        <SelectTrigger className="w-full h-11 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 placeholder:text-gray-400 focus:ring-0 focus:outline-none">
+                        <SelectTrigger className="w-full h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:ring-offset-0 data-[state=open]:ring-0 data-[state=open]:ring-offset-0">
                           <SelectValue placeholder="Anstellungsart wählen" />
                         </SelectTrigger>
                         <SelectContent className="z-[100] rounded-md border border-gray-200 bg-white shadow-xl">
