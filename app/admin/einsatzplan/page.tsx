@@ -35,6 +35,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function EinsatzplanPage() {
   // Custom scrollbar styles
@@ -2349,19 +2350,23 @@ export default function EinsatzplanPage() {
                     
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                      <select
+                      <Select
                         value={editingEinsatz.status}
-                        onChange={(e) => setEditingEinsatz({...editingEinsatz, status: e.target.value})}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none transition-colors"
+                        onValueChange={(value) => setEditingEinsatz({ ...editingEinsatz, status: value })}
                       >
-                        <option value="Offen">Offen</option>
-                        <option value="Verplant">Verplant</option>
-                        <option value="bestätigt">Bestätigt</option>
-                        <option value="Krankenstand">Krankenstand</option>
-                        <option value="Urlaub">Urlaub</option>
-                        <option value="Zeitausgleich">Zeitausgleich</option>
-                        <option value="Notfall">Notfall</option>
-                      </select>
+                        <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder="Status wählen" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                          <SelectItem value="Offen" className="focus:bg-gray-100">Offen</SelectItem>
+                          <SelectItem value="Verplant" className="focus:bg-green-100">Verplant</SelectItem>
+                          <SelectItem value="bestätigt" className="focus:bg-green-50">Bestätigt</SelectItem>
+                          <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
+                          <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
+                          <SelectItem value="Zeitausgleich" className="focus:bg-purple-100">Zeitausgleich</SelectItem>
+                          <SelectItem value="Notfall" className="focus:bg-orange-100">Notfall</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
