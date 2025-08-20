@@ -590,435 +590,68 @@ export default function EinsatzplanPage() {
 
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
-    console.log('Processing Excel file:', file.name);
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
-        const newEinsatzplan: any[] = [];
-        let currentId = 1;
-        
-        // Helper functions from the provided file
-        const getDayOfWeek = (date: Date): string => {
-          const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-          return days[date.getDay()];
-        };
-
-        const getWorkingHours = (dayOfWeek: string): { start: string, end: string } => {
-          if (dayOfWeek === 'Samstag' || dayOfWeek === 'Sonntag') {
-            return { start: '09:00', end: '18:00' };
-          }
-          return { start: '09:30', end: '18:30' };
-        };
-
-        const getMonthInfo = (monthAbbr: string, actualYear?: number): { monthNumber: number, year: number, monthName: string } => {
-          const normalizedMonth = monthAbbr.charAt(0).toUpperCase() + monthAbbr.slice(1).toLowerCase();
-          
-          const germanMonths: { [key: string]: { number: number, name: string } } = {
-            'Jan': { number: 0, name: 'Januar' },
-            'Feb': { number: 1, name: 'Februar' },
-            'Mär': { number: 2, name: 'März' },
-            'Mar': { number: 2, name: 'März' },
-            'Apr': { number: 3, name: 'April' },
-            'Mai': { number: 4, name: 'Mai' },
-            'Jun': { number: 5, name: 'Juni' },
-            'Jul': { number: 6, name: 'Juli' },
-            'Aug': { number: 7, name: 'August' },
-            'Sep': { number: 8, name: 'September' },
-            'Okt': { number: 9, name: 'Oktober' },
-            'Oct': { number: 9, name: 'Oktober' },
-            'Nov': { number: 10, name: 'November' },
-            'Dez': { number: 11, name: 'Dezember' },
-            'Dec': { number: 11, name: 'Dezember' }
-          };
-          
-          console.log('Looking for month:', normalizedMonth);
-          const monthInfo = germanMonths[normalizedMonth];
-          if (!monthInfo) {
-            console.log('Available months:', Object.keys(germanMonths));
-            throw new Error(`Unknown month abbreviation: ${monthAbbr} (normalized: ${normalizedMonth})`);
-          }
-          
-          const year = actualYear || new Date().getFullYear();
-          
+        const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        // map minimal fields for import endpoint
+        const rows = (jsonData || []).slice(1).map((row: any[]) => {
+          const start = row[0] ? new Date(row[0]) : null; // adapt if needed
           return {
-            monthNumber: monthInfo.number,
-            year: year,
-            monthName: monthInfo.name
+            title: row[2] || 'Promotion',
+            location_text: row[3] || '',
+            postal_code: row[4] || '',
+            city: row[5] || '',
+            region: row[6] || '',
+            start_ts: start ? new Date(start).toISOString() : null,
+            end_ts: start ? new Date(start.getTime() + 3*60*60*1000).toISOString() : null,
+            type: 'promotion',
           };
-        };
-
-        const getDaysInMonth = (month: number, year: number): number => {
-          return new Date(year, month + 1, 0).getDate();
-        };
-
-        const excelDateToJSDate = (excelDate: number): Date => {
-          const excelEpoch = new Date(1899, 11, 30);
-          const jsDate = new Date(excelEpoch.getTime() + excelDate * 24 * 60 * 60 * 1000);
-          return jsDate;
-        };
-
-        const extractMonthFromHeader = (data: any[][]): { monthAbbr: string, year: number } => {
-          const headerRow = data[0];
-          if (!headerRow) throw new Error('No header row found');
-          
-          console.log('Header row:', headerRow);
-          
-          for (let i = 4; i < headerRow.length; i++) {
-            const cellValue = headerRow[i];
-            console.log(`Column ${i} value:`, cellValue, typeof cellValue);
-            
-            if (cellValue) {
-              if (typeof cellValue === 'number') {
-                try {
-                  const jsDate = excelDateToJSDate(cellValue);
-                  const month = jsDate.getMonth();
-                  const year = jsDate.getFullYear();
-                  
-                  const monthAbbreviations = [
-                    'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
-                  ];
-                  
-                  const monthAbbr = monthAbbreviations[month];
-                  console.log('Converted Excel date', cellValue, 'to JS date:', jsDate, 'month:', monthAbbr, 'year:', year);
-                  return { monthAbbr, year };
-                } catch (error) {
-                  console.log('Error converting Excel date:', error);
-                  continue;
-                }
-              }
-              
-              const cellStr = String(cellValue).trim();
-              
-              let match = cellStr.match(/\d{1,2}\.([A-Za-z]{3})/i);
-              if (match) {
-                console.log('Found month with pattern 1:', match[1]);
-                return { monthAbbr: match[1], year: new Date().getFullYear() };
-              }
-              
-              match = cellStr.match(/\d{1,2}([A-Za-z]{3})/i);
-              if (match) {
-                console.log('Found month with pattern 2:', match[1]);
-                return { monthAbbr: match[1], year: new Date().getFullYear() };
-              }
-              
-              match = cellStr.match(/^([A-Za-z]{3})$/i);
-              if (match) {
-                console.log('Found month with pattern 3:', match[1]);
-                return { monthAbbr: match[1], year: new Date().getFullYear() };
-              }
-            }
-          }
-          
-          console.log('Could not find month in any column from E onwards');
-          throw new Error('Could not detect month from Excel headers');
-        };
-
-        // Process Excel data using the exact logic from the provided file
-        const { monthAbbr, year: excelYear } = extractMonthFromHeader(jsonData as any[][]);
-        const currentYear = new Date().getFullYear();
-        const { monthNumber, year, monthName } = getMonthInfo(monthAbbr, currentYear);
-        const daysInMonth = getDaysInMonth(monthNumber, currentYear);
-        
-        console.log(`Using Excel month: ${monthAbbr}, Excel year: ${excelYear}, Current year: ${currentYear}`);
-        
-        // Skip header row, start from row 1
-        for (let rowIndex = 1; rowIndex < (jsonData as any[][]).length; rowIndex++) {
-          const row = (jsonData as any[][])[rowIndex];
-          if (!row || row.length < 5) continue;
-          
-          const marketName = row[0] || '';
-          const district = row[1] || '';
-          
-          // Process each date column (starting from column E = index 4)
-          const maxColumns = 4 + daysInMonth;
-          for (let colIndex = 4; colIndex < row.length && colIndex < maxColumns; colIndex++) {
-            const rawValue = row[colIndex];
-            if (!rawValue || rawValue === 0) continue;
-
-            // Handle numeric conversion for values like "0,75"
-            let numValue: number;
-            if (typeof rawValue === 'number') {
-              numValue = rawValue;
-            } else if (typeof rawValue === 'string') {
-              numValue = parseFloat(rawValue.replace(',', '.'));
-              if (isNaN(numValue)) continue;
-            } else {
-              continue;
-            }
-            
-            // Only process valid values
-            if (numValue !== 1 && numValue !== 2 && numValue !== 0.75) {
-              continue;
-            }
-            
-            // Calculate the date using CURRENT YEAR but same day/month from Excel
-            const day = colIndex - 3;
-            const dateInCurrentYear = new Date(currentYear, monthNumber, day);
-            const dayOfWeek = getDayOfWeek(dateInCurrentYear);
-            
-            // Skip Sundays
-            if (dayOfWeek === 'Sonntag') continue;
-            
-            // Determine working hours and other promotion details
-            let planStart: string;
-            let planEnd: string;
-            
-            if (numValue === 0.75) {
-              // 6-hour promotion (9:00-15:00)
-              planStart = "09:00";
-              planEnd = "15:00";
-            } else {
-              // 8-hour promotion
-              const workingHours = getWorkingHours(dayOfWeek);
-              planStart = workingHours.start;
-              planEnd = workingHours.end;
-            }
-            
-            // Format date as YYYY-MM-DD for our system, avoiding timezone issues
-            const year = dateInCurrentYear.getFullYear();
-            const month = String(dateInCurrentYear.getMonth() + 1).padStart(2, '0');
-            const dayOfMonth = String(dateInCurrentYear.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${dayOfMonth}`;
-            
-            console.log(`Day ${day} of ${monthAbbr} ${currentYear} is a ${dayOfWeek}`);
-            
-            // If value is 2, create two separate entries
-            const numPromotions = numValue === 2 ? 2 : 1;
-            
-            for (let i = 0; i < numPromotions; i++) {
-              newEinsatzplan.push({
-                id: currentId++,
-                promotor: "",
-                address: marketName,
-                plz: district,
-                city: "",
-                planStart: planStart,
-                planEnd: planEnd,
-                date: dateStr,
-                status: "Offen",
-                product: marketName.split(' ')[0] || "Market"
-              });
-            }
-          }
-        }
-        
-        // Merge with existing data instead of replacing
-        const mergedEinsatzplan = [...einsatzplanData];
-        let updatedCount = 0;
-        let addedCount = 0;
-        
-        newEinsatzplan.forEach(newPromotion => {
-          // Count existing promotions with same date, address, and time
-          const existingCount = mergedEinsatzplan.filter(existing => 
-            existing.date === newPromotion.date &&
-            existing.address === newPromotion.address &&
-            existing.planStart === newPromotion.planStart &&
-            existing.planEnd === newPromotion.planEnd
-          ).length;
-          
-          if (existingCount >= 2) {
-            // Already have 2 promotions at this time/location - don't add more
-            console.log(`Skipping promotion (max 2 reached): ${newPromotion.date} at ${newPromotion.address} (${newPromotion.planStart}-${newPromotion.planEnd})`);
-          } else {
-            // Can add new promotion - add it with next available ID
-            const maxId = mergedEinsatzplan.length > 0 ? Math.max(...mergedEinsatzplan.map(p => p.id)) : 0;
-            newPromotion.id = maxId + 1 + addedCount;
-            mergedEinsatzplan.push(newPromotion);
-            addedCount++;
-          }
-        });
-        
-        console.log(`Roh import complete: ${addedCount} new promotions added, ${newEinsatzplan.length - addedCount} duplicates skipped`);
-        setEinsatzplanData(mergedEinsatzplan);
-        setShowImportModal(false);
-        
+        }).filter(r => r.start_ts);
+        await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        setShowImportModal(false)
       } catch (error) {
-        console.error('Error processing Excel file:', error);
-        alert(`Fehler beim Verarbeiten der Excel-Datei: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+        console.error('Error processing Roh Excel:', error);
+        alert(`Fehler beim Verarbeiten: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
       }
     };
-    
     reader.readAsArrayBuffer(file);
   };
 
   // Process Excel file for EP intern import
   const processInternExcel = (file: File) => {
-    console.log('Processing EP intern Excel file:', file.name);
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
-        const newEinsatzplan: any[] = [];
-        let currentId = 1;
-        
-        // Helper function to get working hours based on day and hours
-        const getWorkingHoursByDayAndDuration = (dayOfWeek: string, hours: string): { start: string, end: string } => {
-          // Normalize hours value - handle different formats like "6", "6 hours", "6h", etc.
-          const normalizedHours = String(hours).toLowerCase().trim();
-          const isS6Hours = normalizedHours.includes('6') || normalizedHours === '6';
-          
-          if (isS6Hours) {
-            // 6-hour promotion (same as 0.75 value in Roh import)
-            return { start: '09:00', end: '15:00' };
-          } else {
-            // 8-hour promotion (same logic as Roh import)
-            if (dayOfWeek === 'Samstag') {
-              return { start: '09:00', end: '18:00' };
-            }
-            return { start: '09:30', end: '18:30' };
-          }
-        };
-        
-        const getDayOfWeek = (date: Date): string => {
-          const days = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-          return days[date.getDay()];
-        };
-        
-        // Skip header row, start from row 1
-        let skippedRows = 0;
-        let processedRows = 0;
-        
-        for (let rowIndex = 1; rowIndex < (jsonData as any[][]).length; rowIndex++) {
-          const row = (jsonData as any[][])[rowIndex];
-          if (!row || row.length < 9) {
-            console.log(`Row ${rowIndex}: Insufficient columns (${row?.length || 0})`);
-            skippedRows++;
-            continue;
-          }
-          
-          const dateValue = row[1]; // Column B - date
-          const hoursValue = row[4]; // Column E - hours (8 hours or 6 hours)
-          const plz = row[6] || ''; // Column G - PLZ
-          const marketName = row[7] || ''; // Column H - market name
-          const promotorName = row[8] || ''; // Column I - promotor name (might be empty)
-          
-          if (!dateValue || !hoursValue || !marketName) {
-            console.log(`Row ${rowIndex}: Missing required data - Date: ${dateValue}, Hours: ${hoursValue}, Market: ${marketName}`);
-            skippedRows++;
-            continue;
-          }
-          
-          // Parse the date
-          let promotionDate: Date;
-          if (typeof dateValue === 'number') {
-            // Excel serial date
-            const excelEpoch = new Date(1899, 11, 30);
-            promotionDate = new Date(excelEpoch.getTime() + dateValue * 24 * 60 * 60 * 1000);
-          } else if (typeof dateValue === 'string') {
-            // Handle German date format DD.MM.YYYY
-            const dateStr = String(dateValue).trim();
-            const germanDateMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-            if (germanDateMatch) {
-              const [, day, month, year] = germanDateMatch;
-              promotionDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-            } else {
-              // Try standard Date parsing as fallback
-              promotionDate = new Date(dateValue);
-            }
-          } else {
-            continue;
-          }
-          
-          // Check if date is valid
-          if (isNaN(promotionDate.getTime())) {
-            console.log(`Row ${rowIndex}: Invalid date detected, skipping row:`, dateValue);
-            skippedRows++;
-            continue;
-          }
-          
-          const dayOfWeek = getDayOfWeek(promotionDate);
-          
-          // Format date as YYYY-MM-DD
-          const year = promotionDate.getFullYear();
-          const month = String(promotionDate.getMonth() + 1).padStart(2, '0');
-          const day = String(promotionDate.getDate()).padStart(2, '0');
-          const dateStr = `${year}-${month}-${day}`;
-          
-          // Skip Sundays
-          if (dayOfWeek === 'Sonntag') {
-            console.log(`Row ${rowIndex}: Skipping Sunday (${dateStr})`);
-            skippedRows++;
-            continue;
-          }
-          
-          // Get working hours based on day and duration
-          const workingHours = getWorkingHoursByDayAndDuration(dayOfWeek, hoursValue);
-          
-          // Determine status based on promotor name
-          const status = promotorName.trim() ? 'Verplant' : 'Offen';
-          
-          newEinsatzplan.push({
-            id: currentId++,
-            promotor: promotorName.trim(),
-            address: marketName,
-            plz: plz,
-            city: "",
-            planStart: workingHours.start,
-            planEnd: workingHours.end,
-            date: dateStr,
-            status: status,
-            product: marketName.split(' ')[0] || "Market"
-          });
-          
-          processedRows++;
-        }
-        
-        // Merge with existing data and update promotor names
-        const mergedEinsatzplan = [...einsatzplanData];
-        let updatedCount = 0;
-        let addedCount = 0;
-        
-        newEinsatzplan.forEach(newPromotion => {
-          // Find existing promotion with same date, address, and time
-          const existingIndex = mergedEinsatzplan.findIndex(existing => 
-            existing.date === newPromotion.date &&
-            existing.address === newPromotion.address &&
-            existing.planStart === newPromotion.planStart &&
-            existing.planEnd === newPromotion.planEnd
-          );
-          
-          if (existingIndex !== -1) {
-            // Promotion already exists
-            if (newPromotion.promotor && newPromotion.promotor.trim()) {
-              // Update existing promotion with promotor name and set status to Verplant
-              mergedEinsatzplan[existingIndex].promotor = newPromotion.promotor;
-              mergedEinsatzplan[existingIndex].status = 'Verplant';
-              updatedCount++;
-              console.log(`Updated promotion: ${newPromotion.date} at ${newPromotion.address} with promotor ${newPromotion.promotor}`);
-            } else {
-              console.log(`Skipping promotion update (no promotor name): ${newPromotion.date} at ${newPromotion.address}`);
-            }
-          } else {
-            // New promotion - add it with next available ID
-            const maxId = mergedEinsatzplan.length > 0 ? Math.max(...mergedEinsatzplan.map(p => p.id)) : 0;
-            newPromotion.id = maxId + 1 + addedCount;
-            mergedEinsatzplan.push(newPromotion);
-            addedCount++;
-          }
-        });
-        
-        console.log(`EP intern import complete: ${addedCount} new promotions added, ${updatedCount} promotions updated, ${newEinsatzplan.length - addedCount - updatedCount} skipped. ${skippedRows} rows skipped out of ${(jsonData as any[][]).length - 1} total rows.`);
-        setEinsatzplanData(mergedEinsatzplan);
-        setShowImportModal(false);
-        
+        const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const rows = (jsonData || []).slice(1).map((row: any[]) => {
+          const start = row[0] ? new Date(row[0]) : null;
+          return {
+            title: row[1] || 'Promotion',
+            location_text: row[2] || '',
+            postal_code: row[3] || '',
+            city: row[4] || '',
+            region: row[5] || '',
+            start_ts: start ? new Date(start).toISOString() : null,
+            end_ts: start ? new Date(start.getTime() + 3*60*60*1000).toISOString() : null,
+            type: 'promotion',
+          };
+        }).filter(r => r.start_ts);
+        await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+        setShowImportModal(false)
       } catch (error) {
         console.error('Error processing EP intern Excel file:', error);
         alert(`Fehler beim Verarbeiten der EP intern Excel-Datei: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
       }
     };
-    
     reader.readAsArrayBuffer(file);
   };
 
