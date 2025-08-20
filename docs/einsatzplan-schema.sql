@@ -177,10 +177,18 @@ create policy invitations_admin_all on public.assignment_invitations
   using (public.is_admin(auth.uid()))
   with check (public.is_admin(auth.uid()));
 
-drop policy if exists invitations_promotor_read_write_own on public.assignment_invitations;
-create policy invitations_promotor_read_write_own on public.assignment_invitations
-  for select using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+-- Split promotor read vs write policies to avoid WITH CHECK on SELECT
+drop policy if exists invitations_promotor_read_own on public.assignment_invitations;
+create policy invitations_promotor_read_own on public.assignment_invitations
+  for select using (user_id = auth.uid());
+
+drop policy if exists invitations_promotor_insert_own on public.assignment_invitations;
+create policy invitations_promotor_insert_own on public.assignment_invitations
+  for insert with check (user_id = auth.uid());
+
+drop policy if exists invitations_promotor_update_own on public.assignment_invitations;
+create policy invitations_promotor_update_own on public.assignment_invitations
+  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- Time entries policies
 drop policy if exists time_entries_admin_all on public.time_entries;
@@ -188,10 +196,18 @@ create policy time_entries_admin_all on public.time_entries
   using (public.is_admin(auth.uid()))
   with check (public.is_admin(auth.uid()));
 
-drop policy if exists time_entries_promotor_own on public.time_entries;
-create policy time_entries_promotor_own on public.time_entries
-  for select using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+-- Promotor time entries: split
+drop policy if exists time_entries_promotor_read_own on public.time_entries;
+create policy time_entries_promotor_read_own on public.time_entries
+  for select using (user_id = auth.uid());
+
+drop policy if exists time_entries_promotor_insert_own on public.time_entries;
+create policy time_entries_promotor_insert_own on public.time_entries
+  for insert with check (user_id = auth.uid());
+
+drop policy if exists time_entries_promotor_update_own on public.time_entries;
+create policy time_entries_promotor_update_own on public.time_entries
+  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- 9) Grants (for PostgREST/Supa client)
 grant usage on type assignment_type, assignment_status, participant_role, invitation_status, time_method, approval_status to anon, authenticated, service_role;
