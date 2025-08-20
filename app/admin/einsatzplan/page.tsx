@@ -910,12 +910,12 @@ export default function EinsatzplanPage() {
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
       const mapped = rows.map((r) => ({
         id: r.id,
-        date: r.start_ts?.slice(0,10) ?? '',
-        time: r.start_ts ? new Date(r.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '',
+        date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
+        time: '09:30',
         city: r.city || '',
         plz: r.postal_code || '',
-        region: r.region || '',
-        status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : r.status,
+        region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
+        status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
         promotionCount: 1,
         promotorCount: 0,
         promotions: [{ id: r.id }],
