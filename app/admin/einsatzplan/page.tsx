@@ -598,20 +598,60 @@ export default function EinsatzplanPage() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        // map minimal fields for import endpoint
-        const rows = (jsonData || []).slice(1).map((row: any[]) => {
-          const start = row[0] ? new Date(row[0]) : null; // adapt if needed
-          return {
-            title: row[2] || 'Promotion',
-            location_text: row[3] || '',
-            postal_code: row[4] || '',
-            city: row[5] || '',
-            region: row[6] || '',
-            start_ts: start ? new Date(start).toISOString() : null,
-            end_ts: start ? new Date(start.getTime() + 3*60*60*1000).toISOString() : null,
-            type: 'promotion',
-          };
-        }).filter(r => r.start_ts);
+        // Expected layout:
+        // Col A: location name (used as address text)
+        // Col B: PLZ
+        // Col C,D: ignored
+        // Row 1 from Col E onwards: date labels (e.g., '04.Aug') as plain text
+        // Body from Col E onwards: values 1, 2, or 0.75 meaning shifts per rules
+        const header = jsonData[0] || [];
+        const rows: any[] = [];
+        for (let r = 1; r < jsonData.length; r++) {
+          const row = jsonData[r] || [];
+          const location_text = String(row[0] || '').trim();
+          const postal_code = String(row[1] || '').trim();
+          const city = '';
+          const region = getRegionFromPLZ(postal_code);
+          for (let c = 4; c < header.length; c++) { // E onwards (0-indexed)
+            const label = String(header[c] || '').trim();
+            if (!label) continue;
+            const cell = row[c];
+            const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
+            if (![1, 2, 0.75].includes(val)) continue;
+            // Parse date label like '04.Aug' → assume current year
+            const parts = label.split('.');
+            if (parts.length < 2) continue;
+            const day = parseInt(parts[0], 10);
+            const monthName = parts[1];
+            const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
+            const month = months[monthName as keyof typeof months];
+            if (month == null || isNaN(day)) continue;
+            const year = new Date().getFullYear();
+            // Build start/end by rules
+            const start = new Date(Date.UTC(year, month, day, 9, 30));
+            const end = new Date(start);
+            if (val === 1 || val === 2) {
+              end.setUTCHours(18, 30, 0, 0); // 9:30-18:30
+            } else if (val === 0.75) {
+              end.setUTCHours(15, 30, 0, 0); // 9:30-15:30
+            }
+            const base = {
+              title: 'Promotion',
+              location_text,
+              postal_code,
+              city,
+              region,
+              start_ts: start.toISOString(),
+              end_ts: end.toISOString(),
+              type: 'promotion' as const,
+            };
+            rows.push(base);
+            if (val === 2) {
+              // second parallel shift
+              rows.push(base);
+            }
+          }
+        }
         await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
         setShowImportModal(false)
       } catch (error) {
@@ -632,19 +672,50 @@ export default function EinsatzplanPage() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        const rows = (jsonData || []).slice(1).map((row: any[]) => {
-          const start = row[0] ? new Date(row[0]) : null;
-          return {
-            title: row[1] || 'Promotion',
-            location_text: row[2] || '',
-            postal_code: row[3] || '',
-            city: row[4] || '',
-            region: row[5] || '',
-            start_ts: start ? new Date(start).toISOString() : null,
-            end_ts: start ? new Date(start.getTime() + 3*60*60*1000).toISOString() : null,
-            type: 'promotion',
-          };
-        }).filter(r => r.start_ts);
+        // Reuse the same parsing as Roh: header row contains dates E→, body has counts
+        const header = jsonData[0] || [];
+        const rows: any[] = [];
+        for (let r = 1; r < jsonData.length; r++) {
+          const row = jsonData[r] || [];
+          const location_text = String(row[0] || '').trim();
+          const postal_code = String(row[1] || '').trim();
+          const city = '';
+          const region = getRegionFromPLZ(postal_code);
+          for (let c = 4; c < header.length; c++) {
+            const label = String(header[c] || '').trim();
+            if (!label) continue;
+            const cell = row[c];
+            const val = typeof cell === 'number' ? cell : parseFloat(String(cell).replace(',', '.'));
+            if (![1, 2, 0.75].includes(val)) continue;
+            const parts = label.split('.');
+            if (parts.length < 2) continue;
+            const day = parseInt(parts[0], 10);
+            const monthName = parts[1];
+            const months: Record<string, number> = { Jan:0, Feb:1, Mär:2, Mrz:2, Apr:3, Mai:4, Jun:5, Jul:6, Aug:7, Sep:8, Okt:9, Nov:10, Dez:11 };
+            const month = months[monthName as keyof typeof months];
+            if (month == null || isNaN(day)) continue;
+            const year = new Date().getFullYear();
+            const start = new Date(Date.UTC(year, month, day, 9, 30));
+            const end = new Date(start);
+            if (val === 1 || val === 2) {
+              end.setUTCHours(18, 30, 0, 0);
+            } else if (val === 0.75) {
+              end.setUTCHours(15, 30, 0, 0);
+            }
+            const base = {
+              title: 'Promotion',
+              location_text,
+              postal_code,
+              city,
+              region,
+              start_ts: start.toISOString(),
+              end_ts: end.toISOString(),
+              type: 'promotion' as const,
+            };
+            rows.push(base);
+            if (val === 2) rows.push(base);
+          }
+        }
         await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
         setShowImportModal(false)
       } catch (error) {
