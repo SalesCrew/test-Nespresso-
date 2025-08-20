@@ -1183,6 +1183,36 @@ export default function EinsatzplanPage() {
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
 
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (dateRange.start) params.set('from', new Date(dateRange.start).toISOString());
+        if (dateRange.end) params.set('to', new Date(dateRange.end).toISOString());
+        if (regionFilter && regionFilter !== 'ALLE') params.set('region', regionFilter);
+        if (statusFilter) params.set('status', statusFilter);
+        const res = await fetch(`/api/assignments?${params.toString()}`, { cache: 'no-store' });
+        const j = await res.json();
+        const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
+        const mapped = rows.map((r) => ({
+          id: r.id,
+          date: r.start_ts?.slice(0,10) ?? '',
+          time: r.start_ts ? new Date(r.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '',
+          city: r.city || '',
+          plz: r.postal_code || '',
+          region: r.region || '',
+          status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : r.status,
+          promotionCount: 1,
+          promotorCount: 0,
+          promotions: [{ id: r.id }],
+        }));
+        setEinsatzplanData(mapped);
+      } catch {}
+    };
+    loadAssignments();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50/30">
       <style jsx>{customScrollbarStyle}</style>
