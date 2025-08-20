@@ -5,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import * as XLSX from 'xlsx';
-import { debugProcessRohExcel } from './debug-import';
 import { 
   Home, 
   Briefcase, 
@@ -635,8 +634,9 @@ export default function EinsatzplanPage() {
             if (!isNaN(numericLabel) && numericLabel > 40000) {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
-              start = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              start.setUTCHours(9, 30, 0, 0);
+              const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
+              // Create date in UTC to avoid timezone shifts
+              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
             } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -730,8 +730,9 @@ export default function EinsatzplanPage() {
             if (!isNaN(numericLabel) && numericLabel > 40000) {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
-              start = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              start.setUTCHours(9, 30, 0, 0);
+              const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
+              // Create date in UTC to avoid timezone shifts
+              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
             } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -786,9 +787,6 @@ export default function EinsatzplanPage() {
     console.log('File selected:', file?.name, 'Import type:', importType);
     if (file) {
       if (importType === 'roh') {
-        // Use debug version
-        const result = debugProcessRohExcel(file, XLSX, getRegionFromPLZ);
-        console.log('🔵 Debug result received (sync). Using original processRohExcel...');
         processRohExcel(file);
       } else if (importType === 'intern') {
         processInternExcel(file);
