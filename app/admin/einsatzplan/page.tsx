@@ -2363,7 +2363,7 @@ export default function EinsatzplanPage() {
                         }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
-                          <SelectValue placeholder="Promotor wählen" />
+                          <SelectValue placeholder={editingEinsatz.status === 'Offen' ? 'Promotor auswählen' : (editingEinsatz.promotor || '')} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           {promotorsList.map((p: any) => (
