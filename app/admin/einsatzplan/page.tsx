@@ -103,6 +103,8 @@ export default function EinsatzplanPage() {
   
   // Promotors list for assignment
   const [promotorsList, setPromotorsList] = useState<any[]>([]);
+  // Buddy toggle for bulk invites
+  const [inviteBuddy, setInviteBuddy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -765,7 +767,7 @@ export default function EinsatzplanPage() {
               const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
               // Create date in UTC to avoid timezone shifts
               start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
-            } else {
+          } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
               if (parts.length < 2) continue;
@@ -1925,9 +1927,33 @@ export default function EinsatzplanPage() {
                       )}
 
                       {selectedPromotions.length > 0 && selectedPromotors.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <label className="flex items-center space-x-2">
+                              <input type="checkbox" checked={inviteBuddy} onChange={(e) => setInviteBuddy(e.target.checked)} />
+                              <span>Buddy-Tag senden</span>
+                            </label>
+                            <span className="text-gray-500">{selectedPromotions.length} Einsätze → {selectedPromotors.length} Promotoren</span>
+                          </div>
                         <button
                           className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                          onClick={() => {
+                          onClick={async () => {
+                            try {
+                              // Map selected promoter names to IDs
+                              const ids = promotorsList
+                                .filter((p: any) => selectedPromotors.includes(p.name))
+                                .map((p: any) => p.id)
+                                .filter(Boolean)
+                              await fetch('/api/assignments/bulk-invite', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  assignment_ids: selectedPromotions,
+                                  promotor_ids: ids,
+                                  buddy: inviteBuddy
+                                })
+                              })
+                            } catch {}
                             const newHistoryItem = {
                               id: Date.now(),
                               date: new Date().toLocaleDateString('de-DE'),
@@ -1940,12 +1966,14 @@ export default function EinsatzplanPage() {
                             setDistributionHistory(prev => [newHistoryItem, ...prev]);
                             setSelectedPromotions([]);
                             setSelectedPromotors([]);
+                            setInviteBuddy(false);
                             setSelectionMode(false);
                           }}
                         >
                           <Send className="h-4 w-4" />
                           <span>Senden</span>
                         </button>
+                        </div>
                       )}
                     </div>
                   </div>
