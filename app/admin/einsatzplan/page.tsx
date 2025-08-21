@@ -101,6 +101,20 @@ export default function EinsatzplanPage() {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
   
+  // Promotors list for assignment
+  const [promotorsList, setPromotorsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/promotors', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const list = Array.isArray(data?.promotors) ? data.promotors.map((p: any) => ({ id: p.id, name: p.name, region: p.region })) : [];
+        setPromotorsList(list);
+      } catch {}
+    })();
+  }, []);
+  
   // Märkte search state
   const [maerkteSearch, setMaerkteSearch] = useState('');
   
@@ -2339,13 +2353,24 @@ export default function EinsatzplanPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Promotor</label>
-                      <input
-                        type="text"
-                        value={editingEinsatz.promotor || ''}
-                        onChange={(e) => setEditingEinsatz({...editingEinsatz, promotor: e.target.value})}
-                        placeholder="Promotor Name"
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none transition-colors"
-                      />
+                      <Select
+                        value={editingEinsatz.promotorId || ''}
+                        onValueChange={(val) => {
+                          const p = promotorsList.find((x: any) => x.id === val);
+                          if (!p) return;
+                          assignPromotionToPromotor(p.name, p.id);
+                          setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
+                        }}
+                      >
+                        <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder="Promotor wählen" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                          {promotorsList.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     
                     <div className="space-y-1">
@@ -2516,20 +2541,13 @@ export default function EinsatzplanPage() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {/* Mock applications data - replace with real data */}
-                            {[
-                              "Paul Leutner",
-                              "Maria Schmidt", 
-                              "Thomas Weber",
-                              "Lisa König",
-                              "Anna Bauer"
-                            ].map((promotor, index) => (
-                              <div key={index} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
-                                <span className="text-sm text-gray-900">{promotor}</span>
+                            {promotorsList.slice(0, 6).map((p: any) => (
+                              <div key={p.id} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
+                                <span className="text-sm text-gray-900">{p.name}</span>
                                 <div className="flex items-center space-x-2">
                                   <button 
                                     className="p-1 rounded"
-                                    onClick={() => assignPromotionToPromotor(promotor)}
+                                    onClick={() => assignPromotionToPromotor(p.name, p.id)}
                                   >
                                     <Check className="h-4 w-4 text-green-600" />
                                   </button>
@@ -2561,7 +2579,21 @@ export default function EinsatzplanPage() {
                 Abbrechen
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  try {
+                    await fetch(`/api/assignments/${editingEinsatz.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        date: editingEinsatz.date,
+                        planStart: editingEinsatz.planStart,
+                        planEnd: editingEinsatz.planEnd,
+                        location_text: editingEinsatz.address,
+                        postal_code: editingEinsatz.plz,
+                        status: editingEinsatz.status
+                      })
+                    });
+                  } catch {}
                   // Update the einsatzplan data
                   setEinsatzplanData(prev => prev.map(item => 
                     item.id === editingEinsatz.id ? editingEinsatz : item
