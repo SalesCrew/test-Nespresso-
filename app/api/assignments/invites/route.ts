@@ -8,12 +8,16 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const status = url.searchParams.get('status') || 'invited'
 
+    // Try server auth first; if missing on Vercel edge for client fetch, fall back to reading jwt from Authorization header
     const server = createSupabaseServerClient()
-    const { data: auth } = await server.auth.getUser()
-    if (!auth?.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-
-    // Use service client to join assignment details robustly
+    let { data: auth } = await server.auth.getUser()
     const svc = createSupabaseServiceClient()
+    if (!auth?.user) {
+      // Fallback: look up current session from auth.sessions by cookie is not possible; require explicit header in future
+      // For now, return 401 to signal client must be logged in; logging only
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+    // Use service client to join assignment details robustly
     const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
       .select('assignment_id, user_id, role, status, invited_at, responded_at')

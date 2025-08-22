@@ -92,15 +92,8 @@ const newcomerProposalsMock = [
   { id: 5, date: "Fr 16.06.2023 13:00-19:00", location: "O2 Shop Zehlendorf", description: "Accessory Sales" },
 ];
 
-// Mock data for assignment selection
-const assignmentSelectionMock = [
-  { id: 1, date: "Mo 19.06.2023", time: "10:00-16:00", location: "MediaMarkt Berlin Mitte", description: "Samsung Galaxy Promotion" },
-  { id: 2, date: "Di 20.06.2023", time: "12:00-18:00", location: "Saturn Alexanderplatz", description: "iPhone Sales Event" },
-  { id: 3, date: "Mi 21.06.2023", time: "09:00-15:00", location: "Telekom Store Potsdamer Platz", description: "5G Router Demo" },
-  { id: 4, date: "Do 22.06.2023", time: "11:00-17:00", location: "Vodafone Shop Friedrichshain", description: "Contract Consultation Day" },
-  { id: 5, date: "Fr 23.06.2023", time: "13:00-19:00", location: "O2 Store Prenzlauer Berg", description: "Accessory Showcase" },
-  { id: 6, date: "Sa 24.06.2023", time: "10:00-16:00", location: "MediaMarkt Steglitz", description: "Weekend Special Event" },
-];
+// Removed temp data: assignment selection mock now empty (real invites only)
+const assignmentSelectionMock: any[] = [];
 
 // Mock data for replacement assignments
 const replacementAssignmentsMock = [
@@ -143,11 +136,11 @@ export default function EinsatzPage() {
   const [showProposalConfirmation, setShowProposalConfirmation] = useState(false);
 
   // For assignment selection
-  const [assignments, setAssignments] = useState(assignmentSelectionMock);
+  const [assignments, setAssignments] = useState<any[]>([]);
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store' });
+        const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
         const data = await res.json().catch(() => ({}));
         const invites = Array.isArray(data?.invites) ? data.invites : [];
         const mapped = invites.map((i: any) => {
