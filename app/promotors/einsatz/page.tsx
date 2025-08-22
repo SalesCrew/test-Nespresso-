@@ -140,14 +140,18 @@ export default function EinsatzPage() {
   useEffect(() => {
     (async () => {
       try {
+        console.log('Fetching invites...');
         const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
+        console.log('Invites response status:', res.status);
         if (!res.ok) {
-          console.error('Failed to fetch invites:', res.status);
+          console.error('Failed to fetch invites:', res.status, res.statusText);
           setHasAvailableAssignments(false);
           return;
         }
         const data = await res.json().catch(() => ({}));
+        console.log('Invites data:', data);
         const invites = Array.isArray(data?.invites) ? data.invites : [];
+        console.log('Invites array:', invites);
         const mapped = invites.map((i: any) => {
           const a = i.assignment || {};
           const start = a.start_ts ? new Date(a.start_ts) : null;
@@ -164,6 +168,7 @@ export default function EinsatzPage() {
             description: a.description || ''
           }
         }).filter((x: any) => x.id)
+        console.log('Mapped assignments:', mapped);
         setAssignments(mapped)
         setHasAvailableAssignments(mapped.length > 0)
       } catch (err) {
