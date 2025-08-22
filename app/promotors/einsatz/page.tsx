@@ -144,14 +144,24 @@ export default function EinsatzPage() {
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   const [processCompleted, setProcessCompleted] = useState(false);
-  const [originalRejectedIds, setOriginalRejectedIds] = useState<number[]>([]); // Track original rejected assignments
+  
+  // Comprehensive process tracking
+  const [currentProcess, setCurrentProcess] = useState<{
+    originalIds: number[];        // ALL original assignment IDs (invited, applied, rejected)
+    replacementIds: number[];     // Replacement assignment IDs
+    stage: 'idle' | 'invited' | 'applied' | 'waiting' | 'declined' | 'confirmed';
+  }>({
+    originalIds: [],
+    replacementIds: [],
+    stage: 'idle'
+  });
   
   useEffect(() => {
     (async () => {
       try {
-        // Only fetch new invites if no assignment is currently being processed
-        if (showAssignmentConfirmation || isAssignmentCollapsed) {
-          console.log('Skipping invite fetch - assignment already in progress');
+        // Only fetch new invites if no process is active
+        if (currentProcess.stage !== 'idle') {
+          console.log('Skipping invite fetch - process already active:', currentProcess.stage);
           return;
         }
         
@@ -203,17 +213,27 @@ export default function EinsatzPage() {
         console.log('Mapped assignments:', mapped);
         setAssignments(mapped)
         setHasAvailableAssignments(mapped.length > 0)
+        
+        // Track all invited IDs in the process
+        if (mapped.length > 0) {
+          const invitedIds = mapped.map((a: any) => a.id);
+          setCurrentProcess({
+            originalIds: invitedIds,
+            replacementIds: [],
+            stage: 'invited'
+          });
+        }
       } catch (err) {
         console.error('Error fetching invites:', err);
         setHasAvailableAssignments(false);
       }
     })()
-  }, [showAssignmentConfirmation, isAssignmentCollapsed])
+  }, [currentProcess.stage])
   
-  // Load accepted assignments on mount
+  // Load accepted/rejected assignments on mount
   useEffect(() => {
-    // Don't load if a process was already completed
-    if (processCompleted) return;
+    // Only load if process is idle
+    if (currentProcess.stage !== 'idle') return;
     
     (async () => {
       try {
@@ -262,6 +282,13 @@ export default function EinsatzPage() {
             setAssignmentStatuses(statuses);
             setIsAssignmentCollapsed(true);
             setHasAvailableAssignments(true); // Important: Show the card container
+            
+            // Set process to confirmed stage
+            setCurrentProcess({
+              originalIds: ids,
+              replacementIds: [],
+              stage: 'confirmed'
+            });
             
             // Add to assignments if not already there
             setAssignments(prev => {
@@ -319,7 +346,13 @@ export default function EinsatzPage() {
             setIsAssignmentCollapsed(true);
             setHasAvailableAssignments(true);
             setShowReplacementAssignments(true); // Show replacement UI
-            setOriginalRejectedIds(rejectedIds); // Store original rejected IDs
+            
+            // Set process to declined stage with rejected IDs
+            setCurrentProcess({
+              originalIds: rejectedIds,
+              replacementIds: [],
+              stage: 'declined'
+            });
             
             // Add to assignments if not already there
             setAssignments(prev => {
@@ -371,8 +404,9 @@ export default function EinsatzPage() {
   
   // Check assignment status periodically
   useEffect(() => {
-    // Stop checking if process is complete (confirmation shown)
-    if (!isAssignmentCollapsed || selectedAssignmentIds.length === 0 || showAssignmentConfirmation) return;
+    // Only check status when in applied or waiting stage
+    if (currentProcess.stage !== 'applied' && currentProcess.stage !== 'waiting') return;
+    if (selectedAssignmentIds.length === 0) return;
     
     const checkAssignmentStatus = async () => {
       try {
@@ -404,16 +438,15 @@ export default function EinsatzPage() {
         
         setAssignmentStatuses(newStatuses);
         
-        // Show replacement UI only if there are declined assignments and not already showing confirmation
-        if (Object.values(newStatuses).some(status => status === 'declined') && !showAssignmentConfirmation) {
+        // Check if all are confirmed
+        const allConfirmed = Object.values(newStatuses).every(status => status === 'confirmed');
+        const hasDeclined = Object.values(newStatuses).some(status => status === 'declined');
+        
+        if (allConfirmed) {
+          setCurrentProcess(prev => ({ ...prev, stage: 'confirmed' }));
+        } else if (hasDeclined) {
           setShowReplacementAssignments(true);
-          // Store rejected IDs if not already stored
-          const rejectedIds = Object.entries(newStatuses)
-            .filter(([_, status]) => status === 'declined')
-            .map(([id, _]) => parseInt(id));
-          if (rejectedIds.length > 0 && originalRejectedIds.length === 0) {
-            setOriginalRejectedIds(rejectedIds);
-          }
+          setCurrentProcess(prev => ({ ...prev, stage: 'declined' }));
         }
       } catch (error) {
         console.error('Error checking assignment status:', error);
@@ -427,7 +460,7 @@ export default function EinsatzPage() {
     const interval = setInterval(checkAssignmentStatus, 3000);
     
     return () => clearInterval(interval);
-  }, [isAssignmentCollapsed, selectedAssignmentIds, showAssignmentConfirmation, originalRejectedIds]);
+  }, [currentProcess.stage, selectedAssignmentIds]);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -773,6 +806,12 @@ export default function EinsatzPage() {
       setAssignmentStatuses(newStatuses);
       setIsAssignmentCollapsed(true);
       
+      // Update process to applied stage
+      setCurrentProcess(prev => ({
+        ...prev,
+        stage: 'applied'
+      }));
+      
       try {
         // Submit selected assignments
         await Promise.all(selectedAssignmentIds.map(async (id) => {
@@ -880,10 +919,17 @@ export default function EinsatzPage() {
         // Update selected assignment IDs to the replacement ones
         setSelectedAssignmentIds(selectedReplacementIds);
         
+        // Update process with replacement IDs and set to waiting
+        setCurrentProcess(prev => ({
+          ...prev,
+          replacementIds: selectedReplacementIds,
+          stage: 'waiting'
+        }));
+        
         // Clear replacement states and hide replacement section
-      setSelectedReplacementIds([]);
-      setReplacementStatuses({});
-      setShowReplacementAssignments(false);
+        setSelectedReplacementIds([]);
+        setReplacementStatuses({});
+        setShowReplacementAssignments(false);
       
       } catch (error) {
         console.error('Error submitting replacement assignments:', error);
@@ -1463,11 +1509,14 @@ export default function EinsatzPage() {
                       background: 'linear-gradient(135deg, #22C55E, #105F2D)'
                     }}
                     onClick={async () => {
-                      // Mark ALL assignments as acknowledged (including original rejected ones)
+                      // Mark ALL assignments in the process as acknowledged
                       try {
-                        // Combine current assignments with original rejected assignments
-                        const allAssignmentIds = [...new Set([...selectedAssignmentIds, ...originalRejectedIds])];
-                        console.log('Acknowledging all assignments:', allAssignmentIds);
+                        // Get all assignment IDs from the entire process
+                        const allAssignmentIds = [...new Set([
+                          ...currentProcess.originalIds,
+                          ...currentProcess.replacementIds
+                        ])];
+                        console.log('Acknowledging all assignments in process:', allAssignmentIds);
                         
                         await Promise.all(
                           allAssignmentIds.map(id => 
@@ -1496,8 +1545,15 @@ export default function EinsatzPage() {
                         setSelectedReplacementIds([]);
                         setReplacementStatuses({});
                         replacementAssignmentsMock.length = 0; // Clear replacement data
-                        setOriginalRejectedIds([]); // Clear original rejected IDs
                         setShowAssignmentConfirmation(false);
+                        
+                        // Reset process to idle
+                        setCurrentProcess({
+                          originalIds: [],
+                          replacementIds: [],
+                          stage: 'idle'
+                        });
+                        
                         // Reset process completed flag after everything is cleared
                         // This allows new invitations to be loaded
                         setProcessCompleted(false);
