@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
-// List promotors who accepted an invite for a given assignment
+// List promotors who applied for a given assignment
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     console.log('Fetching applications for assignment:', params.id);

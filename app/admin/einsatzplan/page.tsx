@@ -175,13 +175,23 @@ export default function EinsatzplanPage() {
     if (!editingEinsatz) return;
     try {
       if (promotorId) {
+        // Update participant
         await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: promotorId, role: 'lead' })
         })
+        
+        // Update invitation status to accepted
+        await fetch(`/api/assignments/${editingEinsatz.id}/invites/accept`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: promotorId })
+        })
       }
-    } catch {}
+    } catch (error) {
+      console.error('Error assigning promotor:', error);
+    }
     // optimistic UI
     setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, status: 'Verplant' })
     setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: promotorName, status: 'Verplant' } : item))

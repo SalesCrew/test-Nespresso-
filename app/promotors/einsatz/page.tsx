@@ -193,12 +193,59 @@ export default function EinsatzPage() {
   const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
   const [isAssignmentCollapsed, setIsAssignmentCollapsed] = useState(false);
-  const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
   const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
   const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
   const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
+  
+  // Check assignment status periodically
+  useEffect(() => {
+    if (!isAssignmentCollapsed || selectedAssignmentIds.length === 0) return;
+    
+    const checkAssignmentStatus = async () => {
+      try {
+        // Check status for each submitted assignment
+        const statusChecks = await Promise.all(
+          selectedAssignmentIds.map(async (id) => {
+            const res = await fetch(`/api/assignments/${id}/invites/status`, {
+              credentials: 'include'
+            });
+            if (res.ok) {
+              const data = await res.json();
+              return { id: String(id), status: data.status };
+            }
+            return { id: String(id), status: 'pending' };
+          })
+        );
+        
+        // Update statuses
+        const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+        statusChecks.forEach(({ id, status }) => {
+          if (status === 'accepted') {
+            newStatuses[id] = 'confirmed';
+          } else if (status === 'rejected') {
+            newStatuses[id] = 'declined';
+          } else {
+            newStatuses[id] = 'pending';
+          }
+        });
+        
+        setAssignmentStatuses(newStatuses);
+      } catch (error) {
+        console.error('Error checking assignment status:', error);
+      }
+    };
+    
+    // Check immediately
+    checkAssignmentStatus();
+    
+    // Check every 3 seconds
+    const interval = setInterval(checkAssignmentStatus, 3000);
+    
+    return () => clearInterval(interval);
+  }, [isAssignmentCollapsed, selectedAssignmentIds]);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -509,8 +556,8 @@ export default function EinsatzPage() {
   const handleSubmitAssignment = async () => {
     if (selectedAssignmentIds.length > 0) {
       // Optimistic: set pending
-      const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
-      selectedAssignmentIds.forEach(id => { newStatuses[id] = 'pending'; });
+      const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+      selectedAssignmentIds.forEach(id => { newStatuses[String(id)] = 'pending'; });
       setAssignmentStatuses(newStatuses);
       setIsAssignmentCollapsed(true);
       try {
@@ -559,15 +606,15 @@ export default function EinsatzPage() {
   const handleSubmitReplacement = () => {
     if (selectedReplacementIds.length > 0) {
       // Set replacement assignments as confirmed and keep existing confirmed assignments
-      const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {...assignmentStatuses};
+      const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {...assignmentStatuses};
       selectedReplacementIds.forEach(id => {
-        newStatuses[id] = 'confirmed';
+        newStatuses[String(id)] = 'confirmed';
       });
       setAssignmentStatuses(newStatuses);
       
       // Update selected assignment IDs to include confirmed originals + confirmed replacements
       setSelectedAssignmentIds(prev => [
-        ...prev.filter(id => assignmentStatuses[id] === 'confirmed'),
+        ...prev.filter(id => assignmentStatuses[String(id)] === 'confirmed'),
         ...selectedReplacementIds
       ]);
       
@@ -1007,11 +1054,11 @@ export default function EinsatzPage() {
                   <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Einsatz-Anfragen</span>
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400 text-center text-sm">
-                  {selectedAssignmentIds.every(id => assignmentStatuses[id] === 'declined') 
+                  {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'declined') 
                     ? "Leider war jemand schneller als du, suche dir bitte einen Ersatztermin aus."
-                    : selectedAssignmentIds.some(id => assignmentStatuses[id] === 'declined')
-                    ? `Einige deiner Einsätze wurden abgelehnt. Suche dir bitte ${selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} Ersatztermin${selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length > 1 ? 'e' : ''} aus.`
-                    : selectedAssignmentIds.every(id => assignmentStatuses[id] === 'confirmed')
+                    : selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined')
+                    ? `Einige deiner Einsätze wurden abgelehnt. Suche dir bitte ${selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length} Ersatztermin${selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length > 1 ? 'e' : ''} aus.`
+                    : selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed')
                     ? "Deine Einsätze wurden bestätigt und sind jetzt in deinem Kalender sichtbar. Drücke 'Verstanden' um diese Aufgabe als erledigt zu markieren."
                     : "Du bist in der Warteschlange für diese Termine. Sobald sie vom Nespresso Team bestätigt sind, werden sie in deinem Kalender erscheinen."
                   }
@@ -1025,7 +1072,7 @@ export default function EinsatzPage() {
                     if (!assignment) {
                       assignment = replacementAssignmentsMock.find(a => a.id === assignmentId);
                     }
-                    const status = assignmentStatuses[assignmentId] || 'pending';
+                    const status = assignmentStatuses[String(assignmentId)] || 'pending';
                     if (!assignment) return null;
                     
                     return (
@@ -1060,20 +1107,20 @@ export default function EinsatzPage() {
                 </div>
                 
                 {/* Replacement Assignment Selection - Integrated */}
-                {selectedAssignmentIds.some(id => assignmentStatuses[id] === 'declined') && (
+                {selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined') && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                         <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Ersatztermine auswählen</span>
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Wähle {selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} Ersatztermin{selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length > 1 ? 'e' : ''} aus ({selectedReplacementIds.length}/{selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length} ausgewählt)
+                        Wähle {selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length} Ersatztermin{selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length > 1 ? 'e' : ''} aus ({selectedReplacementIds.length}/{selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length} ausgewählt)
                       </p>
                     </div>
                     
                     <div className="space-y-2">
                       {replacementAssignmentsMock.map((assignment) => {
-                        const maxReplacements = selectedAssignmentIds.filter(id => assignmentStatuses[id] === 'declined').length;
+                        const maxReplacements = selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length;
                         const isSelected = selectedReplacementIds.includes(assignment.id);
                         const isDisabled = !isSelected && selectedReplacementIds.length >= maxReplacements;
                         
@@ -1129,7 +1176,7 @@ export default function EinsatzPage() {
 
                 
                 {/* Show "Verstanden" button when all assignments are confirmed */}
-                {selectedAssignmentIds.every(id => assignmentStatuses[id] === 'confirmed') && (
+                {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
                   <Button 
                     className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                     onClick={() => {
