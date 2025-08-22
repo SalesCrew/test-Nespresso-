@@ -1250,7 +1250,10 @@ export default function EinsatzPage() {
                 {/* Show "Verstanden" button when all assignments are confirmed */}
                 {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
                   <Button 
-                    className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
+                    className="w-full mt-4 text-white transition-all duration-300 hover:scale-[1.01]"
+                    style={{
+                      background: 'linear-gradient(135deg, #22C55E, #105F2D)'
+                    }}
                     onClick={async () => {
                       // Mark assignments as acknowledged in database
                       try {
