@@ -143,6 +143,7 @@ export default function EinsatzPage() {
   const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
+  const [processCompleted, setProcessCompleted] = useState(false);
   
   useEffect(() => {
     (async () => {
@@ -210,6 +211,9 @@ export default function EinsatzPage() {
   
   // Load accepted assignments on mount
   useEffect(() => {
+    // Don't load if a process was already completed
+    if (processCompleted) return;
+    
     (async () => {
       try {
         // Load accepted assignments that haven't been acknowledged
@@ -365,7 +369,8 @@ export default function EinsatzPage() {
   
   // Check assignment status periodically
   useEffect(() => {
-    if (!isAssignmentCollapsed || selectedAssignmentIds.length === 0) return;
+    // Stop checking if process is complete (confirmation shown)
+    if (!isAssignmentCollapsed || selectedAssignmentIds.length === 0 || showAssignmentConfirmation) return;
     
     const checkAssignmentStatus = async () => {
       try {
@@ -396,6 +401,11 @@ export default function EinsatzPage() {
         });
         
         setAssignmentStatuses(newStatuses);
+        
+        // Show replacement UI only if there are declined assignments and not already showing confirmation
+        if (Object.values(newStatuses).some(status => status === 'declined') && !showAssignmentConfirmation) {
+          setShowReplacementAssignments(true);
+        }
       } catch (error) {
         console.error('Error checking assignment status:', error);
       }
@@ -408,7 +418,7 @@ export default function EinsatzPage() {
     const interval = setInterval(checkAssignmentStatus, 3000);
     
     return () => clearInterval(interval);
-  }, [isAssignmentCollapsed, selectedAssignmentIds]);
+  }, [isAssignmentCollapsed, selectedAssignmentIds, showAssignmentConfirmation]);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -1364,7 +1374,7 @@ export default function EinsatzPage() {
                 </div>
                 
                 {/* Replacement Assignment Selection - Integrated */}
-                {selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined') && (
+                {showReplacementAssignments && selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined') && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -1457,22 +1467,26 @@ export default function EinsatzPage() {
                       } catch (error) {
                         console.error('Error acknowledging assignments:', error);
                       }
-                      // Show thank-you card temporarily, then clear ALL state
+                      // Immediately clear critical state to stop all processes
                       setShowAssignmentConfirmation(true);
+                      setIsAssignmentCollapsed(false); // This stops the status checking
+                      setShowReplacementAssignments(false); // Prevent replacement UI
+                      setProcessCompleted(true); // Mark process as complete
                       
-                      // After showing confirmation, clear everything to prevent interference
+                      // After showing confirmation, clear ALL remaining state
                       setTimeout(() => {
                         // Clear ALL assignment-related state
                         setSelectedAssignmentIds([]);
                         setAssignmentStatuses({});
                         setAssignments([]);
                         setHasAvailableAssignments(false);
-                        setIsAssignmentCollapsed(false);
-                        setShowReplacementAssignments(false);
                         setSelectedReplacementIds([]);
                         setReplacementStatuses({});
                         replacementAssignmentsMock.length = 0; // Clear replacement data
                         setShowAssignmentConfirmation(false);
+                        // Reset process completed flag after everything is cleared
+                        // This allows new invitations to be loaded
+                        setProcessCompleted(false);
                       }, 5000); // Show confirmation for 5 seconds
                     }}
                   >
