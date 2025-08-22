@@ -344,7 +344,22 @@ export default function EinsatzPage() {
                         description: a.description || ''
                       };
                     });
-                    setAssignments(mapped);
+                    
+                    // For waiting stage, put replacement assignments in replacementAssignments state
+                    if (process.process_stage === 'waiting' && process.replacement_assignment_ids.length > 0) {
+                      const replacementData = mapped.filter((a: any) => 
+                        process.replacement_assignment_ids.includes(String(a.id))
+                      );
+                      setReplacementAssignments(replacementData);
+                      
+                      // Set original assignments too
+                      const originalData = mapped.filter((a: any) => 
+                        process.original_assignment_ids.includes(String(a.id))
+                      );
+                      setAssignments(originalData);
+                    } else {
+                      setAssignments(mapped);
+                    }
                   }
                 }
               }
@@ -1508,7 +1523,7 @@ export default function EinsatzPage() {
                     // Look in both original and replacement assignments
                     let assignment = assignments.find(a => a.id === assignmentId);
                     if (!assignment) {
-                      assignment = replacementAssignmentsMock.find(a => a.id === assignmentId);
+                      assignment = replacementAssignments.find(a => a.id === assignmentId);
                     }
                     const status = assignmentStatuses[String(assignmentId)] || 'pending';
                     if (!assignment) return null;
