@@ -738,12 +738,18 @@ export default function EinsatzPage() {
 
   const handleSubmitAssignment = async () => {
     if (selectedAssignmentIds.length > 0) {
-      // Optimistic: set pending
+      // Get all available assignment IDs
+      const allAvailableIds = assignments.map(a => a.id);
+      const unselectedIds = allAvailableIds.filter(id => !selectedAssignmentIds.includes(id));
+      
+      // Optimistic: set pending for selected
       const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
       selectedAssignmentIds.forEach(id => { newStatuses[String(id)] = 'pending'; });
       setAssignmentStatuses(newStatuses);
       setIsAssignmentCollapsed(true);
+      
       try {
+        // Submit selected assignments
         await Promise.all(selectedAssignmentIds.map(async (id) => {
           const res = await fetch(`/api/assignments/${id}/invites/respond`, {
             method: 'POST',
@@ -753,6 +759,19 @@ export default function EinsatzPage() {
           });
           if (!res.ok) {
             console.error('Failed to submit assignment application:', id, await res.text());
+          }
+        }));
+        
+        // Withdraw unselected assignments so they don't appear again
+        await Promise.all(unselectedIds.map(async (id) => {
+          const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'withdrawn' })
+          });
+          if (!res.ok) {
+            console.error('Failed to withdraw unselected assignment:', id, await res.text());
           }
         }));
       } catch (error) {
@@ -788,6 +807,10 @@ export default function EinsatzPage() {
 
   const handleSubmitReplacement = async () => {
     if (selectedReplacementIds.length > 0) {
+      // Get all available replacement assignment IDs
+      const allReplacementIds = replacementAssignmentsMock.map(a => a.id);
+      const unselectedReplacementIds = allReplacementIds.filter(id => !selectedReplacementIds.includes(id));
+      
       // Optimistic update: set replacement assignments as pending
       const newReplacementStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
       selectedReplacementIds.forEach(id => {
@@ -796,7 +819,7 @@ export default function EinsatzPage() {
       setReplacementStatuses(newReplacementStatuses);
       
       try {
-        // Submit each replacement assignment
+        // Submit selected replacement assignments
         await Promise.all(selectedReplacementIds.map(async (id) => {
           const res = await fetch(`/api/assignments/${id}/invites/respond`, {
             method: 'POST',
@@ -809,12 +832,28 @@ export default function EinsatzPage() {
           }
         }));
         
+        // Withdraw unselected replacement assignments
+        await Promise.all(unselectedReplacementIds.map(async (id) => {
+          const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'withdrawn' })
+          });
+          if (!res.ok) {
+            console.error('Failed to withdraw unselected replacement:', id, await res.text());
+          }
+        }));
+        
         // Update statuses to confirmed after successful submission
         const confirmedStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
         selectedReplacementIds.forEach(id => {
           confirmedStatuses[id] = 'confirmed';
         });
         setReplacementStatuses(confirmedStatuses);
+        
+        // Hide replacement section and wait for status check
+        setShowReplacementAssignments(false);
         
       } catch (error) {
         console.error('Error submitting replacement assignments:', error);
@@ -1371,21 +1410,22 @@ export default function EinsatzPage() {
                     </div>
                     
                     <Button 
-                      className="w-full mt-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-sm"
+                      className="w-full mt-3 text-white transition-all duration-300 hover:scale-[1.01]"
+                      style={{
+                        background: 'linear-gradient(135deg, #22C55E, #105F2D)'
+                      }}
                       onClick={handleSubmitReplacement}
                       disabled={selectedReplacementIds.length === 0}
                     >
-                      <Check className="mr-2 h-3 w-3" /> Auswahl bestätigen
+                      <Check className="mr-2 h-3 w-3" /> Auswählen
                     </Button>
                   </div>
                 )}
                 
 
                 
-                {/* Show "Verstanden" button when all assignments are confirmed or when replacements have been submitted */}
-                {(selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') || 
-                  (showReplacementAssignments && selectedReplacementIds.length > 0 && 
-                   Object.values(replacementStatuses).every(status => status === 'confirmed'))) && (
+                {/* Show "Verstanden" button only when all assignments are confirmed and no replacements are needed */}
+                {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
                   <Button 
                     className="w-full mt-4 text-white transition-all duration-300 hover:scale-[1.01]"
                     style={{
