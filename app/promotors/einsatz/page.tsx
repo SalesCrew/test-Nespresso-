@@ -235,24 +235,6 @@ export default function EinsatzPage() {
   useEffect(() => {
     (async () => {
       try {
-        // First check if there are new invitations
-        const inviteRes = await fetch('/api/assignments/invites?status=invited', { 
-          cache: 'no-store', 
-          credentials: 'include' 
-        });
-        
-        let hasNewInvites = false;
-        if (inviteRes.ok) {
-          const inviteData = await inviteRes.json();
-          const invites = Array.isArray(inviteData?.invites) ? inviteData.invites : [];
-          hasNewInvites = invites.length > 0;
-        }
-        
-        // If there are new invitations, don't load old accepted/rejected assignments
-        if (hasNewInvites) {
-          console.log('New invitations found, skipping old assignment load');
-          return;
-        }
         // Load accepted assignments that haven't been acknowledged
         const res = await fetch('/api/assignments/invites/unacknowledged-accepted', { 
           cache: 'no-store', 
