@@ -1529,30 +1529,38 @@ export default function EinsatzPage() {
                     if (!assignment) return null;
                     
                     return (
-                      <div key={assignmentId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {assignment.date}
+                      <div key={assignmentId} className="p-2.5 border rounded-lg relative min-h-[80px] border-gray-200 dark:border-gray-700">
+                        <div className="flex flex-col">
+                          <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
+                            {assignment.date}
+                            {assignment.isBuddyTag && (
+                              <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400">
+                                Buddy mit {assignment.buddyName}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {assignment.location}
                             </div>
-                            <Badge className="text-xs px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 rounded-full text-[10px]">
-                              {assignment.time}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <div className="relative inline-flex">
+                                <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
+                                <Badge className={`relative text-xs font-medium px-1.5 py-0.5 ${assignment.isBuddyTag ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'} text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]`}>
+                                  <span className="flex items-center">{assignment.time}</span>
+                                </Badge>
+                              </div>
+                              {status === 'pending' && (
+                                <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
+                              )}
+                              {status === 'confirmed' && (
+                                <Check className="h-4 w-4 text-green-500" />
+                              )}
+                              {status === 'declined' && (
+                                <X className="h-4 w-4 text-red-500" />
+                              )}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                            {assignment.location}
-                          </div>
-                        </div>
-                        <div className="flex items-center ml-3">
-                          {status === 'pending' && (
-                            <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
-                          )}
-                          {status === 'confirmed' && (
-                            <Check className="h-4 w-4 text-green-500" />
-                          )}
-                          {status === 'declined' && (
-                            <X className="h-4 w-4 text-red-500" />
-                          )}
                         </div>
                       </div>
                     );
