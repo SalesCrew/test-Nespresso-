@@ -9,15 +9,18 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     if (!auth?.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
     const body = await _req.json().catch(() => ({}))
-    const status = body?.status as 'accepted' | 'withdrawn'
-    if (!['accepted', 'withdrawn'].includes(status)) {
+    const status = body?.status as 'applied' | 'withdrawn' | 'accepted'
+    if (!['applied', 'withdrawn', 'accepted'].includes(status)) {
       return NextResponse.json({ error: 'invalid status' }, { status: 400 })
     }
 
     const svc = createSupabaseServiceClient()
     const { error } = await svc
       .from('assignment_invitations')
-      .update({ status })
+      .update({ 
+        status,
+        responded_at: new Date().toISOString()
+      })
       .eq('assignment_id', params.id)
       .eq('user_id', auth.user.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

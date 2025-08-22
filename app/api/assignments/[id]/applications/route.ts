@@ -7,10 +7,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     const svc = createSupabaseServiceClient()
     const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
-      .select('user_id, role, status, created_at')
+      .select('user_id, role, status, responded_at')
       .eq('assignment_id', params.id)
-      .eq('status', 'accepted')
-      .order('created_at', { ascending: true })
+      .eq('status', 'applied')
+      .order('responded_at', { ascending: true })
     if (invErr) return NextResponse.json({ error: invErr.message }, { status: 500 })
 
     const userIds = [...new Set((invites || []).map((i: any) => i.user_id))]
@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         name: u?.display_name || 'Unbekannt',
         phone: u?.phone || null,
         role: i.role,
-        created_at: i.created_at,
+        responded_at: i.responded_at,
       }
     })
 

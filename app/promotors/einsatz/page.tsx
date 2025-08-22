@@ -514,33 +514,24 @@ export default function EinsatzPage() {
       setAssignmentStatuses(newStatuses);
       setIsAssignmentCollapsed(true);
       try {
-        await Promise.all(selectedAssignmentIds.map(id => fetch(`/api/assignments/${id}/invites/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'accepted' })
-        })));
-      } catch {}
+        await Promise.all(selectedAssignmentIds.map(async (id) => {
+          const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'applied' })
+          });
+          if (!res.ok) {
+            console.error('Failed to submit assignment application:', id, await res.text());
+          }
+        }));
+      } catch (error) {
+        console.error('Error submitting assignments:', error);
+      }
     }
   };
 
-  // Temp test function for assignment statuses
-  const handleTestAssignmentStatus = (status: 'confirmed' | 'declined') => {
-    const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
-    selectedAssignmentIds.forEach(id => {
-      newStatuses[id] = status;
-    });
-    setAssignmentStatuses(newStatuses);
-  };
 
-  // Temp test function for mixed assignment statuses (some declined, some confirmed)
-  const handleTestMixedAssignmentStatus = () => {
-    const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
-    selectedAssignmentIds.forEach((id, index) => {
-      // Make the first assignment declined and the rest confirmed
-      newStatuses[id] = index === 0 ? 'declined' : 'confirmed';
-    });
-    setAssignmentStatuses(newStatuses);
-  };
 
   const handleAssignmentInfoClick = (e: React.MouseEvent, assignment: typeof assignmentSelectionMock[0]) => {
     e.stopPropagation(); // Prevent triggering the parent card onClick
@@ -1159,37 +1150,7 @@ export default function EinsatzPage() {
                   </Button>
                 )}
                 
-                {/* Temp testing buttons */}
-                {selectedReplacementIds.length === 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => handleTestAssignmentStatus('confirmed')}
-                      >
-                        Test: Bestätigt
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => handleTestAssignmentStatus('declined')}
-                      >
-                        Test: Abgelehnt
-                      </Button>
-                    </div>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={handleTestMixedAssignmentStatus}
-                    >
-                      Test: Nur eines von mehreren abgelehnt
-                    </Button>
-                  </div>
-                )}
+
               </CardContent>
             </>
           )}
