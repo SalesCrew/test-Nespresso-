@@ -252,8 +252,96 @@ export default function EinsatzPage() {
             });
           }
         }
+
+        // Load rejected assignments that haven't been acknowledged
+        const resRejected = await fetch('/api/assignments/invites/unacknowledged-rejected', { 
+          cache: 'no-store', 
+          credentials: 'include' 
+        });
+        
+        if (resRejected.ok) {
+          const dataRejected = await resRejected.json();
+          const unacknowledgedRejected = Array.isArray(dataRejected?.invites) ? dataRejected.invites : [];
+          
+          if (unacknowledgedRejected.length > 0) {
+            // Map rejected assignments
+            const rejectedAssignments = unacknowledgedRejected.map((i: any) => {
+              const a = i.assignment || {};
+              const start = a.start_ts ? new Date(a.start_ts) : null;
+              const end = a.end_ts ? new Date(a.end_ts) : null;
+              return {
+                id: a.id,
+                date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
+                time: (start && end)
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  : 'Zeit',
+                location: a.location_text || '',
+                description: a.description || ''
+              };
+            }).filter((x: any) => x.id);
+            
+            // Set state for rejected assignments
+            const rejectedIds = rejectedAssignments.map((a: any) => a.id);
+            const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+            rejectedIds.forEach((id: number) => {
+              statuses[String(id)] = 'declined';
+            });
+            
+            console.log('Setting up rejected assignments state:', {
+              rejectedIds,
+              statuses,
+              rejectedAssignmentsCount: rejectedAssignments.length
+            });
+            
+            setSelectedAssignmentIds(rejectedIds);
+            setAssignmentStatuses(statuses);
+            setIsAssignmentCollapsed(true);
+            setHasAvailableAssignments(true);
+            setShowReplacementAssignments(true); // Show replacement UI
+            
+            // Add to assignments if not already there
+            setAssignments(prev => {
+              const existingIds = new Set(prev.map(a => a.id));
+              const newAssignments = rejectedAssignments.filter((a: any) => !existingIds.has(a.id));
+              return [...prev, ...newAssignments];
+            });
+            
+            // Fetch available replacement assignments
+            const resReplacements = await fetch('/api/assignments/invites?status=invited', { 
+              cache: 'no-store', 
+              credentials: 'include' 
+            });
+            
+            if (resReplacements.ok) {
+              const dataReplacements = await resReplacements.json();
+              const replacementInvites = Array.isArray(dataReplacements?.invites) ? dataReplacements.invites : [];
+              
+              // Replace mock data with real replacement assignments
+              if (replacementInvites.length > 0) {
+                const mappedReplacements = replacementInvites.map((i: any) => {
+                  const a = i.assignment || {};
+                  const start = a.start_ts ? new Date(a.start_ts) : null;
+                  const end = a.end_ts ? new Date(a.end_ts) : null;
+                  return {
+                    id: a.id,
+                    date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : 'Datum',
+                    time: (start && end)
+                      ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                      : 'Zeit',
+                    location: a.location_text || '',
+                    description: a.description || ''
+                  };
+                }).filter((x: any) => x.id);
+                
+                // Update the replacementAssignmentsMock array to use real data
+                replacementAssignmentsMock.length = 0;
+                replacementAssignmentsMock.push(...mappedReplacements);
+              }
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error loading accepted assignments:', error);
+        console.error('Error loading accepted/rejected assignments:', error);
       }
     })();
   }, []);
@@ -698,28 +786,39 @@ export default function EinsatzPage() {
     });
   };
 
-  const handleSubmitReplacement = () => {
+  const handleSubmitReplacement = async () => {
     if (selectedReplacementIds.length > 0) {
-      // Set replacement assignments as confirmed and keep existing confirmed assignments
-      const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {...assignmentStatuses};
+      // Optimistic update: set replacement assignments as pending
+      const newReplacementStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
       selectedReplacementIds.forEach(id => {
-        newStatuses[String(id)] = 'confirmed';
+        newReplacementStatuses[id] = 'pending';
       });
-      setAssignmentStatuses(newStatuses);
+      setReplacementStatuses(newReplacementStatuses);
       
-      // Update selected assignment IDs to include confirmed originals + confirmed replacements
-      setSelectedAssignmentIds(prev => [
-        ...prev.filter(id => assignmentStatuses[String(id)] === 'confirmed'),
-        ...selectedReplacementIds
-      ]);
-      
-      // Clear replacement-specific states
-      setSelectedReplacementIds([]);
-      setReplacementStatuses({});
-      setShowReplacementAssignments(false);
-      
-      // Update assignments data to include replacements
-      setAssignments([...assignments, ...replacementAssignmentsMock]);
+      try {
+        // Submit each replacement assignment
+        await Promise.all(selectedReplacementIds.map(async (id) => {
+          const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'applied' })
+          });
+          if (!res.ok) {
+            console.error('Failed to submit replacement application:', id, await res.text());
+          }
+        }));
+        
+        // Update statuses to confirmed after successful submission
+        const confirmedStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
+        selectedReplacementIds.forEach(id => {
+          confirmedStatuses[id] = 'confirmed';
+        });
+        setReplacementStatuses(confirmedStatuses);
+        
+      } catch (error) {
+        console.error('Error submitting replacement assignments:', error);
+      }
     }
   };
 
@@ -1086,7 +1185,7 @@ export default function EinsatzPage() {
               </Card>
             </div>
           </div>
-        ) : (hasAvailableAssignments || (isAssignmentCollapsed && selectedAssignmentIds.length > 0)) ? (
+        ) : (hasAvailableAssignments || (isAssignmentCollapsed && selectedAssignmentIds.length > 0) || showReplacementAssignments) ? (
           (() => {
             console.log('Assignment card should render:', {
               hasAvailableAssignments,
@@ -1283,8 +1382,10 @@ export default function EinsatzPage() {
                 
 
                 
-                {/* Show "Verstanden" button when all assignments are confirmed */}
-                {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
+                {/* Show "Verstanden" button when all assignments are confirmed or when replacements have been submitted */}
+                {(selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') || 
+                  (showReplacementAssignments && selectedReplacementIds.length > 0 && 
+                   Object.values(replacementStatuses).every(status => status === 'confirmed'))) && (
                   <Button 
                     className="w-full mt-4 text-white transition-all duration-300 hover:scale-[1.01]"
                     style={{
