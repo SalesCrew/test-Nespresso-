@@ -98,24 +98,22 @@ export default function EinsatzplanPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [distributionHistory, setDistributionHistory] = useState<any[]>([]);
   
-  // Load distribution history from localStorage on mount
-  useEffect(() => {
-    const savedHistory = localStorage.getItem('einsatzplan_distribution_history');
-    if (savedHistory) {
-      try {
-        setDistributionHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error('Failed to parse distribution history:', e);
+  // Load distribution history from database
+  const loadInvitationHistory = async () => {
+    try {
+      const res = await fetch('/api/assignments/invitation-history');
+      if (res.ok) {
+        const data = await res.json();
+        setDistributionHistory(data.history || []);
       }
+    } catch (error) {
+      console.error('Failed to load invitation history:', error);
     }
-  }, []);
+  };
   
-  // Save distribution history to localStorage whenever it changes
   useEffect(() => {
-    if (distributionHistory.length > 0) {
-      localStorage.setItem('einsatzplan_distribution_history', JSON.stringify(distributionHistory));
-    }
-  }, [distributionHistory]);
+    loadInvitationHistory();
+  }, []);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
@@ -1912,7 +1910,7 @@ export default function EinsatzplanPage() {
                                 .filter((p: any) => selectedPromotors.includes(p.name))
                                 .map((p: any) => p.id)
                                 .filter(Boolean)
-                              await fetch('/api/assignments/bulk-invite', {
+                              const res = await fetch('/api/assignments/bulk-invite', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -1921,17 +1919,13 @@ export default function EinsatzplanPage() {
                                   buddy: inviteBuddy
                                 })
                               })
-                            } catch {}
-                            const newHistoryItem = {
-                              id: Date.now(),
-                              date: new Date().toLocaleDateString('de-DE'),
-                              time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                              promotions: einsatzplanData.filter(e => selectedPromotions.includes(e.id)),
-                              promotors: [...selectedPromotors],
-                              promotionCount: selectedPromotions.length,
-                              promotorCount: selectedPromotors.length
-                            };
-                            setDistributionHistory(prev => [newHistoryItem, ...prev]);
+                              if (res.ok) {
+                                // Reload history from database
+                                await loadInvitationHistory();
+                              }
+                            } catch (error) {
+                              console.error('Failed to send invitations:', error);
+                            }
                             setSelectedPromotions([]);
                             setSelectedPromotors([]);
                             setInviteBuddy(false);
