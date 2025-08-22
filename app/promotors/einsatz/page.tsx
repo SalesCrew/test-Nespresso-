@@ -228,9 +228,16 @@ export default function EinsatzPage() {
               statuses[String(id)] = 'confirmed';
             });
             
+            console.log('Setting up accepted assignments state:', {
+              ids,
+              statuses,
+              acceptedAssignmentsCount: acceptedAssignments.length
+            });
+            
             setSelectedAssignmentIds(ids);
             setAssignmentStatuses(statuses);
             setIsAssignmentCollapsed(true);
+            setHasAvailableAssignments(true); // Important: Show the card container
             
             // Add to assignments if not already there
             setAssignments(prev => {
@@ -1048,7 +1055,15 @@ export default function EinsatzPage() {
               </Card>
             </div>
           </div>
-        ) : hasAvailableAssignments ? (
+        ) : (hasAvailableAssignments || (isAssignmentCollapsed && selectedAssignmentIds.length > 0)) ? (
+          (() => {
+            console.log('Assignment card should render:', {
+              hasAvailableAssignments,
+              isAssignmentCollapsed,
+              selectedAssignmentIds,
+              assignmentStatuses
+            });
+            return (
           <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
             {!isAssignmentCollapsed ? (
             <>
@@ -1273,6 +1288,8 @@ export default function EinsatzPage() {
             </>
           )}
           </Card>
+            );
+          })()
         ) : null}
 
 
