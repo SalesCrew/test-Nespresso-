@@ -157,6 +157,31 @@ export default function EinsatzPage() {
     stage: 'idle'
   });
   
+  // Save process state to database whenever it changes
+  useEffect(() => {
+    if (currentProcess.stage === 'idle' && currentProcess.originalIds.length === 0) {
+      // Don't save empty idle state
+      return;
+    }
+    
+    (async () => {
+      try {
+        await fetch('/api/assignments/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            stage: currentProcess.stage,
+            originalIds: currentProcess.originalIds,
+            replacementIds: currentProcess.replacementIds
+          })
+        });
+      } catch (error) {
+        console.error('Error saving process state:', error);
+      }
+    })();
+  }, [currentProcess]);
+  
   useEffect(() => {
     (async () => {
       try {
@@ -231,10 +256,46 @@ export default function EinsatzPage() {
     })()
   }, [currentProcess.stage])
   
-  // Load accepted/rejected assignments on mount
+  // Load process state from database on mount
   useEffect(() => {
     (async () => {
       try {
+        // First load saved process state
+        const processRes = await fetch('/api/assignments/process', {
+          cache: 'no-store',
+          credentials: 'include'
+        });
+        
+        if (processRes.ok) {
+          const { process } = await processRes.json();
+          if (process && process.process_stage !== 'idle') {
+            // Restore process state
+            setCurrentProcess({
+              originalIds: process.original_assignment_ids || [],
+              replacementIds: process.replacement_assignment_ids || [],
+              stage: process.process_stage
+            });
+            
+            // Don't load old assignments if we have an active process
+            console.log('Active process found:', process.process_stage);
+            
+            // If process is in waiting stage, we need to restore the UI state
+            if (process.process_stage === 'waiting' || process.process_stage === 'applied') {
+              setSelectedAssignmentIds(process.original_assignment_ids);
+              setIsAssignmentCollapsed(true);
+              setHasAvailableAssignments(true);
+              
+              // Set statuses based on stage
+              const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+              process.original_assignment_ids.forEach((id: string) => {
+                statuses[id] = 'pending';
+              });
+              setAssignmentStatuses(statuses);
+            }
+            
+            return;
+          }
+        }
         // Load accepted assignments that haven't been acknowledged
         const res = await fetch('/api/assignments/invites/unacknowledged-accepted', { 
           cache: 'no-store', 
@@ -1537,6 +1598,17 @@ export default function EinsatzPage() {
                       } catch (error) {
                         console.error('Error acknowledging assignments:', error);
                       }
+                      
+                      // Clear process in database
+                      try {
+                        await fetch('/api/assignments/process', {
+                          method: 'DELETE',
+                          credentials: 'include'
+                        });
+                      } catch (error) {
+                        console.error('Error clearing process:', error);
+                      }
+                      
                       // Immediately clear critical state to stop all processes
                       setShowAssignmentConfirmation(true);
                       setIsAssignmentCollapsed(false); // This stops the status checking
