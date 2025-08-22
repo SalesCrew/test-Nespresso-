@@ -189,6 +189,70 @@ export default function EinsatzPage() {
       }
     })()
   }, [])
+  
+  // Load accepted assignments on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/assignments/invites?status=accepted', { 
+          cache: 'no-store', 
+          credentials: 'include' 
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const acceptedInvites = Array.isArray(data?.invites) ? data.invites : [];
+          
+          // Get acknowledged assignments from localStorage
+          const acknowledgedIds = JSON.parse(localStorage.getItem('acknowledgedAssignments') || '[]');
+          
+          // Filter out already acknowledged assignments
+          const unacknowledgedInvites = acceptedInvites.filter((i: any) => 
+            !acknowledgedIds.includes(i.assignment?.id)
+          );
+          
+          if (unacknowledgedInvites.length > 0) {
+            // Map accepted assignments
+            const acceptedAssignments = unacknowledgedInvites.map((i: any) => {
+              const a = i.assignment || {};
+              const start = a.start_ts ? new Date(a.start_ts) : null;
+              const end = a.end_ts ? new Date(a.end_ts) : null;
+              return {
+                id: a.id,
+                date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
+                time: (start && end)
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  : 'Zeit',
+                location: a.location_text || '',
+                description: a.description || ''
+              };
+            }).filter((x: any) => x.id);
+            
+            // Set up state to show confirmation card
+            const ids = acceptedAssignments.map((a: any) => a.id);
+            const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+            ids.forEach((id: number) => {
+              statuses[String(id)] = 'confirmed';
+            });
+            
+            setSelectedAssignmentIds(ids);
+            setAssignmentStatuses(statuses);
+            setIsAssignmentCollapsed(true);
+            
+            // Add to assignments if not already there
+            setAssignments(prev => {
+              const existingIds = new Set(prev.map(a => a.id));
+              const newAssignments = acceptedAssignments.filter((a: any) => !existingIds.has(a.id));
+              return [...prev, ...newAssignments];
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading accepted assignments:', error);
+      }
+    })();
+  }, []);
+  
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
   const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
@@ -1179,7 +1243,26 @@ export default function EinsatzPage() {
                 {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
                   <Button 
                     className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
-                    onClick={() => {
+                    onClick={async () => {
+                      // Mark assignments as acknowledged in localStorage
+                      try {
+                        const acknowledgedIds = JSON.parse(localStorage.getItem('acknowledgedAssignments') || '[]');
+                        const newAcknowledgedIds = [...new Set([...acknowledgedIds, ...selectedAssignmentIds])];
+                        localStorage.setItem('acknowledgedAssignments', JSON.stringify(newAcknowledgedIds));
+                        
+                        // Also call API for tracking (optional)
+                        await Promise.all(
+                          selectedAssignmentIds.map(id => 
+                            fetch(`/api/assignments/${id}/invites/acknowledge`, {
+                              method: 'POST',
+                              credentials: 'include'
+                            })
+                          )
+                        );
+                      } catch (error) {
+                        console.error('Error acknowledging assignments:', error);
+                      }
+                      
                       setShowAssignmentConfirmation(true);
                       setTimeout(() => {
                         setShowAssignmentConfirmation(false);
