@@ -158,7 +158,7 @@ export default function EinsatzPage() {
           const end = a.end_ts ? new Date(a.end_ts) : null;
           const dateLabel = start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum';
           const timeLabel = (start && end)
-            ? `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}-${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
+            ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
             : 'Zeit';
           console.log('Assignment time mapping:', {
             id: a.id,
@@ -166,6 +166,10 @@ export default function EinsatzPage() {
             end_ts: a.end_ts,
             start: start,
             end: end,
+            startUTC: start ? `${start.getUTCHours()}:${start.getUTCMinutes()}` : null,
+            startLocal: start ? `${start.getHours()}:${start.getMinutes()}` : null,
+            endUTC: end ? `${end.getUTCHours()}:${end.getUTCMinutes()}` : null,
+            endLocal: end ? `${end.getHours()}:${end.getMinutes()}` : null,
             timeLabel: timeLabel
           });
           return {
