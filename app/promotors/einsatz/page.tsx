@@ -141,6 +141,11 @@ export default function EinsatzPage() {
     (async () => {
       try {
         const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
+        if (!res.ok) {
+          console.error('Failed to fetch invites:', res.status);
+          setHasAvailableAssignments(false);
+          return;
+        }
         const data = await res.json().catch(() => ({}));
         const invites = Array.isArray(data?.invites) ? data.invites : [];
         const mapped = invites.map((i: any) => {
@@ -160,7 +165,11 @@ export default function EinsatzPage() {
           }
         }).filter((x: any) => x.id)
         setAssignments(mapped)
-      } catch {}
+        setHasAvailableAssignments(mapped.length > 0)
+      } catch (err) {
+        console.error('Error fetching invites:', err);
+        setHasAvailableAssignments(false);
+      }
     })()
   }, [])
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
@@ -172,7 +181,7 @@ export default function EinsatzPage() {
   const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
   const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
-  const [hasAvailableAssignments, setHasAvailableAssignments] = useState(true);
+  const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
