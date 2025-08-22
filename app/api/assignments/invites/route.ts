@@ -16,10 +16,10 @@ export async function GET(req: Request) {
     const svc = createSupabaseServiceClient()
     const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
-      .select('assignment_id, user_id, role, status, created_at')
+      .select('assignment_id, user_id, role, status, invited_at, responded_at')
       .eq('user_id', auth.user.id)
       .eq('status', status)
-      .order('created_at', { ascending: false })
+      .order('invited_at', { ascending: false })
     if (invErr) return NextResponse.json({ error: invErr.message }, { status: 500 })
 
     const assignmentIds = [...new Set((invites || []).map((i: any) => i.assignment_id))]
@@ -38,7 +38,8 @@ export async function GET(req: Request) {
         assignment_id: inv.assignment_id,
         status: inv.status,
         role: inv.role,
-        created_at: inv.created_at,
+        invited_at: inv.invited_at,
+        responded_at: inv.responded_at,
         assignment: a ? {
           id: a.id,
           location_text: a.location_text,
