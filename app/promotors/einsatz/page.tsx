@@ -133,9 +133,26 @@ export default function EinsatzPage() {
 
   // For assignment selection
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
+  const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
+  const [isAssignmentCollapsed, setIsAssignmentCollapsed] = useState(false);
+  const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
+  const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
+  const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
+  const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
+  
   useEffect(() => {
     (async () => {
       try {
+        // Only fetch new invites if no assignment is currently being processed
+        if (showAssignmentConfirmation || isAssignmentCollapsed) {
+          console.log('Skipping invite fetch - assignment already in progress');
+          return;
+        }
+        
         console.log('Fetching invites...');
         const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
         console.log('Invites response status:', res.status);
@@ -189,7 +206,7 @@ export default function EinsatzPage() {
         setHasAvailableAssignments(false);
       }
     })()
-  }, [])
+  }, [showAssignmentConfirmation, isAssignmentCollapsed])
   
   // Load accepted assignments on mount
   useEffect(() => {
@@ -201,9 +218,10 @@ export default function EinsatzPage() {
           credentials: 'include' 
         });
         
+        let unacknowledgedAccepted: any[] = [];
         if (res.ok) {
           const data = await res.json();
-          const unacknowledgedAccepted = Array.isArray(data?.invites) ? data.invites : [];
+          unacknowledgedAccepted = Array.isArray(data?.invites) ? data.invites : [];
           
           if (unacknowledgedAccepted.length > 0) {
             // Map accepted assignments
@@ -249,17 +267,19 @@ export default function EinsatzPage() {
           }
         }
 
-        // Load rejected assignments that haven't been acknowledged
-        const resRejected = await fetch('/api/assignments/invites/unacknowledged-rejected', { 
-          cache: 'no-store', 
-          credentials: 'include' 
-        });
-        
-        if (resRejected.ok) {
-          const dataRejected = await resRejected.json();
-          const unacknowledgedRejected = Array.isArray(dataRejected?.invites) ? dataRejected.invites : [];
+        // Only load rejected assignments if there are NO accepted assignments
+        // This prevents old rejected assignments from interfering with new accepted ones
+        if (unacknowledgedAccepted.length === 0) {
+          const resRejected = await fetch('/api/assignments/invites/unacknowledged-rejected', { 
+            cache: 'no-store', 
+            credentials: 'include' 
+          });
           
-          if (unacknowledgedRejected.length > 0) {
+          if (resRejected.ok) {
+            const dataRejected = await resRejected.json();
+            const unacknowledgedRejected = Array.isArray(dataRejected?.invites) ? dataRejected.invites : [];
+            
+            if (unacknowledgedRejected.length > 0) {
             // Map rejected assignments
             const rejectedAssignments = unacknowledgedRejected.map((i: any) => {
               const a = i.assignment || {};
@@ -336,22 +356,12 @@ export default function EinsatzPage() {
             }
           }
         }
+        }
       } catch (error) {
         console.error('Error loading accepted/rejected assignments:', error);
       }
     })();
   }, []);
-  
-  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
-  const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
-  const [isAssignmentCollapsed, setIsAssignmentCollapsed] = useState(false);
-  const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
-  const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
-  const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
-  const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
-  const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
-  const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   
   // Check assignment status periodically
   useEffect(() => {
@@ -724,11 +734,11 @@ export default function EinsatzPage() {
       }
     } else {
       // Regular assignments allow multiple selection
-      setSelectedAssignmentIds(prev => 
-        prev.includes(id) 
-          ? prev.filter(assignmentId => assignmentId !== id)
-          : [...prev, id]
-      );
+    setSelectedAssignmentIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(assignmentId => assignmentId !== id)
+        : [...prev, id]
+    );
     }
   };
 
@@ -852,10 +862,10 @@ export default function EinsatzPage() {
         setSelectedAssignmentIds(selectedReplacementIds);
         
         // Clear replacement states and hide replacement section
-        setSelectedReplacementIds([]);
-        setReplacementStatuses({});
-        setShowReplacementAssignments(false);
-        
+      setSelectedReplacementIds([]);
+      setReplacementStatuses({});
+      setShowReplacementAssignments(false);
+      
       } catch (error) {
         console.error('Error submitting replacement assignments:', error);
       }
@@ -1447,10 +1457,23 @@ export default function EinsatzPage() {
                       } catch (error) {
                         console.error('Error acknowledging assignments:', error);
                       }
-                      // Show persistent thank-you collapsed card and avoid reopening replacement selection
+                      // Show thank-you card temporarily, then clear ALL state
                       setShowAssignmentConfirmation(true);
-                      setIsAssignmentCollapsed(true);
-                      setShowReplacementAssignments(false);
+                      
+                      // After showing confirmation, clear everything to prevent interference
+                      setTimeout(() => {
+                        // Clear ALL assignment-related state
+                        setSelectedAssignmentIds([]);
+                        setAssignmentStatuses({});
+                        setAssignments([]);
+                        setHasAvailableAssignments(false);
+                        setIsAssignmentCollapsed(false);
+                        setShowReplacementAssignments(false);
+                        setSelectedReplacementIds([]);
+                        setReplacementStatuses({});
+                        replacementAssignmentsMock.length = 0; // Clear replacement data
+                        setShowAssignmentConfirmation(false);
+                      }, 5000); // Show confirmation for 5 seconds
                     }}
                   >
                     <Check className="mr-2 h-4 w-4" /> Verstanden
