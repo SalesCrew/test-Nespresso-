@@ -852,7 +852,7 @@ export default function EinsatzPage() {
         });
         setReplacementStatuses(confirmedStatuses);
         
-        // Hide replacement section and wait for status check
+        // Hide replacement section after submission
         setShowReplacementAssignments(false);
         
       } catch (error) {
@@ -1424,8 +1424,10 @@ export default function EinsatzPage() {
                 
 
                 
-                {/* Show "Verstanden" button only when all assignments are confirmed and no replacements are needed */}
-                {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && (
+                {/* Show "Verstanden" button when all assignments are confirmed or when replacements have been submitted */}
+                {(selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') || 
+                  (showReplacementAssignments && selectedReplacementIds.length > 0 && 
+                   Object.values(replacementStatuses).every(status => status === 'confirmed'))) && (
                   <Button 
                     className="w-full mt-4 text-white transition-all duration-300 hover:scale-[1.01]"
                     style={{
