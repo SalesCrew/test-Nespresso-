@@ -2811,16 +2811,10 @@ export default function EinsatzplanPage() {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6" style={{
-              scrollbarWidth: 'none' as any,
-              msOverflowStyle: 'none'
-            } as React.CSSProperties}>
-              <style jsx>{`
-                .replacement-scroll::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 replacement-scroll">
+            <div 
+              className="flex-1 overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {openAssignments.map((assignment: any) => (
                   <div
                     key={assignment.id}
