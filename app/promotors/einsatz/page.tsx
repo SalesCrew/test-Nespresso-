@@ -144,6 +144,7 @@ export default function EinsatzPage() {
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   const [processCompleted, setProcessCompleted] = useState(false);
+  const [originalRejectedIds, setOriginalRejectedIds] = useState<number[]>([]); // Track original rejected assignments
   
   useEffect(() => {
     (async () => {
@@ -318,6 +319,7 @@ export default function EinsatzPage() {
             setIsAssignmentCollapsed(true);
             setHasAvailableAssignments(true);
             setShowReplacementAssignments(true); // Show replacement UI
+            setOriginalRejectedIds(rejectedIds); // Store original rejected IDs
             
             // Add to assignments if not already there
             setAssignments(prev => {
@@ -405,6 +407,13 @@ export default function EinsatzPage() {
         // Show replacement UI only if there are declined assignments and not already showing confirmation
         if (Object.values(newStatuses).some(status => status === 'declined') && !showAssignmentConfirmation) {
           setShowReplacementAssignments(true);
+          // Store rejected IDs if not already stored
+          const rejectedIds = Object.entries(newStatuses)
+            .filter(([_, status]) => status === 'declined')
+            .map(([id, _]) => parseInt(id));
+          if (rejectedIds.length > 0 && originalRejectedIds.length === 0) {
+            setOriginalRejectedIds(rejectedIds);
+          }
         }
       } catch (error) {
         console.error('Error checking assignment status:', error);
@@ -418,7 +427,7 @@ export default function EinsatzPage() {
     const interval = setInterval(checkAssignmentStatus, 3000);
     
     return () => clearInterval(interval);
-  }, [isAssignmentCollapsed, selectedAssignmentIds, showAssignmentConfirmation]);
+  }, [isAssignmentCollapsed, selectedAssignmentIds, showAssignmentConfirmation, originalRejectedIds]);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -1454,10 +1463,14 @@ export default function EinsatzPage() {
                       background: 'linear-gradient(135deg, #22C55E, #105F2D)'
                     }}
                     onClick={async () => {
-                      // Mark assignments as acknowledged in database
+                      // Mark ALL assignments as acknowledged (including original rejected ones)
                       try {
+                        // Combine current assignments with original rejected assignments
+                        const allAssignmentIds = [...new Set([...selectedAssignmentIds, ...originalRejectedIds])];
+                        console.log('Acknowledging all assignments:', allAssignmentIds);
+                        
                         await Promise.all(
-                          selectedAssignmentIds.map(id => 
+                          allAssignmentIds.map(id => 
                             fetch(`/api/assignments/${id}/invites/acknowledge`, {
                               method: 'POST',
                               credentials: 'include'
@@ -1483,6 +1496,7 @@ export default function EinsatzPage() {
                         setSelectedReplacementIds([]);
                         setReplacementStatuses({});
                         replacementAssignmentsMock.length = 0; // Clear replacement data
+                        setOriginalRejectedIds([]); // Clear original rejected IDs
                         setShowAssignmentConfirmation(false);
                         // Reset process completed flag after everything is cleared
                         // This allows new invitations to be loaded
