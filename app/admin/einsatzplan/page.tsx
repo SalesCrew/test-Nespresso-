@@ -126,15 +126,27 @@ export default function EinsatzplanPage() {
   const [applicationsList, setApplicationsList] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
+    const loadApplications = async () => {
       if (!showDetailModal || promotionView !== 'applications' || !editingEinsatz?.id) return;
       try {
+        console.log('Loading applications for assignment:', editingEinsatz.id);
         const res = await fetch(`/api/assignments/${editingEinsatz.id}/applications`, { cache: 'no-store' });
         const data = await res.json().catch(() => ({}));
         const apps = Array.isArray(data?.applications) ? data.applications : [];
+        console.log('Loaded applications:', apps);
         setApplicationsList(apps);
-      } catch {}
-    })();
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    };
+    
+    // Load immediately
+    loadApplications();
+    
+    // Refresh every 5 seconds when viewing applications tab
+    const interval = setInterval(loadApplications, 5000);
+    
+    return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
   useEffect(() => {
@@ -2438,7 +2450,7 @@ export default function EinsatzplanPage() {
                                 : 'text-gray-600 hover:text-gray-800'
                             }`}
                           >
-                            Angemeldet
+                            Angemeldet {applicationsList.length > 0 && `(${applicationsList.length})`}
                           </button>
                         </div>
                       </div>
