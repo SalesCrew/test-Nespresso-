@@ -2461,17 +2461,17 @@ export default function EinsatzplanPage() {
                               applicationsList.map((app: any) => (
                                 <div key={app.user_id} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
                                   <span className="text-sm text-gray-900">{app.name}</span>
-                                  <div className="flex items-center space-x-2">
-                                    <button 
-                                      className="p-1 rounded"
+                                <div className="flex items-center space-x-2">
+                                  <button 
+                                    className="p-1 rounded"
                                       onClick={async () => {
                                         await assignPromotionToPromotor(app.name, app.user_id);
                                         // Optimistically remove others
                                         setApplicationsList(prev => prev.filter((x: any) => x.user_id === app.user_id));
                                       }}
-                                    >
-                                      <Check className="h-4 w-4 text-green-600" />
-                                    </button>
+                                  >
+                                    <Check className="h-4 w-4 text-green-600" />
+                                  </button>
                                     <button 
                                       className="p-1 rounded"
                                       onClick={async () => {
@@ -2485,10 +2485,10 @@ export default function EinsatzplanPage() {
                                         setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
                                       }}
                                     >
-                                      <X className="h-4 w-4 text-red-600" />
-                                    </button>
-                                  </div>
+                                    <X className="h-4 w-4 text-red-600" />
+                                  </button>
                                 </div>
+                              </div>
                               ))
                             )}
                           </div>

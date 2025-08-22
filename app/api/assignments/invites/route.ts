@@ -8,15 +8,17 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const status = url.searchParams.get('status') || 'invited'
 
-    // Try server auth first; if missing on Vercel edge for client fetch, fall back to reading jwt from Authorization header
-    const server = createSupabaseServerClient()
-    let { data: auth } = await server.auth.getUser()
+    // Use service client for both auth check and data fetch to avoid RLS issues
     const svc = createSupabaseServiceClient()
+    const server = createSupabaseServerClient()
+    const { data: auth } = await server.auth.getUser()
+    
     if (!auth?.user) {
-      // Fallback: look up current session from auth.sessions by cookie is not possible; require explicit header in future
-      // For now, return 401 to signal client must be logged in; logging only
+      console.error('No authenticated user found in invites API');
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
     }
+    console.log('Fetching invites for user:', auth.user.id, 'with status:', status)
+    
     // Use service client to join assignment details robustly
     const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
@@ -24,6 +26,8 @@ export async function GET(req: Request) {
       .eq('user_id', auth.user.id)
       .eq('status', status)
       .order('invited_at', { ascending: false })
+    
+    console.log('Invites query result:', { invites, error: invErr })
     if (invErr) return NextResponse.json({ error: invErr.message }, { status: 500 })
 
     const assignmentIds = [...new Set((invites || []).map((i: any) => i.assignment_id))]
