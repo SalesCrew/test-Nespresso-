@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -972,53 +972,71 @@ export default function EinsatzplanPage() {
 
 
 
-  const filteredEinsatzplan = einsatzplanData.filter(item => {
-    // Region filter using PLZ mapping
-    const itemRegion = getRegionFromPLZ(item.plz);
-    const regionMatch = regionFilter === "ALLE" || itemRegion === regionFilter;
-    
-    // PLZ filter
-    const plzMatch = !plzFilter || item.plz === plzFilter;
-    
-    // Status filter
-    const statusMatch = !statusFilter || item.status === statusFilter;
-    
-    // Eye filter - hide "Verplant" items when active
-    const verplantMatch = !hideVerplant || item.status !== 'Verplant';
-    
-    // Date filters
-    let dateMatch = true;
-    
-    // Single date filter (from day card clicks)
-    if (dateFilter) {
-      dateMatch = item.date === dateFilter;
-    }
-    // Calendar weeks filter
-    else if (selectedWeeks.length > 0) {
-      const itemDate = new Date(item.date);
-      const itemWeek = getWeekNumber(itemDate);
-      const itemYear = itemDate.getFullYear();
-      dateMatch = selectedWeeks.some(weekStr => {
-        const weekNum = parseInt(weekStr.match(/KW (\d+)/)?.[1] || '0');
-        return weekNum === itemWeek && itemYear === new Date().getFullYear();
-      });
-    }
-    // Date range filter
-    else if (dateRange.start) {
-      if (dateRange.end) {
-        const start = dateRange.start <= dateRange.end ? dateRange.start : dateRange.end;
-        const end = dateRange.start <= dateRange.end ? dateRange.end : dateRange.start;
-        dateMatch = item.date >= start && item.date <= end;
-      } else {
-        dateMatch = item.date === dateRange.start;
+  const filteredEinsatzplan = useMemo(() => {
+    return einsatzplanData.filter(item => {
+      // Region filter using PLZ mapping
+      const itemRegion = getRegionFromPLZ(item.plz);
+      const regionMatch = regionFilter === "ALLE" || itemRegion === regionFilter;
+      
+      // PLZ filter
+      const plzMatch = !plzFilter || item.plz === plzFilter;
+      
+      // Status filter
+      const statusMatch = !statusFilter || item.status === statusFilter;
+      
+      // Eye filter - hide "Verplant" items when active
+      const verplantMatch = !hideVerplant || item.status !== 'Verplant';
+      
+      // Date filters
+      let dateMatch = true;
+      
+      // Single date filter (from day card clicks)
+      if (dateFilter) {
+        dateMatch = item.date === dateFilter;
       }
-    }
+      // Calendar weeks filter
+      else if (selectedWeeks.length > 0) {
+        const itemDate = new Date(item.date);
+        const itemWeek = getWeekNumber(itemDate);
+        const itemYear = itemDate.getFullYear();
+        dateMatch = selectedWeeks.some(weekStr => {
+          const weekNum = parseInt(weekStr.match(/KW (\d+)/)?.[1] || '0');
+          return weekNum === itemWeek && itemYear === new Date().getFullYear();
+        });
+      }
+      // Date range filter
+      else if (dateRange.start) {
+        if (dateRange.end) {
+          const start = dateRange.start <= dateRange.end ? dateRange.start : dateRange.end;
+          const end = dateRange.start <= dateRange.end ? dateRange.end : dateRange.start;
+          dateMatch = item.date >= start && item.date <= end;
+        } else {
+          dateMatch = item.date === dateRange.start;
+        }
+      }
+      
+      return regionMatch && plzMatch && statusMatch && verplantMatch && dateMatch;
+    }).sort((a, b) => {
+      // Sort by date (nearest to farthest)
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+  }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, dateRange]);
+
+  // Memoize statistics to prevent repeated calculations
+  const einsatzStats = useMemo(() => {
+    const confirmed = filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant'].includes(item.status)).length;
+    const cancelled = filteredEinsatzplan.filter(item => ['abgesagt', 'Krankenstand'].includes(item.status)).length;
+    const planned = filteredEinsatzplan.filter(item => ['geplant', 'Offen'].includes(item.status)).length;
+    const total = filteredEinsatzplan.length;
     
-    return regionMatch && plzMatch && statusMatch && verplantMatch && dateMatch;
-  }).sort((a, b) => {
-    // Sort by date (nearest to farthest)
-    return new Date(a.date).getTime() - new Date(b.date).getTime();
-  });
+    return {
+      confirmed,
+      cancelled,
+      planned,
+      total,
+      confirmedPercentage: total > 0 ? Math.min(100, (confirmed / total) * 100) : 0
+    };
+  }, [filteredEinsatzplan]);
 
   const loadAssignments = async (skipFilters = false) => {
     console.log('🟢 loadAssignments called, skipFilters:', skipFilters);
@@ -1572,16 +1590,16 @@ export default function EinsatzplanPage() {
                         <div 
                           className="h-1 rounded-full transition-all duration-300 bg-gradient-to-r from-gray-300 to-gray-400"
                           style={{ 
-                            width: `${filteredEinsatzplan.length > 0 ? Math.min(100, (filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant'].includes(item.status)).length / filteredEinsatzplan.length) * 100) : 0}%` 
+                            width: `${einsatzStats.confirmedPercentage}%` 
                           }}
                         ></div>
                       </div>
                       {/* Statistics indicators */}
                       <div className="flex items-center justify-between opacity-50">
                         <div className="flex items-center space-x-4">
-                          <span className="text-xs text-green-600">{filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant'].includes(item.status)).length}</span>
-                          <span className="text-xs text-red-600">{filteredEinsatzplan.filter(item => ['abgesagt', 'Krankenstand'].includes(item.status)).length}</span>
-                          <span className="text-xs text-gray-600">{filteredEinsatzplan.filter(item => ['geplant', 'Offen'].includes(item.status)).length}</span>
+                          <span className="text-xs text-green-600">{einsatzStats.confirmed}</span>
+                          <span className="text-xs text-red-600">{einsatzStats.cancelled}</span>
+                          <span className="text-xs text-gray-600">{einsatzStats.planned}</span>
                         </div>
                         <button
                           onClick={() => setHideVerplant(!hideVerplant)}
