@@ -233,9 +233,6 @@ export default function EinsatzPage() {
   
   // Load accepted/rejected assignments on mount
   useEffect(() => {
-    // Only load if process is idle
-    if (currentProcess.stage !== 'idle') return;
-    
     (async () => {
       try {
         // Load accepted assignments that haven't been acknowledged
