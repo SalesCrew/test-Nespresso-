@@ -124,6 +124,8 @@ export default function EinsatzplanPage() {
   const [inviteBuddy, setInviteBuddy] = useState(false);
   // Accepted applications for the current assignment (detail view)
   const [applicationsList, setApplicationsList] = useState<any[]>([]);
+  // Flash effect for promotor field
+  const [promotorFieldFlash, setPromotorFieldFlash] = useState(false);
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -2301,7 +2303,17 @@ export default function EinsatzplanPage() {
                           setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
                         }}
                       >
-                        <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
+                        <SelectTrigger 
+                          className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-300"
+                          style={{
+                            boxShadow: promotorFieldFlash 
+                              ? '0 0 0 4px rgba(34, 197, 94, 0.3), 0 0 0 8px rgba(16, 95, 45, 0.2), 0 0 20px rgba(34, 197, 94, 0.4)' 
+                              : 'none',
+                            background: promotorFieldFlash 
+                              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 95, 45, 0.05))' 
+                              : 'white'
+                          }}
+                        >
                           <SelectValue placeholder={editingEinsatz.status === 'Offen' ? 'Promotor auswählen' : (editingEinsatz.promotor || '')} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
@@ -2479,20 +2491,43 @@ export default function EinsatzplanPage() {
                             })()}
                           </div>
                         ) : (
-                          <div className="space-y-2">
+                          <div className="space-y-2 relative overflow-hidden">
                             {applicationsList.length === 0 ? (
                               <div className="text-sm text-gray-400 text-center py-8">Keine Anmeldungen</div>
                             ) : (
                               applicationsList.map((app: any) => (
-                                <div key={app.user_id} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
+                                <div 
+                                  key={app.user_id} 
+                                  className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between overflow-hidden relative transition-all duration-300"
+                                  style={{
+                                    transform: app.isSliding ? 'translateY(-100%)' : 'translateY(0)',
+                                    opacity: app.isSliding ? 0 : 1,
+                                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out'
+                                  }}
+                                >
                                   <span className="text-sm text-gray-900">{app.name}</span>
                                 <div className="flex items-center space-x-2">
                                   <button 
                                     className="p-1 rounded"
                                       onClick={async () => {
+                                        // Trigger slide animation
+                                        setApplicationsList(prev => 
+                                          prev.map(a => a.user_id === app.user_id ? {...a, isSliding: true} : a)
+                                        );
+                                        
+                                        // Update promotor field and trigger flash after animation
+                                        setTimeout(() => {
+                                          setEditingEinsatz((prev: any) => ({...prev, promotor: app.name}));
+                                          setPromotorFieldFlash(true);
+                                          setTimeout(() => setPromotorFieldFlash(false), 800);
+                                        }, 500);
+                                        
                                         await assignPromotionToPromotor(app.name, app.user_id);
-                                        // Optimistically remove others
-                                        setApplicationsList(prev => prev.filter((x: any) => x.user_id === app.user_id));
+                                        
+                                        // Remove from list after animation
+                                        setTimeout(() => {
+                                          setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
+                                        }, 600);
                                       }}
                                   >
                                     <Check className="h-4 w-4 text-green-600" />
@@ -2561,7 +2596,13 @@ export default function EinsatzplanPage() {
                   setSelectedEinsatz(null);
                   setEditingEinsatz(null);
                 }}
-                className="px-6 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 text-sm text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                style={{
+                  background: 'linear-gradient(135deg, #22C55E, #105F2D)',
+                  opacity: 0.9
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
               >
                 Speichern
               </button>
