@@ -8,14 +8,26 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const { data: auth } = await server.auth.getUser()
     if (!auth?.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-    // Store acknowledgment in localStorage on client side instead
-    // Since we can't add a new status to the enum without a migration
-    // For now, just return success
-    // The client will handle hiding acknowledged assignments
+    const svc = createSupabaseServiceClient()
+    
+    // Insert acknowledgment record
+    const { error } = await svc
+      .from('assignment_acknowledgments')
+      .insert({
+        assignment_id: params.id,
+        user_id: auth.user.id
+      })
+      .select()
+      .single()
+      
+    if (error && error.code !== '23505') { // Ignore unique constraint violations
+      console.error('Error saving acknowledgment:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
     console.error('Server error in acknowledge:', e)
-    return NextResponse.json({ ok: true }) // Return success anyway to not break UI
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }
 }

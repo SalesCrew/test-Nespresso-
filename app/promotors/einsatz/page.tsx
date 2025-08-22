@@ -194,32 +194,19 @@ export default function EinsatzPage() {
   useEffect(() => {
     (async () => {
       try {
-        console.log('Loading accepted assignments...');
-        const res = await fetch('/api/assignments/invites?status=accepted', { 
+        // Load accepted assignments that haven't been acknowledged
+        const res = await fetch('/api/assignments/invites/unacknowledged-accepted', { 
           cache: 'no-store', 
           credentials: 'include' 
         });
         
-        console.log('Accepted invites response:', res.status);
         if (res.ok) {
           const data = await res.json();
-          console.log('Accepted invites data:', data);
-          const acceptedInvites = Array.isArray(data?.invites) ? data.invites : [];
+          const unacknowledgedAccepted = Array.isArray(data?.invites) ? data.invites : [];
           
-          // Get acknowledged assignments from localStorage
-          const acknowledgedIds = JSON.parse(localStorage.getItem('acknowledgedAssignments') || '[]');
-          console.log('Acknowledged IDs from localStorage:', acknowledgedIds);
-          
-          // Filter out already acknowledged assignments
-          const unacknowledgedInvites = acceptedInvites.filter((i: any) => 
-            !acknowledgedIds.includes(i.assignment?.id)
-          );
-          
-          console.log('Unacknowledged invites after filtering:', unacknowledgedInvites);
-          
-          if (unacknowledgedInvites.length > 0) {
+          if (unacknowledgedAccepted.length > 0) {
             // Map accepted assignments
-            const acceptedAssignments = unacknowledgedInvites.map((i: any) => {
+            const acceptedAssignments = unacknowledgedAccepted.map((i: any) => {
               const a = i.assignment || {};
               const start = a.start_ts ? new Date(a.start_ts) : null;
               const end = a.end_ts ? new Date(a.end_ts) : null;
@@ -251,11 +238,7 @@ export default function EinsatzPage() {
               const newAssignments = acceptedAssignments.filter((a: any) => !existingIds.has(a.id));
               return [...prev, ...newAssignments];
             });
-          } else {
-            console.log('No unacknowledged accepted assignments to show');
           }
-        } else {
-          console.error('Failed to load accepted invites:', res.status);
         }
       } catch (error) {
         console.error('Error loading accepted assignments:', error);
@@ -1254,13 +1237,8 @@ export default function EinsatzPage() {
                   <Button 
                     className="w-full mt-4 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
                     onClick={async () => {
-                      // Mark assignments as acknowledged in localStorage
+                      // Mark assignments as acknowledged in database
                       try {
-                        const acknowledgedIds = JSON.parse(localStorage.getItem('acknowledgedAssignments') || '[]');
-                        const newAcknowledgedIds = [...new Set([...acknowledgedIds, ...selectedAssignmentIds])];
-                        localStorage.setItem('acknowledgedAssignments', JSON.stringify(newAcknowledgedIds));
-                        
-                        // Also call API for tracking (optional)
                         await Promise.all(
                           selectedAssignmentIds.map(id => 
                             fetch(`/api/assignments/${id}/invites/acknowledge`, {
