@@ -87,6 +87,10 @@ export default function EinsatzplanPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEinsatz, setSelectedEinsatz] = useState<any>(null);
   const [editingEinsatz, setEditingEinsatz] = useState<any>(null);
+  const [showReplacementModal, setShowReplacementModal] = useState(false);
+  const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string} | null>(null);
+  const [openAssignments, setOpenAssignments] = useState<any[]>([]);
+  const [selectedReplacementAssignments, setSelectedReplacementAssignments] = useState<string[]>([]);
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -114,6 +118,21 @@ export default function EinsatzplanPage() {
   useEffect(() => {
     loadInvitationHistory();
   }, []);
+
+  // Fetch open assignments when replacement modal opens
+  useEffect(() => {
+    if (showReplacementModal) {
+      (async () => {
+        try {
+          const res = await fetch('/api/assignments?status=open');
+          const data = await res.json();
+          setOpenAssignments(data.assignments || []);
+        } catch (error) {
+          console.error('Error fetching open assignments:', error);
+        }
+      })();
+    }
+  }, [showReplacementModal]);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
@@ -803,6 +822,43 @@ export default function EinsatzplanPage() {
       }
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  // Handle replacement assignment selection
+  const handleReplacementAssignmentSelect = (assignmentId: string) => {
+    setSelectedReplacementAssignments(prev => 
+      prev.includes(assignmentId)
+        ? prev.filter(id => id !== assignmentId)
+        : [...prev, assignmentId]
+    );
+  };
+
+  // Handle sending replacement invites
+  const handleSendReplacementInvites = async () => {
+    if (!declinedPromotor || selectedReplacementAssignments.length === 0) return;
+    
+    try {
+      const res = await fetch('/api/assignments/bulk-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignment_ids: selectedReplacementAssignments,
+          promotor_ids: [declinedPromotor.user_id],
+          buddy: false
+        })
+      });
+      
+      if (res.ok) {
+        setShowReplacementModal(false);
+        setDeclinedPromotor(null);
+        setSelectedReplacementAssignments([]);
+        
+        // Update the status in the invitations to show as replacement
+        // This will trigger the replacement UI in the promotor's view
+      }
+    } catch (error) {
+      console.error('Error sending replacement invites:', error);
+    }
   };
 
   // Handle file selection
@@ -2508,8 +2564,8 @@ export default function EinsatzplanPage() {
                                   key={app.user_id} 
                                   className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between overflow-hidden relative transition-all duration-300"
                                   style={{
-                                    transform: app.isSliding ? 'translateY(-100%)' : 'translateY(0)',
-                                    opacity: app.isSliding ? 0 : 1,
+                                    transform: app.isSliding ? 'translateY(-100%)' : app.isSlidingRight ? 'translateX(100%)' : 'translate(0)',
+                                    opacity: app.isSliding || app.isSlidingRight ? 0 : 1,
                                     transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out'
                                   }}
                                 >
@@ -2543,14 +2599,26 @@ export default function EinsatzplanPage() {
                                     <button 
                                       className="p-1 rounded"
                                       onClick={async () => {
-                                        try {
-                                          await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ user_id: app.user_id })
-                                          });
-                                        } catch {}
-                                        setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
+                                        // Trigger slide-right animation
+                                        setApplicationsList(prev => 
+                                          prev.map(a => a.user_id === app.user_id ? {...a, isSlidingRight: true} : a)
+                                        );
+                                        
+                                        // After animation, open replacement assignment window
+                                        setTimeout(async () => {
+                                          try {
+                                            await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
+                                              method: 'POST',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ user_id: app.user_id })
+                                            });
+                                          } catch {}
+                                          setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
+                                          
+                                          // Open replacement assignment selection
+                                          setDeclinedPromotor({ user_id: app.user_id, name: app.name });
+                                          setShowReplacementModal(true);
+                                        }, 500);
                                       }}
                                     >
                                     <X className="h-4 w-4 text-red-600" />
@@ -2714,6 +2782,111 @@ export default function EinsatzplanPage() {
                 >
                   Importieren
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Replacement Assignments Modal */}
+      {showReplacementModal && declinedPromotor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[95vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="relative p-6 border-b border-gray-100">
+              <div className="pr-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-1">Ersatztermine für {declinedPromotor.name}</h3>
+                <p className="text-sm text-gray-500">Wähle Ersatztermine aus den offenen Einsätzen</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowReplacementModal(false);
+                  setDeclinedPromotor(null);
+                  setSelectedReplacementAssignments([]);
+                }}
+                className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6" style={{
+              scrollbarWidth: 'none' as any,
+              msOverflowStyle: 'none'
+            } as React.CSSProperties}>
+              <style jsx>{`
+                .replacement-scroll::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 replacement-scroll">
+                {openAssignments.map((assignment: any) => (
+                  <div
+                    key={assignment.id}
+                    onClick={() => handleReplacementAssignmentSelect(assignment.id)}
+                    className={`
+                      p-4 rounded-lg border-2 cursor-pointer transition-all
+                      ${selectedReplacementAssignments.includes(assignment.id)
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }
+                    `}
+                  >
+                    <div className="space-y-2">
+                      <div className="font-medium text-gray-900">
+                        {new Date(assignment.start_ts).toLocaleDateString('de-DE', { 
+                          weekday: 'short', 
+                          day: '2-digit', 
+                          month: '2-digit' 
+                        })}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {assignment.location_text}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          {assignment.postal_code} {assignment.city}
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                          {`${String(new Date(assignment.start_ts).getUTCHours()).padStart(2, '0')}:${String(new Date(assignment.start_ts).getUTCMinutes()).padStart(2, '0')}-${String(new Date(assignment.end_ts).getUTCHours()).padStart(2, '0')}:${String(new Date(assignment.end_ts).getUTCMinutes()).padStart(2, '0')}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  {selectedReplacementAssignments.length} Ersatztermine ausgewählt
+                </span>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowReplacementModal(false);
+                      setDeclinedPromotor(null);
+                      setSelectedReplacementAssignments([]);
+                    }}
+                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={handleSendReplacementInvites}
+                    disabled={selectedReplacementAssignments.length === 0}
+                    className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${
+                      selectedReplacementAssignments.length === 0
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                  >
+                    Ersatztermine senden
+                  </button>
+                </div>
               </div>
             </div>
           </div>
