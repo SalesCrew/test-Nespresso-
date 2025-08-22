@@ -8,16 +8,20 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const status = url.searchParams.get('status') || 'invited'
 
-    // Use service client for both auth check and data fetch to avoid RLS issues
-    const svc = createSupabaseServiceClient()
+    // Use server client for auth check
     const server = createSupabaseServerClient()
-    const { data: auth } = await server.auth.getUser()
+    const { data: auth, error: authError } = await server.auth.getUser()
     
-    if (!auth?.user) {
-      console.error('No authenticated user found in invites API');
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    if (authError || !auth?.user) {
+      console.error('Auth error in invites API:', authError?.message || 'No user');
+      // Return empty invites instead of 401 to avoid breaking the UI
+      return NextResponse.json({ invites: [] })
     }
+    
     console.log('Fetching invites for user:', auth.user.id, 'with status:', status)
+    
+    // Use service client to bypass RLS for data fetch
+    const svc = createSupabaseServiceClient()
     
     // Use service client to join assignment details robustly
     const { data: invites, error: invErr } = await svc
@@ -61,6 +65,8 @@ export async function GET(req: Request) {
         } : null
       }
     })
+    
+    console.log('Returning invites:', result.length, 'items');
 
     return NextResponse.json({ invites: result })
   } catch (e: any) {

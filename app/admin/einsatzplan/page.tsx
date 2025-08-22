@@ -97,6 +97,25 @@ export default function EinsatzplanPage() {
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [distributionHistory, setDistributionHistory] = useState<any[]>([]);
+  
+  // Load distribution history from localStorage on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('einsatzplan_distribution_history');
+    if (savedHistory) {
+      try {
+        setDistributionHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Failed to parse distribution history:', e);
+      }
+    }
+  }, []);
+  
+  // Save distribution history to localStorage whenever it changes
+  useEffect(() => {
+    if (distributionHistory.length > 0) {
+      localStorage.setItem('einsatzplan_distribution_history', JSON.stringify(distributionHistory));
+    }
+  }, [distributionHistory]);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
