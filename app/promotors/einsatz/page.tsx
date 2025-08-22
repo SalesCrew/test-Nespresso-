@@ -170,14 +170,19 @@ export default function EinsatzPage() {
             startLocal: start ? `${start.getHours()}:${start.getMinutes()}` : null,
             endUTC: end ? `${end.getUTCHours()}:${end.getUTCMinutes()}` : null,
             endLocal: end ? `${end.getHours()}:${end.getMinutes()}` : null,
-            timeLabel: timeLabel
+            timeLabel: timeLabel,
+            isBuddyTag: i.is_buddy_tag,
+            buddyName: i.buddy_name
           });
           return {
             id: a.id,
             date: dateLabel,
             time: timeLabel,
             location: a.location_text || '',
-            description: a.description || ''
+            description: a.description || '',
+            isBuddyTag: i.is_buddy_tag || false,
+            buddyName: i.buddy_name || null,
+            role: i.role
           }
         }).filter((x: any) => x.id)
         console.log('Mapped assignments:', mapped);
@@ -609,12 +614,38 @@ export default function EinsatzPage() {
     }
   };
 
-  const handleAssignmentSelect = (id: number) => {
-    setSelectedAssignmentIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(assignmentId => assignmentId !== id)
-        : [...prev, id]
-    );
+  const handleAssignmentSelect = async (id: number) => {
+    const assignment = assignments.find(a => a.id === id);
+    
+    if (assignment?.isBuddyTag) {
+      // For buddy tags, auto-submit immediately
+      setSelectedAssignmentIds([id]);
+      const newStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+      newStatuses[String(id)] = 'pending';
+      setAssignmentStatuses(newStatuses);
+      setIsAssignmentCollapsed(true);
+      
+      try {
+        const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'applied' })
+        });
+        if (!res.ok) {
+          console.error('Failed to submit buddy tag application:', id, await res.text());
+        }
+      } catch (error) {
+        console.error('Error submitting buddy tag:', error);
+      }
+    } else {
+      // Regular assignments allow multiple selection
+      setSelectedAssignmentIds(prev => 
+        prev.includes(id) 
+          ? prev.filter(assignmentId => assignmentId !== id)
+          : [...prev, id]
+      );
+    }
   };
 
   const handleSubmitAssignment = async () => {
@@ -1094,6 +1125,11 @@ export default function EinsatzPage() {
                       <div className="flex flex-col">
                         <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
                           {assignment.date}
+                          {assignment.isBuddyTag && (
+                            <span className="ml-2 text-xs font-normal text-purple-600 dark:text-purple-400">
+                              Buddy mit {assignment.buddyName}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -1101,7 +1137,7 @@ export default function EinsatzPage() {
                           </div>
                           <div className="relative inline-flex">
                             <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-                            <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
+                            <Badge className={`relative text-xs font-medium px-1.5 py-0.5 ${assignment.isBuddyTag ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'} text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]`}>
                               <span className="flex items-center">{assignment.time}</span>
                             </Badge>
                           </div>
