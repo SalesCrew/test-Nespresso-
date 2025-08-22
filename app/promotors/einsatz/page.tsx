@@ -144,6 +144,7 @@ export default function EinsatzPage() {
   const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   const [processCompleted, setProcessCompleted] = useState(false);
+  const [replacementAssignments, setReplacementAssignments] = useState<any[]>([]);
   
   // Comprehensive process tracking
   const [currentProcess, setCurrentProcess] = useState<{
@@ -388,9 +389,9 @@ export default function EinsatzPage() {
                   };
                 }).filter((x: any) => x.id);
                 
-                // Update the replacementAssignmentsMock array to use real data
-                replacementAssignmentsMock.length = 0;
-                replacementAssignmentsMock.push(...mappedReplacements);
+                // Set replacement assignments in state
+                setReplacementAssignments(mappedReplacements);
+                console.log('Set replacement assignments:', mappedReplacements.length, 'items');
               }
             }
           }
@@ -872,7 +873,7 @@ export default function EinsatzPage() {
   const handleSubmitReplacement = async () => {
     if (selectedReplacementIds.length > 0) {
       // Get all available replacement assignment IDs
-      const allReplacementIds = replacementAssignmentsMock.map(a => a.id);
+      const allReplacementIds = replacementAssignments.map(a => a.id);
       const unselectedReplacementIds = allReplacementIds.filter(id => !selectedReplacementIds.includes(id));
       
       // Optimistic update: set replacement assignments as pending
@@ -1429,7 +1430,17 @@ export default function EinsatzPage() {
                 </div>
                 
                 {/* Replacement Assignment Selection - Integrated */}
-                {showReplacementAssignments && selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined') && (
+                {(() => {
+                  const hasDeclined = selectedAssignmentIds.some(id => assignmentStatuses[String(id)] === 'declined');
+                  console.log('Replacement UI check:', {
+                    showReplacementAssignments,
+                    selectedAssignmentIds,
+                    assignmentStatuses,
+                    hasDeclined,
+                    replacementCount: replacementAssignments.length
+                  });
+                  return showReplacementAssignments && hasDeclined;
+                })() && (
                   <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
@@ -1441,7 +1452,7 @@ export default function EinsatzPage() {
                     </div>
                     
                     <div className="space-y-2">
-                      {replacementAssignmentsMock.map((assignment) => {
+                      {replacementAssignments.map((assignment) => {
                         const maxReplacements = selectedAssignmentIds.filter(id => assignmentStatuses[String(id)] === 'declined').length;
                         const isSelected = selectedReplacementIds.includes(assignment.id);
                         const isDisabled = !isSelected && selectedReplacementIds.length >= maxReplacements;
@@ -1544,7 +1555,7 @@ export default function EinsatzPage() {
                         setHasAvailableAssignments(false);
                         setSelectedReplacementIds([]);
                         setReplacementStatuses({});
-                        replacementAssignmentsMock.length = 0; // Clear replacement data
+                        setReplacementAssignments([]); // Clear replacement data
                         setShowAssignmentConfirmation(false);
                         
                         // Reset process to idle
