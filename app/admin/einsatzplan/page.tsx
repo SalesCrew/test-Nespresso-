@@ -2231,13 +2231,13 @@ export default function EinsatzplanPage() {
                   <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                     Empfänger ({selectedHistoryItem.promotors.length})
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
                     {selectedHistoryItem.promotors.map((promotor: string) => (
                       <div 
                         key={promotor}
-                        className="p-2 rounded-lg bg-gray-50 border border-gray-200 text-sm"
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm"
                       >
-                        <span className="font-medium text-gray-900">{promotor}</span>
+                        <span className="font-medium text-gray-900 whitespace-nowrap">{promotor}</span>
                       </div>
                     ))}
                   </div>

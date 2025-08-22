@@ -28,10 +28,10 @@ export async function GET(req: Request) {
     
     // Fetch related data for the UI
     const formatted = await Promise.all((history || []).map(async (item) => {
-      // Fetch promotions
+      // Fetch promotions with full details
       const { data: promotions } = await svc
         .from('assignments')
-        .select('id, location_text, postal_code, city, start_ts, end_ts')
+        .select('id, location_text, postal_code, city, region, start_ts, end_ts, status, type')
         .in('id', item.assignment_ids || [])
       
       // Fetch promotor names
@@ -49,7 +49,20 @@ export async function GET(req: Request) {
         buddy: item.buddy,
         assignmentIds: item.assignment_ids,
         promotorIds: item.promotor_ids,
-        promotions: promotions || [],
+        promotions: (promotions || []).map(p => {
+          const start = p.start_ts ? new Date(p.start_ts) : null;
+          const end = p.end_ts ? new Date(p.end_ts) : null;
+          return {
+            id: p.id,
+            address: p.location_text || '',
+            date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : '',
+            planStart: start ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}` : '',
+            planEnd: end ? `${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}` : '',
+            plz: p.postal_code || '',
+            city: p.city || '',
+            status: p.status || 'open'
+          };
+        }),
         promotors: (promotors || []).map(p => p.display_name || 'Unknown')
       }
     }))
