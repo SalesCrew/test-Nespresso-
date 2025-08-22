@@ -279,18 +279,75 @@ export default function EinsatzPage() {
             // Don't load old assignments if we have an active process
             console.log('Active process found:', process.process_stage);
             
-            // If process is in waiting stage, we need to restore the UI state
-            if (process.process_stage === 'waiting' || process.process_stage === 'applied') {
-              setSelectedAssignmentIds(process.original_assignment_ids);
+            // Restore UI state based on process stage
+            if (process.process_stage !== 'idle') {
+              // For waiting stage, we need to set the replacement IDs as selected
+              if (process.process_stage === 'waiting' && process.replacement_assignment_ids.length > 0) {
+                setSelectedAssignmentIds(process.replacement_assignment_ids.map((id: string) => parseInt(id)));
+                const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+                process.replacement_assignment_ids.forEach((id: string) => {
+                  statuses[id] = 'pending';
+                });
+                setAssignmentStatuses(statuses);
+              } else {
+                // For other stages, use original IDs
+                setSelectedAssignmentIds(process.original_assignment_ids.map((id: string) => parseInt(id)));
+                const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
+                
+                if (process.process_stage === 'confirmed') {
+                  process.original_assignment_ids.forEach((id: string) => {
+                    statuses[id] = 'confirmed';
+                  });
+                } else if (process.process_stage === 'declined') {
+                  process.original_assignment_ids.forEach((id: string) => {
+                    statuses[id] = 'declined';
+                  });
+                  setShowReplacementAssignments(true);
+                } else {
+                  process.original_assignment_ids.forEach((id: string) => {
+                    statuses[id] = 'pending';
+                  });
+                }
+                setAssignmentStatuses(statuses);
+              }
+              
               setIsAssignmentCollapsed(true);
               setHasAvailableAssignments(true);
               
-              // Set statuses based on stage
-              const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
-              process.original_assignment_ids.forEach((id: string) => {
-                statuses[id] = 'pending';
-              });
-              setAssignmentStatuses(statuses);
+              // For confirmed stage, show assignment confirmation
+              if (process.process_stage === 'confirmed') {
+                setShowAssignmentConfirmation(false); // This will show the green check UI
+              }
+              
+              // Load assignment details for the IDs we have
+              const allIds = [...process.original_assignment_ids, ...process.replacement_assignment_ids];
+              if (allIds.length > 0) {
+                // Fetch assignment details
+                const assignmentRes = await fetch(`/api/assignments?ids=${allIds.join(',')}`, {
+                  cache: 'no-store',
+                  credentials: 'include'
+                });
+                
+                if (assignmentRes.ok) {
+                  const { assignments: assignmentData } = await assignmentRes.json();
+                  if (assignmentData && assignmentData.length > 0) {
+                    const mapped = assignmentData.map((a: any) => {
+                      const start = a.start_ts ? new Date(a.start_ts) : null;
+                      const end = a.end_ts ? new Date(a.end_ts) : null;
+                      return {
+                        id: a.id,
+                        date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
+                        time: (start && end)
+                          ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                          : 'Zeit',
+                        location: a.location_text || '',
+                        description: a.description || ''
+                      };
+                    });
+                    setAssignments(mapped);
+                  }
+                }
+              }
             }
             
             return;
