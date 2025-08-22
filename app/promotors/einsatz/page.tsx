@@ -95,12 +95,8 @@ const newcomerProposalsMock = [
 // Removed temp data: assignment selection mock now empty (real invites only)
 const assignmentSelectionMock: any[] = [];
 
-// Mock data for replacement assignments
-const replacementAssignmentsMock = [
-  { id: 101, date: "So 25.06.2023", time: "11:00-17:00", location: "Telekom Shop Charlottenburg", description: "Sunday Special Promotion" },
-  { id: 102, date: "Mo 26.06.2023", time: "14:00-20:00", location: "MediaMarkt Tempelhof", description: "Evening Electronics Event" },
-  { id: 103, date: "Di 27.06.2023", time: "10:00-16:00", location: "Saturn Spandau", description: "Tuesday Tech Showcase" },
-];
+// No mock data - only real assignments from API
+const replacementAssignmentsMock: any[] = [];
 
 export default function EinsatzPage() {
   const router = useRouter();
@@ -845,14 +841,19 @@ export default function EinsatzPage() {
           }
         }));
         
-        // Update statuses to confirmed after successful submission
-        const confirmedStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
+        // Update main assignment statuses to pending (waiting for approval)
+        const pendingStatuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
         selectedReplacementIds.forEach(id => {
-          confirmedStatuses[id] = 'confirmed';
+          pendingStatuses[String(id)] = 'pending';
         });
-        setReplacementStatuses(confirmedStatuses);
+        setAssignmentStatuses(pendingStatuses);
         
-        // Hide replacement section after submission
+        // Update selected assignment IDs to the replacement ones
+        setSelectedAssignmentIds(selectedReplacementIds);
+        
+        // Clear replacement states and hide replacement section
+        setSelectedReplacementIds([]);
+        setReplacementStatuses({});
         setShowReplacementAssignments(false);
         
       } catch (error) {
@@ -1424,10 +1425,9 @@ export default function EinsatzPage() {
                 
 
                 
-                {/* Show "Verstanden" button when all assignments are confirmed or when replacements have been submitted */}
-                {(selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') || 
-                  (showReplacementAssignments && selectedReplacementIds.length > 0 && 
-                   Object.values(replacementStatuses).every(status => status === 'confirmed'))) && (
+                {/* Show "Verstanden" button only when all assignments are confirmed */}
+                {selectedAssignmentIds.every(id => assignmentStatuses[String(id)] === 'confirmed') && 
+                 !showReplacementAssignments && (
                   <Button 
                     className="w-full mt-4 text-white transition-all duration-300 hover:scale-[1.01]"
                     style={{
