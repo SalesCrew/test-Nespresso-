@@ -160,6 +160,14 @@ export default function EinsatzPage() {
           const timeLabel = (start && end)
             ? `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}-${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
             : 'Zeit';
+          console.log('Assignment time mapping:', {
+            id: a.id,
+            start_ts: a.start_ts,
+            end_ts: a.end_ts,
+            start: start,
+            end: end,
+            timeLabel: timeLabel
+          });
           return {
             id: a.id,
             date: dateLabel,
