@@ -105,6 +105,20 @@ export default function EinsatzplanPage() {
   const [promotorsList, setPromotorsList] = useState<any[]>([]);
   // Buddy toggle for bulk invites
   const [inviteBuddy, setInviteBuddy] = useState(false);
+  // Accepted applications for the current assignment (detail view)
+  const [applicationsList, setApplicationsList] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      if (!showDetailModal || promotionView !== 'applications' || !editingEinsatz?.id) return;
+      try {
+        const res = await fetch(`/api/assignments/${editingEinsatz.id}/applications`, { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const apps = Array.isArray(data?.applications) ? data.applications : [];
+        setApplicationsList(apps);
+      } catch {}
+    })();
+  }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
   useEffect(() => {
     (async () => {
@@ -2441,22 +2455,42 @@ export default function EinsatzplanPage() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {promotorsList.slice(0, 6).map((p: any) => (
-                              <div key={p.id} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
-                                <span className="text-sm text-gray-900">{p.name}</span>
-                                <div className="flex items-center space-x-2">
-                                  <button 
-                                    className="p-1 rounded"
-                                    onClick={() => assignPromotionToPromotor(p.name, p.id)}
-                                  >
-                                    <Check className="h-4 w-4 text-green-600" />
-                                  </button>
-                                  <button className="p-1 rounded">
-                                    <X className="h-4 w-4 text-red-600" />
-                                  </button>
+                            {applicationsList.length === 0 ? (
+                              <div className="text-sm text-gray-400 text-center py-8">Keine Anmeldungen</div>
+                            ) : (
+                              applicationsList.map((app: any) => (
+                                <div key={app.user_id} className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 mx-1 flex items-center justify-between">
+                                  <span className="text-sm text-gray-900">{app.name}</span>
+                                  <div className="flex items-center space-x-2">
+                                    <button 
+                                      className="p-1 rounded"
+                                      onClick={async () => {
+                                        await assignPromotionToPromotor(app.name, app.user_id);
+                                        // Optimistically remove others
+                                        setApplicationsList(prev => prev.filter((x: any) => x.user_id === app.user_id));
+                                      }}
+                                    >
+                                      <Check className="h-4 w-4 text-green-600" />
+                                    </button>
+                                    <button 
+                                      className="p-1 rounded"
+                                      onClick={async () => {
+                                        try {
+                                          await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ user_id: app.user_id })
+                                          });
+                                        } catch {}
+                                        setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
+                                      }}
+                                    >
+                                      <X className="h-4 w-4 text-red-600" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))
+                            )}
                           </div>
                         )}
                       </div>

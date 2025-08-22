@@ -144,6 +144,32 @@ export default function EinsatzPage() {
 
   // For assignment selection
   const [assignments, setAssignments] = useState(assignmentSelectionMock);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const invites = Array.isArray(data?.invites) ? data.invites : [];
+        const mapped = invites.map((i: any) => {
+          const a = i.assignment || {};
+          const start = a.start_ts ? new Date(a.start_ts) : null;
+          const end = a.end_ts ? new Date(a.end_ts) : null;
+          const dateLabel = start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum';
+          const timeLabel = (start && end)
+            ? `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}-${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`
+            : 'Zeit';
+          return {
+            id: a.id,
+            date: dateLabel,
+            time: timeLabel,
+            location: a.location_text || '',
+            description: a.description || ''
+          }
+        }).filter((x: any) => x.id)
+        setAssignments(mapped)
+      } catch {}
+    })()
+  }, [])
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
   const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
@@ -461,16 +487,20 @@ export default function EinsatzPage() {
     );
   };
 
-  const handleSubmitAssignment = () => {
+  const handleSubmitAssignment = async () => {
     if (selectedAssignmentIds.length > 0) {
-      console.log("Submitted assignment IDs:", selectedAssignmentIds);
-      // Set all selected assignments to pending status
+      // Optimistic: set pending
       const newStatuses: {[key: number]: 'pending' | 'confirmed' | 'declined'} = {};
-      selectedAssignmentIds.forEach(id => {
-        newStatuses[id] = 'pending';
-      });
+      selectedAssignmentIds.forEach(id => { newStatuses[id] = 'pending'; });
       setAssignmentStatuses(newStatuses);
       setIsAssignmentCollapsed(true);
+      try {
+        await Promise.all(selectedAssignmentIds.map(id => fetch(`/api/assignments/${id}/invites/respond`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'accepted' })
+        })));
+      } catch {}
     }
   };
 
