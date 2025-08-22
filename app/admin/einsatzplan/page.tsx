@@ -2304,14 +2304,12 @@ export default function EinsatzplanPage() {
                         }}
                       >
                         <SelectTrigger 
-                          className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-300"
+                          className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0"
                           style={{
                             boxShadow: promotorFieldFlash 
-                              ? '0 0 0 4px rgba(34, 197, 94, 0.3), 0 0 0 8px rgba(16, 95, 45, 0.2), 0 0 20px rgba(34, 197, 94, 0.4)' 
+                              ? '0 0 20px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.8)' 
                               : 'none',
-                            background: promotorFieldFlash 
-                              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 95, 45, 0.05))' 
-                              : 'white'
+                            transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
                           <SelectValue placeholder={editingEinsatz.status === 'Offen' ? 'Promotor auswählen' : (editingEinsatz.promotor || '')} />
