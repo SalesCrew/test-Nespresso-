@@ -450,77 +450,12 @@ export default function EinsatzplanPage() {
   };
 
   const selectAllFiltered = () => {
-    const allPromotors = [
-      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
-      { name: "Michael Weber", region: "steiermark" },
-      { name: "Jan Müller", region: "salzburg" },
-      { name: "Lisa König", region: "wien-noe-bgl" },
-      { name: "Anna Bauer", region: "oberoesterreich" },
-      { name: "Tom Fischer", region: "tirol" },
-      { name: "Maria Huber", region: "steiermark" },
-      { name: "David Klein", region: "vorarlberg" },
-      { name: "Emma Wagner", region: "kaernten" },
-      { name: "Paul Berger", region: "wien-noe-bgl" },
-      { name: "Julia Mayer", region: "salzburg" },
-      { name: "Felix Gruber", region: "oberoesterreich" },
-      { name: "Sophie Reiter", region: "steiermark" },
-      { name: "Max Köhler", region: "tirol" },
-      { name: "Lena Fuchs", region: "vorarlberg" },
-      { name: "Klaus Müller", region: "wien-noe-bgl" },
-      { name: "Sandra Hofer", region: "steiermark" },
-      { name: "Martin Schneider", region: "salzburg" },
-      { name: "Nina Weiss", region: "oberoesterreich" },
-      { name: "Patrick Schwarz", region: "tirol" },
-      { name: "Andrea Roth", region: "vorarlberg" },
-      { name: "Florian Braun", region: "kaernten" },
-      { name: "Jessica Grün", region: "wien-noe-bgl" },
-      { name: "Daniel Gelb", region: "steiermark" },
-      { name: "Sabrina Blau", region: "salzburg" },
-      { name: "Thomas Orange", region: "oberoesterreich" },
-      { name: "Melanie Violett", region: "tirol" },
-      { name: "Christian Rosa", region: "vorarlberg" },
-      { name: "Vanessa Grau", region: "kaernten" },
-      { name: "Marco Silber", region: "wien-noe-bgl" },
-      { name: "Tanja Gold", region: "steiermark" },
-      { name: "Oliver Bronze", region: "salzburg" },
-      { name: "Carina Kupfer", region: "oberoesterreich" },
-      { name: "Lukas Platin", region: "tirol" },
-      { name: "Stephanie Kristall", region: "vorarlberg" },
-      { name: "Benjamin Diamant", region: "kaernten" },
-      { name: "Michelle Rubin", region: "wien-noe-bgl" },
-      { name: "Tobias Saphir", region: "steiermark" },
-      { name: "Nadine Smaragd", region: "salzburg" },
-      { name: "Kevin Topas", region: "oberoesterreich" },
-      { name: "Franziska Opal", region: "tirol" },
-      { name: "Dominik Achat", region: "vorarlberg" },
-      { name: "Simone Jade", region: "kaernten" },
-      { name: "Philip Onyx", region: "wien-noe-bgl" },
-      { name: "Verena Quarz", region: "steiermark" },
-      { name: "Fabian Marmor", region: "salzburg" },
-      { name: "Isabella Granit", region: "oberoesterreich" },
-      { name: "Maximilian Schiefer", region: "tirol" },
-      { name: "Katharina Basalt", region: "vorarlberg" },
-      { name: "Wolfgang Kalk", region: "kaernten" },
-      { name: "Elena Ton", region: "wien-noe-bgl" },
-      { name: "Robert Sand", region: "steiermark" },
-      { name: "Nicole Lehm", region: "salzburg" },
-      { name: "Stefan Kies", region: "oberoesterreich" },
-      { name: "Petra Fels", region: "tirol" },
-      { name: "Alexander Stein", region: "vorarlberg" },
-      { name: "Christina Berg", region: "kaernten" },
-      { name: "Manuel Tal", region: "wien-noe-bgl" },
-      { name: "Andrea Bach", region: "steiermark" },
-      { name: "Daniel See", region: "salzburg" },
-      { name: "Sabine Meer", region: "oberoesterreich" },
-      { name: "Thomas Ozean", region: "tirol" }
-    ];
-
-    const filteredNames = allPromotors
-      .filter(promotor => 
+    const filteredNames = promotorsList
+      .filter((promotor: any) => 
         (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
         promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
       )
-      .map(promotor => promotor.name);
+      .map((promotor: any) => promotor.name);
     
     const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
     const matchesLastSelection = lastSelectedByIcon.length > 0 && 
@@ -2149,70 +2084,7 @@ export default function EinsatzplanPage() {
             >
               <div className="flex-1 overflow-auto custom-scrollbar">
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {[
-                  { name: "Sarah Schmidt", region: "wien-noe-bgl" },
-                  { name: "Michael Weber", region: "steiermark" },
-                  { name: "Jan Müller", region: "salzburg" },
-                  { name: "Lisa König", region: "wien-noe-bgl" },
-                  { name: "Anna Bauer", region: "oberoesterreich" },
-                  { name: "Tom Fischer", region: "tirol" },
-                  { name: "Maria Huber", region: "steiermark" },
-                  { name: "David Klein", region: "vorarlberg" },
-                  { name: "Emma Wagner", region: "kaernten" },
-                  { name: "Paul Berger", region: "wien-noe-bgl" },
-                  { name: "Julia Mayer", region: "salzburg" },
-                  { name: "Felix Gruber", region: "oberoesterreich" },
-                  { name: "Sophie Reiter", region: "steiermark" },
-                  { name: "Max Köhler", region: "tirol" },
-                  { name: "Lena Fuchs", region: "vorarlberg" },
-                  { name: "Klaus Müller", region: "wien-noe-bgl" },
-                  { name: "Sandra Hofer", region: "steiermark" },
-                  { name: "Martin Schneider", region: "salzburg" },
-                  { name: "Nina Weiss", region: "oberoesterreich" },
-                  { name: "Patrick Schwarz", region: "tirol" },
-                  { name: "Andrea Roth", region: "vorarlberg" },
-                  { name: "Florian Braun", region: "kaernten" },
-                  { name: "Jessica Grün", region: "wien-noe-bgl" },
-                  { name: "Daniel Gelb", region: "steiermark" },
-                  { name: "Sabrina Blau", region: "salzburg" },
-                  { name: "Thomas Orange", region: "oberoesterreich" },
-                  { name: "Melanie Violett", region: "tirol" },
-                  { name: "Christian Rosa", region: "vorarlberg" },
-                  { name: "Vanessa Grau", region: "kaernten" },
-                  { name: "Marco Silber", region: "wien-noe-bgl" },
-                  { name: "Tanja Gold", region: "steiermark" },
-                  { name: "Oliver Bronze", region: "salzburg" },
-                  { name: "Carina Kupfer", region: "oberoesterreich" },
-                  { name: "Lukas Platin", region: "tirol" },
-                  { name: "Stephanie Kristall", region: "vorarlberg" },
-                  { name: "Benjamin Diamant", region: "kaernten" },
-                  { name: "Michelle Rubin", region: "wien-noe-bgl" },
-                  { name: "Tobias Saphir", region: "steiermark" },
-                  { name: "Nadine Smaragd", region: "salzburg" },
-                  { name: "Kevin Topas", region: "oberoesterreich" },
-                  { name: "Franziska Opal", region: "tirol" },
-                  { name: "Dominik Achat", region: "vorarlberg" },
-                  { name: "Simone Jade", region: "kaernten" },
-                  { name: "Philip Onyx", region: "wien-noe-bgl" },
-                  { name: "Verena Quarz", region: "steiermark" },
-                  { name: "Fabian Marmor", region: "salzburg" },
-                  { name: "Isabella Granit", region: "oberoesterreich" },
-                  { name: "Maximilian Schiefer", region: "tirol" },
-                  { name: "Katharina Basalt", region: "vorarlberg" },
-                  { name: "Wolfgang Kalk", region: "kaernten" },
-                  { name: "Elena Ton", region: "wien-noe-bgl" },
-                  { name: "Robert Sand", region: "steiermark" },
-                  { name: "Nicole Lehm", region: "salzburg" },
-                  { name: "Stefan Kies", region: "oberoesterreich" },
-                  { name: "Petra Fels", region: "tirol" },
-                  { name: "Alexander Stein", region: "vorarlberg" },
-                  { name: "Christina Berg", region: "kaernten" },
-                  { name: "Manuel Tal", region: "wien-noe-bgl" },
-                  { name: "Andrea Bach", region: "steiermark" },
-                  { name: "Daniel See", region: "salzburg" },
-                  { name: "Sabine Meer", region: "oberoesterreich" },
-                  { name: "Thomas Ozean", region: "tirol" }
-                ]
+                {promotorsList
                 .filter(promotor => 
                   (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
                   promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
@@ -2221,7 +2093,7 @@ export default function EinsatzplanPage() {
                   const isSelected = selectedPromotors.includes(promotor.name);
                   return (
                     <button
-                      key={promotor.name}
+                      key={promotor.id || promotor.name}
                       onClick={() => {
                         if (isSelected) {
                           setSelectedPromotors(prev => prev.filter(name => name !== promotor.name));
