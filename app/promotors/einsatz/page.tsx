@@ -1447,18 +1447,10 @@ export default function EinsatzPage() {
                       } catch (error) {
                         console.error('Error acknowledging assignments:', error);
                       }
-                      
+                      // Show persistent thank-you collapsed card and avoid reopening replacement selection
                       setShowAssignmentConfirmation(true);
-                      setTimeout(() => {
-                        setShowAssignmentConfirmation(false);
-                        setIsAssignmentCollapsed(false);
-                        setSelectedAssignmentIds([]);
-                        setAssignmentStatuses({});
-                        setSelectedReplacementIds([]);
-                        setReplacementStatuses({});
-                        setShowReplacementAssignments(false);
-                        setHasAvailableAssignments(false);
-                      }, 7000);
+                      setIsAssignmentCollapsed(true);
+                      setShowReplacementAssignments(false);
                     }}
                   >
                     <Check className="mr-2 h-4 w-4" /> Verstanden
