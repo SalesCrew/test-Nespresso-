@@ -1109,16 +1109,6 @@ export default function EinsatzPage() {
         });
       }
       
-      // Mark rejected assignments as 'verstanden' so they don't show again
-      for (const rejectedAssignment of processState.rejectedAssignments) {
-        await fetch(`/api/assignments/${rejectedAssignment.id}/invites/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'verstanden' })
-        });
-      }
-      
       // Reload state
       await loadProcessState();
     } catch (error) {

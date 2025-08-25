@@ -8,7 +8,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     const svc = createSupabaseServiceClient()
     const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
-      .select('user_id, role, status, responded_at')
+      .select('id, user_id, role, status, responded_at')
       .eq('assignment_id', params.id)
       .eq('status', 'applied')
       .order('responded_at', { ascending: true })
@@ -28,6 +28,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     const applications = (invites || []).map((i: any) => {
       const u = byUser.get(i.user_id)
       return {
+        invitation_id: i.id,
         user_id: i.user_id,
         name: u?.display_name || 'Unbekannt',
         phone: u?.phone || null,

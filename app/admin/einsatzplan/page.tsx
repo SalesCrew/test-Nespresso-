@@ -88,7 +88,7 @@ export default function EinsatzplanPage() {
   const [selectedEinsatz, setSelectedEinsatz] = useState<any>(null);
   const [editingEinsatz, setEditingEinsatz] = useState<any>(null);
   const [showReplacementModal, setShowReplacementModal] = useState(false);
-  const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string, invitation_id?: string} | null>(null);
+  const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string, invitation_id: string} | null>(null);
   const [openAssignments, setOpenAssignments] = useState<any[]>([]);
   const [selectedReplacementAssignments, setSelectedReplacementAssignments] = useState<string[]>([]);
   
@@ -854,7 +854,7 @@ export default function EinsatzplanPage() {
         setDeclinedPromotor(null);
         setSelectedReplacementAssignments([]);
         
-        // The replacement_for field will link these to the rejected invitation
+        // Update the status in the invitations to show as replacement
         // This will trigger the replacement UI in the promotor's view
       }
     } catch (error) {
@@ -2625,20 +2625,17 @@ export default function EinsatzplanPage() {
                                         
                                         // After animation, open replacement assignment window
                                         setTimeout(async () => {
-                                          let invitationId = null;
                                           try {
-                                            const res = await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
+                                            await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json' },
                                               body: JSON.stringify({ user_id: app.user_id })
                                             });
-                                            const data = await res.json();
-                                            invitationId = data.invitation_id;
                                           } catch {}
                                           setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
                                           
                                           // Open replacement assignment selection
-                                          setDeclinedPromotor({ user_id: app.user_id, name: app.name, invitation_id: invitationId });
+                                          setDeclinedPromotor({ user_id: app.user_id, name: app.name, invitation_id: app.invitation_id });
                                           setShowReplacementModal(true);
                                         }, 500);
                                       }}

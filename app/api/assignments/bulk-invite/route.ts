@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         user_id, 
         role, 
         status: 'invited',
-        replacement_for 
+        ...(replacement_for ? { replacement_for } : {})
       }))
     ))
 
