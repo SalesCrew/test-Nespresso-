@@ -6,7 +6,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
-    const status = url.searchParams.get('status') || 'invited'
+    const status = url.searchParams.get('status') // Don't default to 'invited'
 
     // Use server client for auth check
     const server = createSupabaseServerClient()
@@ -24,11 +24,17 @@ export async function GET(req: Request) {
     const svc = createSupabaseServiceClient()
     
     // Use service client to join assignment details robustly
-    const { data: invites, error: invErr } = await svc
+    let query = svc
       .from('assignment_invitations')
-      .select('assignment_id, user_id, role, status, invited_at, responded_at')
+      .select('assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at')
       .eq('user_id', auth.user.id)
-      .eq('status', status)
+    
+    // Only filter by status if it's provided
+    if (status) {
+      query = query.eq('status', status)
+    }
+    
+    const { data: invites, error: invErr } = await query
       .order('invited_at', { ascending: false })
     
     console.log('Invites query result:', { invites, error: invErr })
@@ -89,6 +95,7 @@ export async function GET(req: Request) {
         role: inv.role,
         invited_at: inv.invited_at,
         responded_at: inv.responded_at,
+        acknowledged_at: inv.acknowledged_at,
         is_buddy_tag: isBuddyTag,
         buddy_name: isBuddyTag ? leadParticipant.first_name : null,
         assignment: a ? {
