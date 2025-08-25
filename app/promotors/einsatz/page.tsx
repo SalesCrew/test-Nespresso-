@@ -1180,6 +1180,24 @@ export default function EinsatzPage() {
         });
       }
       
+      // Mark unselected replacement assignments as 'rejected_handled'
+      // This prevents them from appearing again
+      const unselectedReplacements = processState.replacementAssignments
+        .filter(a => !processState.selectedIds.includes(a.id));
+      
+      for (const unselectedAssignment of unselectedReplacements) {
+        try {
+          await fetch(`/api/assignments/${unselectedAssignment.id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'rejected_handled' })
+          });
+        } catch (e) {
+          console.error('Failed to mark unselected replacement as handled:', e);
+        }
+      }
+      
       // Reload state
       await loadProcessState();
     } catch (error) {
