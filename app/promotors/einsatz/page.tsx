@@ -184,7 +184,6 @@ export default function EinsatzPage() {
       const data = await res.json();
       const tags = data.buddy_tags || [];
       console.log('Loaded buddy tags:', tags);
-      console.log('Buddy tags with names:', tags.map(tag => ({ id: tag.assignment_id, buddy_name: tag.buddy_name })));
       setBuddyTags(tags);
     } else {
       console.error('Failed to load buddy tags:', res.status);
@@ -1702,21 +1701,15 @@ const loadProcessState = async () => {
                     key={buddyTag.assignment_id}
                     className={`p-2.5 border-2 rounded-lg cursor-pointer transition-all relative min-h-[100px]
                                 ${selectedBuddyTagId === buddyTag.assignment_id 
-                                  ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/30 shadow-md scale-105' 
+                                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-md scale-105' 
                                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
                     onClick={() => handleBuddyTagSelect(buddyTag.assignment_id)}
                   >
                     <div className="flex flex-col relative">
-                      {buddyTag.buddy_name ? (
+                      {buddyTag.buddy_name && (
                         <div className="absolute top-2 right-2">
                           <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
                             <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
-                          </Badge>
-                        </div>
-                      ) : (
-                        <div className="absolute top-2 right-2">
-                          <Badge className="text-xs font-medium px-2 py-0.5 bg-red-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                            <span className="flex items-center">Debug: No Name</span>
                           </Badge>
                         </div>
                       )}
