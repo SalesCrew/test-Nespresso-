@@ -250,8 +250,9 @@ export default function EinsatzPage() {
             const nonVerstandenInvites = invites.filter((i: any) => i.status !== 'verstanden');
             
             // Separate replacements from originals
-            const originalInvites = nonVerstandenInvites.filter((i: any) => !i.replacement_for);
-            const replacementInvites = nonVerstandenInvites.filter((i: any) => i.replacement_for);
+            // Only consider it a replacement if replacement_for is NOT null and NOT undefined
+            const originalInvites = nonVerstandenInvites.filter((i: any) => !i.replacement_for || i.replacement_for === null);
+            const replacementInvites = nonVerstandenInvites.filter((i: any) => i.replacement_for && i.replacement_for !== null);
             
             // For original invites - normal categorization
             const invitedInvites = originalInvites.filter((i: any) => 
