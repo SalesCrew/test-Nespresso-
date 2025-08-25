@@ -25,6 +25,7 @@ import {
   PauseCircle,
   StopCircle,
   Check,
+  CheckCircle,
   AlertTriangle,
   ClipboardList,
   Video,
