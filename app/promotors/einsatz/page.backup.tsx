@@ -43,15 +43,12 @@ import {
   Truck,
   RotateCcw,
   GraduationCap,
-  UserCheck,
-  Separator as LucideSeparator
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 
 // Mock data for today's assignment
@@ -134,99 +131,65 @@ export default function EinsatzPage() {
   const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
   const [showProposalConfirmation, setShowProposalConfirmation] = useState(false);
 
-  // NEW: Simplified process state management
-  const [processState, setProcessState] = useState<{
-    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted';
-    invitedAssignments: any[];
-    waitingAssignments: any[];
-    acceptedAssignments: any[];
-    rejectedAssignments: any[];
-    replacementAssignments: any[];
-    selectedIds: string[];
-  }>({
-    stage: 'loading',
-    invitedAssignments: [],
-    waitingAssignments: [],
-    acceptedAssignments: [],
-    rejectedAssignments: [],
-    replacementAssignments: [],
-    selectedIds: []
-  });
-  
-  // Keep old state variables temporarily for compatibility
+  // For assignment selection
   const [assignments, setAssignments] = useState<any[]>([]);
   const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<number[]>([]);
+  const [showAssignmentSubmittedMessage, setShowAssignmentSubmittedMessage] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<typeof assignmentSelectionMock[0] | null>(null);
   const [isAssignmentCollapsed, setIsAssignmentCollapsed] = useState(false);
   const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
+  const [showAssignmentConfirmation, setShowAssignmentConfirmation] = useState(false);
+  const [showReplacementAssignments, setShowReplacementAssignments] = useState(false);
+  const [selectedReplacementIds, setSelectedReplacementIds] = useState<number[]>([]);
+  const [replacementStatuses, setReplacementStatuses] = useState<{[key: number]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
+  const [processCompleted, setProcessCompleted] = useState(false);
   const [replacementAssignments, setReplacementAssignments] = useState<any[]>([]);
   
-  // Load process state from API
-  const loadProcessState = async () => {
-    try {
-      const res = await fetch('/api/assignments/invites/process-state', {
-        cache: 'no-store',
-        credentials: 'include'
-      });
-      
-      if (!res.ok) {
-        console.error('Failed to load process state');
-        setProcessState(prev => ({ ...prev, stage: 'idle' }));
-        return;
-      }
-      
-      const data = await res.json();
-      console.log('Process state loaded:', data);
-      
-      setProcessState({
-        stage: data.stage || 'idle',
-        invitedAssignments: data.invitedAssignments || [],
-        waitingAssignments: data.waitingAssignments || [],
-        acceptedAssignments: data.acceptedAssignments || [],
-        rejectedAssignments: data.rejectedAssignments || [],
-        replacementAssignments: data.replacementAssignments || [],
-        selectedIds: []
-      });
-      
-      // Update compatibility state
-      if (data.stage === 'select_assignment') {
-        setAssignments(data.invitedAssignments);
-        setHasAvailableAssignments(true);
-        setIsAssignmentCollapsed(false);
-      } else if (['waiting', 'accepted', 'declined', 'partially_accepted'].includes(data.stage)) {
-        setIsAssignmentCollapsed(true);
-        setHasAvailableAssignments(false);
-        
-        // Set assignment statuses for compatibility
-        const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
-        data.waitingAssignments?.forEach((a: any) => { statuses[a.id] = 'pending'; });
-        data.acceptedAssignments?.forEach((a: any) => { statuses[a.id] = 'confirmed'; });
-        data.rejectedAssignments?.forEach((a: any) => { statuses[a.id] = 'declined'; });
-        setAssignmentStatuses(statuses);
-        
-        // Set selected IDs
-        const allIds = [
-          ...(data.waitingAssignments || []),
-          ...(data.acceptedAssignments || []),
-          ...(data.rejectedAssignments || [])
-        ].map((a: any) => parseInt(a.id));
-        setSelectedAssignmentIds(allIds);
-        
-        // Set replacement assignments
-        setReplacementAssignments(data.replacementAssignments || []);
-      }
-    } catch (error) {
-      console.error('Error loading process state:', error);
-      setProcessState(prev => ({ ...prev, stage: 'idle' }));
+  // Comprehensive process tracking
+  const [currentProcess, setCurrentProcess] = useState<{
+    originalIds: number[];        // ALL original assignment IDs (invited, applied, rejected)
+    replacementIds: number[];     // Replacement assignment IDs
+    stage: 'idle' | 'invited' | 'applied' | 'waiting' | 'declined' | 'confirmed';
+  }>({
+    originalIds: [],
+    replacementIds: [],
+    stage: 'idle'
+  });
+  
+  // Save process state to database whenever it changes
+  useEffect(() => {
+    if (currentProcess.stage === 'idle' && currentProcess.originalIds.length === 0) {
+      // Don't save empty idle state
+      return;
     }
-  };
+    
+    (async () => {
+      try {
+        await fetch('/api/assignments/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            stage: currentProcess.stage,
+            originalIds: currentProcess.originalIds,
+            replacementIds: currentProcess.replacementIds
+          })
+        });
+      } catch (error) {
+        console.error('Error saving process state:', error);
+      }
+    })();
+  }, [currentProcess]);
   
   useEffect(() => {
     (async () => {
       try {
-        // Load process state instead
-        await loadProcessState();
-        return;
+        // Only fetch new invites if no process is active
+        if (currentProcess.stage !== 'idle') {
+          console.log('Skipping invite fetch - process already active:', currentProcess.stage);
+          return;
+        }
         
         console.log('Fetching invites...');
         const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
@@ -291,7 +254,7 @@ export default function EinsatzPage() {
         setHasAvailableAssignments(false);
       }
     })()
-  }, [])
+  }, [currentProcess.stage])
   
   // Load process state from database on mount
   useEffect(() => {
@@ -306,7 +269,12 @@ export default function EinsatzPage() {
         if (processRes.ok) {
           const { process } = await processRes.json();
           if (process && process.process_stage !== 'idle') {
-            // Skip - process restoration is handled in loadProcessState now
+            // Restore process state
+            setCurrentProcess({
+              originalIds: process.original_assignment_ids || [],
+              replacementIds: process.replacement_assignment_ids || [],
+              stage: process.process_stage
+            });
             
             // Don't load old assignments if we have an active process
             console.log('Active process found:', process.process_stage);
@@ -957,96 +925,6 @@ export default function EinsatzPage() {
     }
   };
 
-  // NEW: Simplified flow handlers
-  const handleNewAssignmentSelect = (assignmentId: string) => {
-    setProcessState(prev => {
-      const isSelected = prev.selectedIds.includes(assignmentId);
-      return {
-        ...prev,
-        selectedIds: isSelected 
-          ? prev.selectedIds.filter(id => id !== assignmentId)
-          : [...prev.selectedIds, assignmentId]
-      };
-    });
-  };
-
-  const handleNewSubmitAssignments = async () => {
-    try {
-      // Submit selected assignments
-      for (const assignmentId of processState.selectedIds) {
-        await fetch(`/api/assignments/${assignmentId}/invites/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'applied' })
-        });
-      }
-      
-      // Withdraw unselected assignments
-      const unselectedIds = processState.invitedAssignments
-        .filter(a => !processState.selectedIds.includes(a.id))
-        .map(a => a.id);
-        
-      for (const assignmentId of unselectedIds) {
-        await fetch(`/api/assignments/${assignmentId}/invites/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'withdrawn' })
-        });
-      }
-      
-      // Reload state
-      await loadProcessState();
-    } catch (error) {
-      console.error('Error submitting assignments:', error);
-    }
-  };
-
-  const handleNewSubmitReplacements = async () => {
-    try {
-      // Submit selected replacement assignments
-      for (const assignmentId of processState.selectedIds) {
-        await fetch(`/api/assignments/${assignmentId}/invites/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'applied' })
-        });
-      }
-      
-      // Reload state
-      await loadProcessState();
-    } catch (error) {
-      console.error('Error submitting replacements:', error);
-    }
-  };
-
-  const handleNewAcknowledge = async () => {
-    try {
-      await fetch('/api/assignments/invites/acknowledge-all', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      // Reset to initial state
-      setProcessState({
-        stage: 'loading',
-        invitedAssignments: [],
-        waitingAssignments: [],
-        acceptedAssignments: [],
-        rejectedAssignments: [],
-        replacementAssignments: [],
-        selectedIds: []
-      });
-      
-      // Reload after a short delay
-      setTimeout(() => loadProcessState(), 500);
-    } catch (error) {
-      console.error('Error acknowledging:', error);
-    }
-  };
-
   const handleSubmitAssignment = async () => {
     if (selectedAssignmentIds.length > 0) {
       // Get all available assignment IDs
@@ -1525,204 +1403,34 @@ export default function EinsatzPage() {
           </div>
         )}
 
-        {/* Assignment Selection Card - NEW FLOW */}
-        {processState.stage === 'loading' ? (
-          // Loading state
-          <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
-            <CardContent className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400">Prüfe Anfragen...</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : processState.stage === 'idle' ? (
-          // No invitations state
-          <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
-            <CardContent className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <UserCheck className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400">Keine Einladungen verfügbar</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : processState.stage === 'select_assignment' ? (
-          // NEW: Assignment selection UI
-          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-600 dark:text-gray-400 text-center">
-                Suche dir <span className="text-gray-600 dark:text-gray-400">deinen</span> <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">nächsten Einsatz</span> <span className="text-gray-600 dark:text-gray-400">selber aus!</span>
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400 text-center">
-                Wähle einen verfügbaren Einsatz für die kommenden Tage aus.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4 scrollbar-hide">
-                {processState.invitedAssignments.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[80px]
-                                ${processState.selectedIds.includes(assignment.id) 
-                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-105 z-10' 
-                                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm z-0'}`}
-                    onClick={() => handleNewAssignmentSelect(assignment.id)}
-                  >
-                    <button 
-                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
-                      onClick={(e) => handleAssignmentInfoClick(e, assignment)}
-                      aria-label="Mehr Details"
-                    >
-                      <Info className="h-4 w-4" />
-                    </button>
-                    <div className="flex flex-col">
-                      <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
-                        {assignment.date}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {assignment.location}
-                        </div>
-                        <div className="relative inline-flex">
-                          <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-                          <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
-                            <span className="flex items-center">{assignment.time}</span>
-                          </Badge>
+        {/* Assignment Selection Card */}
+        {showAssignmentConfirmation ? (
+          <div className="w-full max-w-md mx-auto mb-6">
+            <div className="relative">
+              {/* Outer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              
+              {/* Main card */}
+              <Card className="relative bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 border-0 shadow-xl overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-blue-500/20 to-indigo-500/20 animate-pulse"></div>
+                
+                {/* Content */}
+                <CardContent className="relative p-0">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center h-[140px] w-full px-4">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
+                        <div className="text-white">
+                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Auswählen!</div>
+                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-              <Button 
-                className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                onClick={handleNewSubmitAssignments}
-                disabled={processState.selectedIds.length === 0}
-              >
-                Auswählen
-              </Button>
-            </CardContent>
-          </Card>
-        ) : ['waiting', 'accepted', 'declined', 'partially_accepted'].includes(processState.stage) ? (
-          // NEW: Status UI (waiting/accepted/declined)
-          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-blue-600 dark:text-blue-400 text-center text-lg">
-                <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Einsatz-Anfragen</span>
-              </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400 text-center text-sm">
-                {processState.stage === 'waiting' && "Du bist in der Warteschlange für diese Termine."}
-                {processState.stage === 'accepted' && "Deine Einsätze wurden bestätigt!"}
-                {processState.stage === 'declined' && "Leider war jemand schneller als du."}
-                {processState.stage === 'partially_accepted' && "Einige deiner Einsätze wurden bestätigt."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                {[...processState.waitingAssignments, ...processState.acceptedAssignments, ...processState.rejectedAssignments].map((assignment) => {
-                  const isAccepted = processState.acceptedAssignments.some(a => a.id === assignment.id);
-                  const isRejected = processState.rejectedAssignments.some(a => a.id === assignment.id);
-                  const isWaiting = processState.waitingAssignments.some(a => a.id === assignment.id);
-                  
-                  return (
-                    <div key={assignment.id} className="p-2.5 border rounded-lg relative min-h-[80px] border-gray-200 dark:border-gray-700">
-                      <div className="flex flex-col">
-                        <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
-                          {assignment.date}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {assignment.location}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="relative inline-flex">
-                              <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-                              <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
-                                <span className="flex items-center">{assignment.time}</span>
-                              </Badge>
-                            </div>
-                            {isWaiting && (
-                              <Loader2 className="h-4 w-4 text-orange-400 animate-spin" />
-                            )}
-                            {isAccepted && (
-                              <Check className="h-4 w-4 text-green-500" />
-                            )}
-                            {isRejected && (
-                              <X className="h-4 w-4 text-red-500" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              {/* Show replacement assignments if needed */}
-              {(processState.stage === 'declined' || processState.stage === 'partially_accepted') && 
-               processState.rejectedAssignments.length > 0 && 
-               processState.replacementAssignments.length > 0 && (
-                <>
-                  <Separator className="my-4" />
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Wähle {processState.rejectedAssignments.length} Ersatztermin{processState.rejectedAssignments.length > 1 ? 'e' : ''}:
-                  </div>
-                  <div className="space-y-3">
-                    {processState.replacementAssignments.map((assignment) => (
-                      <div
-                        key={assignment.id}
-                        className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[80px]
-                                    ${processState.selectedIds.includes(assignment.id) 
-                                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/30 shadow-md scale-105 z-10' 
-                                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm z-0'}`}
-                        onClick={() => handleNewAssignmentSelect(assignment.id)}
-                      >
-                        <div className="flex flex-col">
-                          <div className="text-base font-medium text-gray-800 dark:text-gray-200 mb-1">
-                            {assignment.date}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                              {assignment.location}
-                            </div>
-                            <div className="relative inline-flex">
-                              <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-                              <Badge className="relative text-xs font-medium px-1.5 py-0.5 bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full text-[10px]">
-                                <span className="flex items-center">{assignment.time}</span>
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              
-              {/* Action buttons */}
-              {(processState.stage === 'accepted' || 
-                (processState.stage === 'declined' && processState.replacementAssignments.length === 0) ||
-                (processState.stage === 'partially_accepted' && processState.replacementAssignments.length === 0)) && (
-                <Button 
-                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                  onClick={handleNewAcknowledge}
-                >
-                  Verstanden
-                </Button>
-              )}
-              
-              {(processState.stage === 'declined' || processState.stage === 'partially_accepted') && 
-               processState.replacementAssignments.length > 0 && (
-                <Button 
-                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                  onClick={handleNewSubmitReplacements}
-                  disabled={processState.selectedIds.length !== processState.rejectedAssignments.length}
-                >
-                  Auswählen
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         ) : (hasAvailableAssignments || (isAssignmentCollapsed && selectedAssignmentIds.length > 0) || showReplacementAssignments) ? (
           (() => {
             console.log('Assignment card should render:', {
