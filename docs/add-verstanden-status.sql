@@ -1,19 +1,28 @@
 -- Add 'verstanden' to the invitation_status enum
--- This allows tracking when a user has acknowledged their assignment
+-- This requires running in separate transactions due to PostgreSQL limitations
 
--- First, we need to check what status values are currently allowed
--- If using an enum type:
+-- STEP 1: Run this first and commit
 ALTER TYPE invitation_status ADD VALUE IF NOT EXISTS 'verstanden';
 
--- If using a CHECK constraint, we need to drop and recreate it:
--- First drop the existing constraint (adjust the name if different)
-ALTER TABLE public.assignment_invitations 
-DROP CONSTRAINT IF EXISTS assignment_invitations_status_check;
-
--- Add the new constraint with 'verstanden' included
-ALTER TABLE public.assignment_invitations 
-ADD CONSTRAINT assignment_invitations_status_check 
-CHECK (status IN ('invited', 'applied', 'withdrawn', 'accepted', 'rejected', 'verstanden'));
-
--- Update the process_stage view to handle verstanden status
--- The view should treat verstanden as a completed state (no active process)
+-- STEP 2: Then run this in a new transaction
+-- Update the view to exclude verstanden status
+CREATE OR REPLACE VIEW public.user_assignment_processes AS
+SELECT 
+  user_id,
+  MAX(CASE 
+    WHEN status = 'invited' AND responded_at IS NULL THEN 'select_assignment'
+    WHEN status = 'applied' AND process_stage IS NULL THEN 'waiting'
+    WHEN status = 'rejected' AND acknowledged_at IS NULL THEN 'declined'
+    WHEN status = 'accepted' AND acknowledged_at IS NULL THEN 'accepted'
+    WHEN status = 'verstanden' THEN NULL -- Verstanden assignments are complete
+    WHEN status IN ('accepted', 'rejected') AND acknowledged_at IS NOT NULL THEN NULL
+    ELSE process_stage
+  END) as current_stage,
+  array_agg(DISTINCT assignment_id) FILTER (WHERE replacement_for IS NULL AND status != 'verstanden') as original_assignment_ids,
+  array_agg(DISTINCT assignment_id) FILTER (WHERE replacement_for IS NOT NULL AND status != 'verstanden') as replacement_assignment_ids,
+  COUNT(DISTINCT CASE WHEN status = 'accepted' THEN assignment_id END) as accepted_count,
+  COUNT(DISTINCT CASE WHEN status = 'rejected' THEN assignment_id END) as rejected_count,
+  COUNT(DISTINCT assignment_id) FILTER (WHERE status != 'verstanden') as total_count
+FROM public.assignment_invitations
+WHERE (acknowledged_at IS NULL OR status IN ('invited', 'applied')) AND status != 'verstanden'
+GROUP BY user_id;
