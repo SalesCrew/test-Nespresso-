@@ -567,8 +567,8 @@ export default function EinsatzPage() {
   
   // Check assignment status periodically
   useEffect(() => {
-    // Only check status when in applied or waiting stage
-    if (currentProcess.stage !== 'applied' && currentProcess.stage !== 'waiting') return;
+    // Only check status when in waiting stage
+    if (processState.stage !== 'waiting') return;
     if (selectedAssignmentIds.length === 0) return;
     
     const checkAssignmentStatus = async () => {
@@ -623,7 +623,7 @@ export default function EinsatzPage() {
     const interval = setInterval(checkAssignmentStatus, 3000);
     
     return () => clearInterval(interval);
-  }, [currentProcess.stage, selectedAssignmentIds]);
+  }, [processState.stage, selectedAssignmentIds]);
 
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
@@ -1952,11 +1952,12 @@ export default function EinsatzPage() {
                     onClick={async () => {
                       // Mark ALL assignments in the process as acknowledged
                       try {
-                        // Get all assignment IDs from the entire process
-                        const allAssignmentIds = [...new Set([
-                          ...currentProcess.originalIds,
-                          ...currentProcess.replacementIds
-                        ])];
+                        // Get all assignment IDs from the process state
+                        const allAssignmentIds = [
+                          ...processState.waitingAssignments.map(a => a.id),
+                          ...processState.acceptedAssignments.map(a => a.id),
+                          ...processState.rejectedAssignments.map(a => a.id)
+                        ];
                         console.log('Acknowledging all assignments in process:', allAssignmentIds);
                         
                         await Promise.all(
