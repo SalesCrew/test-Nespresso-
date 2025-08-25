@@ -1699,13 +1699,20 @@ const loadProcessState = async () => {
                 {buddyTags.map((buddyTag) => (
                   <div
                     key={buddyTag.assignment_id}
-                    className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[100px]
+                    className={`cursor-pointer transition-all relative min-h-[100px] rounded-lg
                                 ${selectedBuddyTagId === buddyTag.assignment_id 
-                                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-md scale-105' 
-                                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
+                                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 p-[2px] shadow-md scale-105' 
+                                  : 'border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
                     onClick={() => handleBuddyTagSelect(buddyTag.assignment_id)}
                   >
-                    <div className="flex flex-col">
+                    <div className={`flex flex-col p-2.5 rounded-lg relative ${selectedBuddyTagId === buddyTag.assignment_id ? 'bg-white dark:bg-gray-900' : ''}`}>
+                      {buddyTag.buddy_name && (
+                        <div className="absolute top-2 right-2">
+                          <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+                            <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
+                          </Badge>
+                        </div>
+                      )}
                       <div className="text-base font-medium text-gray-800 dark:text-gray-200">
                         {new Date(buddyTag.assignment.start_ts).toLocaleDateString('de-DE', { 
                           weekday: 'short', 
@@ -1726,18 +1733,13 @@ const loadProcessState = async () => {
                             </span>
                           </Badge>
                         </div>
-                        {buddyTag.buddy_name && (
-                          <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                            <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
               <Button 
-                className="w-full mt-4 bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white"
+                className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md"
                 onClick={handleSubmitBuddyTag}
                 disabled={selectedBuddyTagId === null}
               >
