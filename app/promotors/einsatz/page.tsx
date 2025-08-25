@@ -943,21 +943,39 @@ export default function EinsatzPage() {
 
   // NEW: Simplified flow handlers
   const handleNewAssignmentSelect = (assignmentId: string) => {
+    console.log('=== SELECTING ASSIGNMENT ===');
+    console.log('assignmentId:', assignmentId);
+    
     setProcessState(prev => {
       const isSelected = prev.selectedIds.includes(assignmentId);
+      const newSelectedIds = isSelected 
+        ? prev.selectedIds.filter(id => id !== assignmentId)
+        : [...prev.selectedIds, assignmentId];
+      
+      console.log('Current selectedIds:', prev.selectedIds);
+      console.log('New selectedIds:', newSelectedIds);
+      
       return {
         ...prev,
-        selectedIds: isSelected 
-          ? prev.selectedIds.filter(id => id !== assignmentId)
-          : [...prev.selectedIds, assignmentId]
+        selectedIds: newSelectedIds
       };
     });
   };
 
   const handleNewSubmitAssignments = async () => {
+    console.log('=== SUBMITTING ASSIGNMENTS ===');
+    console.log('processState.selectedIds:', processState.selectedIds);
+    console.log('processState.invitedAssignments:', processState.invitedAssignments);
+    
+    if (processState.selectedIds.length === 0) {
+      console.error('No assignments selected!');
+      return;
+    }
+    
     try {
       // Submit selected assignments
       for (const assignmentId of processState.selectedIds) {
+        console.log('Submitting assignment:', assignmentId);
         await fetch(`/api/assignments/${assignmentId}/invites/respond`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
