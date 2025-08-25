@@ -265,9 +265,9 @@ export default function EinsatzPage() {
             const rejectedInvites = originalInvites.filter((i: any) => 
               i.status === 'rejected');
             
-            // ALL replacement invites (regardless of status) go to replacements
-            // They should show in the declined UI as replacement options
-            const replacementInvitedInvites = replacementInvites;
+            // Only uninvited replacement invites should be shown as options
+            const replacementInvitedInvites = replacementInvites.filter((i: any) => 
+              i.status === 'invited');
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
@@ -277,6 +277,11 @@ export default function EinsatzPage() {
             console.log('- replacement invited:', replacementInvitedInvites.length);
             console.log('Raw rejected invites:', rejectedInvites);
             console.log('Raw replacement invites:', replacementInvites);
+            
+            // Debug: log each invite to see replacement_for values
+            invites.forEach((inv: any) => {
+              console.log(`Invite ${inv.assignment_id}: status=${inv.status}, replacement_for=${inv.replacement_for}`);
+            });
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
@@ -289,7 +294,7 @@ export default function EinsatzPage() {
             
             // Priority order - REJECTED ALWAYS TAKES PRECEDENCE
             if (mappedRejected.length > 0 && mappedAccepted.length === 0) {
-              // Only rejected - show declined UI
+              // Only rejected - show declined UI (with or without replacements)
               stage = 'declined';
             } else if (mappedRejected.length > 0 && mappedAccepted.length > 0) {
               // Mix of accepted and rejected
@@ -300,8 +305,11 @@ export default function EinsatzPage() {
             } else if (mappedWaiting.length > 0) {
               // Waiting for response
               stage = 'waiting';
-            } else if (mappedInvited.length > 0 || mappedReplacements.length > 0) {
-              // New invitations to select
+            } else if (mappedInvited.length > 0) {
+              // New invitations to select (but NOT if they are replacements for rejected)
+              stage = 'select_assignment';
+            } else if (mappedReplacements.length > 0) {
+              // If we ONLY have replacements with no rejected (shouldn't happen but handle it)
               stage = 'select_assignment';
             }
             
