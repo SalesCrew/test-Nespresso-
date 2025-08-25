@@ -137,7 +137,7 @@ export default function EinsatzPage() {
 
   // NEW: Simplified process state management
   const [processState, setProcessState] = useState<{
-    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted' | 'thankyou';
+    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted';
     invitedAssignments: any[];
     waitingAssignments: any[];
     acceptedAssignments: any[];
@@ -1084,11 +1084,25 @@ export default function EinsatzPage() {
   };
 
   const handleNewAcknowledge = () => {
-    console.log('User pressed Verstanden - showing thank you state');
+    console.log('User pressed Verstanden - going directly to loading');
     
-    // Show thank you state immediately
+    // Mark assignments as acknowledged in background
+    const assignmentIds = [
+      ...processState.acceptedAssignments.map(a => a.id),
+      ...processState.rejectedAssignments.map(a => a.id)
+    ];
+    
+    // Fire and forget - don't wait
+    assignmentIds.forEach(id => {
+      fetch(`/api/assignments/${id}/invites/acknowledge`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(() => {}); // Ignore errors
+    });
+    
+    // Immediately go to loading state
     setProcessState({
-      stage: 'thankyou',
+      stage: 'loading',
       invitedAssignments: [],
       waitingAssignments: [],
       acceptedAssignments: [],
@@ -1097,24 +1111,10 @@ export default function EinsatzPage() {
       selectedIds: []
     });
     
-    // After 7 seconds, go to loading and search for new invites
+    // Load new assignments after short delay
     setTimeout(() => {
-      console.log('Thank you period over - searching for new invites');
-      setProcessState({
-        stage: 'loading',
-        invitedAssignments: [],
-        waitingAssignments: [],
-        acceptedAssignments: [],
-        rejectedAssignments: [],
-        replacementAssignments: [],
-        selectedIds: []
-      });
-      
-      // Start loading new process state
-      setTimeout(() => {
-        loadProcessState();
-      }, 100);
-    }, 7000);
+      loadProcessState();
+    }, 100);
   };
 
   const handleSubmitAssignment = async () => {
@@ -1622,16 +1622,6 @@ export default function EinsatzPage() {
                 <UserCheck className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-600 dark:text-gray-400">Keine Einladungen verfügbar</p>
                       </div>
-            </CardContent>
-          </Card>
-        ) : processState.stage === 'thankyou' ? (
-          // Thank you state - collapsed view
-          <Card className="mb-6 border-dashed border-green-400 dark:border-green-600 shadow-sm bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <p className="text-green-700 dark:text-green-400 font-medium">Vielen Dank fürs Lesen!</p>
-              </div>
             </CardContent>
           </Card>
         ) : processState.stage === 'select_assignment' ? (
