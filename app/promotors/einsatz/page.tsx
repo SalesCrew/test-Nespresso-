@@ -1769,15 +1769,15 @@ export default function EinsatzPage() {
               
               {/* Show replacement assignments if needed */}
               {(processState.stage === 'declined' || processState.stage === 'partially_accepted') && 
-               processState.rejectedAssignments.length > 0 && 
-               processState.replacementAssignments.length > 0 && (
+               processState.rejectedAssignments.length > 0 && (
                 <>
                   <Separator className="my-4" />
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                     Wähle {processState.rejectedAssignments.length} Ersatztermin{processState.rejectedAssignments.length > 1 ? 'e' : ''}:
                   </div>
-                  <div className="space-y-3">
-                    {processState.replacementAssignments.map((assignment) => (
+                  {processState.replacementAssignments.length > 0 ? (
+                    <div className="space-y-3">
+                      {processState.replacementAssignments.map((assignment) => (
                       <div
                         key={assignment.id}
                         className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[80px]
@@ -1803,8 +1803,13 @@ export default function EinsatzPage() {
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                                          ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                      Ersatztermine werden geladen...
+                    </div>
+                  )}
                 </>
               )}
               
