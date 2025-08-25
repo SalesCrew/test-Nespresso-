@@ -192,33 +192,7 @@ export default function EinsatzPage() {
         selectedIds: []
       });
       
-      // Update compatibility state
-      if (data.stage === 'select_assignment') {
-        setAssignments(data.invitedAssignments);
-        setHasAvailableAssignments(true);
-        setIsAssignmentCollapsed(false);
-      } else if (['waiting', 'accepted', 'declined', 'partially_accepted'].includes(data.stage)) {
-        setIsAssignmentCollapsed(true);
-        setHasAvailableAssignments(false);
-        
-        // Set assignment statuses for compatibility
-        const statuses: {[key: string]: 'pending' | 'confirmed' | 'declined'} = {};
-        data.waitingAssignments?.forEach((a: any) => { statuses[a.id] = 'pending'; });
-        data.acceptedAssignments?.forEach((a: any) => { statuses[a.id] = 'confirmed'; });
-        data.rejectedAssignments?.forEach((a: any) => { statuses[a.id] = 'declined'; });
-        setAssignmentStatuses(statuses);
-        
-        // Set selected IDs
-        const allIds = [
-          ...(data.waitingAssignments || []),
-          ...(data.acceptedAssignments || []),
-          ...(data.rejectedAssignments || [])
-        ].map((a: any) => parseInt(a.id));
-        setSelectedAssignmentIds(allIds);
-        
-        // Set replacement assignments
-        setReplacementAssignments(data.replacementAssignments || []);
-      }
+              // Don't update old compatibility state - we're using the new UI only
     } catch (error) {
       console.error('Error loading process state:', error);
       
@@ -266,6 +240,10 @@ export default function EinsatzPage() {
               replacementAssignments: [],
               selectedIds: []
             });
+            
+            // Also clear old state to prevent old UI from showing
+            setHasAvailableAssignments(false);
+            setAssignments([]);
             return;
           }
         }
@@ -1712,7 +1690,7 @@ export default function EinsatzPage() {
               )}
             </CardContent>
           </Card>
-        ) : (hasAvailableAssignments || (isAssignmentCollapsed && selectedAssignmentIds.length > 0) || showReplacementAssignments) ? (
+        ) : false ? ( // Disable old UI completely
           (() => {
             console.log('Assignment card should render:', {
               hasAvailableAssignments,
