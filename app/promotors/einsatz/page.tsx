@@ -1845,7 +1845,9 @@ export default function EinsatzPage() {
               )}
             </CardContent>
           </Card>
-        ) : false ? ( // Disable old UI completely
+        ) : null}
+        
+        {false ? ( // Disable old UI completely
           (() => {
             console.log('Assignment card should render:', {
               hasAvailableAssignments,

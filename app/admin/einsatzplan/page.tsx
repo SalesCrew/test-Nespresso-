@@ -857,9 +857,9 @@ export default function EinsatzplanPage() {
         // Update the status in the invitations to show as replacement
         // This will trigger the replacement UI in the promotor's view
       }
-    } catch (error) {
+      } catch (error) {
       console.error('Error sending replacement invites:', error);
-    }
+      }
   };
 
   // Handle file selection
@@ -975,52 +975,52 @@ export default function EinsatzplanPage() {
 
   const filteredEinsatzplan = useMemo(() => {
     return einsatzplanData.filter(item => {
-      // Region filter using PLZ mapping
-      const itemRegion = getRegionFromPLZ(item.plz);
-      const regionMatch = regionFilter === "ALLE" || itemRegion === regionFilter;
-      
-      // PLZ filter
-      const plzMatch = !plzFilter || item.plz === plzFilter;
-      
-      // Status filter
-      const statusMatch = !statusFilter || item.status === statusFilter;
-      
-      // Eye filter - hide "Verplant" items when active
-      const verplantMatch = !hideVerplant || item.status !== 'Verplant';
-      
-      // Date filters
-      let dateMatch = true;
-      
-      // Single date filter (from day card clicks)
-      if (dateFilter) {
-        dateMatch = item.date === dateFilter;
+    // Region filter using PLZ mapping
+    const itemRegion = getRegionFromPLZ(item.plz);
+    const regionMatch = regionFilter === "ALLE" || itemRegion === regionFilter;
+    
+    // PLZ filter
+    const plzMatch = !plzFilter || item.plz === plzFilter;
+    
+    // Status filter
+    const statusMatch = !statusFilter || item.status === statusFilter;
+    
+    // Eye filter - hide "Verplant" items when active
+    const verplantMatch = !hideVerplant || item.status !== 'Verplant';
+    
+    // Date filters
+    let dateMatch = true;
+    
+    // Single date filter (from day card clicks)
+    if (dateFilter) {
+      dateMatch = item.date === dateFilter;
+    }
+    // Calendar weeks filter
+    else if (selectedWeeks.length > 0) {
+      const itemDate = new Date(item.date);
+      const itemWeek = getWeekNumber(itemDate);
+      const itemYear = itemDate.getFullYear();
+      dateMatch = selectedWeeks.some(weekStr => {
+        const weekNum = parseInt(weekStr.match(/KW (\d+)/)?.[1] || '0');
+        return weekNum === itemWeek && itemYear === new Date().getFullYear();
+      });
+    }
+    // Date range filter
+    else if (dateRange.start) {
+      if (dateRange.end) {
+        const start = dateRange.start <= dateRange.end ? dateRange.start : dateRange.end;
+        const end = dateRange.start <= dateRange.end ? dateRange.end : dateRange.start;
+        dateMatch = item.date >= start && item.date <= end;
+      } else {
+        dateMatch = item.date === dateRange.start;
       }
-      // Calendar weeks filter
-      else if (selectedWeeks.length > 0) {
-        const itemDate = new Date(item.date);
-        const itemWeek = getWeekNumber(itemDate);
-        const itemYear = itemDate.getFullYear();
-        dateMatch = selectedWeeks.some(weekStr => {
-          const weekNum = parseInt(weekStr.match(/KW (\d+)/)?.[1] || '0');
-          return weekNum === itemWeek && itemYear === new Date().getFullYear();
-        });
-      }
-      // Date range filter
-      else if (dateRange.start) {
-        if (dateRange.end) {
-          const start = dateRange.start <= dateRange.end ? dateRange.start : dateRange.end;
-          const end = dateRange.start <= dateRange.end ? dateRange.end : dateRange.start;
-          dateMatch = item.date >= start && item.date <= end;
-        } else {
-          dateMatch = item.date === dateRange.start;
-        }
-      }
-      
-      return regionMatch && plzMatch && statusMatch && verplantMatch && dateMatch;
-    }).sort((a, b) => {
-      // Sort by date (nearest to farthest)
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
+    }
+    
+    return regionMatch && plzMatch && statusMatch && verplantMatch && dateMatch;
+  }).sort((a, b) => {
+    // Sort by date (nearest to farthest)
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
   }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, dateRange]);
 
   // Memoize statistics to prevent repeated calculations
