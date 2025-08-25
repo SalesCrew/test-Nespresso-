@@ -192,7 +192,8 @@ export default function EinsatzPage() {
         selectedIds: []
       });
       
-              // Don't update old compatibility state - we're using the new UI only
+      console.log('Process state set from API response');
+      // Don't update old compatibility state - we're using the new UI only
     } catch (error) {
       console.error('Error loading process state:', error);
       
@@ -231,6 +232,9 @@ export default function EinsatzPage() {
               };
             }).filter((x: any) => x.id);
             
+            console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
+            console.log('mappedInvites:', mappedInvites);
+            
             setProcessState({
               stage: 'select_assignment',
               invitedAssignments: mappedInvites,
@@ -241,23 +245,37 @@ export default function EinsatzPage() {
               selectedIds: []
             });
             
+            console.log('Process state set to select_assignment with', mappedInvites.length, 'invitations');
+            
             // Also clear old state to prevent old UI from showing
             setHasAvailableAssignments(false);
             setAssignments([]);
-            return;
+            return; // IMPORTANT: Return here to avoid setting to idle
           }
+        } else {
+          console.log('No invitations found in fallback');
+          setProcessState(prev => ({ ...prev, stage: 'idle' }));
         }
       } catch (fallbackError) {
         console.error('Fallback also failed:', fallbackError);
+        setProcessState(prev => ({ ...prev, stage: 'idle' }));
       }
-      
-      setProcessState(prev => ({ ...prev, stage: 'idle' }));
     }
   };
   
   useEffect(() => {
+    console.log('=== MOUNTING EINSATZ PAGE ===');
+    console.log('Initial processState:', processState);
+    console.log('Initial hasAvailableAssignments:', hasAvailableAssignments);
+    console.log('Initial assignments:', assignments);
     loadProcessState();
   }, []);
+  
+  // Track processState changes
+  useEffect(() => {
+    console.log('=== PROCESS STATE CHANGED ===');
+    console.log('New processState:', processState);
+  }, [processState]);
 
   
   // Load process state from database on mount
@@ -1493,6 +1511,14 @@ export default function EinsatzPage() {
         )}
 
         {/* Assignment Selection Card - NEW FLOW */}
+        {(() => {
+          console.log('=== RENDER DECISION ===');
+          console.log('processState.stage:', processState.stage);
+          console.log('processState.invitedAssignments:', processState.invitedAssignments);
+          console.log('hasAvailableAssignments:', hasAvailableAssignments);
+          console.log('assignments:', assignments);
+          return null;
+        })()}
         {processState.stage === 'loading' ? (
           // Loading state
           <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
