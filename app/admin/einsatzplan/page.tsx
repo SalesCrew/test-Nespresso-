@@ -436,6 +436,7 @@ export default function EinsatzplanPage() {
   const getStatusBackgroundColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'verplant': return 'bg-green-50/40';
+      case 'buddy tag': return 'bg-purple-50/40';
       case 'krankenstand': return 'bg-red-50/40';
       case 'notfall': return 'bg-orange-50/40';
       case 'urlaub': return 'bg-blue-50/40';
@@ -456,12 +457,13 @@ export default function EinsatzplanPage() {
   };
 
   const getStatusOptions = () => {
-    return ["Verplant", "Krankenstand", "Notfall", "Urlaub", "Zeitausgleich", "Markierte"];
+    return ["Verplant", "Buddy Tag", "Krankenstand", "Notfall", "Urlaub", "Zeitausgleich", "Markierte"];
   };
 
   const getStatusGradient = (status: string) => {
     switch (status) {
       case "Verplant": return "from-white to-green-100/60";
+      case "Buddy Tag": return "from-white to-purple-100/60";
       case "Krankenstand": return "from-white to-red-100/60";
       case "Notfall": return "from-white to-orange-100/60";
       case "Urlaub": return "from-white to-blue-100/60";
@@ -474,6 +476,7 @@ export default function EinsatzplanPage() {
   const getStatusHoverClass = (status: string) => {
     switch (status) {
       case "Verplant": return "hover:bg-green-100/50";
+      case "Buddy Tag": return "hover:bg-purple-100/50";
       case "Krankenstand": return "hover:bg-red-100/50";
       case "Notfall": return "hover:bg-orange-100/50";
       case "Urlaub": return "hover:bg-blue-100/50";
@@ -1078,7 +1081,11 @@ export default function EinsatzplanPage() {
           planEnd: timeEnd,
           plz: r.postal_code || '',
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
-          status: r.status === 'assigned' ? 'Verplant' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
+          status: r.status === 'assigned' ? 'Verplant' : r.status === 'buddy_tag' ? 'Buddy Tag' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
+          // Include buddy information
+          promotor: r.display_name || (r.status === 'assigned' ? 'Verplant' : ''),
+          buddy_name: r.buddy_name,
+          buddy_user_id: r.buddy_user_id,
           promotionCount: 1,
           promotorCount: 0,
           promotions: [{ id: r.id }],
