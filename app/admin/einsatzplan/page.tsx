@@ -2009,13 +2009,23 @@ export default function EinsatzplanPage() {
                                 .filter((p: any) => selectedPromotors.includes(p.name))
                                 .map((p: any) => p.id)
                                 .filter(Boolean)
+                              // Check if any selected assignments are "Verplant" (assigned)
+                              const selectedAssignmentData = einsatzplanData.filter((assignment: any) => 
+                                selectedPromotions.includes(assignment.id));
+                              const hasVerplantAssignments = selectedAssignmentData.some((assignment: any) => 
+                                assignment.status === 'Verplant');
+                              
+                              // Auto-buddy tag if selecting Verplant assignments, otherwise use checkbox
+                              const isBuddyTag = hasVerplantAssignments || inviteBuddy;
+                              
                               const res = await fetch('/api/assignments/bulk-invite', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                   assignment_ids: selectedPromotions,
                                   promotor_ids: ids,
-                                  buddy: inviteBuddy
+                                  buddy: inviteBuddy,
+                                  is_buddy_tag: isBuddyTag
                                 })
                               })
                               if (res.ok) {

@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     const promotor_ids: string[] = Array.isArray(body.promotor_ids) ? body.promotor_ids : []
     const buddy: boolean = Boolean(body.buddy)
     const replacement_for: string | null = body.replacement_for || null
+    const is_buddy_tag: boolean = Boolean(body.is_buddy_tag)
 
     if (assignment_ids.length === 0 || promotor_ids.length === 0) {
       return NextResponse.json({ error: 'assignment_ids and promotor_ids are required' }, { status: 400 })
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         user_id, 
         role, 
         status: 'invited',
+        is_buddy_tag: is_buddy_tag,
         ...(replacement_for ? { replacement_for } : {})
       }))
     ))

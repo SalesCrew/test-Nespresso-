@@ -2,79 +2,56 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
-// GET current user's assignment invitations (e.g., status=invited|accepted)
+// GET current user's buddy tag invitations
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url)
-    const status = url.searchParams.get('status') // Don't default to 'invited'
-    const invitationIds = url.searchParams.get('invitation_ids')
-
     // Use server client for auth check
     const server = createSupabaseServerClient()
     const { data: auth, error: authError } = await server.auth.getUser()
     
     if (authError || !auth?.user) {
-      console.error('Auth error in invites API:', authError?.message || 'No user');
-      // Return empty invites instead of 401 to avoid breaking the UI
-      return NextResponse.json({ invites: [] })
+      console.error('Auth error in buddy tags API:', authError?.message || 'No user');
+      return NextResponse.json({ buddy_tags: [] })
     }
     
-    console.log('Fetching invites for user:', auth.user.id, 'with status:', status, 'invitation_ids:', invitationIds)
+    console.log('Fetching buddy tags for user:', auth.user.id)
     
     // Use service client to bypass RLS for data fetch
     const svc = createSupabaseServiceClient()
     
-    // Use service client to join assignment details robustly
-    let query = svc
+    const { data: invites, error: invErr } = await svc
       .from('assignment_invitations')
       .select('id, assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at, replacement_for, is_buddy_tag')
-    
-    // If invitation_ids are provided, fetch those specific invitations
-    if (invitationIds) {
-      const ids = invitationIds.split(',').filter(id => id.trim());
-      query = query.in('id', ids)
-    } else {
-      // Otherwise filter by user
-      query = query.eq('user_id', auth.user.id)
-      
-      // Only filter by status if it's provided
-      if (status) {
-        query = query.eq('status', status)
-      }
-      
-      // Always exclude verstanden and rejected_handled status, and buddy tags from normal invitations
-      query = query.neq('status', 'verstanden').neq('status', 'rejected_handled').eq('is_buddy_tag', false)
-    }
-    
-    const { data: invites, error: invErr } = await query
+      .eq('user_id', auth.user.id)
+      .eq('is_buddy_tag', true)
+      .neq('status', 'verstanden')
+      .neq('status', 'withdrawn')
       .order('invited_at', { ascending: false })
     
-    console.log('Invites query result:', { invites, error: invErr })
+    console.log('Buddy tags query result:', { invites, error: invErr })
     if (invErr) return NextResponse.json({ error: invErr.message }, { status: 500 })
 
     const assignmentIds = [...new Set((invites || []).map((i: any) => i.assignment_id))]
-    if (assignmentIds.length === 0) return NextResponse.json({ invites: [] })
+    if (assignmentIds.length === 0) return NextResponse.json({ buddy_tags: [] })
 
     const { data: assignments, error: asgErr } = await svc
       .from('assignments')
-      .select('*')
+      .select('id, location_text, postal_code, city, region, start_ts, end_ts, status, description')
       .in('id', assignmentIds)
     if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
 
-    // Get existing participants (to check if someone is already assigned as lead)
+    // Get participant info (the lead/buddy they'll work with)
     const { data: participants, error: partErr } = await svc
       .from('assignment_participants')
-      .select('assignment_id, user_id, role, chosen_by_admin')
+      .select('assignment_id, user_id')
       .in('assignment_id', assignmentIds)
       .eq('role', 'lead')
-      .eq('chosen_by_admin', true)
-    if (partErr) console.error('Error fetching participants:', partErr)
+    if (partErr) console.error('Error loading participants:', partErr)
 
-    // If there are lead participants, get their names
-    const leadUserIds = [...new Set((participants || []).map((p: any) => p.user_id))]
     let userProfiles: any[] = []
-    if (leadUserIds.length > 0) {
-      const { data: profiles } = await svc
+    if (participants && participants.length > 0) {
+      const leadUserIds = [...new Set(participants.map((p: any) => p.user_id))]
+      const { data: profiles, error: profErr } = await svc
         .from('user_profiles')
         .select('user_id, display_name')
         .in('user_id', leadUserIds)
@@ -99,7 +76,6 @@ export async function GET(req: Request) {
     const result = (invites || []).map((inv: any) => {
       const a = byId.get(inv.assignment_id)
       const leadParticipant = participantsByAssignment.get(inv.assignment_id)
-      const isBuddyTag = !!leadParticipant && inv.role === 'buddy'
       
       return {
         id: inv.id,
@@ -110,8 +86,8 @@ export async function GET(req: Request) {
         responded_at: inv.responded_at,
         acknowledged_at: inv.acknowledged_at,
         replacement_for: inv.replacement_for,
-        is_buddy_tag: inv.is_buddy_tag,
-        buddy_name: isBuddyTag ? leadParticipant.first_name : null,
+        is_buddy_tag: true,
+        buddy_name: leadParticipant ? leadParticipant.first_name : null,
         assignment: a ? {
           id: a.id,
           location_text: a.location_text,
@@ -126,11 +102,11 @@ export async function GET(req: Request) {
       }
     })
     
-    console.log('Returning invites:', result.length, 'items');
+    console.log('Returning buddy tags:', result.length, 'items');
 
-    return NextResponse.json({ invites: result })
+    return NextResponse.json({ buddy_tags: result })
   } catch (e: any) {
+    console.error('Server error in buddy tags API:', e)
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }
 }
-
