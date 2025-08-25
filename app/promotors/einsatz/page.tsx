@@ -164,13 +164,17 @@ export default function EinsatzPage() {
   // Load process state from API
   const loadProcessState = async () => {
     try {
+      console.log('Loading process state...');
       const res = await fetch('/api/assignments/invites/process-state', {
         cache: 'no-store',
         credentials: 'include'
       });
       
       if (!res.ok) {
-        console.error('Failed to load process state');
+        console.error('Failed to load process state:', res.status, res.statusText);
+        // Try to get error details
+        const text = await res.text();
+        console.error('Error response:', text);
         setProcessState(prev => ({ ...prev, stage: 'idle' }));
         return;
       }
@@ -217,81 +221,66 @@ export default function EinsatzPage() {
       }
     } catch (error) {
       console.error('Error loading process state:', error);
+      
+      // Fallback: Try to load invitations using the existing API
+      try {
+        console.log('Falling back to existing invites API...');
+        const res = await fetch('/api/assignments/invites?status=invited', { 
+          cache: 'no-store', 
+          credentials: 'include' 
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const invites = Array.isArray(data?.invites) ? data.invites : [];
+          console.log('Fallback invites loaded:', invites.length);
+          
+          if (invites.length > 0) {
+            // Map invites to the format we need
+            const mappedInvites = invites.map((i: any) => {
+              const a = i.assignment || {};
+              const start = a.start_ts ? new Date(a.start_ts) : null;
+              const end = a.end_ts ? new Date(a.end_ts) : null;
+              return {
+                id: a.id,
+                date: start ? start.toLocaleDateString('de-DE', { 
+                  weekday: 'short', 
+                  day: '2-digit', 
+                  month: '2-digit', 
+                  year: 'numeric' 
+                }) : 'Datum',
+                time: (start && end)
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  : 'Zeit',
+                location: a.location_text || '',
+                status: i.status
+              };
+            }).filter((x: any) => x.id);
+            
+            setProcessState({
+              stage: 'select_assignment',
+              invitedAssignments: mappedInvites,
+              waitingAssignments: [],
+              acceptedAssignments: [],
+              rejectedAssignments: [],
+              replacementAssignments: [],
+              selectedIds: []
+            });
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
+      
       setProcessState(prev => ({ ...prev, stage: 'idle' }));
     }
   };
   
   useEffect(() => {
-    (async () => {
-      try {
-        // Load process state instead
-        await loadProcessState();
-        return;
-        
-        console.log('Fetching invites...');
-        const res = await fetch('/api/assignments/invites?status=invited', { cache: 'no-store', credentials: 'include' });
-        console.log('Invites response status:', res.status);
-        if (!res.ok) {
-          console.error('Failed to fetch invites:', res.status, res.statusText);
-          setHasAvailableAssignments(false);
-          return;
-        }
-        const data = await res.json().catch(() => ({}));
-        console.log('Invites data:', data);
-        const invites = Array.isArray(data?.invites) ? data.invites : [];
-        console.log('Invites array:', invites);
-        const mapped = invites.map((i: any) => {
-          const a = i.assignment || {};
-          const start = a.start_ts ? new Date(a.start_ts) : null;
-          const end = a.end_ts ? new Date(a.end_ts) : null;
-          const dateLabel = start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum';
-          const timeLabel = (start && end)
-            ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
-            : 'Zeit';
-          console.log('Assignment time mapping:', {
-            id: a.id,
-            start_ts: a.start_ts,
-            end_ts: a.end_ts,
-            start: start,
-            end: end,
-            startUTC: start ? `${start.getUTCHours()}:${start.getUTCMinutes()}` : null,
-            startLocal: start ? `${start.getHours()}:${start.getMinutes()}` : null,
-            endUTC: end ? `${end.getUTCHours()}:${end.getUTCMinutes()}` : null,
-            endLocal: end ? `${end.getHours()}:${end.getMinutes()}` : null,
-            timeLabel: timeLabel,
-            isBuddyTag: i.is_buddy_tag,
-            buddyName: i.buddy_name
-          });
-          return {
-            id: a.id,
-            date: dateLabel,
-            time: timeLabel,
-            location: a.location_text || '',
-            description: a.description || '',
-            isBuddyTag: i.is_buddy_tag || false,
-            buddyName: i.buddy_name || null,
-            role: i.role
-          }
-        }).filter((x: any) => x.id)
-        console.log('Mapped assignments:', mapped);
-        setAssignments(mapped)
-        setHasAvailableAssignments(mapped.length > 0)
-        
-        // Track all invited IDs in the process
-        if (mapped.length > 0) {
-          const invitedIds = mapped.map((a: any) => a.id);
-          setCurrentProcess({
-            originalIds: invitedIds,
-            replacementIds: [],
-            stage: 'invited'
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching invites:', err);
-        setHasAvailableAssignments(false);
-      }
-    })()
-  }, [])
+    loadProcessState();
+  }, []);
+
   
   // Load process state from database on mount
   useEffect(() => {
