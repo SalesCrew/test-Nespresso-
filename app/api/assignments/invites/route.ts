@@ -42,8 +42,8 @@ export async function GET(req: Request) {
         query = query.eq('status', status)
       }
       
-      // Always exclude verstanden status
-      query = query.neq('status', 'verstanden')
+      // Always exclude verstanden and rejected_handled status
+      query = query.neq('status', 'verstanden').neq('status', 'rejected_handled')
     }
     
     const { data: invites, error: invErr } = await query

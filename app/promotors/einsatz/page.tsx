@@ -1141,6 +1141,21 @@ export default function EinsatzPage() {
 
   const handleNewSubmitReplacements = async () => {
     try {
+      // First, mark the original rejected invitations as 'rejected_handled'
+      // This prevents them from triggering the declined UI state
+      for (const rejectedAssignment of processState.rejectedAssignments) {
+        try {
+          await fetch(`/api/assignments/${rejectedAssignment.id}/invites/respond`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: 'rejected_handled' })
+          });
+        } catch (e) {
+          console.error('Failed to mark rejected as handled:', e);
+        }
+      }
+      
       // Submit selected replacement assignments
       for (const assignmentId of processState.selectedIds) {
         await fetch(`/api/assignments/${assignmentId}/invites/respond`, {

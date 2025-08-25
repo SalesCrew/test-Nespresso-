@@ -9,8 +9,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     if (!auth?.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
     const body = await _req.json().catch(() => ({}))
-    const status = body?.status as 'applied' | 'withdrawn' | 'accepted' | 'verstanden'
-    if (!['applied', 'withdrawn', 'accepted', 'verstanden'].includes(status)) {
+    const status = body?.status as 'applied' | 'withdrawn' | 'accepted' | 'verstanden' | 'rejected_handled'
+    if (!['applied', 'withdrawn', 'accepted', 'verstanden', 'rejected_handled'].includes(status)) {
       return NextResponse.json({ error: 'invalid status' }, { status: 400 })
     }
 
@@ -19,11 +19,11 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     // Build update object based on status
     const updateData: any = { status }
     
-    // Only set responded_at for initial responses, not for verstanden
-    if (status !== 'verstanden') {
+    // Only set responded_at for initial responses, not for verstanden or rejected_handled
+    if (status !== 'verstanden' && status !== 'rejected_handled') {
       updateData.responded_at = new Date().toISOString()
     } else {
-      // For verstanden, also set acknowledged_at
+      // For verstanden and rejected_handled, also set acknowledged_at
       updateData.acknowledged_at = new Date().toISOString()
     }
     
