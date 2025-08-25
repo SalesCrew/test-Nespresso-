@@ -1,10 +1,13 @@
 -- Add 'rejected_handled' status for original rejected invitations after replacement is submitted
 -- This prevents the original rejection from triggering the declined UI state
 
+-- STEP 1: Run this first and COMMIT
 -- Add the new status to the enum
 ALTER TYPE public.invitation_status ADD VALUE IF NOT EXISTS 'rejected_handled' AFTER 'verstanden';
 
+-- STEP 2: Run this in a SEPARATE transaction after Step 1 is committed
 -- Update the view to exclude rejected_handled from active processes
+/*
 CREATE OR REPLACE VIEW public.user_assignment_processes AS
 SELECT 
   user_id,
@@ -26,3 +29,4 @@ FROM public.assignment_invitations
 WHERE (acknowledged_at IS NULL OR (status IN ('invited', 'applied'))) 
   AND status NOT IN ('verstanden', 'rejected_handled')
 GROUP BY user_id;
+*/
