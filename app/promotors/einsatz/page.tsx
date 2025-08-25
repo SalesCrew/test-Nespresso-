@@ -273,6 +273,10 @@ export default function EinsatzPage() {
             const replacementAppliedInvites = replacementInvites.filter((i: any) => 
               i.status === 'applied');
             
+            // Also get accepted replacement invites - these should trigger accepted stage
+            const replacementAcceptedInvites = replacementInvites.filter((i: any) => 
+              i.status === 'accepted');
+            
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
             console.log('- applied:', appliedInvites.length);
@@ -280,6 +284,7 @@ export default function EinsatzPage() {
             console.log('- rejected:', rejectedInvites.length);
             console.log('- replacement invited:', replacementInvitedInvites.length);
             console.log('- replacement applied:', replacementAppliedInvites.length);
+            console.log('- replacement accepted:', replacementAcceptedInvites.length);
             console.log('Raw rejected invites:', rejectedInvites);
             console.log('Raw replacement invites:', replacementInvites);
             
@@ -292,7 +297,9 @@ export default function EinsatzPage() {
             // Include both original applied AND replacement applied invites for waiting
             const mappedWaiting = [...appliedInvites, ...replacementAppliedInvites]
               .map(mapInvite).filter((x: any) => x.id);
-            const mappedAccepted = acceptedInvites.map(mapInvite).filter((x: any) => x.id);
+            // Include both original accepted AND replacement accepted invites
+            const mappedAccepted = [...acceptedInvites, ...replacementAcceptedInvites]
+              .map(mapInvite).filter((x: any) => x.id);
             const mappedRejected = rejectedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedReplacements = replacementInvitedInvites.map(mapInvite).filter((x: any) => x.id);
             
