@@ -220,8 +220,9 @@ export default function EinsatzPage() {
           const data = await res.json();
           console.log('Fallback API response:', data);
           const invites = Array.isArray(data?.invites) ? data.invites : [];
-          console.log('Fallback invites loaded:', invites.length);
-          console.log('Invites data:', invites);
+                      console.log('Fallback invites loaded:', invites.length);
+            console.log('Invites data:', invites);
+            console.log('First invite details:', invites[0]);
           
           if (invites.length > 0) {
             // Map function for consistent formatting
@@ -256,7 +257,7 @@ export default function EinsatzPage() {
             
             // For original invites - normal categorization
             const invitedInvites = originalInvites.filter((i: any) => 
-              i.status === 'invited' && !i.responded_at);
+              i.status === 'invited');
             const appliedInvites = originalInvites.filter((i: any) => 
               i.status === 'applied');
             const acceptedInvites = originalInvites.filter((i: any) => 
