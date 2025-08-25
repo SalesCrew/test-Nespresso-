@@ -1,40 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
-
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
+    // Use server client for auth check
+    const server = createSupabaseServerClient();
+    const { data: auth, error: authError } = await server.auth.getUser();
     
-    if (!token) {
+    if (authError || !auth?.user) {
+      console.error('Auth error in acknowledge-all API:', authError?.message || 'No user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Use service client for data operations
+    const supabase = createSupabaseServiceClient();
 
+    console.log('Acknowledging invitations for user:', auth.user.id);
+    
     // Update all unacknowledged invitations for this user
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('assignment_invitations')
       .update({ acknowledged_at: new Date().toISOString() })
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .is('acknowledged_at', null)
-      .in('status', ['accepted', 'rejected']);
+      .in('status', ['accepted', 'rejected'])
+      .select();
 
     if (error) {
       console.error('Error acknowledging invitations:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    console.log('Successfully acknowledged', data?.length || 0, 'invitations');
+    return NextResponse.json({ success: true, acknowledged: data?.length || 0 });
 
   } catch (error) {
     console.error('Error in acknowledge-all:', error);

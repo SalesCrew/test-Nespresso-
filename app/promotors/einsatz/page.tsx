@@ -1080,10 +1080,20 @@ export default function EinsatzPage() {
 
   const handleNewAcknowledge = async () => {
     try {
-      await fetch('/api/assignments/invites/acknowledge-all', {
+      console.log('Acknowledging assignments...');
+      const response = await fetch('/api/assignments/invites/acknowledge-all', {
         method: 'POST',
         credentials: 'include'
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Acknowledge API error:', errorData);
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('Acknowledge result:', result);
       
       // Show thank you state
       setProcessState(prev => ({
@@ -1106,6 +1116,24 @@ export default function EinsatzPage() {
       }, 3000);
     } catch (error) {
       console.error('Error acknowledging:', error);
+      // Even if acknowledgment fails, still show thank you and proceed
+      setProcessState(prev => ({
+        ...prev,
+        stage: 'thankyou' as any
+      }));
+      
+      setTimeout(() => {
+        setProcessState({
+          stage: 'loading',
+          invitedAssignments: [],
+          waitingAssignments: [],
+          acceptedAssignments: [],
+          rejectedAssignments: [],
+          replacementAssignments: [],
+          selectedIds: []
+        });
+        loadProcessState();
+      }, 3000);
     }
   };
 
