@@ -199,19 +199,33 @@ export default function EinsatzPage() {
       // Fallback: Try to load invitations using the existing API
       try {
         console.log('Falling back to existing invites API...');
-        const res = await fetch('/api/assignments/invites?status=invited', { 
+        const res = await fetch('/api/assignments/invites', { // Remove status filter to get all invites
           cache: 'no-store', 
           credentials: 'include' 
         });
         
         if (res.ok) {
           const data = await res.json();
+          console.log('Fallback API response:', data);
           const invites = Array.isArray(data?.invites) ? data.invites : [];
           console.log('Fallback invites loaded:', invites.length);
+          console.log('Invites data:', invites);
           
           if (invites.length > 0) {
-            // Map invites to the format we need
-            const mappedInvites = invites.map((i: any) => {
+            // Categorize invitations by status
+            const invitedInvites = invites.filter((i: any) => i.status === 'invited' && !i.responded_at);
+            const appliedInvites = invites.filter((i: any) => i.status === 'applied');
+            const acceptedInvites = invites.filter((i: any) => i.status === 'accepted' && !i.acknowledged_at);
+            const rejectedInvites = invites.filter((i: any) => i.status === 'rejected' && !i.acknowledged_at);
+            
+            console.log('Categorized invites:');
+            console.log('- invited:', invitedInvites.length);
+            console.log('- applied:', appliedInvites.length);
+            console.log('- accepted:', acceptedInvites.length);
+            console.log('- rejected:', rejectedInvites.length);
+            
+            // Map function for consistent formatting
+            const mapInvite = (i: any) => {
               const a = i.assignment || {};
               const start = a.start_ts ? new Date(a.start_ts) : null;
               const end = a.end_ts ? new Date(a.end_ts) : null;
@@ -229,22 +243,45 @@ export default function EinsatzPage() {
                 location: a.location_text || '',
                 status: i.status
               };
-            }).filter((x: any) => x.id);
+            };
+            
+            const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedAccepted = acceptedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedRejected = rejectedInvites.map(mapInvite).filter((x: any) => x.id);
+            
+            // Determine the stage based on what we have
+            let stage: string = 'idle';
+            if (mappedInvited.length > 0) {
+              stage = 'select_assignment';
+            } else if (mappedWaiting.length > 0) {
+              stage = 'waiting';
+            } else if (mappedAccepted.length > 0 && mappedRejected.length > 0) {
+              stage = 'partially_accepted';
+            } else if (mappedAccepted.length > 0) {
+              stage = 'accepted';
+            } else if (mappedRejected.length > 0) {
+              stage = 'declined';
+            }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
-            console.log('mappedInvites:', mappedInvites);
+            console.log('Determined stage:', stage);
+            console.log('mappedInvited:', mappedInvited);
+            console.log('mappedWaiting:', mappedWaiting);
+            console.log('mappedAccepted:', mappedAccepted);
+            console.log('mappedRejected:', mappedRejected);
             
             setProcessState({
-              stage: 'select_assignment',
-              invitedAssignments: mappedInvites,
-              waitingAssignments: [],
-              acceptedAssignments: [],
-              rejectedAssignments: [],
+              stage: stage as any,
+              invitedAssignments: mappedInvited,
+              waitingAssignments: mappedWaiting,
+              acceptedAssignments: mappedAccepted,
+              rejectedAssignments: mappedRejected,
               replacementAssignments: [],
               selectedIds: []
             });
             
-            console.log('Process state set to select_assignment with', mappedInvites.length, 'invitations');
+            console.log('Process state set to', stage, 'with invitations');
             
             // Also clear old state to prevent old UI from showing
             setHasAvailableAssignments(false);
