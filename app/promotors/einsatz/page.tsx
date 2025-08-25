@@ -253,6 +253,7 @@ export default function EinsatzPage() {
             const originalInvites = nonVerstandenInvites.filter((i: any) => !i.replacement_for);
             const replacementInvites = nonVerstandenInvites.filter((i: any) => i.replacement_for);
             
+            // For original invites - normal categorization
             const invitedInvites = originalInvites.filter((i: any) => 
               i.status === 'invited' && !i.responded_at);
             const appliedInvites = originalInvites.filter((i: any) => 
@@ -262,9 +263,9 @@ export default function EinsatzPage() {
             const rejectedInvites = originalInvites.filter((i: any) => 
               i.status === 'rejected');
             
-            // Replacement invites that are still invited
-            const replacementInvitedInvites = replacementInvites.filter((i: any) => 
-              i.status === 'invited' && !i.responded_at);
+            // ALL replacement invites (regardless of status) go to replacements
+            // They should show in the declined UI as replacement options
+            const replacementInvitedInvites = replacementInvites;
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
@@ -272,6 +273,8 @@ export default function EinsatzPage() {
             console.log('- accepted:', acceptedInvites.length);
             console.log('- rejected:', rejectedInvites.length);
             console.log('- replacement invited:', replacementInvitedInvites.length);
+            console.log('Raw rejected invites:', rejectedInvites);
+            console.log('Raw replacement invites:', replacementInvites);
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
@@ -281,19 +284,23 @@ export default function EinsatzPage() {
             
             // Determine the stage based on what we have
             let stage: string = 'idle';
-            if (mappedRejected.length > 0 && mappedReplacements.length > 0) {
-              // If we have rejected assignments with replacements available
+            
+            // Priority order - REJECTED ALWAYS TAKES PRECEDENCE
+            if (mappedRejected.length > 0 && mappedAccepted.length === 0) {
+              // Only rejected - show declined UI
               stage = 'declined';
-            } else if (mappedInvited.length > 0) {
-              stage = 'select_assignment';
-            } else if (mappedWaiting.length > 0) {
-              stage = 'waiting';
-            } else if (mappedAccepted.length > 0 && mappedRejected.length > 0) {
+            } else if (mappedRejected.length > 0 && mappedAccepted.length > 0) {
+              // Mix of accepted and rejected
               stage = 'partially_accepted';
             } else if (mappedAccepted.length > 0) {
+              // Only accepted
               stage = 'accepted';
-            } else if (mappedRejected.length > 0) {
-              stage = 'declined';
+            } else if (mappedWaiting.length > 0) {
+              // Waiting for response
+              stage = 'waiting';
+            } else if (mappedInvited.length > 0 || mappedReplacements.length > 0) {
+              // New invitations to select
+              stage = 'select_assignment';
             }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
