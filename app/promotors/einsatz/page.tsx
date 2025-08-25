@@ -312,6 +312,27 @@ export default function EinsatzPage() {
               // If we ONLY have replacements with no rejected (original was already acknowledged)
               // Show declined UI so replacements appear in the correct Ersatztermin UI
               stage = 'declined';
+              
+              // For replacement invites, we need to show the original rejected assignments
+              // We'll extract assignment data from the invites that have been marked as 'verstanden'
+              // The replacement invites contain the original assignment info we need
+              const uniqueReplacementForIds = [...new Set(replacementInvites
+                .map((inv: any) => inv.replacement_for)
+                .filter((id: string | null) => id !== null))];
+              
+              if (uniqueReplacementForIds.length > 0) {
+                // Since we can't fetch the original invitations (they're 'verstanden'), 
+                // we'll create placeholder rejected entries based on the fact that these ARE replacements
+                // The UI will show "Leider war jemand schneller als du." which is appropriate
+                mappedRejected = uniqueReplacementForIds.map((replacementForId: string, index: number) => ({
+                  id: `rejected-${replacementForId}`,
+                  date: 'Ursprünglicher Termin',
+                  time: '',
+                  location: 'Bereits abgesagt',
+                  status: 'rejected',
+                  isPlaceholder: true
+                }));
+              }
             }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
