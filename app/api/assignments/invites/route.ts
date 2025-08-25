@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     // Use service client to join assignment details robustly
     let query = svc
       .from('assignment_invitations')
-      .select('assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at')
+      .select('assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at, replacement_for')
       .eq('user_id', auth.user.id)
     
     // Only filter by status if it's provided
@@ -99,6 +99,7 @@ export async function GET(req: Request) {
         invited_at: inv.invited_at,
         responded_at: inv.responded_at,
         acknowledged_at: inv.acknowledged_at,
+        replacement_for: inv.replacement_for,
         is_buddy_tag: isBuddyTag,
         buddy_name: isBuddyTag ? leadParticipant.first_name : null,
         assignment: a ? {

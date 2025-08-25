@@ -249,29 +249,42 @@ export default function EinsatzPage() {
             // Filter out assignments with status 'verstanden'
             const nonVerstandenInvites = invites.filter((i: any) => i.status !== 'verstanden');
             
-            const invitedInvites = nonVerstandenInvites.filter((i: any) => 
+            // Separate replacements from originals
+            const originalInvites = nonVerstandenInvites.filter((i: any) => !i.replacement_for);
+            const replacementInvites = nonVerstandenInvites.filter((i: any) => i.replacement_for);
+            
+            const invitedInvites = originalInvites.filter((i: any) => 
               i.status === 'invited' && !i.responded_at);
-            const appliedInvites = nonVerstandenInvites.filter((i: any) => 
+            const appliedInvites = originalInvites.filter((i: any) => 
               i.status === 'applied');
-            const acceptedInvites = nonVerstandenInvites.filter((i: any) => 
+            const acceptedInvites = originalInvites.filter((i: any) => 
               i.status === 'accepted');
-            const rejectedInvites = nonVerstandenInvites.filter((i: any) => 
+            const rejectedInvites = originalInvites.filter((i: any) => 
               i.status === 'rejected');
+            
+            // Replacement invites that are still invited
+            const replacementInvitedInvites = replacementInvites.filter((i: any) => 
+              i.status === 'invited' && !i.responded_at);
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
             console.log('- applied:', appliedInvites.length);
             console.log('- accepted:', acceptedInvites.length);
             console.log('- rejected:', rejectedInvites.length);
+            console.log('- replacement invited:', replacementInvitedInvites.length);
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedAccepted = acceptedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedRejected = rejectedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedReplacements = replacementInvitedInvites.map(mapInvite).filter((x: any) => x.id);
             
             // Determine the stage based on what we have
             let stage: string = 'idle';
-            if (mappedInvited.length > 0) {
+            if (mappedRejected.length > 0 && mappedReplacements.length > 0) {
+              // If we have rejected assignments with replacements available
+              stage = 'declined';
+            } else if (mappedInvited.length > 0) {
               stage = 'select_assignment';
             } else if (mappedWaiting.length > 0) {
               stage = 'waiting';
@@ -289,6 +302,7 @@ export default function EinsatzPage() {
             console.log('mappedWaiting:', mappedWaiting);
             console.log('mappedAccepted:', mappedAccepted);
             console.log('mappedRejected:', mappedRejected);
+            console.log('mappedReplacements:', mappedReplacements);
             
             setProcessState({
               stage: stage as any,
@@ -296,7 +310,7 @@ export default function EinsatzPage() {
               waitingAssignments: mappedWaiting,
               acceptedAssignments: mappedAccepted,
               rejectedAssignments: mappedRejected,
-              replacementAssignments: [],
+              replacementAssignments: mappedReplacements,
               selectedIds: []
             });
             
