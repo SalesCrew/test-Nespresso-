@@ -136,7 +136,7 @@ export default function EinsatzPage() {
 
   // NEW: Simplified process state management
   const [processState, setProcessState] = useState<{
-    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted' | 'thankyou';
+    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted' | 'thankyou' | 'verstanden';
     invitedAssignments: any[];
     waitingAssignments: any[];
     acceptedAssignments: any[];
@@ -246,10 +246,15 @@ export default function EinsatzPage() {
             };
             
             // Categorize invitations by status
-            const invitedInvites = invites.filter((i: any) => i.status === 'invited' && !i.responded_at);
-            const appliedInvites = invites.filter((i: any) => i.status === 'applied');
-            const acceptedInvites = invites.filter((i: any) => i.status === 'accepted' && !i.acknowledged_at);
-            const rejectedInvites = invites.filter((i: any) => i.status === 'rejected' && !i.acknowledged_at);
+            // Filter out assignments that have been acknowledged (verstanden)
+            const invitedInvites = invites.filter((i: any) => 
+              i.status === 'invited' && !i.responded_at && !i.acknowledged_at);
+            const appliedInvites = invites.filter((i: any) => 
+              i.status === 'applied' && !i.acknowledged_at);
+            const acceptedInvites = invites.filter((i: any) => 
+              i.status === 'accepted' && !i.acknowledged_at);
+            const rejectedInvites = invites.filter((i: any) => 
+              i.status === 'rejected' && !i.acknowledged_at);
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
@@ -1079,62 +1084,46 @@ export default function EinsatzPage() {
   };
 
   const handleNewAcknowledge = async () => {
+    console.log('User pressed Verstanden - showing thank you state');
+    
+    // Show thank you state immediately
+    setProcessState(prev => ({
+      ...prev,
+      stage: 'thankyou' as any
+    }));
+    
+    // Update database in background (don't wait for it)
     try {
-      console.log('Acknowledging assignments...');
-      const response = await fetch('/api/assignments/invites/acknowledge-all', {
-        method: 'POST',
-        credentials: 'include'
-      });
+      // Mark relevant assignments as acknowledged
+      const assignmentIds = [
+        ...processState.acceptedAssignments.map(a => a.id),
+        ...processState.rejectedAssignments.map(a => a.id)
+      ];
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Acknowledge API error:', errorData);
-        throw new Error(`API error: ${response.status}`);
+      for (const assignmentId of assignmentIds) {
+        fetch(`/api/assignments/${assignmentId}/invites/acknowledge`, {
+          method: 'POST',
+          credentials: 'include'
+        }).catch(e => console.error('Background acknowledge failed:', e));
       }
-      
-      const result = await response.json();
-      console.log('Acknowledge result:', result);
-      
-      // Show thank you state
-      setProcessState(prev => ({
-        ...prev,
-        stage: 'thankyou' as any
-      }));
-      
-      // After 3 seconds, reset and reload
-      setTimeout(() => {
-        setProcessState({
-          stage: 'loading',
-          invitedAssignments: [],
-          waitingAssignments: [],
-          acceptedAssignments: [],
-          rejectedAssignments: [],
-          replacementAssignments: [],
-          selectedIds: []
-        });
-        loadProcessState();
-      }, 3000);
-    } catch (error) {
-      console.error('Error acknowledging:', error);
-      // Even if acknowledgment fails, still show thank you and proceed
-      setProcessState(prev => ({
-        ...prev,
-        stage: 'thankyou' as any
-      }));
-      
-      setTimeout(() => {
-        setProcessState({
-          stage: 'loading',
-          invitedAssignments: [],
-          waitingAssignments: [],
-          acceptedAssignments: [],
-          rejectedAssignments: [],
-          replacementAssignments: [],
-          selectedIds: []
-        });
-        loadProcessState();
-      }, 3000);
+    } catch (e) {
+      console.error('Error marking as acknowledged:', e);
     }
+    
+    // After 7 seconds, reload
+    setTimeout(() => {
+      console.log('Thank you period over - reloading');
+      setProcessState({
+        stage: 'loading',
+        invitedAssignments: [],
+        waitingAssignments: [],
+        acceptedAssignments: [],
+        rejectedAssignments: [],
+        replacementAssignments: [],
+        selectedIds: []
+      });
+      loadProcessState();
+    }, 7000);
   };
 
   const handleSubmitAssignment = async () => {
@@ -1651,6 +1640,16 @@ export default function EinsatzPage() {
               <div className="flex items-center justify-center space-x-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <p className="text-green-700 dark:text-green-400 font-medium">Vielen Dank fürs Lesen!</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : processState.stage === 'verstanden' ? (
+          // Verstanden state - should not be visible as we reload immediately
+          <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-center space-x-3">
+                <CheckCircle className="h-5 w-5 text-gray-500" />
+                <p className="text-gray-600 dark:text-gray-400">Verstanden - Laden...</p>
               </div>
             </CardContent>
           </Card>
