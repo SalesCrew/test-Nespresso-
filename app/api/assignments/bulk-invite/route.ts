@@ -31,9 +31,16 @@ export async function POST(req: Request) {
       }))
     ))
 
-    const { error } = await svc
-      .from('assignment_invitations')
-      .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+    // If this is a replacement invitation, use insert to create new rows
+    // Otherwise use upsert for regular invitations
+    const { error } = replacement_for
+      ? await svc
+          .from('assignment_invitations')
+          .insert(rows as any)
+      : await svc
+          .from('assignment_invitations')
+          .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+    
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     // Save to invitation history

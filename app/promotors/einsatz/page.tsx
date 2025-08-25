@@ -313,25 +313,45 @@ export default function EinsatzPage() {
               // Show declined UI so replacements appear in the correct Ersatztermin UI
               stage = 'declined';
               
-              // For replacement invites, we need to show the original rejected assignments
-              // We'll extract assignment data from the invites that have been marked as 'verstanden'
-              // The replacement invites contain the original assignment info we need
-              const uniqueReplacementForIds = [...new Set(replacementInvites
+              // Get the original rejected invitations that these are replacements for
+              const replacementForIds = [...new Set(replacementInvites
                 .map((inv: any) => inv.replacement_for)
                 .filter((id: string | null) => id !== null))];
               
-              if (uniqueReplacementForIds.length > 0) {
-                // Since we can't fetch the original invitations (they're 'verstanden'), 
-                // we'll create placeholder rejected entries based on the fact that these ARE replacements
-                // The UI will show "Leider war jemand schneller als du." which is appropriate
-                mappedRejected = uniqueReplacementForIds.map((replacementForId: string, index: number) => ({
-                  id: `rejected-${replacementForId}`,
-                  date: 'Ursprünglicher Termin',
-                  time: '',
-                  location: 'Bereits abgesagt',
-                  status: 'rejected',
-                  isPlaceholder: true
-                }));
+              if (replacementForIds.length > 0) {
+                // Fetch the original invitations to show what was rejected
+                try {
+                  const originalInvitesRes = await fetch(`/api/assignments/invites?invitation_ids=${replacementForIds.join(',')}`, { 
+                    cache: 'no-store',
+                    credentials: 'include' 
+                  });
+                  
+                  if (originalInvitesRes.ok) {
+                    const originalData = await originalInvitesRes.json();
+                    const originalInvites = originalData.invites || [];
+                    
+                    // Map original invitations to rejected format
+                    mappedRejected = originalInvites.map((invite: any) => {
+                      const assignment = invite.assignment;
+                      if (!assignment) return null;
+                      
+                      return {
+                        id: assignment.id,
+                        date: new Date(assignment.start_ts).toLocaleDateString('de-DE', { 
+                          weekday: 'short', 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric' 
+                        }),
+                        time: `${new Date(assignment.start_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(assignment.start_ts).getUTCMinutes().toString().padStart(2, '0')}-${new Date(assignment.end_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(assignment.end_ts).getUTCMinutes().toString().padStart(2, '0')}`,
+                        location: assignment.location_text,
+                        status: 'rejected'
+                      };
+                    }).filter(Boolean);
+                  }
+                } catch (error) {
+                  console.error('Error fetching original rejected invitations:', error);
+                }
               }
             }
             

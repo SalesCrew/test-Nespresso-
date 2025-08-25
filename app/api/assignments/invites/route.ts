@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
     const status = url.searchParams.get('status') // Don't default to 'invited'
+    const invitationIds = url.searchParams.get('invitation_ids')
 
     // Use server client for auth check
     const server = createSupabaseServerClient()
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ invites: [] })
     }
     
-    console.log('Fetching invites for user:', auth.user.id, 'with status:', status)
+    console.log('Fetching invites for user:', auth.user.id, 'with status:', status, 'invitation_ids:', invitationIds)
     
     // Use service client to bypass RLS for data fetch
     const svc = createSupabaseServiceClient()
@@ -26,16 +27,24 @@ export async function GET(req: Request) {
     // Use service client to join assignment details robustly
     let query = svc
       .from('assignment_invitations')
-      .select('assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at, replacement_for')
-      .eq('user_id', auth.user.id)
+      .select('id, assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at, replacement_for')
     
-    // Only filter by status if it's provided
-    if (status) {
-      query = query.eq('status', status)
+    // If invitation_ids are provided, fetch those specific invitations
+    if (invitationIds) {
+      const ids = invitationIds.split(',').filter(id => id.trim());
+      query = query.in('id', ids)
+    } else {
+      // Otherwise filter by user
+      query = query.eq('user_id', auth.user.id)
+      
+      // Only filter by status if it's provided
+      if (status) {
+        query = query.eq('status', status)
+      }
+      
+      // Always exclude verstanden status
+      query = query.neq('status', 'verstanden')
     }
-    
-    // Always exclude verstanden status
-    query = query.neq('status', 'verstanden')
     
     const { data: invites, error: invErr } = await query
       .order('invited_at', { ascending: false })
@@ -93,6 +102,7 @@ export async function GET(req: Request) {
       const isBuddyTag = !!leadParticipant && inv.role === 'buddy'
       
       return {
+        id: inv.id,
         assignment_id: inv.assignment_id,
         status: inv.status,
         role: inv.role,
