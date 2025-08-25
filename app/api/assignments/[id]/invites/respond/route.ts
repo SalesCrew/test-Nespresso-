@@ -9,18 +9,27 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     if (!auth?.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
     const body = await _req.json().catch(() => ({}))
-    const status = body?.status as 'applied' | 'withdrawn' | 'accepted'
-    if (!['applied', 'withdrawn', 'accepted'].includes(status)) {
+    const status = body?.status as 'applied' | 'withdrawn' | 'accepted' | 'verstanden'
+    if (!['applied', 'withdrawn', 'accepted', 'verstanden'].includes(status)) {
       return NextResponse.json({ error: 'invalid status' }, { status: 400 })
     }
 
     const svc = createSupabaseServiceClient()
+    
+    // Build update object based on status
+    const updateData: any = { status }
+    
+    // Only set responded_at for initial responses, not for verstanden
+    if (status !== 'verstanden') {
+      updateData.responded_at = new Date().toISOString()
+    } else {
+      // For verstanden, also set acknowledged_at
+      updateData.acknowledged_at = new Date().toISOString()
+    }
+    
     const { error } = await svc
       .from('assignment_invitations')
-      .update({ 
-        status,
-        responded_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('assignment_id', params.id)
       .eq('user_id', auth.user.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
