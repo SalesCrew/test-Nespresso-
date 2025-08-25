@@ -309,8 +309,9 @@ export default function EinsatzPage() {
               // New invitations to select (but NOT if they are replacements for rejected)
               stage = 'select_assignment';
             } else if (mappedReplacements.length > 0) {
-              // If we ONLY have replacements with no rejected (shouldn't happen but handle it)
-              stage = 'select_assignment';
+              // If we ONLY have replacements with no rejected (original was already acknowledged)
+              // Show declined UI so replacements appear in the correct Ersatztermin UI
+              stage = 'declined';
             }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
@@ -1735,8 +1736,9 @@ export default function EinsatzPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="space-y-3">
-                {[...processState.waitingAssignments, ...processState.acceptedAssignments, ...processState.rejectedAssignments].map((assignment) => {
+              {([...processState.waitingAssignments, ...processState.acceptedAssignments, ...processState.rejectedAssignments].length > 0) && (
+                <div className="space-y-3">
+                  {[...processState.waitingAssignments, ...processState.acceptedAssignments, ...processState.rejectedAssignments].map((assignment) => {
                   const isAccepted = processState.acceptedAssignments.some(a => a.id === assignment.id);
                   const isRejected = processState.rejectedAssignments.some(a => a.id === assignment.id);
                   const isWaiting = processState.waitingAssignments.some(a => a.id === assignment.id);
@@ -1772,16 +1774,18 @@ export default function EinsatzPage() {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                  })}
+                </div>
+              )}
               
               {/* Show replacement assignments if needed */}
-              {(processState.stage === 'declined' || processState.stage === 'partially_accepted') && 
-               processState.rejectedAssignments.length > 0 && (
+              {(processState.stage === 'declined' || processState.stage === 'partially_accepted') && (
                 <>
                   <Separator className="my-4" />
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Wähle {processState.rejectedAssignments.length} Ersatztermin{processState.rejectedAssignments.length > 1 ? 'e' : ''}:
+                    {processState.rejectedAssignments.length > 0 
+                      ? `Wähle ${processState.rejectedAssignments.length} Ersatztermin${processState.rejectedAssignments.length > 1 ? 'e' : ''}:`
+                      : 'Wähle Ersatztermine aus:'}
                   </div>
                   {processState.replacementAssignments.length > 0 ? (
                     <div className="space-y-3">
@@ -1838,7 +1842,9 @@ export default function EinsatzPage() {
                 <Button 
                   className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
                   onClick={handleNewSubmitReplacements}
-                  disabled={processState.selectedIds.length !== processState.rejectedAssignments.length}
+                  disabled={processState.selectedIds.length === 0 || 
+                           (processState.rejectedAssignments.length > 0 && 
+                            processState.selectedIds.length !== processState.rejectedAssignments.length)}
                 >
                   Auswählen
                 </Button>
