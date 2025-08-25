@@ -175,8 +175,7 @@ export default function EinsatzPage() {
         // Try to get error details
         const text = await res.text();
         console.error('Error response:', text);
-        setProcessState(prev => ({ ...prev, stage: 'idle' }));
-        return;
+        throw new Error('Process state API failed'); // Throw to trigger fallback
       }
       
       const data = await res.json();
