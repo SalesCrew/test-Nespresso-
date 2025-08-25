@@ -136,7 +136,7 @@ export default function EinsatzPage() {
 
   // NEW: Simplified process state management
   const [processState, setProcessState] = useState<{
-    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted' | 'thankyou' | 'verstanden';
+    stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted' | 'thankyou';
     invitedAssignments: any[];
     waitingAssignments: any[];
     acceptedAssignments: any[];
@@ -168,7 +168,6 @@ export default function EinsatzPage() {
   const setReplacementStatuses = () => {};
   const setProcessCompleted = () => {};
   const selectedAssignment = null;
-  const setSelectedAssignment = () => {};
   const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   const [replacementAssignments, setReplacementAssignments] = useState<any[]>([]);
@@ -1094,7 +1093,6 @@ export default function EinsatzPage() {
     
     // Update database in background (don't wait for it)
     try {
-      // Mark relevant assignments as acknowledged
       const assignmentIds = [
         ...processState.acceptedAssignments.map(a => a.id),
         ...processState.rejectedAssignments.map(a => a.id)
@@ -1110,9 +1108,9 @@ export default function EinsatzPage() {
       console.error('Error marking as acknowledged:', e);
     }
     
-    // After 7 seconds, reload
+    // After 7 seconds, search for new invites
     setTimeout(() => {
-      console.log('Thank you period over - reloading');
+      console.log('Thank you period over - searching for new invites');
       setProcessState({
         stage: 'loading',
         invitedAssignments: [],
@@ -1640,16 +1638,6 @@ export default function EinsatzPage() {
               <div className="flex items-center justify-center space-x-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
                 <p className="text-green-700 dark:text-green-400 font-medium">Vielen Dank fürs Lesen!</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : processState.stage === 'verstanden' ? (
-          // Verstanden state - should not be visible as we reload immediately
-          <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center space-x-3">
-                <CheckCircle className="h-5 w-5 text-gray-500" />
-                <p className="text-gray-600 dark:text-gray-400">Verstanden - Laden...</p>
               </div>
             </CardContent>
           </Card>
