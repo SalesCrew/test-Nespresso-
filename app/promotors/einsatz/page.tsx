@@ -212,18 +212,6 @@ export default function EinsatzPage() {
           console.log('Invites data:', invites);
           
           if (invites.length > 0) {
-            // Categorize invitations by status
-            const invitedInvites = invites.filter((i: any) => i.status === 'invited' && !i.responded_at);
-            const appliedInvites = invites.filter((i: any) => i.status === 'applied');
-            const acceptedInvites = invites.filter((i: any) => i.status === 'accepted' && !i.acknowledged_at);
-            const rejectedInvites = invites.filter((i: any) => i.status === 'rejected' && !i.acknowledged_at);
-            
-            console.log('Categorized invites:');
-            console.log('- invited:', invitedInvites.length);
-            console.log('- applied:', appliedInvites.length);
-            console.log('- accepted:', acceptedInvites.length);
-            console.log('- rejected:', rejectedInvites.length);
-            
             // Map function for consistent formatting
             const mapInvite = (i: any) => {
               const a = i.assignment || {};
@@ -244,6 +232,18 @@ export default function EinsatzPage() {
                 status: i.status
               };
             };
+            
+            // Categorize invitations by status
+            const invitedInvites = invites.filter((i: any) => i.status === 'invited' && !i.responded_at);
+            const appliedInvites = invites.filter((i: any) => i.status === 'applied');
+            const acceptedInvites = invites.filter((i: any) => i.status === 'accepted' && !i.acknowledged_at);
+            const rejectedInvites = invites.filter((i: any) => i.status === 'rejected' && !i.acknowledged_at);
+            
+            console.log('Categorized invites:');
+            console.log('- invited:', invitedInvites.length);
+            console.log('- applied:', appliedInvites.length);
+            console.log('- accepted:', acceptedInvites.length);
+            console.log('- rejected:', rejectedInvites.length);
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
@@ -287,9 +287,14 @@ export default function EinsatzPage() {
             setHasAvailableAssignments(false);
             setAssignments([]);
             return; // IMPORTANT: Return here to avoid setting to idle
+          } else {
+            // No invitations at all
+            console.log('No invitations found in fallback');
+            setProcessState(prev => ({ ...prev, stage: 'idle' }));
+            return;
           }
         } else {
-          console.log('No invitations found in fallback');
+          console.log('Fallback API failed:', res.status);
           setProcessState(prev => ({ ...prev, stage: 'idle' }));
         }
       } catch (fallbackError) {
