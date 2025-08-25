@@ -1058,13 +1058,17 @@ const loadProcessState = async () => {
     }
   };
 
-  const handleBuddyTagSelect = async (id: string) => {
+  const handleBuddyTagSelect = (id: string) => {
     console.log("Selected buddy tag ID:", id);
     setSelectedBuddyTagId(id);
+  };
+
+  const handleSubmitBuddyTag = async () => {
+    if (!selectedBuddyTagId) return;
     
     try {
-      // Auto-submit buddy tag - it gets accepted immediately
-      const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+      // Submit selected buddy tag - it gets accepted immediately
+      const res = await fetch(`/api/assignments/${selectedBuddyTagId}/invites/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1073,7 +1077,7 @@ const loadProcessState = async () => {
       
       if (res.ok) {
         // Mark unselected buddy tags as withdrawn
-        const unselectedTags = buddyTags.filter(tag => tag.assignment_id !== id);
+        const unselectedTags = buddyTags.filter(tag => tag.assignment_id !== selectedBuddyTagId);
         for (const tag of unselectedTags) {
           try {
             await fetch(`/api/assignments/${tag.assignment_id}/invites/respond`, {
@@ -1732,9 +1736,13 @@ const loadProcessState = async () => {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 text-center text-sm text-gray-500">
-                Klicke auf einen Termin um ihn sofort zu bestätigen
-              </div>
+              <Button 
+                className="w-full mt-4 bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white"
+                onClick={handleSubmitBuddyTag}
+                disabled={selectedBuddyTagId === null}
+              >
+                <Check className="mr-2 h-4 w-4" /> Auswahl bestätigen
+              </Button>
             </CardContent>
           </Card>
           ) : null
