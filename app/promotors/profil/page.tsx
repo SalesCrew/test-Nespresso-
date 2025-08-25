@@ -1272,22 +1272,22 @@ export default function ProfilPage() {
                 const pendingContracts = promotorContracts.filter(c => !c.is_active && !c.file_path);
                 return pendingContracts.map((contract) => (
                   <div key={contract.id} className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Neuer Vertrag verfügbar</span>
                       <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Ausstehend</span>
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                       <div>Wochenstunden: {contract.hours_per_week || 'N/A'}</div>
                       <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
                       <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
-                    </div>
+                </div>
                     <div className="flex items-center gap-2">
-                      <button 
+                <button 
                         className="flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
                         onClick={() => handleDienstvertragSelect(contract.id)}
-                      >
-                        Ansehen & Unterschreiben
-                      </button>
+                >
+                  Ansehen & Unterschreiben
+                </button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1319,7 +1319,7 @@ export default function ProfilPage() {
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
-                    </div>
+              </div>
                   </div>
                 ));
               })()}
@@ -1377,18 +1377,18 @@ export default function ProfilPage() {
                 if (!activeContract) return null;
                 
                 return (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Aktiver Vertrag</span>
-                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Aktiv</span>
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Aktiver Vertrag</span>
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">Aktiv</span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                       <div>Wochenstunden: {activeContract.hours_per_week || 'N/A'}</div>
                       <div>Laufzeit: {activeContract.start_date ? new Date(activeContract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {activeContract.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
                       <div>Anstellungsart: {activeContract.employment_type || 'N/A'}</div>
-                    </div>
+                </div>
                     <div className="flex items-center justify-between">
-                      <button
+                <button 
                         className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                         onClick={async () => {
                           if (!userId || !activeContract.file_path) return;
@@ -1402,10 +1402,10 @@ export default function ProfilPage() {
                       <button 
                         className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                         onClick={() => handleDienstvertragSelect(activeContract.id)}
-                      >
-                        Vertrag ansehen
-                      </button>
-                    </div>
+                >
+                  Vertrag ansehen
+                </button>
+              </div>
                   </div>
                 );
               })()}
@@ -1442,28 +1442,28 @@ export default function ProfilPage() {
                 if (previousContracts.length === 0) return null;
                 
                 return (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 px-1">Frühere Verträge</h4>
                     {previousContracts.map((contract, index) => (
                       <div key={contract.id} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                             Vertrag {previousContracts.length - index}
                           </span>
                           <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">Beendet</span>
-                        </div>
+                  </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                           <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'N/A'}</div>
-                        </div>
+                  </div>
                         <div className="flex items-center gap-2">
-                          <button
+                  <button 
                             className="flex-1 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-lg transition-all duration-200"
                             onClick={() => handleDienstvertragSelect(contract.id)}
-                          >
-                            Archiv ansehen
-                          </button>
+                  >
+                    Archiv ansehen
+                  </button>
                           {contract.file_path && (
-                            <button
+                  <button 
                               className="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded-lg"
                               onClick={async () => {
                                 if (!userId) return;
@@ -1474,10 +1474,10 @@ export default function ProfilPage() {
                               title="Unterschriebenen Vertrag ansehen"
                             >
                               <Eye className="h-3 w-3" />
-                            </button>
+                  </button>
                           )}
-                        </div>
-                      </div>
+                </div>
+              </div>
                     ))}
                   </div>
                 );
@@ -1550,7 +1550,7 @@ export default function ProfilPage() {
                     const ed = useC?.end_date ? new Date(useC.end_date).toLocaleDateString('de-DE') : '';
                     const tmp = !!useC?.is_temporary;
                     return (
-                      <DienstvertragTemplate
+                  <DienstvertragTemplate
                         promotorName={headerName || ''}
                         promotorBirthDate={editablePersonalData.birthday || ''}
                         promotorAddress={headerLocation || ''}

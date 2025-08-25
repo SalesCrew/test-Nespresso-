@@ -27,24 +27,32 @@ export async function POST(req: Request) {
         user_id, 
         role, 
         status: 'invited',
-        invited_at: new Date().toISOString(),
-        responded_at: null,
-        acknowledged_at: null,
         ...(replacement_for ? { replacement_for } : {})
       }))
     ))
 
-    // Always use upsert to handle existing invitations
-    // For replacements, the replacement_for field will be included
-    const { data, error } = await svc
-      .from('assignment_invitations')
-      .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
-      .select()
+    // For replacements, we need to handle existing invitations differently
+    // Since replacements are for NEW assignments, not the same ones that were rejected
+    let result;
     
-    if (error) {
-      console.error('Bulk invite error:', error);
-      console.error('Attempted rows:', JSON.stringify(rows, null, 2));
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (replacement_for) {
+      // For replacements, always use upsert since we're inviting to NEW assignments
+      // The constraint is on assignment_id/user_id/role, so new assignments won't conflict
+      result = await svc
+        .from('assignment_invitations')
+        .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+    } else {
+      // For regular invitations, use upsert as before
+      result = await svc
+        .from('assignment_invitations')
+        .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+    }
+    
+    if (result.error) {
+      console.error('Bulk invite error:', result.error);
+      console.error('Attempted to insert rows:', rows);
+      console.error('Is replacement:', !!replacement_for);
+      return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
 
     // Save to invitation history
