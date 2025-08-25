@@ -1778,6 +1778,7 @@ export default function EinsatzplanPage() {
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
                                   <span className={`font-medium ${
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'text-green-500' :
+                                    einsatz.status === 'Buddy Tag' ? 'text-purple-500' :
                                     einsatz.status === 'Krankenstand' ? 'text-red-500' :
                                     einsatz.status === 'Notfall' ? 'text-orange-500' :
                                     einsatz.status === 'Urlaub' ? 'text-blue-500' :
@@ -1789,6 +1790,7 @@ export default function EinsatzplanPage() {
                                   </span>
                                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'bg-green-400' :
+                                    einsatz.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                                     einsatz.status === 'Krankenstand' ? 'bg-red-400' :
                                     einsatz.status === 'Notfall' ? 'bg-orange-400' :
                                     einsatz.status === 'Urlaub' ? 'bg-blue-400' :
@@ -2330,6 +2332,7 @@ export default function EinsatzplanPage() {
                           </div>
                           <div className={`w-2 h-2 rounded-full ${
                             promotion.status === 'Verplant' || promotion.status === 'bestätigt' ? 'bg-green-400' :
+                            promotion.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                             promotion.status === 'Krankenstand' ? 'bg-red-400' :
                             promotion.status === 'Notfall' ? 'bg-orange-400' :
                             promotion.status === 'Urlaub' ? 'bg-blue-400' :
@@ -2414,7 +2417,7 @@ export default function EinsatzplanPage() {
                             transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
-                          <SelectValue placeholder={editingEinsatz.status === 'Offen' ? 'Promotor auswählen' : (editingEinsatz.promotor || '')} />
+                          <SelectValue placeholder={editingEinsatz.promotor || 'Promotor auswählen'} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           {promotorsList.map((p: any) => (
@@ -2436,6 +2439,7 @@ export default function EinsatzplanPage() {
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="Offen" className="focus:bg-gray-100">Offen</SelectItem>
                           <SelectItem value="Verplant" className="focus:bg-green-100">Verplant</SelectItem>
+                          <SelectItem value="Buddy Tag" className="focus:bg-purple-100">Buddy Tag</SelectItem>
                           
                           <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
                           <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
@@ -2511,6 +2515,7 @@ export default function EinsatzplanPage() {
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${
                           editingEinsatz.status === 'Verplant' || editingEinsatz.status === 'bestätigt' ? 'bg-green-400' :
+                          editingEinsatz.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                           editingEinsatz.status === 'Krankenstand' ? 'bg-red-400' :
                           editingEinsatz.status === 'Notfall' ? 'bg-orange-400' :
                           editingEinsatz.status === 'Urlaub' ? 'bg-blue-400' :
