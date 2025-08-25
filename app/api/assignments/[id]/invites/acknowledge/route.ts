@@ -10,18 +10,19 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
     const svc = createSupabaseServiceClient()
     
-    // Insert acknowledgment record
+    // Update invitation status to 'verstanden'
     const { error } = await svc
-      .from('assignment_acknowledgments')
-      .insert({
-        assignment_id: params.id,
-        user_id: auth.user.id
+      .from('assignment_invitations')
+      .update({ 
+        status: 'verstanden',
+        acknowledged_at: new Date().toISOString()
       })
-      .select()
-      .single()
+      .eq('assignment_id', params.id)
+      .eq('user_id', auth.user.id)
+      .in('status', ['accepted', 'rejected'])
       
-    if (error && error.code !== '23505') { // Ignore unique constraint violations
-      console.error('Error saving acknowledgment:', error)
+    if (error) {
+      console.error('Error updating to verstanden:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 

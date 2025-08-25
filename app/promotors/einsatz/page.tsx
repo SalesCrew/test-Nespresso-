@@ -246,15 +246,17 @@ export default function EinsatzPage() {
             };
             
             // Categorize invitations by status
-            // Filter out assignments that have been acknowledged (verstanden)
-            const invitedInvites = invites.filter((i: any) => 
-              i.status === 'invited' && !i.responded_at && !i.acknowledged_at);
-            const appliedInvites = invites.filter((i: any) => 
-              i.status === 'applied' && !i.acknowledged_at);
-            const acceptedInvites = invites.filter((i: any) => 
-              i.status === 'accepted' && !i.acknowledged_at);
-            const rejectedInvites = invites.filter((i: any) => 
-              i.status === 'rejected' && !i.acknowledged_at);
+            // Filter out assignments with status 'verstanden'
+            const nonVerstandenInvites = invites.filter((i: any) => i.status !== 'verstanden');
+            
+            const invitedInvites = nonVerstandenInvites.filter((i: any) => 
+              i.status === 'invited' && !i.responded_at);
+            const appliedInvites = nonVerstandenInvites.filter((i: any) => 
+              i.status === 'applied');
+            const acceptedInvites = nonVerstandenInvites.filter((i: any) => 
+              i.status === 'accepted');
+            const rejectedInvites = nonVerstandenInvites.filter((i: any) => 
+              i.status === 'rejected');
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
@@ -1083,22 +1085,28 @@ export default function EinsatzPage() {
     }
   };
 
-  const handleNewAcknowledge = () => {
-    console.log('User pressed Verstanden - going directly to loading');
+  const handleNewAcknowledge = async () => {
+    console.log('User pressed Verstanden - marking as verstanden in DB');
     
-    // Mark assignments as acknowledged in background
+    // Mark assignments as verstanden in database
     const assignmentIds = [
       ...processState.acceptedAssignments.map(a => a.id),
       ...processState.rejectedAssignments.map(a => a.id)
     ];
     
-    // Fire and forget - don't wait
-    assignmentIds.forEach(id => {
-      fetch(`/api/assignments/${id}/invites/acknowledge`, {
-        method: 'POST',
-        credentials: 'include'
-      }).catch(() => {}); // Ignore errors
-    });
+    // Update status to 'verstanden' for each assignment
+    for (const assignmentId of assignmentIds) {
+      try {
+        await fetch(`/api/assignments/${assignmentId}/invites/respond`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ status: 'verstanden' })
+        });
+      } catch (e) {
+        console.error('Failed to mark as verstanden:', e);
+      }
+    }
     
     // Immediately go to loading state
     setProcessState({
@@ -1114,7 +1122,7 @@ export default function EinsatzPage() {
     // Load new assignments after short delay
     setTimeout(() => {
       loadProcessState();
-    }, 100);
+    }, 500);
   };
 
   const handleSubmitAssignment = async () => {

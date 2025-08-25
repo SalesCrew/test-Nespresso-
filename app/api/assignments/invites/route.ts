@@ -34,6 +34,9 @@ export async function GET(req: Request) {
       query = query.eq('status', status)
     }
     
+    // Always exclude verstanden status
+    query = query.neq('status', 'verstanden')
+    
     const { data: invites, error: invErr } = await query
       .order('invited_at', { ascending: false })
     
