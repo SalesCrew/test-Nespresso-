@@ -27,21 +27,25 @@ export async function POST(req: Request) {
         user_id, 
         role, 
         status: 'invited',
+        invited_at: new Date().toISOString(),
+        responded_at: null,
+        acknowledged_at: null,
         ...(replacement_for ? { replacement_for } : {})
       }))
     ))
 
-    // If this is a replacement invitation, use insert to create new rows
-    // Otherwise use upsert for regular invitations
-    const { error } = replacement_for
-      ? await svc
-          .from('assignment_invitations')
-          .insert(rows as any)
-      : await svc
-          .from('assignment_invitations')
-          .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+    // Always use upsert to handle existing invitations
+    // For replacements, the replacement_for field will be included
+    const { data, error } = await svc
+      .from('assignment_invitations')
+      .upsert(rows as any, { onConflict: 'assignment_id,user_id,role' })
+      .select()
     
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('Bulk invite error:', error);
+      console.error('Attempted rows:', JSON.stringify(rows, null, 2));
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     // Save to invitation history
     const { error: historyError } = await svc
