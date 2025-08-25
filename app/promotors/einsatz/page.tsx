@@ -1706,13 +1706,6 @@ const loadProcessState = async () => {
                     onClick={() => handleBuddyTagSelect(buddyTag.assignment_id)}
                   >
                     <div className="flex flex-col relative">
-                      {buddyTag.buddy_name && (
-                        <div className="absolute top-2 right-2">
-                          <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                            <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
-                          </Badge>
-                        </div>
-                      )}
                       <div className="text-base font-medium text-gray-800 dark:text-gray-200">
                         {new Date(buddyTag.assignment.start_ts).toLocaleDateString('de-DE', { 
                           weekday: 'short', 
@@ -1733,6 +1726,11 @@ const loadProcessState = async () => {
                             </span>
                           </Badge>
                         </div>
+                        {buddyTag.buddy_name && (
+                          <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+                            <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
