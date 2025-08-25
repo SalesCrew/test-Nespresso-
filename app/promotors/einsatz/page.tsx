@@ -1082,33 +1082,21 @@ export default function EinsatzPage() {
     }
   };
 
-  const handleNewAcknowledge = async () => {
+  const handleNewAcknowledge = () => {
     console.log('User pressed Verstanden - showing thank you state');
     
     // Show thank you state immediately
-    setProcessState(prev => ({
-      ...prev,
-      stage: 'thankyou' as any
-    }));
+    setProcessState({
+      stage: 'thankyou',
+      invitedAssignments: [],
+      waitingAssignments: [],
+      acceptedAssignments: [],
+      rejectedAssignments: [],
+      replacementAssignments: [],
+      selectedIds: []
+    });
     
-    // Update database in background (don't wait for it)
-    try {
-      const assignmentIds = [
-        ...processState.acceptedAssignments.map(a => a.id),
-        ...processState.rejectedAssignments.map(a => a.id)
-      ];
-      
-      for (const assignmentId of assignmentIds) {
-        fetch(`/api/assignments/${assignmentId}/invites/acknowledge`, {
-          method: 'POST',
-          credentials: 'include'
-        }).catch(e => console.error('Background acknowledge failed:', e));
-      }
-    } catch (e) {
-      console.error('Error marking as acknowledged:', e);
-    }
-    
-    // After 7 seconds, search for new invites
+    // After 7 seconds, go to loading and search for new invites
     setTimeout(() => {
       console.log('Thank you period over - searching for new invites');
       setProcessState({
@@ -1120,7 +1108,11 @@ export default function EinsatzPage() {
         replacementAssignments: [],
         selectedIds: []
       });
-      loadProcessState();
+      
+      // Start loading new process state
+      setTimeout(() => {
+        loadProcessState();
+      }, 100);
     }, 7000);
   };
 
