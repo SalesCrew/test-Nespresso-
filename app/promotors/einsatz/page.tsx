@@ -129,11 +129,10 @@ export default function EinsatzPage() {
   const [earlyEndReason, setEarlyEndReason] = useState("");
   const [minutesEarlyEnd, setMinutesEarlyEnd] = useState(0);
 
-  // For newcomer proposals
-  const [isNewcomer, setIsNewcomer] = useState(true); // Simulate newcomer status
-  const [proposals, setProposals] = useState(newcomerProposalsMock);
-  const [selectedProposalId, setSelectedProposalId] = useState<number | null>(null);
-  const [showProposalConfirmation, setShowProposalConfirmation] = useState(false);
+  // For buddy tags
+  const [buddyTags, setBuddyTags] = useState<any[]>([]);
+  const [selectedBuddyTagId, setSelectedBuddyTagId] = useState<string | null>(null);
+  const [showBuddyTagConfirmation, setShowBuddyTagConfirmation] = useState(false);
 
   // NEW: Simplified process state management
   const [processState, setProcessState] = useState<{
@@ -174,7 +173,29 @@ export default function EinsatzPage() {
   const [replacementAssignments, setReplacementAssignments] = useState<any[]>([]);
   
   // Load process state from API
-  const loadProcessState = async () => {
+  const loadBuddyTags = async () => {
+  try {
+    const res = await fetch('/api/assignments/buddy-tags', { 
+      cache: 'no-store',
+      credentials: 'include' 
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      const tags = data.buddy_tags || [];
+      console.log('Loaded buddy tags:', tags);
+      setBuddyTags(tags);
+    } else {
+      console.error('Failed to load buddy tags:', res.status);
+      setBuddyTags([]);
+    }
+  } catch (error) {
+    console.error('Error loading buddy tags:', error);
+    setBuddyTags([]);
+  }
+};
+
+const loadProcessState = async () => {
     try {
       console.log('Loading process state...');
       const res = await fetch('/api/assignments/invites/process-state', {
@@ -416,6 +437,7 @@ export default function EinsatzPage() {
     console.log('Initial hasAvailableAssignments:', hasAvailableAssignments);
     console.log('Initial assignments:', assignments);
     loadProcessState();
+    loadBuddyTags();
   }, []);
   
   // Track processState changes
@@ -1036,22 +1058,46 @@ export default function EinsatzPage() {
     }
   };
 
-  const handleProposalSelect = (id: number) => {
-    setSelectedProposalId(id);
-  };
-
-  const handleSubmitProposal = () => {
-    if (selectedProposalId !== null) {
-      console.log("Submitted proposal ID:", selectedProposalId);
-      // Here, you'd typically send this to a backend.
-      // For UI demo, we can disable the card or show a message.
-      setProposals([]); // Or mark as submitted
-      setShowProposalConfirmation(true);
-      setTimeout(() => {
-        setShowProposalConfirmation(false);
-        setIsNewcomer(false);
-        setSelectedProposalId(null);
-      }, 7000); // Hide message after 7s and reset state
+  const handleBuddyTagSelect = async (id: string) => {
+    console.log("Selected buddy tag ID:", id);
+    setSelectedBuddyTagId(id);
+    
+    try {
+      // Auto-submit buddy tag - it gets accepted immediately
+      const res = await fetch(`/api/assignments/${id}/invites/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'accepted' })
+      });
+      
+      if (res.ok) {
+        // Mark unselected buddy tags as withdrawn
+        const unselectedTags = buddyTags.filter(tag => tag.assignment_id !== id);
+        for (const tag of unselectedTags) {
+          try {
+            await fetch(`/api/assignments/${tag.assignment_id}/invites/respond`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ status: 'withdrawn' })
+            });
+          } catch (e) {
+            console.error('Failed to withdraw unselected buddy tag:', e);
+          }
+        }
+        
+        // Show confirmation and reload
+        setShowBuddyTagConfirmation(true);
+        setTimeout(() => {
+          setShowBuddyTagConfirmation(false);
+          setBuddyTags([]);
+          setSelectedBuddyTagId(null);
+          loadProcessState(); // Reload to show accepted state
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Error submitting buddy tag:', error);
     }
   };
 
@@ -1635,8 +1681,8 @@ export default function EinsatzPage() {
         )}
 
         {/* Newcomer Date Selection Card */}
-        {!showProposalConfirmation ? (
-          isNewcomer && proposals.length > 0 ? (
+        {!showBuddyTagConfirmation ? (
+          buddyTags.length > 0 ? (
           <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
             <CardHeader>
               <CardTitle className="text-blue-600 dark:text-blue-400 text-center">
@@ -1646,51 +1692,49 @@ export default function EinsatzPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {proposals.map((proposal) => (
+                {buddyTags.map((buddyTag) => (
                   <div
-                    key={proposal.id}
+                    key={buddyTag.assignment_id}
                     className={`p-2.5 border rounded-lg cursor-pointer transition-all relative min-h-[100px]
-                                ${selectedProposalId === proposal.id 
-                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md scale-105' 
+                                ${selectedBuddyTagId === buddyTag.assignment_id 
+                                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 shadow-md scale-105' 
                                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'}`}
-                    onClick={() => handleProposalSelect(proposal.id)}
+                    onClick={() => handleBuddyTagSelect(buddyTag.assignment_id)}
                   >
-                    <button 
-                      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 opacity-40 hover:opacity-100 transition-opacity"
-                      onClick={(e) => handleInfoClick(e, proposal)}
-                      aria-label="Mehr Details"
-                    >
-                      <Info className="h-4 w-4" />
-                    </button>
-                        <div className="flex flex-col">
-      <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-        {proposal.date.split(' ')[0]} {proposal.date.split(' ')[1]} {/* Day of week + Date */}
-      </div>
-      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-1.5">
-        {proposal.location}
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="relative inline-flex">
-          <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
-          <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-            <span className="flex items-center">{proposal.date.split(' ')[2]}</span>
-          </Badge>
-        </div>
-                        <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                          <span className="flex items-center">Buddy: Cesira</span>
-                        </Badge>
+                    <div className="flex flex-col">
+                      <div className="text-base font-medium text-gray-800 dark:text-gray-200">
+                        {new Date(buddyTag.assignment.start_ts).toLocaleDateString('de-DE', { 
+                          weekday: 'short', 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric' 
+                        })}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-1.5">
+                        {buddyTag.assignment.location_text}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="relative inline-flex">
+                          <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
+                          <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+                            <span className="flex items-center">
+                              {`${new Date(buddyTag.assignment.start_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.start_ts).getUTCMinutes().toString().padStart(2, '0')}-${new Date(buddyTag.assignment.end_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.end_ts).getUTCMinutes().toString().padStart(2, '0')}`}
+                            </span>
+                          </Badge>
+                        </div>
+                        {buddyTag.buddy_name && (
+                          <Badge className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
+                            <span className="flex items-center">Buddy: {buddyTag.buddy_name}</span>
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <Button 
-                className="w-full mt-4 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
-                onClick={handleSubmitProposal}
-                disabled={selectedProposalId === null}
-              >
-                <Check className="mr-2 h-4 w-4" /> Auswahl bestätigen
-              </Button>
+              <div className="mt-4 text-center text-sm text-gray-500">
+                Klicke auf einen Termin um ihn sofort zu bestätigen
+              </div>
             </CardContent>
           </Card>
           ) : null
@@ -1711,8 +1755,8 @@ export default function EinsatzPage() {
                     <div className="flex items-center justify-center h-[140px] w-full px-4">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
                         <div className="text-white">
-                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Auswählen!</div>
-                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
+                          <div className="text-lg font-semibold mb-2">✓ Buddy Tag bestätigt!</div>
+                          <div className="text-sm">Dein Buddy Tag wurde erfolgreich bestätigt.</div>
                         </div>
                       </div>
                     </div>
