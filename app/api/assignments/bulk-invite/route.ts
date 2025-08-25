@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     const assignment_ids: string[] = Array.isArray(body.assignment_ids) ? body.assignment_ids : []
     const promotor_ids: string[] = Array.isArray(body.promotor_ids) ? body.promotor_ids : []
     const buddy: boolean = Boolean(body.buddy)
+    const replacement_for: string | null = body.replacement_for || null
 
     if (assignment_ids.length === 0 || promotor_ids.length === 0) {
       return NextResponse.json({ error: 'assignment_ids and promotor_ids are required' }, { status: 400 })
@@ -21,7 +22,13 @@ export async function POST(req: Request) {
 
     const role = buddy ? 'buddy' : 'lead'
     const rows = assignment_ids.flatMap((assignment_id: string) => (
-      promotor_ids.map((user_id: string) => ({ assignment_id, user_id, role, status: 'invited' }))
+      promotor_ids.map((user_id: string) => ({ 
+        assignment_id, 
+        user_id, 
+        role, 
+        status: 'invited',
+        replacement_for 
+      }))
     ))
 
     const { error } = await svc

@@ -88,7 +88,7 @@ export default function EinsatzplanPage() {
   const [selectedEinsatz, setSelectedEinsatz] = useState<any>(null);
   const [editingEinsatz, setEditingEinsatz] = useState<any>(null);
   const [showReplacementModal, setShowReplacementModal] = useState(false);
-  const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string} | null>(null);
+  const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string, invitation_id?: string} | null>(null);
   const [openAssignments, setOpenAssignments] = useState<any[]>([]);
   const [selectedReplacementAssignments, setSelectedReplacementAssignments] = useState<string[]>([]);
   
@@ -844,7 +844,8 @@ export default function EinsatzplanPage() {
         body: JSON.stringify({
           assignment_ids: selectedReplacementAssignments,
           promotor_ids: [declinedPromotor.user_id],
-          buddy: false
+          buddy: false,
+          replacement_for: declinedPromotor.invitation_id
         })
       });
       
@@ -853,7 +854,7 @@ export default function EinsatzplanPage() {
         setDeclinedPromotor(null);
         setSelectedReplacementAssignments([]);
         
-        // Update the status in the invitations to show as replacement
+        // The replacement_for field will link these to the rejected invitation
         // This will trigger the replacement UI in the promotor's view
       }
     } catch (error) {
@@ -2624,17 +2625,20 @@ export default function EinsatzplanPage() {
                                         
                                         // After animation, open replacement assignment window
                                         setTimeout(async () => {
+                                          let invitationId = null;
                                           try {
-                                            await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
+                                            const res = await fetch(`/api/assignments/${editingEinsatz.id}/applications/decline`, {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json' },
                                               body: JSON.stringify({ user_id: app.user_id })
                                             });
+                                            const data = await res.json();
+                                            invitationId = data.invitation_id;
                                           } catch {}
                                           setApplicationsList(prev => prev.filter((x: any) => x.user_id !== app.user_id));
                                           
                                           // Open replacement assignment selection
-                                          setDeclinedPromotor({ user_id: app.user_id, name: app.name });
+                                          setDeclinedPromotor({ user_id: app.user_id, name: app.name, invitation_id: invitationId });
                                           setShowReplacementModal(true);
                                         }, 500);
                                       }}
