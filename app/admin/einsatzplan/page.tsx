@@ -1752,9 +1752,12 @@ export default function EinsatzplanPage() {
                                 const rawPromotorName = einsatz.promotor?.includes(' & ') 
                                   ? einsatz.promotor.split(' & ')[0] 
                                   : einsatz.promotor;
+                                // Auto-set status to Buddy Tag if buddy_name exists
+                                const autoStatus = einsatz.buddy_name ? 'Buddy Tag' : einsatz.status;
                                 setEditingEinsatz({
                                   ...einsatz,
-                                  promotor: rawPromotorName
+                                  promotor: rawPromotorName,
+                                  status: autoStatus
                                 });
                                 setShowDetailModal(true);
                               }
