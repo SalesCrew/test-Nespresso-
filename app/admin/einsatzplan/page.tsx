@@ -35,6 +35,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+import AIPromotorRecommendations from "@/components/AIPromotorRecommendations";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export default function EinsatzplanPage() {
@@ -3143,6 +3144,18 @@ export default function EinsatzplanPage() {
           </div>
         </div>
       )}
+
+      {/* AI Promotor Recommendations */}
+      <AIPromotorRecommendations 
+        selectedAssignmentId={selectedEinsatz?.id} 
+        onPromotorSelect={(promotorId, promotorName) => {
+          // Auto-assign the recommended promotor to the selected assignment
+          if (selectedEinsatz) {
+            assignPromotionToPromotor(promotorName, promotorId);
+            setEditingEinsatz({ ...selectedEinsatz, promotor: promotorName, promotorId: promotorId, status: 'Verplant' });
+          }
+        }}
+      />
 
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
