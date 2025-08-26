@@ -355,6 +355,7 @@ STRIKTE REGELN:
 - Nutze ausschließlich die übergebenen Angaben
 - Erfinde NICHTS, nutze keine externen Quellen
 - Führe keine Nebenaufgaben aus
+- HARTE REGEL (Cluster/Bundesland): Das Cluster/Bundesland der/des Promotor:in MUSS 1:1 mit dem Cluster/Bundesland des Einsatzes übereinstimmen. Keine Cross-Cluster-Vorschläge. Beispiel: "Wien/NÖ/BGL" ↔ nur Einsätze in "Wien/NÖ/BGL".
 - Prüfe harte Eignung: Verfügbarkeit, verbleibende Wochenstunden, Muss-Anforderungen, keine Sperren
 - Bewerte geeignete Personen nach: Nähe/Anreise, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
 - Löse Gleichstände strikt deterministisch (alphabetische Reihenfolge bei gleicher Bewertung)
@@ -387,7 +388,7 @@ ${JSON.stringify(assignmentContext, null, 2)}
 
 WICHTIGE PRÜFKRITERIEN:
 1. HARTE EIGNUNG:
-   - Region/Bundesland muss übereinstimmen
+   - EXAKTE CLUSTER-/BUNDESLAND-ÜBEREINSTIMMUNG (AUSSCHLUSSKRITERIUM): Wenn das Cluster des/der Promotor:in nicht exakt dem Einsatz-Cluster entspricht → Kandidat strikt ausschließen. Beispiel: "Wien/NÖ/BGL" darf NUR Einsätze in "Wien/NÖ/BGL".
    - Verfügbarkeit an working_days prüfen
    - Verbleibende Wochenstunden (remaining_hours_this_week) ausreichend
    - Keine Sperren in assignment restrictions
