@@ -2594,34 +2594,34 @@ export default function EinsatzplanPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
-                      <Select
-                        value={editingEinsatz.buddy_name ? 'Buddy Tag' : editingEinsatz.status}
-                        onValueChange={(value) => {
-                          // If there's a buddy, force status to stay as Buddy Tag
-                          if (editingEinsatz.buddy_name) {
-                            return; // Don't allow status change when buddy exists
-                          }
-                          updateAssignmentStatus(editingEinsatz.id, value);
-                        }}
-                      >
-                        <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
-                          <SelectValue placeholder="Status wählen" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                          <SelectItem value="Offen" className="focus:bg-gray-100">Offen</SelectItem>
-                          <SelectItem value="Verplant" className="focus:bg-green-100">Verplant</SelectItem>
-                          <SelectItem value="Buddy Tag" className="focus:bg-purple-100">Buddy Tag</SelectItem>
-                          
-                          <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
-                          <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
-                          <SelectItem value="Zeitausgleich" className="focus:bg-yellow-100">Zeitausgleich</SelectItem>
-                          <SelectItem value="Notfall" className="focus:bg-orange-100">Notfall</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
+                    <Select
+                      value={editingEinsatz.buddy_name ? 'Buddy Tag' : editingEinsatz.status}
+                      onValueChange={(value) => {
+                        // If there's a buddy, force status to stay as Buddy Tag
+                        if (editingEinsatz.buddy_name) {
+                          return; // Don't allow status change when buddy exists
+                        }
+                        updateAssignmentStatus(editingEinsatz.id, value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
+                        <SelectValue placeholder="Status wählen" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        <SelectItem value="Offen" className="focus:bg-gray-100">Offen</SelectItem>
+                        <SelectItem value="Verplant" className="focus:bg-green-100">Verplant</SelectItem>
+                        <SelectItem value="Buddy Tag" className="focus:bg-purple-100">Buddy Tag</SelectItem>
+                        
+                        <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
+                        <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
+                        <SelectItem value="Zeitausgleich" className="focus:bg-yellow-100">Zeitausgleich</SelectItem>
+                        <SelectItem value="Notfall" className="focus:bg-orange-100">Notfall</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
