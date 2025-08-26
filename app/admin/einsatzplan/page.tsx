@@ -1197,9 +1197,17 @@ export default function EinsatzplanPage() {
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
           // If there's a buddy, force status to Buddy Tag regardless of database status
           status: (r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
+                  // Map all database statuses to UI statuses
                   (r.status === 'assigned' ? 'Verplant' : 
                    r.status === 'buddy_tag' ? 'Buddy Tag' : 
-                   r.status === 'open' ? 'Offen' : 
+                   r.status === 'open' ? 'Offen' :
+                   r.status === 'krankenstand' ? 'Krankenstand' :
+                   r.status === 'notfall' ? 'Notfall' :
+                   r.status === 'urlaub' ? 'Urlaub' :
+                   r.status === 'zeitausgleich' ? 'Zeitausgleich' :
+                   r.status === 'markierte' ? 'Markierte' :
+                   r.status === 'bestätigt' ? 'bestätigt' :
+                   r.status === 'geplant' ? 'geplant' :
                    (r.status || 'Offen')),
           // Include buddy information
           promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
