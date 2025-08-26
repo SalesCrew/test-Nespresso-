@@ -8,22 +8,34 @@ const openai = new OpenAI({
 })
 
 export async function POST(req: Request) {
+  console.log('🚀 AI Recommendation Request Started')
+  
   try {
     const body = await req.json().catch(() => ({}))
     const assignmentId = body?.assignmentId
     const maxRecommendations = body?.maxRecommendations || 6
 
+    console.log('📋 Request Parameters:', {
+      assignmentId,
+      maxRecommendations,
+      hasApiKey: !!process.env.OPENAI_API_KEY
+    })
+
     if (!assignmentId) {
+      console.log('❌ Missing assignmentId')
       return NextResponse.json({ error: 'assignmentId required' }, { status: 400 })
     }
 
     if (!process.env.OPENAI_API_KEY) {
+      console.log('❌ Missing OpenAI API key')
       return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
     }
 
     const svc = createSupabaseServiceClient()
+    console.log('📊 Database connection established')
     
     // Get assignment details
+    console.log('🎯 Fetching assignment details for ID:', assignmentId)
     const { data: assignment, error: assignmentError } = await svc
       .from('assignments')
       .select('*')
@@ -31,37 +43,69 @@ export async function POST(req: Request) {
       .single()
     
     if (assignmentError || !assignment) {
+      console.log('❌ Assignment fetch error:', assignmentError?.message || 'Assignment not found')
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
     }
+    
+    console.log('✅ Assignment found:', {
+      id: assignment.id,
+      title: assignment.title,
+      location: assignment.location_text,
+      region: assignment.region,
+      postal_code: assignment.postal_code,
+      start_ts: assignment.start_ts,
+      end_ts: assignment.end_ts
+    })
 
     // Get all promotors with comprehensive data
+    console.log('👥 Fetching promotor users...')
     const { data: users, error: usersError } = await svc
       .from('user_profiles')
       .select('user_id, display_name, phone, role')
       .eq('role', 'promotor')
 
     if (usersError) {
+      console.log('❌ Users fetch error:', usersError.message)
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
     }
 
+    console.log(`✅ Found ${users?.length || 0} promotor users`)
     const userIds = (users || []).map((u: any) => u.user_id)
+    console.log('🔍 User IDs:', userIds.slice(0, 3), userIds.length > 3 ? `... (${userIds.length} total)` : '')
     
     // Get promotor profiles with detailed info
-    const { data: profiles } = await svc
+    console.log('📋 Fetching promotor profiles...')
+    const { data: profiles, error: profilesError } = await svc
       .from('promotor_profiles')
       .select('user_id, phone, region, postal_code, city, working_days')
       .in('user_id', userIds)
 
+    if (profilesError) {
+      console.log('⚠️ Profiles fetch error:', profilesError.message)
+    }
+    console.log(`✅ Found ${profiles?.length || 0} promotor profiles`)
+
     // Get active contracts for weekly hours
-    const { data: contracts } = await svc
+    console.log('📄 Fetching active contracts...')
+    const { data: contracts, error: contractsError } = await svc
       .from('contracts')
       .select('user_id, hours_per_week, is_active')
       .in('user_id', userIds)
       .eq('is_active', true)
 
+    if (contractsError) {
+      console.log('⚠️ Contracts fetch error:', contractsError.message)
+    }
+    console.log(`✅ Found ${contracts?.length || 0} active contracts`)
+
     // Calculate current calendar week from assignment date
     const assignmentDate = new Date(assignment.start_ts || assignment.date)
     const currentKW = getCalendarWeek(assignmentDate)
+    console.log('📅 Assignment date analysis:', {
+      assignmentDate: assignmentDate.toISOString(),
+      currentKW,
+      formattedDate: assignmentDate.toLocaleDateString('de-DE')
+    })
     
     // Get date range for context (4 weeks before/after)
     const contextStartDate = new Date(assignmentDate)
@@ -69,19 +113,36 @@ export async function POST(req: Request) {
     const contextEndDate = new Date(assignmentDate) 
     contextEndDate.setDate(contextEndDate.getDate() + 28)
 
+    console.log('🕰️ Context date range:', {
+      contextStart: contextStartDate.toLocaleDateString('de-DE'),
+      contextEnd: contextEndDate.toLocaleDateString('de-DE')
+    })
+
     // Get assignment history for context (4 weeks before/after current assignment)
-    const { data: assignmentHistory } = await svc
+    console.log('📚 Fetching assignment history...')
+    const { data: assignmentHistory, error: historyError } = await svc
       .from('assignments')
       .select('id, title, location_text, postal_code, region, start_ts, end_ts, status, notes')
       .gte('start_ts', contextStartDate.toISOString())
       .lte('start_ts', contextEndDate.toISOString())
       .order('start_ts', { ascending: true })
 
+    if (historyError) {
+      console.log('⚠️ Assignment history fetch error:', historyError.message)
+    }
+    console.log(`✅ Found ${assignmentHistory?.length || 0} historical assignments`)
+
     // Get current week assignments for workload calculation
     const weekStart = getWeekStart(assignmentDate)
     const weekEnd = getWeekEnd(assignmentDate)
+    console.log('📊 Current week range:', {
+      weekStart: weekStart.toLocaleDateString('de-DE'),
+      weekEnd: weekEnd.toLocaleDateString('de-DE'),
+      weekKW: currentKW
+    })
     
-    const { data: currentWeekAssignments } = await svc
+    console.log('⏱️ Fetching current week assignments...')
+    const { data: currentWeekAssignments, error: weekAssignmentsError } = await svc
       .from('assignment_participants')
       .select(`
         user_id,
@@ -91,11 +152,20 @@ export async function POST(req: Request) {
       .gte('assignments.start_ts', weekStart.toISOString())
       .lte('assignments.start_ts', weekEnd.toISOString())
 
+    if (weekAssignmentsError) {
+      console.log('⚠️ Week assignments fetch error:', weekAssignmentsError.message)
+    }
+    console.log(`✅ Found ${currentWeekAssignments?.length || 0} current week assignment participations`)
+
     // Create maps for quick lookup
+    console.log('🗂️ Creating lookup maps...')
     const profileByUser = new Map((profiles || []).map((p: any) => [p.user_id, p]))
     const contractByUser = new Map((contracts || []).map((c: any) => [c.user_id, c]))
+    console.log(`📋 Profile map: ${profileByUser.size} entries`)
+    console.log(`📄 Contract map: ${contractByUser.size} entries`)
     
     // Group current week assignments by user
+    console.log('📊 Grouping week assignments by user...')
     const weekAssignmentsByUser = new Map()
     ;(currentWeekAssignments || []).forEach((item: any) => {
       const userId = item.user_id
@@ -104,8 +174,10 @@ export async function POST(req: Request) {
       }
       weekAssignmentsByUser.get(userId).push(item.assignments)
     })
+    console.log(`⏱️ Week assignments grouped for ${weekAssignmentsByUser.size} users`)
     
-    const promotors = (users || []).map((u: any) => {
+    console.log('👥 Building comprehensive promotor data...')
+    const promotors = (users || []).map((u: any, index: number) => {
       const profile = profileByUser.get(u.user_id) as any
       const contract = contractByUser.get(u.user_id) as any
       const weekAssignments = weekAssignmentsByUser.get(u.user_id) || []
@@ -115,7 +187,7 @@ export async function POST(req: Request) {
       const contractHours = contract?.hours_per_week || 0
       const remainingHours = Math.max(0, contractHours - workedHours)
       
-      return {
+      const promotorData = {
         ...u,
         phone: profile?.phone || u.phone || '+43 123 456 789',
         region: profile?.region || 'wien-noe-bgl',
@@ -127,7 +199,21 @@ export async function POST(req: Request) {
         remaining_hours_this_week: remainingHours,
         current_week_assignments: weekAssignments.length
       }
+      
+      if (index < 3) {
+        console.log(`👤 Promotor ${index + 1}: ${promotorData.display_name}`, {
+          region: promotorData.region,
+          contractHours: promotorData.contract_hours_per_week,
+          workedHours: promotorData.worked_hours_this_week,
+          remainingHours: promotorData.remaining_hours_this_week,
+          weekAssignments: promotorData.current_week_assignments
+        })
+      }
+      
+      return promotorData
     })
+    
+    console.log(`✅ Built data for ${promotors.length} promotors`)
 
     // Helper functions
     function getCalendarWeek(date: Date): number {
@@ -207,9 +293,12 @@ export async function POST(req: Request) {
     }))
 
     // Check for assignment restrictions in notes
+    console.log('🚫 Checking assignment restrictions...')
     const assignmentRestrictions = extractRestrictions(assignment.notes || '')
+    console.log('🚫 Assignment restrictions:', assignmentRestrictions.length > 0 ? assignmentRestrictions : 'None found')
     
     // Prepare assignment history context (4 weeks before/after)
+    console.log('📚 Preparing assignment context...')
     const assignmentContext = (assignmentHistory || []).map((hist: any) => ({
       id: hist.id,
       location_text: hist.location_text,
@@ -220,6 +309,7 @@ export async function POST(req: Request) {
       calendar_week: getCalendarWeek(new Date(hist.start_ts)),
       notes: hist.notes
     }))
+    console.log(`📚 Assignment context: ${assignmentContext.length} assignments over 8 weeks`)
 
     function extractRestrictions(notes: string): string[] {
       if (!notes) return []
@@ -238,6 +328,17 @@ export async function POST(req: Request) {
     }
 
     // Call GPT-5 nano for recommendations
+    console.log('🤖 Calling GPT-5 nano for AI analysis...')
+    console.log('📤 AI request parameters:', {
+      model: 'gpt-5-nano',
+      temperature: 0.3,
+      max_tokens: 2000,
+      promotorCount: promotorData.length,
+      assignmentKW: currentKW,
+      hasRestrictions: assignmentRestrictions.length > 0,
+      contextAssignments: assignmentContext.length
+    })
+    
     try {
       const completion = await openai.chat.completions.create({
         model: "gpt-5-nano",
@@ -312,43 +413,80 @@ Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW 
       })
 
       const aiResponse = completion.choices[0]?.message?.content
+      console.log('📥 Raw AI response received:', {
+        hasResponse: !!aiResponse,
+        responseLength: aiResponse?.length || 0,
+        tokensUsed: completion.usage?.total_tokens || 0
+      })
+      
       if (!aiResponse) {
+        console.log('❌ No response content from AI')
         throw new Error('No response from AI')
       }
+
+      console.log('🔍 AI Response Preview:', aiResponse.substring(0, 200) + '...')
 
       // Parse AI response
       let recommendations: any[]
       try {
+        console.log('🔄 Parsing AI JSON response...')
         const parsed = JSON.parse(aiResponse)
         recommendations = Array.isArray(parsed) ? parsed : parsed.recommendations || []
+        console.log(`✅ Successfully parsed ${recommendations.length} recommendations`)
       } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError)
+        console.error('❌ Failed to parse AI response:', parseError)
+        console.error('📄 Raw response that failed to parse:', aiResponse)
         throw new Error('Invalid AI response format')
       }
 
       // Validate and sanitize recommendations
+      console.log('🔍 Validating and sanitizing recommendations...')
       const validRecommendations = recommendations
         .slice(0, maxRecommendations)
-        .map((rec: any, index: number) => ({
-          keyword: rec.keyword || `promotor_${rec.promotorId?.slice(0, 8) || index}`,
-          promotorName: rec.promotorName || 'Unknown',
-          promotorId: rec.promotorId || '',
-          phone: rec.phone || '',
-          confidence: Math.max(0.0, Math.min(1.0, Number(rec.confidence) || 0.5)),
-          rank: rec.rank || (index + 1),
-          reasoning: rec.reasoning || 'AI recommendation'
-        }))
+        .map((rec: any, index: number) => {
+          const validated = {
+            keyword: rec.keyword || `promotor_${rec.promotorId?.slice(0, 8) || index}`,
+            promotorName: rec.promotorName || 'Unknown',
+            promotorId: rec.promotorId || '',
+            phone: rec.phone || '',
+            confidence: Math.max(0.0, Math.min(1.0, Number(rec.confidence) || 0.5)),
+            rank: rec.rank || (index + 1),
+            reasoning: rec.reasoning || 'AI recommendation'
+          }
+          
+          if (index < 3) {
+            console.log(`🏆 Recommendation ${index + 1}:`, {
+              rank: validated.rank,
+              name: validated.promotorName,
+              confidence: validated.confidence,
+              reasoning: validated.reasoning.substring(0, 50) + '...'
+            })
+          }
+          
+          return validated
+        })
+
+      console.log(`✅ Final recommendations count: ${validRecommendations.length}`)
+      console.log('🎯 AI recommendation process completed successfully')
 
       return NextResponse.json({ 
         success: true,
         assignmentId,
         recommendations: validRecommendations,
         timestamp: new Date().toISOString(),
-        source: 'gpt-5-nano'
+        source: 'gpt-5-nano',
+        debug: {
+          totalPromotors: promotors.length,
+          calendarWeek: currentKW,
+          restrictionsFound: assignmentRestrictions.length,
+          contextAssignments: assignmentContext.length,
+          tokensUsed: completion.usage?.total_tokens || 0
+        }
       })
 
     } catch (aiError: any) {
-      console.error('AI API Error:', aiError)
+      console.error('❌ AI API Error:', aiError)
+      console.log('🔄 Falling back to mock recommendations...')
       
       // Fallback to mock data if AI fails
       const fallbackRecommendations = (promotors || [])
@@ -363,18 +501,31 @@ Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW 
           reasoning: `Fallback recommendation (AI unavailable: ${aiError.message})`
         }))
 
+      console.log(`🆘 Fallback completed with ${fallbackRecommendations.length} recommendations`)
+
       return NextResponse.json({ 
         success: true,
         assignmentId,
         recommendations: fallbackRecommendations,
         timestamp: new Date().toISOString(),
         source: 'fallback',
-        error: `AI error: ${aiError.message}`
+        error: `AI error: ${aiError.message}`,
+        debug: {
+          totalPromotors: promotors.length,
+          calendarWeek: currentKW,
+          restrictionsFound: assignmentRestrictions.length,
+          contextAssignments: assignmentContext.length,
+          aiErrorType: aiError.constructor.name
+        }
       })
     }
 
   } catch (e: any) {
-    console.error('AI recommendation error:', e)
-    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
+    console.error('❌ Critical AI recommendation error:', e)
+    console.error('📊 Error stack:', e.stack)
+    return NextResponse.json({ 
+      error: e?.message || 'Server error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 })
   }
 }
