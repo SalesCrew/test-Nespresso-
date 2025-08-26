@@ -283,11 +283,21 @@ export default function EinsatzplanPage() {
   // Function to update assignment notes
   const updateAssignmentNotes = async (assignmentId: string, notes: string) => {
     try {
-      await fetch(`/api/assignments/${assignmentId}`, {
+      console.log('🔵 Saving notes:', { assignmentId, notes });
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes })
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Failed to save notes:', response.status, errorText);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('✅ Notes saved successfully:', result);
       
       // Update local state
       setEditingEinsatz((prev: any) => prev ? { ...prev, notes } : prev);
@@ -1164,6 +1174,10 @@ export default function EinsatzplanPage() {
       console.log('🟢 Response data:', j);
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
       console.log('🟢 Assignments count:', rows.length);
+      if (rows.length > 0) {
+        console.log('🟢 First assignment data:', rows[0]);
+        console.log('🟢 Notes field in first assignment:', rows[0].notes);
+      }
       const mapped = rows.map((r) => {
         const startIso: string = r.start_ts || ''
         const endIso: string = r.end_ts || r.start_ts || ''
