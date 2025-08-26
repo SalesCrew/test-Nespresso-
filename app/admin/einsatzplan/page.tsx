@@ -2429,21 +2429,29 @@ export default function EinsatzplanPage() {
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Buddy (optional)</label>
                       <Select
-                        value={editingEinsatz.buddy_user_id || ''}
+                        value={editingEinsatz.buddy_user_id || 'none'}
                         onValueChange={(val) => {
-                          const buddy = promotorsList.find((x: any) => x.id === val);
-                          setEditingEinsatz({ 
-                            ...editingEinsatz, 
-                            buddy_user_id: val, 
-                            buddy_name: buddy ? buddy.name : '' 
-                          });
+                          if (val === 'none') {
+                            setEditingEinsatz({ 
+                              ...editingEinsatz, 
+                              buddy_user_id: null, 
+                              buddy_name: null 
+                            });
+                          } else {
+                            const buddy = promotorsList.find((x: any) => x.id === val);
+                            setEditingEinsatz({ 
+                              ...editingEinsatz, 
+                              buddy_user_id: val, 
+                              buddy_name: buddy ? buddy.name : '' 
+                            });
+                          }
                         }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
                           <SelectValue placeholder={editingEinsatz.buddy_name || 'Buddy auswählen'} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
-                          <SelectItem value="" className="focus:bg-gray-100">Kein Buddy</SelectItem>
+                          <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
                           {promotorsList.map((p: any) => (
                             <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
                           ))}
