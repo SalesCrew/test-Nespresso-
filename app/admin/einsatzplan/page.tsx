@@ -2035,8 +2035,8 @@ export default function EinsatzplanPage() {
                   {/* Header with Toggle Button */}
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-green-600" />
                       {aiMode ? 'Perfect Match' : 'Perfect Match'}
+                      <Sparkles className="h-4 w-4 text-black" />
                     </h3>
                     <button
                       onClick={() => {
