@@ -26,16 +26,34 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.postal_code !== undefined) updates.postal_code = String(body.postal_code)
     if (body.city !== undefined) updates.city = String(body.city)
     if (body.region !== undefined) updates.region = String(body.region)
+    if (body.notes !== undefined) updates.notes = String(body.notes)
 
-    // Optional mapping from UI status → DB status
+    // Handle status updates - accept both UI and DB status formats
     if (body.status) {
-      const ui = String(body.status)
-      const map: Record<string, 'open' | 'assigned' | 'inviting' | 'completed' | 'cancelled'> = {
-        Offen: 'open',
-        Verplant: 'assigned',
+      const status = String(body.status)
+      // If it's already a valid DB status, use it directly
+      const validDbStatuses = ['open', 'assigned', 'buddy_tag', 'inviting', 'completed', 'cancelled', 
+                               'krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 
+                               'bestätigt', 'geplant']
+      if (validDbStatuses.includes(status)) {
+        updates.status = status
+      } else {
+        // Otherwise map from UI status to DB status
+        const map: Record<string, string> = {
+          'Offen': 'open',
+          'Verplant': 'assigned',
+          'Buddy Tag': 'buddy_tag',
+          'Krankenstand': 'krankenstand',
+          'Notfall': 'notfall',
+          'Urlaub': 'urlaub',
+          'Zeitausgleich': 'zeitausgleich',
+          'Markierte': 'markierte',
+          'bestätigt': 'bestätigt',
+          'geplant': 'geplant'
+        }
+        const dbStatus = map[status]
+        if (dbStatus) updates.status = dbStatus
       }
-      const dbStatus = map[ui]
-      if (dbStatus) updates.status = dbStatus
     }
 
     if (Object.keys(updates).length === 0) {

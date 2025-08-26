@@ -255,6 +255,50 @@ export default function EinsatzplanPage() {
     ))
   };
 
+  // Function to update assignment status
+  const updateAssignmentStatus = async (assignmentId: string, newStatus: string) => {
+    try {
+      // Convert UI status to database status
+      const dbStatus = newStatus === 'Verplant' ? 'assigned' : 
+                       newStatus === 'Buddy Tag' ? 'buddy_tag' :
+                       newStatus === 'Offen' ? 'open' :
+                       newStatus.toLowerCase();
+      
+      await fetch(`/api/assignments/${assignmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: dbStatus })
+      });
+      
+      // Update local state
+      setEditingEinsatz((prev: any) => prev ? { ...prev, status: newStatus } : prev);
+      setEinsatzplanData((prev: any[]) => prev.map(item => 
+        item.id === assignmentId ? { ...item, status: newStatus } : item
+      ));
+    } catch (error) {
+      console.error('Error updating assignment status:', error);
+    }
+  };
+
+  // Function to update assignment notes
+  const updateAssignmentNotes = async (assignmentId: string, notes: string) => {
+    try {
+      await fetch(`/api/assignments/${assignmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes })
+      });
+      
+      // Update local state
+      setEditingEinsatz((prev: any) => prev ? { ...prev, notes } : prev);
+      setEinsatzplanData((prev: any[]) => prev.map(item => 
+        item.id === assignmentId ? { ...item, notes } : item
+      ));
+    } catch (error) {
+      console.error('Error updating assignment notes:', error);
+    }
+  };
+
   const weeksContainerRef = useRef<HTMLDivElement>(null);
   const dateDropdownRef = useRef<HTMLDivElement>(null);
   const plzDropdownRef = useRef<HTMLDivElement>(null);
@@ -1150,6 +1194,7 @@ export default function EinsatzplanPage() {
           promotionCount: 1,
           promotorCount: 0,
           promotions: [{ id: r.id }],
+          notes: r.notes || '',
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
@@ -2520,7 +2565,7 @@ export default function EinsatzplanPage() {
                           if (editingEinsatz.buddy_name) {
                             return; // Don't allow status change when buddy exists
                           }
-                          setEditingEinsatz({ ...editingEinsatz, status: value });
+                          updateAssignmentStatus(editingEinsatz.id, value);
                         }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
@@ -2620,6 +2665,7 @@ export default function EinsatzplanPage() {
                     <textarea
                       value={editingEinsatz.notes || ''}
                       onChange={(e) => setEditingEinsatz({...editingEinsatz, notes: e.target.value})}
+                      onBlur={(e) => updateAssignmentNotes(editingEinsatz.id, e.target.value)}
                       placeholder="Notizen hinzufügen..."
                       className="flex-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none transition-colors resize-none"
                     />
