@@ -13,8 +13,15 @@ export async function GET(req: Request) {
 
     // Use service role to ensure admins can list all assignments regardless of session context
     const svc = createSupabaseServiceClient()
-    // Use the view that includes buddy information
-    let q = svc.from('assignments_with_buddy_info').select('*').order('start_ts', { ascending: true })
+    // Query assignments directly and join with participant info to get buddy information
+    let q = svc.from('assignments').select(`
+      *,
+      assignment_participants!assignment_participants_assignment_id_fkey(
+        user_id,
+        role,
+        user_profiles(display_name)
+      )
+    `).order('start_ts', { ascending: true })
     
     if (ids) {
       const idArray = ids.split(',').filter(id => id.trim())
