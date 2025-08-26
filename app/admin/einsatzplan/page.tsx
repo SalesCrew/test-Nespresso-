@@ -1098,8 +1098,8 @@ export default function EinsatzplanPage() {
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    // Eye filter - hide "Verplant" items when active
-    const verplantMatch = !hideVerplant || item.status !== 'Verplant';
+    // Eye filter - hide all assigned items when active, only show "Offen"
+    const verplantMatch = !hideVerplant || item.status === 'Offen';
     
     // Date filters
     let dateMatch = true;
@@ -1740,7 +1740,7 @@ export default function EinsatzplanPage() {
                         <button
                           onClick={() => setHideVerplant(!hideVerplant)}
                           className="p-1 hover:bg-gray-100 rounded transition-colors"
-                          title={hideVerplant ? "Verplante anzeigen" : "Verplante ausblenden"}
+                          title={hideVerplant ? "Alle anzeigen" : "Nur Offene anzeigen"}
                         >
                           {hideVerplant ? (
                             <EyeOff className="h-3 w-3 text-gray-400" />
