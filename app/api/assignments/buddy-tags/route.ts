@@ -24,8 +24,7 @@ export async function GET(req: Request) {
       .select('id, assignment_id, user_id, role, status, invited_at, responded_at, acknowledged_at, replacement_for, is_buddy_tag')
       .eq('user_id', auth.user.id)
       .eq('is_buddy_tag', true)
-      .neq('status', 'verstanden')
-      .neq('status', 'withdrawn')
+      .eq('status', 'invited')
       .order('invited_at', { ascending: false })
     
     console.log('Buddy tags query result:', { invites, error: invErr })
