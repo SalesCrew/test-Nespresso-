@@ -1,7 +1,7 @@
 -- Fix buddy tag display name to remove "Promotor &" prefix
 -- This updates the assignment_details_with_participants view
 
-DROP VIEW IF EXISTS assignment_details_with_participants;
+DROP VIEW IF EXISTS assignment_details_with_participants CASCADE;
 
 CREATE OR REPLACE VIEW assignment_details_with_participants AS
 SELECT 
@@ -9,9 +9,9 @@ SELECT
   -- Get lead participant info
   lead_participant.user_id AS lead_user_id,
   lead_profile.display_name AS lead_display_name,
-  -- Get buddy participant info (for buddy tags)
-  buddy_participant.user_id AS buddy_user_id,
-  buddy_profile.display_name AS buddy_display_name,
+  -- Get buddy participant info (for buddy tags) - renamed to avoid conflict
+  buddy_participant.user_id AS buddy_participant_user_id,
+  buddy_profile.display_name AS buddy_participant_display_name,
   -- Computed display name based on assignment type
   CASE 
     WHEN a.status = 'buddy_tag' THEN 
