@@ -421,39 +421,66 @@ Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW 
 
       const result = await response.json()
       console.log('📥 GPT-5 Response structure:', {
-        hasOutputText: !!result.output_text,
-        hasOutput: !!result.output,
+        hasOutputText: typeof result.output_text === 'string',
+        outputType: Array.isArray(result.output) ? 'array' : typeof result.output,
         responseId: result.response_id,
         reasoningTokens: result.reasoning_tokens,
         outputTokens: result.output_tokens
       })
 
-      // GPT-5 returns output_text or output instead of choices
-      const aiResponse = result.output_text || result.output || ''
+      // Helper to robustly extract text from GPT-5 Responses API
+      const extractTextFromResponse = (res: any): string => {
+        if (typeof res?.output_text === 'string') return res.output_text
+        let text = ''
+        const out = res?.output
+        if (Array.isArray(out)) {
+          for (const item of out) {
+            // item.content can be string or array of segments
+            const content = (item && item.content) || []
+            if (typeof content === 'string') {
+              text += content + '\n'
+            } else if (Array.isArray(content)) {
+              for (const seg of content) {
+                if (typeof seg?.text === 'string') text += seg.text + '\n'
+                else if (typeof seg === 'string') text += seg + '\n'
+              }
+            }
+          }
+        }
+        if (!text && typeof res === 'string') return res
+        return text.trim()
+      }
+
+      const aiResponseRaw: any = result
+      const aiResponseText: string = extractTextFromResponse(aiResponseRaw)
+
       console.log('📥 Raw AI response received:', {
-        hasResponse: !!aiResponse,
-        responseLength: aiResponse.length,
+        hasResponse: !!aiResponseText,
+        responseLength: aiResponseText.length,
+        usedOutputText: typeof result.output_text === 'string',
+        usedOutputArray: Array.isArray(result.output),
         reasoningTokens: result.reasoning_tokens || 0,
         outputTokens: result.output_tokens || 0
       })
       
-      if (!aiResponse) {
+      if (!aiResponseText) {
         console.log('❌ No response content from GPT-5')
         throw new Error('No response from GPT-5')
       }
 
-      console.log('🔍 AI Response Preview:', aiResponse.substring(0, 200) + '...')
+      const preview = (typeof aiResponseText === 'string' ? aiResponseText : JSON.stringify(aiResponseText)).slice(0, 200)
+      console.log('🔍 AI Response Preview:', preview + '...')
 
       // Parse AI response
       let recommendations: any[]
       try {
         console.log('🔄 Parsing AI JSON response...')
-        const parsed = JSON.parse(aiResponse)
+        const parsed = JSON.parse(aiResponseText)
         recommendations = Array.isArray(parsed) ? parsed : parsed.recommendations || []
         console.log(`✅ Successfully parsed ${recommendations.length} recommendations`)
       } catch (parseError) {
         console.error('❌ Failed to parse AI response:', parseError)
-        console.error('📄 Raw response that failed to parse:', aiResponse)
+        console.error('📄 Raw response that failed to parse:', aiResponseText)
         throw new Error('Invalid AI response format')
       }
 
