@@ -229,35 +229,55 @@ export default function EinsatzplanPage() {
 
   // Function to get AI recommendations
   const fetchAiRecommendations = async (assignmentId: string) => {
+    console.log('🎯 [CLIENT] AI recommendation request started', { assignmentId });
+    
     if (!assignmentId) {
+      console.log('❌ [CLIENT] No assignment ID provided');
       setAiError('Bitte wählen Sie zuerst einen Einsatz aus');
       return;
     }
 
     setAiLoading(true);
     setAiError(null);
+    console.log('🔄 [CLIENT] Setting loading state, calling API...');
 
     try {
+      const requestBody = { 
+        assignmentId: assignmentId,
+        maxRecommendations: 6 
+      };
+      console.log('📤 [CLIENT] Request payload:', requestBody);
+
       const response = await fetch('/api/ai/recommend-promotors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          assignmentId: assignmentId,
-          maxRecommendations: 6 
-        })
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('📥 [CLIENT] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('❌ [CLIENT] API error response:', errorText);
         throw new Error('Fehler beim Abrufen der Empfehlungen');
       }
 
       const data = await response.json();
+      console.log('✅ [CLIENT] API response data:', data);
+      console.log('🏆 [CLIENT] Recommendations received:', data.recommendations?.length || 0);
+      
       setAiRecommendations(data.recommendations || []);
     } catch (err: any) {
+      console.error('❌ [CLIENT] AI request failed:', err);
       setAiError(err.message || 'Unbekannter Fehler');
       setAiRecommendations([]);
     } finally {
       setAiLoading(false);
+      console.log('🏁 [CLIENT] AI request completed');
     }
   };
 
@@ -1920,6 +1940,7 @@ export default function EinsatzplanPage() {
                                 );
                               } else if (aiMode) {
                                 // AI mode: fetch recommendations instead of opening detail modal
+                                console.log('🧠 [CLIENT] AI mode click detected', { einsatzId: einsatz.id, aiMode });
                                 setSelectedEinsatz(einsatz);
                                 fetchAiRecommendations(einsatz.id);
                               } else {
@@ -2017,10 +2038,15 @@ export default function EinsatzplanPage() {
                     </h3>
                     <button
                       onClick={() => {
-                        setAiMode(!aiMode);
+                        const newAiMode = !aiMode;
+                        console.log('🧠 [CLIENT] Brain button clicked', { currentAiMode: aiMode, newAiMode });
+                        setAiMode(newAiMode);
                         if (!aiMode) {
                           setAiRecommendations([]);
                           setAiError(null);
+                          console.log('🧠 [CLIENT] AI mode activated, cleared previous data');
+                        } else {
+                          console.log('🧠 [CLIENT] AI mode deactivated');
                         }
                       }}
                       className={`p-2 rounded-lg border transition-colors ${
