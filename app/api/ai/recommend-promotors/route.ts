@@ -24,20 +24,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
     }
 
-    // Get all promotors with their profiles and phone numbers
-    const { data: promotors, error: promotorsError } = await svc
+    // Get all promotors with their profiles and phone numbers from both tables
+    const { data: users, error: usersError } = await svc
       .from('user_profiles')
-      .select(`
-        user_id,
-        display_name,
-        phone,
-        role
-      `)
+      .select('user_id, display_name, phone, role')
       .eq('role', 'promotor')
-    
-    if (promotorsError) {
-      return NextResponse.json({ error: 'Failed to fetch promotors' }, { status: 500 })
+
+    if (usersError) {
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
     }
+
+    // Get promotor profiles with phone numbers
+    const userIds = (users || []).map((u: any) => u.user_id)
+    const { data: profiles, error: profilesError } = await svc
+      .from('promotor_profiles')
+      .select('user_id, phone')
+      .in('user_id', userIds)
+
+    const profileByUser = new Map((profiles || []).map((p: any) => [p.user_id, p]))
+    
+    const promotors = (users || []).map((u: any) => {
+      const profile = profileByUser.get(u.user_id) as any
+      return {
+        ...u,
+        phone: profile?.phone || u.phone || '+43 123 456 789' // Fallback for demo
+      }
+    })
+
 
     // For now, return a mock response until we integrate with OpenAI
     // This will be replaced with actual AI logic
