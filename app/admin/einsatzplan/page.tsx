@@ -1136,6 +1136,8 @@ export default function EinsatzplanPage() {
   });
   }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, dateRange]);
 
+
+
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
     const confirmed = filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant'].includes(item.status)).length;
@@ -1222,15 +1224,7 @@ export default function EinsatzplanPage() {
       console.log('🟢 Mapped data:', mapped.length, 'items');
       console.log('🟢 First mapped item:', mapped[0]);
       
-      // Debug buddy tag filtering
-      const buddyTagItems = mapped.filter(item => item.buddy_name || item.buddy_user_id);
-      console.log('🔵 Buddy tag items and their statuses:', buddyTagItems.map(item => ({ 
-        id: item.id, 
-        status: item.status, 
-        buddy_name: item.buddy_name, 
-        buddy_user_id: item.buddy_user_id,
-        raw_status: rows.find(r => r.id === item.id)?.status
-      })));
+
       
       setEinsatzplanData(mapped);
       console.log('🟢 State updated with', mapped.length, 'assignments');
@@ -1772,7 +1766,7 @@ export default function EinsatzplanPage() {
                   >
                     {viewMode === 'days' ? (
                       /* Days View */
-                      <div className="grid grid-cols-4 gap-4">
+                      <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
                         {generateDayCards().map((dayData) => {
                           // Check if all promotions are "Verplant" (and there's at least one promotion)
                           const allVerplant = dayData.total > 0 && dayData.verplant === dayData.total;
@@ -1853,13 +1847,13 @@ export default function EinsatzplanPage() {
                       </div>
                     ) : (
                       /* List View */
-                      <div className="space-y-2">
+                      <div key={`list-view-${hideVerplant ? 'filtered' : 'all'}`} className="space-y-2">
                         {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
                         return (
                           <div 
-                            key={einsatz.id} 
+                            key={`${einsatz.id}-${hideVerplant ? 'filtered' : 'all'}`} 
                             onClick={(e) => {
                               if (selectionMode) {
                                 e.stopPropagation();
