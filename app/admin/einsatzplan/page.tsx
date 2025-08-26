@@ -2478,8 +2478,14 @@ export default function EinsatzplanPage() {
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
                       <Select
-                        value={editingEinsatz.status}
-                        onValueChange={(value) => setEditingEinsatz({ ...editingEinsatz, status: value })}
+                        value={editingEinsatz.buddy_name ? 'Buddy Tag' : editingEinsatz.status}
+                        onValueChange={(value) => {
+                          // If there's a buddy, force status to stay as Buddy Tag
+                          if (editingEinsatz.buddy_name) {
+                            return; // Don't allow status change when buddy exists
+                          }
+                          setEditingEinsatz({ ...editingEinsatz, status: value });
+                        }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
                           <SelectValue placeholder="Status wählen" />
