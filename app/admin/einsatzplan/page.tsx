@@ -493,14 +493,18 @@ export default function EinsatzplanPage() {
 
   // Helper function to format promotor name consistently with dropdown
   const getDisplayName = (einsatz: any) => {
-    // For buddy tags, show both names if available
-    if (einsatz.status === 'Buddy Tag' && einsatz.promotor && einsatz.buddy_name) {
-      return `${einsatz.promotor} & ${einsatz.buddy_name}`;
+    // Always combine promotor and buddy names based on what's actually in the dropdowns
+    const promotorName = einsatz.promotor;
+    const buddyName = einsatz.buddy_name;
+    
+    if (promotorName && buddyName) {
+      return `${promotorName} & ${buddyName}`;
+    } else if (promotorName) {
+      return promotorName;
+    } else if (buddyName) {
+      return buddyName;
     }
-    // For all other cases, show promotor name if available, otherwise fallback
-    if (einsatz.promotor) {
-      return einsatz.promotor;
-    }
+    
     return einsatz.product || 'Market';
   };
 
