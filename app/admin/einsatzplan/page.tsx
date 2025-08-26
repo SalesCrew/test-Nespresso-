@@ -1772,8 +1772,8 @@ export default function EinsatzplanPage() {
                       /* Days View */
                       <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
                         {generateDayCards().map((dayData) => {
-                          // Check if all promotions are planned (Verplant + Buddy Tag) and there's at least one promotion
-                          const allPlanned = dayData.total > 0 && (dayData.verplant + dayData.buddyTag) === dayData.total;
+                          // Green background when there are 0 "Offen" assignments and at least one assignment total
+                          const noOpenAssignments = dayData.total > 0 && dayData.offen === 0;
                           
                           return (
                           <div 
@@ -1783,7 +1783,7 @@ export default function EinsatzplanPage() {
                               setViewMode('list');
                             }}
                             className={`p-4 rounded-lg shadow-sm hover:shadow-sm hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
-                              allPlanned ? 'bg-green-50' : 'bg-white'
+                              noOpenAssignments ? 'bg-green-50' : 'bg-white'
                             }`}
                           >
                             <div className="space-y-3">
