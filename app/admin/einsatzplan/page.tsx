@@ -2025,7 +2025,7 @@ export default function EinsatzplanPage() {
                       }}
                       className={`p-2 rounded-lg border transition-colors ${
                         aiMode 
-                          ? 'border-purple-300 bg-purple-100 text-purple-700' 
+                          ? 'border-green-300 bg-green-100 text-green-700' 
                           : 'border-gray-300 hover:border-gray-400 text-gray-600'
                       }`}
                       title={aiMode ? "AI Modus beenden" : "AI Modus aktivieren"}
@@ -2052,7 +2052,7 @@ export default function EinsatzplanPage() {
 
                         {aiLoading ? (
                           <div className="text-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-500 mb-2" />
+                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-green-500 mb-2" />
                             <div className="text-sm text-gray-500">
                               AI analysiert...
                             </div>
@@ -2066,10 +2066,10 @@ export default function EinsatzplanPage() {
                             };
 
                             const getRankColor = (rank: number) => {
-                              if (rank === 1) return 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white';
-                              if (rank === 2) return 'bg-gradient-to-r from-gray-300 to-gray-400 text-white';
-                              if (rank === 3) return 'bg-gradient-to-r from-amber-600 to-amber-700 text-white';
-                              return 'bg-gradient-to-r from-blue-400 to-blue-500 text-white';
+                              if (rank === 1) return 'bg-gradient-to-r from-green-400 to-green-600 text-white';
+                              if (rank === 2) return 'bg-gradient-to-r from-green-300 to-green-500 text-white';
+                              if (rank === 3) return 'bg-gradient-to-r from-green-200 to-green-400 text-white';
+                              return 'bg-gradient-to-r from-green-100 to-green-300 text-white';
                             };
 
                             return (
@@ -2081,7 +2081,7 @@ export default function EinsatzplanPage() {
                                     setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
                                   }
                                 }}
-                                className="p-3 rounded-lg border border-gray-100 hover:border-purple-200 hover:bg-purple-50 cursor-pointer transition-all bg-white"
+                                className="p-3 rounded-lg border border-gray-100 hover:border-green-200 hover:bg-green-50 cursor-pointer transition-all bg-white"
                               >
                                 <div className="flex items-center space-x-3">
                                   {/* Rank Badge */}
