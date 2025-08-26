@@ -331,7 +331,7 @@ export async function POST(req: Request) {
     console.log('🤖 Calling GPT-5 nano for AI analysis...')
     console.log('📤 AI request parameters:', {
       model: 'gpt-5-nano',
-      temperature: 0.3,
+      temperature: '1 (default, only supported value)',
       max_completion_tokens: 2000,
       promotorCount: promotorData.length,
       assignmentKW: currentKW,
@@ -408,7 +408,7 @@ Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW 
           }
         ],
         max_completion_tokens: 2000,
-        temperature: 0.3,
+        // temperature: 1 is the default and only supported value for GPT-5 nano
         response_format: { type: "json_object" }
       })
 
