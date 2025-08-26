@@ -91,6 +91,7 @@ export default function EinsatzplanPage() {
   const [declinedPromotor, setDeclinedPromotor] = useState<{user_id: string, name: string, invitation_id: string} | null>(null);
   const [openAssignments, setOpenAssignments] = useState<any[]>([]);
   const [selectedReplacementAssignments, setSelectedReplacementAssignments] = useState<string[]>([]);
+  const [replacementRegionFilter, setReplacementRegionFilter] = useState("ALLE");
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -3018,6 +3019,7 @@ export default function EinsatzplanPage() {
                   setShowReplacementModal(false);
                   setDeclinedPromotor(null);
                   setSelectedReplacementAssignments([]);
+                  setReplacementRegionFilter("ALLE");
                 }}
                 className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
               >
@@ -3025,12 +3027,50 @@ export default function EinsatzplanPage() {
               </button>
             </div>
 
+            {/* Region Filter Pills */}
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                {["ALLE", "W/NÖ/BGL", "ST", "S", "OÖ", "T", "V", "K"].map((region) => {
+                  const isSelected = replacementRegionFilter === region || (replacementRegionFilter === "ALLE" && region === "ALLE");
+                  return (
+                    <button
+                      key={region}
+                      onClick={() => setReplacementRegionFilter(replacementRegionFilter === region ? "ALLE" : region)}
+                      className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
+                        isSelected 
+                          ? 'bg-gray-100 text-gray-700 scale-110' 
+                          : 'bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {region}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Content */}
             <div 
               className="flex-1 overflow-y-auto p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {openAssignments.map((assignment: any) => (
+                {openAssignments
+                  .filter((assignment: any) => {
+                    if (replacementRegionFilter === "ALLE") return true;
+                    // Map region codes to postal code ranges (same logic as main einsatzplan)
+                    const plz = assignment.postal_code;
+                    switch (replacementRegionFilter) {
+                      case "W/NÖ/BGL": return plz >= 1000 && plz <= 3999;
+                      case "ST": return plz >= 8000 && plz <= 8999;
+                      case "S": return plz >= 5000 && plz <= 5999;
+                      case "OÖ": return plz >= 4000 && plz <= 4999;
+                      case "T": return plz >= 6000 && plz <= 6999;
+                      case "V": return plz >= 6700 && plz <= 6999;
+                      case "K": return plz >= 9000 && plz <= 9999;
+                      default: return true;
+                    }
+                  })
+                  .map((assignment: any) => (
                   <div
                     key={assignment.id}
                     onClick={() => handleReplacementAssignmentSelect(assignment.id)}
@@ -3063,7 +3103,8 @@ export default function EinsatzplanPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                }
               </div>
             </div>
 
@@ -3079,6 +3120,7 @@ export default function EinsatzplanPage() {
                       setShowReplacementModal(false);
                       setDeclinedPromotor(null);
                       setSelectedReplacementAssignments([]);
+                      setReplacementRegionFilter("ALLE");
                     }}
                     className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
