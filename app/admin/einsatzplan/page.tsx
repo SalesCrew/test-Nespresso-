@@ -216,6 +216,45 @@ export default function EinsatzplanPage() {
     setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: promotorName, status: 'Verplant' } : item))
   };
 
+  // Function to assign buddy to promotion
+  const assignBuddyToPromotion = async (buddyName: string, buddyId?: string) => {
+    if (!editingEinsatz) return;
+    try {
+      if (buddyId) {
+        // Update participant as buddy
+        await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: buddyId, role: 'buddy' })
+        })
+        
+        // Update assignment status to buddy_tag
+        await fetch(`/api/assignments/${editingEinsatz.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'buddy_tag' })
+        })
+      } else if (!buddyName) {
+        // Remove buddy if no name provided
+        await fetch(`/api/assignments/${editingEinsatz.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
+        })
+      }
+    } catch (error) {
+      console.error('Error assigning buddy:', error);
+    }
+    // optimistic UI update
+    const newStatus = buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen');
+    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus })
+    setEinsatzplanData(prev => prev.map(item => 
+      item.id === editingEinsatz.id 
+        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus } 
+        : item
+    ))
+  };
+
   const weeksContainerRef = useRef<HTMLDivElement>(null);
   const dateDropdownRef = useRef<HTMLDivElement>(null);
   const plzDropdownRef = useRef<HTMLDivElement>(null);
@@ -2446,20 +2485,12 @@ export default function EinsatzplanPage() {
                         value={editingEinsatz.buddy_user_id || 'none'}
                         onValueChange={(val) => {
                           if (val === 'none') {
-                            setEditingEinsatz({ 
-                              ...editingEinsatz, 
-                              buddy_user_id: null, 
-                              buddy_name: null,
-                              status: editingEinsatz.promotor ? 'Verplant' : 'Offen'
-                            });
+                            assignBuddyToPromotion('', undefined);
                           } else {
                             const buddy = promotorsList.find((x: any) => x.id === val);
-                            setEditingEinsatz({ 
-                              ...editingEinsatz, 
-                              buddy_user_id: val, 
-                              buddy_name: buddy ? buddy.name : '',
-                              status: 'Buddy Tag'
-                            });
+                            if (buddy) {
+                              assignBuddyToPromotion(buddy.name, buddy.id);
+                            }
                           }
                         }}
                       >

@@ -1,0 +1,1 @@
+[33m3428cf9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m feat: separate buddy field and fix promotor name display - Added separate buddy dropdown in detail modal - Shows promotor name immediately when field has value - Clean separation between promotor and buddy fields
