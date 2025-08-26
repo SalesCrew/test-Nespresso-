@@ -2446,14 +2446,16 @@ export default function EinsatzplanPage() {
                             setEditingEinsatz({ 
                               ...editingEinsatz, 
                               buddy_user_id: null, 
-                              buddy_name: null 
+                              buddy_name: null,
+                              status: editingEinsatz.promotor ? 'Verplant' : 'Offen'
                             });
                           } else {
                             const buddy = promotorsList.find((x: any) => x.id === val);
                             setEditingEinsatz({ 
                               ...editingEinsatz, 
                               buddy_user_id: val, 
-                              buddy_name: buddy ? buddy.name : '' 
+                              buddy_name: buddy ? buddy.name : '',
+                              status: 'Buddy Tag'
                             });
                           }
                         }}
