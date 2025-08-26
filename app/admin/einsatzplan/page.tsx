@@ -1145,9 +1145,9 @@ export default function EinsatzplanPage() {
 
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
-    const confirmed = filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant'].includes(item.status)).length;
-    const cancelled = filteredEinsatzplan.filter(item => ['abgesagt', 'Krankenstand'].includes(item.status)).length;
-    const planned = filteredEinsatzplan.filter(item => ['geplant', 'Offen'].includes(item.status)).length;
+    const confirmed = filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant', 'Buddy Tag'].includes(item.status)).length;
+    const cancelled = filteredEinsatzplan.filter(item => ['Krankenstand', 'Notfall'].includes(item.status)).length;
+    const planned = filteredEinsatzplan.filter(item => !['bestätigt', 'Verplant', 'Buddy Tag', 'Krankenstand', 'Notfall'].includes(item.status)).length;
     const total = filteredEinsatzplan.length;
     
     return {
