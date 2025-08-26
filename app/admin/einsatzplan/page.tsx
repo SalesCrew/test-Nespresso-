@@ -32,7 +32,8 @@ import {
   EyeOff,
   Brain,
   User,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -2031,10 +2032,11 @@ export default function EinsatzplanPage() {
                 }}
               >
                 <CardContent className="p-3 h-full flex flex-col">
-                  {/* Header with Brain Button */}
+                  {/* Header with Toggle Button */}
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {aiMode ? 'AI Empfehlungen' : 'Promotor Matching'}
+                    <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-green-600" />
+                      {aiMode ? 'Perfect Match' : 'Perfect Match'}
                     </h3>
                     <button
                       onClick={() => {
