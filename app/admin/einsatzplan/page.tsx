@@ -1022,6 +1022,7 @@ export default function EinsatzplanPage() {
           date: date,
           verplant: 0,
           offen: 0,
+          buddyTag: 0,
           krankenstand: 0,
           notfall: 0,
           urlaub: 0,
@@ -1038,6 +1039,9 @@ export default function EinsatzplanPage() {
         case 'bestätigt':
         case 'verplant':
           dayData.verplant++;
+          break;
+        case 'buddy tag':
+          dayData.buddyTag++;
           break;
         case 'geplant':
         case 'offen':
@@ -1768,8 +1772,8 @@ export default function EinsatzplanPage() {
                       /* Days View */
                       <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
                         {generateDayCards().map((dayData) => {
-                          // Check if all promotions are "Verplant" (and there's at least one promotion)
-                          const allVerplant = dayData.total > 0 && dayData.verplant === dayData.total;
+                          // Check if all promotions are planned (Verplant + Buddy Tag) and there's at least one promotion
+                          const allPlanned = dayData.total > 0 && (dayData.verplant + dayData.buddyTag) === dayData.total;
                           
                           return (
                           <div 
@@ -1779,7 +1783,7 @@ export default function EinsatzplanPage() {
                               setViewMode('list');
                             }}
                             className={`p-4 rounded-lg shadow-sm hover:shadow-sm hover:scale-[1.01] transition-all duration-200 cursor-pointer ${
-                              allVerplant ? 'bg-green-50' : 'bg-white'
+                              allPlanned ? 'bg-green-50' : 'bg-white'
                             }`}
                           >
                             <div className="space-y-3">
@@ -1810,6 +1814,13 @@ export default function EinsatzplanPage() {
                                     <span className="text-xs text-gray-600">Offen</span>
                                   </div>
                                   <span className={`text-xs font-medium text-gray-600 ${dayData.offen === 0 ? 'opacity-30' : ''}`}>{dayData.offen > 0 ? dayData.offen : 'N/A'}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                                    <span className="text-xs text-gray-600">Buddy Tage</span>
+                                  </div>
+                                  <span className={`text-xs font-medium text-purple-600 ${dayData.buddyTag === 0 ? 'opacity-30' : ''}`}>{dayData.buddyTag > 0 ? dayData.buddyTag : 'N/A'}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-2">
