@@ -1139,8 +1139,8 @@ export default function EinsatzplanPage() {
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
           status: r.status === 'assigned' ? 'Verplant' : r.status === 'buddy_tag' ? 'Buddy Tag' : r.status === 'open' ? 'Offen' : (r.status || 'Offen'),
           // Include buddy information
-          promotor: r.display_name || (r.status === 'assigned' ? 'Verplant' : ''),
-          buddy_name: r.buddy_name,
+          promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
+          buddy_name: r.buddy_name || r.buddy_display_name,
           buddy_user_id: r.buddy_user_id,
           promotionCount: 1,
           promotorCount: 0,
