@@ -1098,7 +1098,7 @@ export default function EinsatzplanPage() {
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    // Eye filter - hide all assigned items when active, only show "Offen"
+    // Eye filter - hide all non-"Offen" items when active, based on UI status (dropdown value)
     const verplantMatch = !hideVerplant || item.status === 'Offen';
     
     // Date filters
@@ -1175,8 +1175,8 @@ export default function EinsatzplanPage() {
       const rows: any[] = Array.isArray(j.assignments) ? j.assignments : [];
       console.log('🟢 Assignments count:', rows.length);
       if (rows.length > 0) {
-        console.log('🟢 First assignment data:', rows[0]);
-        console.log('🟢 Notes field in first assignment:', rows[0].notes);
+              console.log('🟢 First assignment data:', rows[0]);
+      console.log('🟢 Notes field in first assignment:', rows[0].notes);
       }
       const mapped = rows.map((r) => {
         const startIso: string = r.start_ts || ''
@@ -1221,6 +1221,17 @@ export default function EinsatzplanPage() {
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
       console.log('🟢 First mapped item:', mapped[0]);
+      
+      // Debug buddy tag filtering
+      const buddyTagItems = mapped.filter(item => item.buddy_name || item.buddy_user_id);
+      console.log('🔵 Buddy tag items and their statuses:', buddyTagItems.map(item => ({ 
+        id: item.id, 
+        status: item.status, 
+        buddy_name: item.buddy_name, 
+        buddy_user_id: item.buddy_user_id,
+        raw_status: rows.find(r => r.id === item.id)?.status
+      })));
+      
       setEinsatzplanData(mapped);
       console.log('🟢 State updated with', mapped.length, 'assignments');
     } catch (e: any) {
