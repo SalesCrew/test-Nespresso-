@@ -28,9 +28,12 @@ OPENAI_API_KEY=your_actual_openai_api_key_here
 The AI recommendation system is now configured to use GPT-5 nano with the following settings:
 
 - **Model**: `gpt-5-nano`
-- **Max Tokens**: 2000
-- **Temperature**: 0.3 (for more deterministic results)
-- **Response Format**: JSON object
+- **API Endpoint**: `/v1/responses` (NOT `/v1/chat/completions`)
+- **Max Completion Tokens**: 2000
+- **Reasoning Effort**: `minimal` (for fast responses)
+- **Text Verbosity**: `low` (for concise outputs)
+- **Temperature**: Default only (1.0) - GPT-5 doesn't support custom values
+- **Response Format**: Plain text (JSON parsing handled in code)
 
 ## Fallback System
 
