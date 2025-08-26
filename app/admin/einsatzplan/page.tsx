@@ -2088,7 +2088,12 @@ export default function EinsatzplanPage() {
                                     setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
                                   }
                                 }}
-                                className="p-3 rounded-lg border border-gray-100 hover:border-green-200 hover:bg-green-50 cursor-pointer transition-all bg-white"
+                                className={`p-3 rounded-lg border border-gray-100 cursor-pointer transition-all bg-white ${
+                                  rec.rank === 1 ? 'hover:bg-gradient-to-r hover:from-yellow-50/60 hover:to-amber-50/60 hover:border-yellow-200/80' :
+                                  rec.rank === 2 ? 'hover:bg-gradient-to-r hover:from-gray-50/60 hover:to-slate-50/60 hover:border-gray-200/80' :
+                                  rec.rank === 3 ? 'hover:bg-gradient-to-r hover:from-amber-50/60 hover:to-orange-50/60 hover:border-amber-200/80' :
+                                  'hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-indigo-50/60 hover:border-blue-200/80'
+                                }`}
                               >
                                 <div className="flex items-center space-x-3">
                                   {/* Rank Badge */}
@@ -2101,11 +2106,29 @@ export default function EinsatzplanPage() {
 
                                   {/* Promotor Info */}
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center mb-1">
-                                      <User className="h-3 w-3 text-gray-400 mr-1" />
-                                      <span className="font-medium text-gray-900 text-sm truncate">
-                                        {rec.promotorName}
-                                      </span>
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center min-w-0">
+                                        <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
+                                        <span className="font-medium text-gray-900 text-sm truncate">
+                                          {rec.promotorName}
+                                        </span>
+                                      </div>
+                                      
+                                      {/* Phone Number Container */}
+                                      {rec.phone && (
+                                        <div className="flex-shrink-0 ml-2">
+                                          <div className="px-2 py-1 rounded-md bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200/60 shadow-sm">
+                                            <div className="flex items-center space-x-1">
+                                              <svg className="h-2.5 w-2.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z" clipRule="evenodd" />
+                                              </svg>
+                                              <span className="text-xs font-medium text-slate-600" style={{ opacity: 0.7 }}>
+                                                {rec.phone}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                     
                                     {/* Confidence */}

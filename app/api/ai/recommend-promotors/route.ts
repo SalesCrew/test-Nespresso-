@@ -24,12 +24,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
     }
 
-    // Get all promotors with their profiles
+    // Get all promotors with their profiles and phone numbers
     const { data: promotors, error: promotorsError } = await svc
       .from('user_profiles')
       .select(`
         user_id,
         display_name,
+        phone,
         role
       `)
       .eq('role', 'promotor')
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
         keyword: `promotor_${promotor.user_id.slice(0, 8)}`,
         promotorName: promotor.display_name,
         promotorId: promotor.user_id,
+        phone: promotor.phone,
         confidence: Math.max(0.6, 1 - (index * 0.1)),
         rank: index + 1,
         reasoning: `Good match based on profile analysis`
