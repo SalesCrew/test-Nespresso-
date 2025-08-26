@@ -493,10 +493,15 @@ export default function EinsatzplanPage() {
 
   // Helper function to format promotor name consistently with dropdown
   const getDisplayName = (einsatz: any) => {
+    // For buddy tags, show both names if available
     if (einsatz.status === 'Buddy Tag' && einsatz.promotor && einsatz.buddy_name) {
       return `${einsatz.promotor} & ${einsatz.buddy_name}`;
     }
-    return einsatz.promotor || (einsatz.product || 'Market');
+    // For all other cases, show promotor name if available, otherwise fallback
+    if (einsatz.promotor) {
+      return einsatz.promotor;
+    }
+    return einsatz.product || 'Market';
   };
 
   // Helper functions for promotor selection (copied from admin dashboard)
@@ -2411,9 +2416,34 @@ export default function EinsatzplanPage() {
                             transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
-                          <SelectValue placeholder={getDisplayName(editingEinsatz) || 'Promotor auswählen'} />
+                          <SelectValue placeholder={editingEinsatz.promotor || 'Promotor auswählen'} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                          {promotorsList.map((p: any) => (
+                            <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Buddy (optional)</label>
+                      <Select
+                        value={editingEinsatz.buddy_user_id || ''}
+                        onValueChange={(val) => {
+                          const buddy = promotorsList.find((x: any) => x.id === val);
+                          setEditingEinsatz({ 
+                            ...editingEinsatz, 
+                            buddy_user_id: val, 
+                            buddy_name: buddy ? buddy.name : '' 
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
+                          <SelectValue placeholder={editingEinsatz.buddy_name || 'Buddy auswählen'} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                          <SelectItem value="" className="focus:bg-gray-100">Kein Buddy</SelectItem>
                           {promotorsList.map((p: any) => (
                             <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
                           ))}
