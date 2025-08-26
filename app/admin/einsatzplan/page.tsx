@@ -29,7 +29,10 @@ import {
   Check,
   Search,
   Eye,
-  EyeOff
+  EyeOff,
+  Brain,
+  User,
+  Loader2
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -103,6 +106,12 @@ export default function EinsatzplanPage() {
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
   const [distributionHistory, setDistributionHistory] = useState<any[]>([]);
+  
+  // AI Recommendations state
+  const [aiMode, setAiMode] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState<any[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   
   // Load distribution history from database
   const loadInvitationHistory = async () => {
@@ -216,6 +225,40 @@ export default function EinsatzplanPage() {
     // optimistic UI
     setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, status: 'Verplant' })
     setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: promotorName, status: 'Verplant' } : item))
+  };
+
+  // Function to get AI recommendations
+  const fetchAiRecommendations = async (assignmentId: string) => {
+    if (!assignmentId) {
+      setAiError('Bitte wählen Sie zuerst einen Einsatz aus');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/ai/recommend-promotors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          assignmentId: assignmentId,
+          maxRecommendations: 6 
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen der Empfehlungen');
+      }
+
+      const data = await response.json();
+      setAiRecommendations(data.recommendations || []);
+    } catch (err: any) {
+      setAiError(err.message || 'Unbekannter Fehler');
+      setAiRecommendations([]);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   // Function to assign buddy to promotion
@@ -1875,6 +1918,10 @@ export default function EinsatzplanPage() {
                                     ? prev.filter(id => id !== einsatz.id)
                                     : [...prev, einsatz.id]
                                 );
+                              } else if (aiMode) {
+                                // AI mode: fetch recommendations instead of opening detail modal
+                                setSelectedEinsatz(einsatz);
+                                fetchAiRecommendations(einsatz.id);
                               } else {
                                 setSelectedEinsatz(einsatz);
                                 // Extract just the promotor name without any formatting
@@ -1963,6 +2010,30 @@ export default function EinsatzplanPage() {
                 }}
               >
                 <CardContent className="p-3 h-full flex flex-col">
+                  {/* Header with Brain Button */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {aiMode ? 'AI Empfehlungen' : 'Promotor Matching'}
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setAiMode(!aiMode);
+                        if (!aiMode) {
+                          setAiRecommendations([]);
+                          setAiError(null);
+                        }
+                      }}
+                      className={`p-2 rounded-lg border transition-colors ${
+                        aiMode 
+                          ? 'border-purple-300 bg-purple-100 text-purple-700' 
+                          : 'border-gray-300 hover:border-gray-400 text-gray-600'
+                      }`}
+                      title={aiMode ? "AI Modus beenden" : "AI Modus aktivieren"}
+                    >
+                      <Brain className="h-4 w-4" />
+                    </button>
+                  </div>
+
                   <div 
                     className="flex-1 overflow-y-auto"
                     style={{
@@ -1970,34 +2041,111 @@ export default function EinsatzplanPage() {
                       msOverflowStyle: 'none'
                     }}
                   >
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5, 6].map((index) => (
-                        <div 
-                          key={index}
-                          className="p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-white"
-                        >
-                          <div className="grid grid-cols-5 gap-3 flex-1 items-center">
-                            <div className="min-w-0">
-                              <div className="h-3 bg-gray-100 rounded mb-1"></div>
-                              <div className="h-2 bg-gray-50 rounded w-3/4"></div>
-                            </div>
-                            <div className="text-center">
-                              <div className="h-2 bg-gray-100 rounded mx-auto w-2/3"></div>
-                            </div>
-                            <div className="text-center">
-                              <div className="h-2 bg-gray-100 rounded mx-auto w-1/2"></div>
-                            </div>
-                            <div className="text-center">
-                              <div className="h-2 bg-gray-100 rounded mx-auto w-3/4"></div>
-                            </div>
-                            <div className="text-center flex items-center justify-end space-x-2">
-                              <div className="h-2 bg-gray-100 rounded w-1/3"></div>
-                              <div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+                    {aiMode ? (
+                      /* AI Mode Content */
+                      <div className="space-y-2">
+                        {aiError && (
+                          <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+                            {aiError}
+                          </div>
+                        )}
+
+                        {aiLoading ? (
+                          <div className="text-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-500 mb-2" />
+                            <div className="text-sm text-gray-500">
+                              AI analysiert...
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ) : aiRecommendations.length > 0 ? (
+                          aiRecommendations.map((rec: any, index: number) => {
+                            const getConfidenceColor = (confidence: number) => {
+                              if (confidence >= 0.8) return 'text-green-600 bg-green-50';
+                              if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-50';
+                              return 'text-red-600 bg-red-50';
+                            };
+
+                            const getRankColor = (rank: number) => {
+                              if (rank === 1) return 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white';
+                              if (rank === 2) return 'bg-gradient-to-r from-gray-300 to-gray-400 text-white';
+                              if (rank === 3) return 'bg-gradient-to-r from-amber-600 to-amber-700 text-white';
+                              return 'bg-gradient-to-r from-blue-400 to-blue-500 text-white';
+                            };
+
+                            return (
+                              <div
+                                key={rec.keyword}
+                                onClick={() => {
+                                  if (selectedEinsatz) {
+                                    assignPromotionToPromotor(rec.promotorName, rec.promotorId);
+                                    setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
+                                  }
+                                }}
+                                className="p-3 rounded-lg border border-gray-100 hover:border-purple-200 hover:bg-purple-50 cursor-pointer transition-all bg-white"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  {/* Rank Badge */}
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(rec.rank)}`}>
+                                    {rec.rank}
+                                  </div>
+
+                                  {/* Promotor Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center mb-1">
+                                      <User className="h-3 w-3 text-gray-400 mr-1" />
+                                      <span className="font-medium text-gray-900 text-sm truncate">
+                                        {rec.promotorName}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Confidence */}
+                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
+                                      {Math.round(rec.confidence * 100)}%
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-8">
+                            <Brain className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                            <p className="text-sm font-medium text-gray-600 mb-1">Einsatz auswählen</p>
+                            <p className="text-xs text-gray-400">Klicken Sie auf eine Promotion für AI-Empfehlungen</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Normal Mode - Placeholder Content */
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4, 5, 6].map((index) => (
+                          <div 
+                            key={index}
+                            className="p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-white"
+                          >
+                            <div className="grid grid-cols-5 gap-3 flex-1 items-center">
+                              <div className="min-w-0">
+                                <div className="h-3 bg-gray-100 rounded mb-1"></div>
+                                <div className="h-2 bg-gray-50 rounded w-3/4"></div>
+                              </div>
+                              <div className="text-center">
+                                <div className="h-2 bg-gray-100 rounded mx-auto w-2/3"></div>
+                              </div>
+                              <div className="text-center">
+                                <div className="h-2 bg-gray-100 rounded mx-auto w-1/2"></div>
+                              </div>
+                              <div className="text-center">
+                                <div className="h-2 bg-gray-100 rounded mx-auto w-3/4"></div>
+                              </div>
+                              <div className="text-center flex items-center justify-end space-x-2">
+                                <div className="h-2 bg-gray-100 rounded w-1/3"></div>
+                                <div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
