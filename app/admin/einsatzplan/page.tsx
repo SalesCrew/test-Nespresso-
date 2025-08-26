@@ -2060,9 +2060,9 @@ export default function EinsatzplanPage() {
                         ) : aiRecommendations.length > 0 ? (
                           aiRecommendations.map((rec: any, index: number) => {
                             const getConfidenceColor = (confidence: number) => {
-                              if (confidence >= 0.8) return 'text-green-600 bg-green-50';
-                              if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-50';
-                              return 'text-red-600 bg-red-50';
+                              if (confidence >= 0.8) return 'text-green-600 bg-green-50 border border-green-200/40';
+                              if (confidence >= 0.6) return 'text-yellow-600 bg-yellow-50 border border-green-200/40';
+                              return 'text-red-600 bg-red-50 border border-green-200/40';
                             };
 
                             const getRankColor = (rank: number) => {
