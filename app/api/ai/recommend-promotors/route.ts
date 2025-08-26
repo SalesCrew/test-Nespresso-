@@ -332,7 +332,7 @@ export async function POST(req: Request) {
     console.log('📤 AI request parameters:', {
       model: 'gpt-5-nano',
       temperature: 0.3,
-      max_tokens: 2000,
+      max_completion_tokens: 2000,
       promotorCount: promotorData.length,
       assignmentKW: currentKW,
       hasRestrictions: assignmentRestrictions.length > 0,
@@ -407,7 +407,7 @@ WICHTIGE PRÜFKRITERIEN:
 Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW ${currentKW}.`
           }
         ],
-        max_tokens: 2000,
+        max_completion_tokens: 2000,
         temperature: 0.3,
         response_format: { type: "json_object" }
       })
