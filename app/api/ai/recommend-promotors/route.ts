@@ -340,12 +340,16 @@ export async function POST(req: Request) {
     })
     
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-5-nano",
-        messages: [
-          {
-            role: "system",
-            content: `Du bist GPT-5 nano und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
+      // GPT-5 uses the new Responses API, not Chat Completions
+      const response = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "gpt-5-nano",
+          input: `Du bist GPT-5 nano und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
 
 STRIKTE REGELN:
 - Nutze ausschließlich die übergebenen Angaben
@@ -369,15 +373,7 @@ Antworte ausschließlich mit einem JSON-Array mit exakt ${maxRecommendations} Ei
   }
 ]
 
-WICHTIG:
-- Wenn weniger als ${maxRecommendations} Promotor:innen geeignet sind, fülle mit den besten verfügbaren auf
-- Jeder Eintrag muss das exakte Vollnamens-Keyword der ausgewählten Person enthalten
-- Keine Erklärungen außerhalb des JSON, kein Zusatztext
-- Deterministische Rangfolge basierend auf objektiven Kriterien`
-          },
-          {
-            role: "user", 
-            content: `EINSATZ (KW ${currentKW}):
+EINSATZ (KW ${currentKW}):
 ${JSON.stringify(assignmentData, null, 2)}
 
 VERFÜGBARE PROMOTOR:INNEN:
@@ -404,24 +400,46 @@ WICHTIGE PRÜFKRITERIEN:
 3. DETERMINISTISCHE RANGFOLGE:
    - Bei Gleichstand: alphabetische Reihenfolge nach Name
    
-Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW ${currentKW}.`
-          }
-        ],
-        max_completion_tokens: 2000,
-        // temperature: 1 is the default and only supported value for GPT-5 nano
-        response_format: { type: "json_object" }
+Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW ${currentKW}.`,
+          reasoning: {
+            effort: "minimal" // For fast response times with GPT-5-nano
+          },
+          text: {
+            verbosity: "low" // Keep responses concise
+          },
+          // response_format is not mentioned in GPT-5 docs, might not be supported
+        })
       })
 
-      const aiResponse = completion.choices[0]?.message?.content
+      console.log('🌐 GPT-5 Response status:', response.status)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ GPT-5 API error:', errorText)
+        throw new Error(`GPT-5 API error: ${response.status} ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log('📥 GPT-5 Response structure:', {
+        hasOutputText: !!result.output_text,
+        hasOutput: !!result.output,
+        responseId: result.response_id,
+        reasoningTokens: result.reasoning_tokens,
+        outputTokens: result.output_tokens
+      })
+
+      // GPT-5 returns output_text or output instead of choices
+      const aiResponse = result.output_text || result.output || ''
       console.log('📥 Raw AI response received:', {
         hasResponse: !!aiResponse,
-        responseLength: aiResponse?.length || 0,
-        tokensUsed: completion.usage?.total_tokens || 0
+        responseLength: aiResponse.length,
+        reasoningTokens: result.reasoning_tokens || 0,
+        outputTokens: result.output_tokens || 0
       })
       
       if (!aiResponse) {
-        console.log('❌ No response content from AI')
-        throw new Error('No response from AI')
+        console.log('❌ No response content from GPT-5')
+        throw new Error('No response from GPT-5')
       }
 
       console.log('🔍 AI Response Preview:', aiResponse.substring(0, 200) + '...')
@@ -480,7 +498,9 @@ Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW 
           calendarWeek: currentKW,
           restrictionsFound: assignmentRestrictions.length,
           contextAssignments: assignmentContext.length,
-          tokensUsed: completion.usage?.total_tokens || 0
+          reasoningTokens: result.reasoning_tokens || 0,
+          outputTokens: result.output_tokens || 0,
+          responseId: result.response_id
         }
       })
 
