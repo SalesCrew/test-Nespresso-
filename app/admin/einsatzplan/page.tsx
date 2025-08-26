@@ -2066,10 +2066,17 @@ export default function EinsatzplanPage() {
                             };
 
                             const getRankColor = (rank: number) => {
-                              if (rank === 1) return 'bg-gradient-to-r from-green-400 to-green-600 text-white';
-                              if (rank === 2) return 'bg-gradient-to-r from-green-300 to-green-500 text-white';
-                              if (rank === 3) return 'bg-gradient-to-r from-green-200 to-green-400 text-white';
-                              return 'bg-gradient-to-r from-green-100 to-green-300 text-white';
+                              if (rank === 1) return 'text-white';
+                              if (rank === 2) return 'text-white';
+                              if (rank === 3) return 'text-white';
+                              return 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white';
+                            };
+
+                            const getRankStyle = (rank: number) => {
+                              if (rank === 1) return { background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)' };
+                              if (rank === 2) return { background: 'linear-gradient(135deg, #DEDFE1 0%, #BCBDC1 25%, #ECEEED 75%, #B6BCBC 100%)' };
+                              if (rank === 3) return { background: 'linear-gradient(135deg, #BD965D 0%, #99774A 25%, #DEBF93 75%, #AC9071 100%)' };
+                              return {};
                             };
 
                             return (
@@ -2085,7 +2092,10 @@ export default function EinsatzplanPage() {
                               >
                                 <div className="flex items-center space-x-3">
                                   {/* Rank Badge */}
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(rec.rank)}`}>
+                                  <div 
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(rec.rank)}`}
+                                    style={getRankStyle(rec.rank)}
+                                  >
                                     {rec.rank}
                                   </div>
 
