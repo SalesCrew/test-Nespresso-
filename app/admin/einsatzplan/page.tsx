@@ -491,6 +491,14 @@ export default function EinsatzplanPage() {
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
+  // Helper function to format promotor name consistently with dropdown
+  const getDisplayName = (einsatz: any) => {
+    if (einsatz.status === 'Buddy Tag' && einsatz.promotor && einsatz.buddy_name) {
+      return `${einsatz.promotor} & ${einsatz.buddy_name}`;
+    }
+    return einsatz.promotor || (einsatz.product || 'Market');
+  };
+
   // Helper functions for promotor selection (copied from admin dashboard)
   const getRegionGradient = (region: string) => {
     switch (region) {
@@ -1744,27 +1752,13 @@ export default function EinsatzplanPage() {
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
-                                  {hasPromotor ? (
-                                    <>
-                                      <h4 className="text-sm font-medium text-gray-900">{einsatz.promotor}</h4>
-                                      <button
-                                        onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
-                                        className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
-                                      >
-                                        {einsatz.address}
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <h4 className="text-sm font-medium text-gray-900">{einsatz.product || 'Market'}</h4>
-                                      <button
-                                        onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
-                                        className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
-                                      >
-                                        {einsatz.address}
-                                      </button>
-                                    </>
-                                  )}
+                                  <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
+                                  <button
+                                    onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
+                                    className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
+                                  >
+                                    {einsatz.address}
+                                  </button>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
                                   <span>{einsatz.plz} {einsatz.city}</span>
@@ -2417,7 +2411,7 @@ export default function EinsatzplanPage() {
                             transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
-                          <SelectValue placeholder={editingEinsatz.promotor || 'Promotor auswählen'} />
+                          <SelectValue placeholder={getDisplayName(editingEinsatz) || 'Promotor auswählen'} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           {promotorsList.map((p: any) => (
