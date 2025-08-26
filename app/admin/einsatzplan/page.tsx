@@ -1744,7 +1744,14 @@ export default function EinsatzplanPage() {
                                 );
                               } else {
                                 setSelectedEinsatz(einsatz);
-                                setEditingEinsatz({...einsatz});
+                                // Extract just the promotor name without any formatting
+                                const rawPromotorName = einsatz.promotor?.includes(' & ') 
+                                  ? einsatz.promotor.split(' & ')[0] 
+                                  : einsatz.promotor;
+                                setEditingEinsatz({
+                                  ...einsatz,
+                                  promotor: rawPromotorName
+                                });
                                 setShowDetailModal(true);
                               }
                             }}
