@@ -2003,16 +2003,9 @@ Import EP
 
                         {aiLoading ? (
                           <div className="flex items-center justify-center py-16">
-                            <div className="relative w-14 h-14">
-                              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="44" strokeWidth="8" className="stroke-gray-200 fill-none" />
-                                <circle cx="50" cy="50" r="44" strokeWidth="8" strokeLinecap="round" className="stroke-green-500 fill-none" style={{ strokeDasharray: 276, strokeDashoffset: 180 }}>
-                                  <animate attributeName="stroke-dashoffset" values="276;0" dur="1.2s" repeatCount="indefinite" />
-                                </circle>
-                              </svg>
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-ping"></div>
-                              </div>
+                            <div className="relative h-10 w-10">
+                              <div className="absolute inset-0 rounded-full border border-gray-200"></div>
+                              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-green-500 animate-spin" style={{ animationDuration: '900ms' }}></div>
                             </div>
                             <span className="ml-3 text-sm text-gray-600">AI analysiert…</span>
                           </div>
