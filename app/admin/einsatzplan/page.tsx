@@ -962,7 +962,7 @@ export default function EinsatzplanPage() {
         try {
           // Fetch ALL assignments from database for accurate conflict detection
           console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments?raw=true`, { cache: 'no-store' });
+          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
           if (!allAssignmentsRes.ok) {
             throw new Error('Failed to fetch existing assignments');
           }
@@ -970,15 +970,16 @@ export default function EinsatzplanPage() {
           const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
           console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
           
-          // Log first assignment to see structure
+          // Log first assignment to see structure and timezone info
           if (existingAssignments.length > 0) {
-            console.log('🔵 First existing assignment structure:', {
+            const testDate = new Date(existingAssignments[0].start_ts);
+            console.log('🔵 First existing assignment timezone check:', {
               id: existingAssignments[0].id,
-              location_text: existingAssignments[0].location_text,
-              start_ts: existingAssignments[0].start_ts,
-              end_ts: existingAssignments[0].end_ts,
-              postal_code: existingAssignments[0].postal_code,
-              status: existingAssignments[0].status
+              start_ts_raw: existingAssignments[0].start_ts,
+              start_ts_parsed: testDate.toString(),
+              utc_hours: testDate.getUTCHours(),
+              local_hours: testDate.getHours(),
+              timezone_offset: testDate.getTimezoneOffset()
             });
           }
           
@@ -995,10 +996,10 @@ export default function EinsatzplanPage() {
             continue;
           }
           
-          // Extract date and time slot from assignments
+          // Extract date and time slot from assignments - use UTC hours for consistent comparison
           const newDate = newStartDate.toISOString().split('T')[0];
-          const newStartHour = newStartDate.getHours();
-          const newEndHour = newEndDate.getHours();
+          const newStartHour = newStartDate.getUTCHours();
+          const newEndHour = newEndDate.getUTCHours();
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
@@ -1013,8 +1014,8 @@ export default function EinsatzplanPage() {
             }
             
             const existingDate = existingStartDate.toISOString().split('T')[0];
-            const existingStartHour = existingStartDate.getHours();
-            const existingEndHour = existingEndDate.getHours();
+            const existingStartHour = existingStartDate.getUTCHours();
+            const existingEndHour = existingEndDate.getUTCHours();
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
@@ -1055,6 +1056,10 @@ export default function EinsatzplanPage() {
             const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
                                      (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
             
+            // Final check: If everything is identical and no promotor would be lost, skip
+            const isIdentical = !hasActualChanges && !wouldLosePromotor && 
+                               (conflictingAssignment.status === 'open' || conflictingAssignment.status === 'Offen');
+            
             // Log for debugging
             if (processedExistingIds.size < 3) {
               console.log('🔵 Conflict check details:', {
@@ -1078,12 +1083,13 @@ export default function EinsatzplanPage() {
                   hasTimeChanges,
                   hasOtherChanges,
                   wouldLosePromotor,
-                  willShowConflict: hasActualChanges || wouldLosePromotor
+                  isIdentical,
+                  willShowConflict: !isIdentical && (hasActualChanges || wouldLosePromotor)
                 }
               });
             }
             
-            if (hasActualChanges || wouldLosePromotor) {
+            if (!isIdentical && (hasActualChanges || wouldLosePromotor)) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
@@ -1225,7 +1231,7 @@ export default function EinsatzplanPage() {
         try {
           // Fetch ALL assignments from database for accurate conflict detection
           console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments?raw=true`, { cache: 'no-store' });
+          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
           if (!allAssignmentsRes.ok) {
             throw new Error('Failed to fetch existing assignments');
           }
@@ -1233,15 +1239,16 @@ export default function EinsatzplanPage() {
           const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
           console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
           
-          // Log first assignment to see structure
+          // Log first assignment to see structure and timezone info
           if (existingAssignments.length > 0) {
-            console.log('🔵 First existing assignment structure:', {
+            const testDate = new Date(existingAssignments[0].start_ts);
+            console.log('🔵 First existing assignment timezone check:', {
               id: existingAssignments[0].id,
-              location_text: existingAssignments[0].location_text,
-              start_ts: existingAssignments[0].start_ts,
-              end_ts: existingAssignments[0].end_ts,
-              postal_code: existingAssignments[0].postal_code,
-              status: existingAssignments[0].status
+              start_ts_raw: existingAssignments[0].start_ts,
+              start_ts_parsed: testDate.toString(),
+              utc_hours: testDate.getUTCHours(),
+              local_hours: testDate.getHours(),
+              timezone_offset: testDate.getTimezoneOffset()
             });
           }
           
@@ -1258,10 +1265,10 @@ export default function EinsatzplanPage() {
             continue;
           }
           
-          // Extract date and time slot from assignments
+          // Extract date and time slot from assignments - use UTC hours for consistent comparison
           const newDate = newStartDate.toISOString().split('T')[0];
-          const newStartHour = newStartDate.getHours();
-          const newEndHour = newEndDate.getHours();
+          const newStartHour = newStartDate.getUTCHours();
+          const newEndHour = newEndDate.getUTCHours();
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
@@ -1276,8 +1283,8 @@ export default function EinsatzplanPage() {
             }
             
             const existingDate = existingStartDate.toISOString().split('T')[0];
-            const existingStartHour = existingStartDate.getHours();
-            const existingEndHour = existingEndDate.getHours();
+            const existingStartHour = existingStartDate.getUTCHours();
+            const existingEndHour = existingEndDate.getUTCHours();
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
@@ -1318,6 +1325,10 @@ export default function EinsatzplanPage() {
             const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
                                      (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
             
+            // Final check: If everything is identical and no promotor would be lost, skip
+            const isIdentical = !hasActualChanges && !wouldLosePromotor && 
+                               (conflictingAssignment.status === 'open' || conflictingAssignment.status === 'Offen');
+            
             // Log for debugging
             if (processedExistingIds.size < 3) {
               console.log('🔵 Conflict check details:', {
@@ -1341,12 +1352,13 @@ export default function EinsatzplanPage() {
                   hasTimeChanges,
                   hasOtherChanges,
                   wouldLosePromotor,
-                  willShowConflict: hasActualChanges || wouldLosePromotor
+                  isIdentical,
+                  willShowConflict: !isIdentical && (hasActualChanges || wouldLosePromotor)
                 }
               });
             }
             
-            if (hasActualChanges || wouldLosePromotor) {
+            if (!isIdentical && (hasActualChanges || wouldLosePromotor)) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
@@ -3627,9 +3639,19 @@ Import EP
                             <p>
                               {conflict.existing.start_ts && conflict.existing.end_ts ? (
                                 <>
-                                  {new Date(conflict.existing.start_ts).toLocaleDateString('de-DE')} {' '}
-                                  {new Date(conflict.existing.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - 
-                                  {new Date(conflict.existing.end_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                  {(() => {
+                                    // Parse UTC timestamps and display in local timezone
+                                    const startDate = new Date(conflict.existing.start_ts);
+                                    const endDate = new Date(conflict.existing.end_ts);
+                                    // For display, we want to show the intended local time (9:30-18:30)
+                                    // Since the DB stores UTC times that represent local times, we need to adjust
+                                    const displayDate = startDate.toLocaleDateString('de-DE');
+                                    const startHour = startDate.getUTCHours();
+                                    const endHour = endDate.getUTCHours();
+                                    const startMinutes = startDate.getUTCMinutes();
+                                    const endMinutes = endDate.getUTCMinutes();
+                                    return `${displayDate} ${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                                  })()}
                                 </>
                               ) : 'Ungültige Zeit'}
                             </p>
@@ -3654,9 +3676,19 @@ Import EP
                             <p>
                               {conflict.new.start_ts && conflict.new.end_ts ? (
                                 <>
-                                  {new Date(conflict.new.start_ts).toLocaleDateString('de-DE')} {' '}
-                                  {new Date(conflict.new.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - 
-                                  {new Date(conflict.new.end_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                  {(() => {
+                                    // Parse UTC timestamps and display in local timezone
+                                    const startDate = new Date(conflict.new.start_ts);
+                                    const endDate = new Date(conflict.new.end_ts);
+                                    // For display, we want to show the intended local time (9:30-18:30)
+                                    // Since the DB stores UTC times that represent local times, we need to adjust
+                                    const displayDate = startDate.toLocaleDateString('de-DE');
+                                    const startHour = startDate.getUTCHours();
+                                    const endHour = endDate.getUTCHours();
+                                    const startMinutes = startDate.getUTCMinutes();
+                                    const endMinutes = endDate.getUTCMinutes();
+                                    return `${displayDate} ${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                                  })()}
                                 </>
                               ) : 'Ungültige Zeit'}
                             </p>
