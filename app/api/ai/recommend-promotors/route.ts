@@ -193,11 +193,15 @@ export async function POST(req: Request) {
         region: profile?.region || 'wien-noe-bgl',
         postal_code: profile?.postal_code || '',
         city: profile?.city || '',
+        address: profile?.address || '', // Full address for distance calculation
         working_days: profile?.working_days || [],
         contract_hours_per_week: contractHours,
         worked_hours_this_week: workedHours,
         remaining_hours_this_week: remainingHours,
-        current_week_assignments: weekAssignments.length
+        current_week_assignments: weekAssignments.length,
+        stammmarkt: profile?.stammmarkt || null, // Placeholder for Stammmarkt data
+        has_driving_license: profile?.has_driving_license || false, // Placeholder for Führerschein
+        has_car: profile?.has_car || false // Placeholder for Auto
       }
       
       if (index < 3) {
@@ -267,6 +271,8 @@ export async function POST(req: Request) {
       title: assignment.title,
       location_text: assignment.location_text,
       postal_code: assignment.postal_code,
+      city: assignment.city || '',
+      address: assignment.address || assignment.location_text, // Full address for distance calculation
       region: assignment.region,
       start_ts: assignment.start_ts,
       end_ts: assignment.end_ts,
@@ -285,11 +291,15 @@ export async function POST(req: Request) {
       region: p.region,
       postal_code: p.postal_code,
       city: p.city,
+      address: p.address,
       working_days: p.working_days,
       contract_hours_per_week: p.contract_hours_per_week,
       worked_hours_this_week: p.worked_hours_this_week,
       remaining_hours_this_week: p.remaining_hours_this_week,
-      current_week_assignments: p.current_week_assignments
+      current_week_assignments: p.current_week_assignments,
+      stammmarkt: p.stammmarkt,
+      has_driving_license: p.has_driving_license,
+      has_car: p.has_car
     }))
 
     // Check for assignment restrictions in notes
@@ -360,6 +370,19 @@ STRIKTE REGELN:
 - Prüfe harte Eignung: Verfügbarkeit, verbleibende Wochenstunden, Muss-Anforderungen, keine Sperren
 - Bewerte geeignete Personen nach: Nähe/Anreise, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
 - Löse Gleichstände strikt deterministisch (alphabetische Reihenfolge bei gleicher Bewertung)
+
+ZUSÄTZLICHE REGELN:
+⦁ Wenn ein Promotor aus demselben Bundesland verfügbar ist, MUSS AUSNAHMSLOS zuerst ein Promotor aus demselben Bundesland zugeteilt werden. Bundesland sind die Cluster sowie KNT oder Wien/Nö/Bgl. Ziel ist es IMMER, dass das Cluster vom Einsatz gleich ist wie das vom Promotor. Gibt es in diesem Cluster KEINE freien Promotoren, wechsle strikt zum geografisch nächstmöglichen Cluster, berechne anhand der markt adresse und PLZ und der Adresse des promotors die Distanz und nimm IMMER den nächstgelegenen verfügbaren Promotor.
+
+⦁ Viele Promotoren haben einen Stammmarkt; DIESER HAT OBERSTE PRIORITÄT. Versuche IMMER an erster Stelle, Promotoren ihrem Stammmarkt zuzuordnen – ABER NUR, wenn sie am Tag des zu matchenden Termins tatsächlich frei sind.
+
+⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind.
+
+⦁ Wenn mehrere Promotoren gut geeignet sind und es KEINEN verfügbaren Promotor mit diesem Markt als Stammmarkt gibt, MUSST du anhand der Adresse und PLZ des Marktes sowie der Heimatadresse der Promotoren die Distanz berechnen und STRIKT den nächstgelegenen auswählen.
+
+⦁ Schlage NUR Promotoren vor, die an diesem Tag einen Arbeitstag haben (angezeigt in Abkürzungen: Mo, Di, Mi …). Falls es KEINE geeigneten Promotoren gibt, DARFST du ausnahmsweise nicht arbeitende Promotoren in der Nähe vorschlagen, sofern sie an diesem Tag KEINEN anderen Termin haben.
+
+⦁ Für Strecken, die zu lang für öffentliche Verkehrsmittel sind, PRÜFE zwingend, ob die Promotoren Führerschein und Auto haben, und schlage BEVORZUGT diese vor.
 
 AUSGABEFORMAT:
 Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} Einträgen. Falls weniger als ${maxRecommendations} geeignete Promotor:innen gefunden werden, ist es völlig in Ordnung, weniger Empfehlungen zurückzugeben:
