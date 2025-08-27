@@ -1504,7 +1504,7 @@ export default function EinsatzplanPage() {
               <p className="text-gray-500 text-sm">Übersicht und Planung aller Einsätze</p>
             </div>
             <div className="flex items-center space-x-3">
-
+              
               <button
                 onClick={() => setShowImportModal(true)}
                 className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
@@ -2181,7 +2181,7 @@ Import EP
                             };
 
                             const isExpanded = expandedRecommendations.has(rec.keyword);
-                            
+
                             return (
                               <div
                                 key={rec.keyword}
@@ -2219,7 +2219,7 @@ Import EP
 
                                   {/* Content Area - Both states remain in DOM */}
                                   <div className="flex-1 relative h-full">
-                                    {/* Promotor Info */}
+                                  {/* Promotor Info */}
                                     <div 
                                       className="absolute inset-0 flex items-center space-x-3"
                                       style={{
@@ -2229,25 +2229,25 @@ Import EP
                                         pointerEvents: isExpanded ? 'none' : 'auto'
                                       }}
                                     >
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center mb-1">
-                                          <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
-                                          <span className="font-medium text-gray-900 text-sm truncate">
-                                            {rec.promotorName}
-                                          </span>
-                                        </div>
-                                        {rec.phone && (
-                                          <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
-                                            {rec.phone}
-                                          </div>
-                                        )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center mb-1">
+                                      <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
+                                      <span className="font-medium text-gray-900 text-sm truncate">
+                                        {rec.promotorName}
+                                      </span>
+                                    </div>
+                                    {rec.phone && (
+                                      <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
+                                        {rec.phone}
                                       </div>
-                                      
-                                      {/* Confidence - Right side */}
-                                      <div className="flex-shrink-0">
-                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
-                                          {Math.round(rec.confidence * 100)}%
-                                        </span>
+                                    )}
+                                  </div>
+
+                                  {/* Confidence - Right side */}
+                                  <div className="flex-shrink-0">
+                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
+                                      {Math.round(rec.confidence * 100)}%
+                                    </span>
                                       </div>
                                     </div>
 
@@ -3247,30 +3247,30 @@ Import EP
             {/* Modal Content */}
             <div className="p-6">
               {/* Import Type Selection */}
-              <div className="mb-6">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setImportType('roh')}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      importType === 'roh'
-                        ? 'bg-gray-100 text-gray-700 border border-gray-200'
-                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    Roh Excel
-                  </button>
-                  <button
-                    onClick={() => setImportType('intern')}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                      importType === 'intern'
-                        ? 'bg-gray-100 text-gray-700 border border-gray-200'
-                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    EP intern
-                  </button>
+                <div className="mb-6">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setImportType('roh')}
+                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                        importType === 'roh'
+                          ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                          : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      Roh Excel
+                    </button>
+                    <button
+                      onClick={() => setImportType('intern')}
+                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                        importType === 'intern'
+                          ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                          : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      EP intern
+                    </button>
+                  </div>
                 </div>
-              </div>
 
               {/* Drag and Drop Area */}
               <div 
@@ -3553,12 +3553,10 @@ Import EP
                 {/* Date */}
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Datum *</label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={newAssignment.start_date}
-                    onChange={(e) => setNewAssignment(prev => ({ ...prev, start_date: e.target.value }))}
-                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
-                    required
+                    onChange={(value) => setNewAssignment(prev => ({ ...prev, start_date: value }))}
+                    className="w-full"
                   />
                 </div>
 
@@ -3566,20 +3564,18 @@ Import EP
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start Zeit</label>
-                    <input
-                      type="time"
+                    <TimePicker
                       value={newAssignment.start_time}
-                      onChange={(e) => setNewAssignment(prev => ({ ...prev, start_time: e.target.value }))}
-                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                      onChange={(value) => setNewAssignment(prev => ({ ...prev, start_time: value }))}
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">End Zeit</label>
-                    <input
-                      type="time"
+                    <TimePicker
                       value={newAssignment.end_time}
-                      onChange={(e) => setNewAssignment(prev => ({ ...prev, end_time: e.target.value }))}
-                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                      onChange={(value) => setNewAssignment(prev => ({ ...prev, end_time: value }))}
+                      className="w-full"
                     />
                   </div>
                 </div>
