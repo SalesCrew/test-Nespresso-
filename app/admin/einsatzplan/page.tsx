@@ -158,7 +158,7 @@ export default function EinsatzplanPage() {
   // Import conflict resolution state
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [importConflicts, setImportConflicts] = useState<any[]>([]);
-  const [conflictResolutions, setConflictResolutions] = useState<Map<string, 'new' | 'existing' | 'add'>>(new Map());
+  const [conflictResolutions, setConflictResolutions] = useState<Map<string, 'new' | 'existing'>>(new Map());
   const [newNonConflictingRows, setNewNonConflictingRows] = useState<any[]>([]);
   
   // Load distribution history from database
@@ -946,21 +946,50 @@ export default function EinsatzplanPage() {
         const existingAssignments = einsatzplanData;
         const conflicts = [];
         const newAssignments = [];
+        const processedExistingIds = new Set();
         
         for (const newRow of rows) {
-          const conflictingAssignment = existingAssignments.find(existing => 
-            existing.location_text === newRow.location_text &&
-            existing.postal_code === newRow.postal_code &&
-            existing.start_ts === newRow.start_ts
-          );
+          // Extract date and time slot from assignments
+          const newDate = new Date(newRow.start_ts).toISOString().split('T')[0];
+          const newStartHour = new Date(newRow.start_ts).getHours();
+          const newEndHour = new Date(newRow.end_ts).getHours();
+          const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
+          
+          // Find matching existing assignment
+          const conflictingAssignment = existingAssignments.find(existing => {
+            if (processedExistingIds.has(existing.id)) return false;
+            
+            const existingDate = new Date(existing.start_ts).toISOString().split('T')[0];
+            const existingStartHour = new Date(existing.start_ts).getHours();
+            const existingEndHour = new Date(existing.end_ts).getHours();
+            const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
+            
+            return existing.location_text === newRow.location_text &&
+                   existing.postal_code === newRow.postal_code &&
+                   existingDate === newDate &&
+                   existingTimeSlot === newTimeSlot;
+          });
           
           if (conflictingAssignment) {
-            conflicts.push({
-              id: conflictingAssignment.id,
-              new: newRow,
-              existing: conflictingAssignment,
-              hasPromotor: !!conflictingAssignment.promotor
-            });
+            processedExistingIds.add(conflictingAssignment.id);
+            
+            // Check if there are actual differences
+            const hasChanges = 
+              conflictingAssignment.title !== newRow.title ||
+              conflictingAssignment.city !== newRow.city ||
+              conflictingAssignment.region !== newRow.region ||
+              conflictingAssignment.start_ts !== newRow.start_ts ||
+              conflictingAssignment.end_ts !== newRow.end_ts;
+            
+            if (hasChanges || conflictingAssignment.status !== 'Offen') {
+              conflicts.push({
+                id: conflictingAssignment.id,
+                new: newRow,
+                existing: conflictingAssignment,
+                hasPromotor: !!conflictingAssignment.promotor,
+                hasChanges: hasChanges
+              });
+            }
           } else {
             newAssignments.push(newRow);
           }
@@ -1072,21 +1101,50 @@ export default function EinsatzplanPage() {
         const existingAssignments = einsatzplanData;
         const conflicts = [];
         const newAssignments = [];
+        const processedExistingIds = new Set();
         
         for (const newRow of rows) {
-          const conflictingAssignment = existingAssignments.find(existing => 
-            existing.location_text === newRow.location_text &&
-            existing.postal_code === newRow.postal_code &&
-            existing.start_ts === newRow.start_ts
-          );
+          // Extract date and time slot from assignments
+          const newDate = new Date(newRow.start_ts).toISOString().split('T')[0];
+          const newStartHour = new Date(newRow.start_ts).getHours();
+          const newEndHour = new Date(newRow.end_ts).getHours();
+          const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
+          
+          // Find matching existing assignment
+          const conflictingAssignment = existingAssignments.find(existing => {
+            if (processedExistingIds.has(existing.id)) return false;
+            
+            const existingDate = new Date(existing.start_ts).toISOString().split('T')[0];
+            const existingStartHour = new Date(existing.start_ts).getHours();
+            const existingEndHour = new Date(existing.end_ts).getHours();
+            const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
+            
+            return existing.location_text === newRow.location_text &&
+                   existing.postal_code === newRow.postal_code &&
+                   existingDate === newDate &&
+                   existingTimeSlot === newTimeSlot;
+          });
           
           if (conflictingAssignment) {
-            conflicts.push({
-              id: conflictingAssignment.id,
-              new: newRow,
-              existing: conflictingAssignment,
-              hasPromotor: !!conflictingAssignment.promotor
-            });
+            processedExistingIds.add(conflictingAssignment.id);
+            
+            // Check if there are actual differences
+            const hasChanges = 
+              conflictingAssignment.title !== newRow.title ||
+              conflictingAssignment.city !== newRow.city ||
+              conflictingAssignment.region !== newRow.region ||
+              conflictingAssignment.start_ts !== newRow.start_ts ||
+              conflictingAssignment.end_ts !== newRow.end_ts;
+            
+            if (hasChanges || conflictingAssignment.status !== 'Offen') {
+              conflicts.push({
+                id: conflictingAssignment.id,
+                new: newRow,
+                existing: conflictingAssignment,
+                hasPromotor: !!conflictingAssignment.promotor,
+                hasChanges: hasChanges
+              });
+            }
           } else {
             newAssignments.push(newRow);
           }
@@ -1121,19 +1179,25 @@ export default function EinsatzplanPage() {
   // Handle conflict resolution
   const applyConflictResolutions = async () => {
     try {
-      const toImport = [];
-      const toUpdate = [];
+      const toImport: any[] = [];
+      const toUpdate: any[] = [];
       
       // Process conflict resolutions
       for (const conflict of importConflicts) {
         const resolution = conflictResolutions.get(conflict.id) || 'existing';
         
         if (resolution === 'new') {
-          // Use new data
-          toUpdate.push({ id: conflict.id, ...conflict.new });
-        } else if (resolution === 'add' && !conflict.hasPromotor) {
-          // Add only if no promotor assigned
-          toImport.push(conflict.new);
+          // Use new data - update the existing assignment
+          toUpdate.push({ 
+            id: conflict.id, 
+            ...conflict.new,
+            // Preserve promotor and status if assignment was already "Verplant"
+            ...(conflict.existing.status === 'Verplant' && {
+              promotor: conflict.existing.promotor,
+              promotorId: conflict.existing.promotorId,
+              status: conflict.existing.status
+            })
+          });
         }
         // 'existing' means keep current data, do nothing
       }
@@ -3341,20 +3405,29 @@ Import EP
                     <div key={conflict.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Bestehend</h4>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">Aktuell im System</h4>
                           <div className="text-sm text-gray-600">
-                            <p>{conflict.existing.location_text} - {conflict.existing.postal_code}</p>
+                            <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code}</p>
                             <p>{new Date(conflict.existing.start_ts).toLocaleString('de-DE')}</p>
+                            <p>Status: <span className={`font-medium ${
+                              conflict.existing.status === 'Verplant' ? 'text-green-600' : 
+                              conflict.existing.status === 'Offen' ? 'text-yellow-600' : 
+                              'text-gray-600'
+                            }`}>{conflict.existing.status}</span></p>
                             {conflict.existing.promotor && (
                               <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor}</p>
                             )}
                           </div>
                         </div>
                         <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Neu (Import)</h4>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">Neu aus Excel</h4>
                           <div className="text-sm text-gray-600">
-                            <p>{conflict.new.location_text} - {conflict.new.postal_code}</p>
+                            <p className="font-medium">{conflict.new.location_text} - {conflict.new.postal_code}</p>
                             <p>{new Date(conflict.new.start_ts).toLocaleString('de-DE')}</p>
+                            <p>Status: <span className="text-yellow-600 font-medium">Offen</span></p>
+                            {conflict.hasChanges && (
+                              <p className="text-orange-600 text-xs mt-1">⚠️ Zeitänderung oder andere Unterschiede</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -3372,7 +3445,7 @@ Import EP
                               : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                           }`}
                         >
-                          Bestehendes behalten
+                          Aktuellen Stand behalten
                         </button>
                         <button
                           onClick={() => {
@@ -3386,24 +3459,8 @@ Import EP
                               : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                           }`}
                         >
-                          Mit neuem überschreiben
+                          Mit Excel-Daten aktualisieren
                         </button>
-                        {!conflict.hasPromotor && (
-                          <button
-                            onClick={() => {
-                              const newResolutions = new Map(conflictResolutions);
-                              newResolutions.set(conflict.id, 'add');
-                              setConflictResolutions(newResolutions);
-                            }}
-                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                              resolution === 'add'
-                                ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                            }`}
-                          >
-                            Als zusätzlich hinzufügen
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
@@ -3422,7 +3479,7 @@ Import EP
                   }}
                   className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Alle behalten
+                  Alle aktuell behalten
                 </button>
                 <button
                   onClick={() => {
@@ -3432,7 +3489,7 @@ Import EP
                   }}
                   className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Alle überschreiben
+                  Alle mit Excel aktualisieren
                 </button>
               </div>
               <button
