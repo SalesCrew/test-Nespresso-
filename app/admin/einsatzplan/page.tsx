@@ -840,10 +840,32 @@ export default function EinsatzplanPage() {
 
   // Check if two assignments match (same location, date, time)
   const assignmentsMatch = (a1: any, a2: any) => {
-    return a1.location_text === a2.location_text &&
-           a1.postal_code === a2.postal_code &&
-           a1.start_ts === a2.start_ts &&
-           a1.end_ts === a2.end_ts;
+    // Compare locations - handle different field names
+    const loc1 = a1.location_text || a1.address || '';
+    const loc2 = a2.location_text || a2.address || '';
+    const plz1 = String(a1.postal_code || a1.plz || '');
+    const plz2 = String(a2.postal_code || a2.plz || '');
+    
+    // Compare locations and PLZ
+    if (loc1 !== loc2 || plz1 !== plz2) return false;
+    
+    // For dates, compare the timestamps
+    if (!a1.start_ts || !a2.start_ts) return false;
+    
+    // Compare the actual timestamps
+    const match = a1.start_ts === a2.start_ts && a1.end_ts === a2.end_ts;
+    
+    // Debug logging for first few comparisons
+    if (match) {
+      console.log('🔵 Match found!', {
+        loc1, loc2, plz1, plz2,
+        start1: a1.start_ts,
+        start2: a2.start_ts,
+        status: a2.status
+      });
+    }
+    
+    return match;
   };
   
   // Handle conflict resolution
@@ -986,20 +1008,45 @@ export default function EinsatzplanPage() {
           console.log('🔵 Sample dates:', rows.slice(0, 3).map(r => r.start_ts));
         }
         
+        // Fetch current assignments to ensure fresh data
+        console.log('🔵 Fetching current assignments for conflict check...');
+        const currentRes = await fetch('/api/assignments');
+        if (!currentRes.ok) {
+          throw new Error('Failed to load current assignments');
+        }
+        const currentData = await currentRes.json();
+        const currentAssignments = Array.isArray(currentData.assignments) ? currentData.assignments : [];
+        console.log('🔵 Loaded', currentAssignments.length, 'current assignments');
+        
+        // Map the assignments to preserve the fields we need
+        const mappedCurrent = currentAssignments.map((r: any) => ({
+          ...r,
+          location_text: r.location_text,
+          postal_code: r.postal_code,
+          start_ts: r.start_ts,
+          end_ts: r.end_ts,
+          status: r.status
+        }));
+        
+        console.log('🔵 Checking conflicts against', mappedCurrent.length, 'existing assignments');
+        
         // Check for conflicts with existing assignments
         const newAssignments: any[] = [];
         const conflicts: any[] = [];
         
         for (const newRow of rows) {
-          const existingMatch = einsatzplanData.find(existing => assignmentsMatch(existing, newRow));
+          const existingMatch = mappedCurrent.find((existing: any) => assignmentsMatch(existing, newRow));
           
           if (existingMatch) {
             // Check if it's identical (including status)
-            if (existingMatch.status === 'Offen') {
+            // Excel imports are always 'open' status
+            if (existingMatch.status === 'open') {
               // Identical, skip
+              console.log('🔵 Skipping identical assignment:', newRow.location_text);
               continue;
             } else {
               // Different status - this is a conflict
+              console.log('🔵 Found conflict - existing status:', existingMatch.status);
               conflicts.push({
                 excel: newRow,
                 existing: existingMatch
@@ -1126,20 +1173,43 @@ export default function EinsatzplanPage() {
           }
         }
         
+        // Fetch current assignments to ensure fresh data
+        console.log('🔵 Fetching current assignments for conflict check...');
+        const currentRes = await fetch('/api/assignments');
+        if (!currentRes.ok) {
+          throw new Error('Failed to load current assignments');
+        }
+        const currentData = await currentRes.json();
+        const currentAssignments = Array.isArray(currentData.assignments) ? currentData.assignments : [];
+        console.log('🔵 Loaded', currentAssignments.length, 'current assignments');
+        
+        // Map the assignments to preserve the fields we need
+        const mappedCurrent = currentAssignments.map((r: any) => ({
+          ...r,
+          location_text: r.location_text,
+          postal_code: r.postal_code,
+          start_ts: r.start_ts,
+          end_ts: r.end_ts,
+          status: r.status
+        }));
+        
         // Check for conflicts with existing assignments
         const newAssignments: any[] = [];
         const conflicts: any[] = [];
         
         for (const newRow of rows) {
-          const existingMatch = einsatzplanData.find(existing => assignmentsMatch(existing, newRow));
+          const existingMatch = mappedCurrent.find((existing: any) => assignmentsMatch(existing, newRow));
           
           if (existingMatch) {
             // Check if it's identical (including status)
-            if (existingMatch.status === 'Offen') {
+            // Excel imports are always 'open' status
+            if (existingMatch.status === 'open') {
               // Identical, skip
+              console.log('🔵 Skipping identical assignment:', newRow.location_text);
               continue;
             } else {
               // Different status - this is a conflict
+              console.log('🔵 Found conflict - existing status:', existingMatch.status);
               conflicts.push({
                 excel: newRow,
                 existing: existingMatch
@@ -1446,10 +1516,14 @@ export default function EinsatzplanPage() {
           time: timeText,
           city: r.city || r.location_text || '',
           address: r.location_text || '',
+          location_text: r.location_text || '', // Preserve for matching
           planStart: timeStart,
           planEnd: timeEnd,
           plz: r.postal_code || '',
+          postal_code: r.postal_code || '', // Preserve for matching
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
+          start_ts: r.start_ts, // Preserve for matching
+          end_ts: r.end_ts, // Preserve for matching
           // If there's a buddy, force status to Buddy Tag regardless of database status
           status: (r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
                   // Map all database statuses to UI statuses
