@@ -1796,7 +1796,7 @@ const loadProcessState = async () => {
           </Card>
         ) : processState.stage === 'idle' ? (
           // No invitations state
-          <Card className="mb-6 border-dashed border-gray-400 dark:border-gray-600 shadow-sm">
+          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
             <CardContent className="flex items-center justify-center py-8">
               <div className="text-center">
                 <UserCheck className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
