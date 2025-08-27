@@ -85,7 +85,7 @@ export default function EinsatzplanPage() {
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const [showMaerkteView, setShowMaerkteView] = useState(false);
+
   const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState<'roh' | 'intern'>('roh');
   const [einsatzplanData, setEinsatzplanData] = useState<any[]>([]);
@@ -193,8 +193,7 @@ export default function EinsatzplanPage() {
     })();
   }, []);
   
-  // Märkte search state
-  const [maerkteSearch, setMaerkteSearch] = useState('');
+
   
   // Eye filter state - when true, filter out "Verplant" items
   const [hideVerplant, setHideVerplant] = useState(false);
@@ -1318,43 +1317,17 @@ export default function EinsatzplanPage() {
         <header className="bg-white border-b border-gray-100 px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{showMaerkteView ? 'Märkte' : 'Einsatzplan'}</h1>
-              <p className="text-gray-500 text-sm">{showMaerkteView ? 'Marktübersicht und Verwaltung' : 'Übersicht und Planung aller Einsätze'}</p>
+              <h1 className="text-2xl font-semibold text-gray-900">Einsatzplan</h1>
+              <p className="text-gray-500 text-sm">Übersicht und Planung aller Einsätze</p>
             </div>
             <div className="flex items-center space-x-3">
-              {/* Menu Buttons */}
-              <button
-                onClick={() => setShowMaerkteView(false)}
-                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
-                  !showMaerkteView 
-                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Einsatzplan</span>
-              </button>
-              <button
-                onClick={() => setShowMaerkteView(true)}
-                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
-                  showMaerkteView 
-                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <Home className="h-4 w-4" />
-                <span>Märkte</span>
-              </button>
-              
-              {/* Vertical Divider */}
-              <div className="h-8 w-px bg-gray-300 opacity-60 mx-3"></div>
-              
+
               <button
                 onClick={() => setShowImportModal(true)}
                 className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
                 style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
               >
-                {showMaerkteView ? 'Import POS' : 'Import EP'}
+Import EP
               </button>
             </div>
           </div>
@@ -1362,98 +1335,7 @@ export default function EinsatzplanPage() {
 
         {/* Dashboard Content */}
         <main className="p-8 space-y-6">
-          {showMaerkteView ? (
-            /* Märkte View */
-            <div className="w-full">
-              <Card 
-                className="border-0 w-full h-[600px]"
-                style={{
-                  background: 'linear-gradient(135deg, #ffffff 0%, rgba(99, 102, 241, 0.003) 50%, rgba(79, 70, 229, 0.005) 100%)',
-                  boxShadow: '0 4px 20px -2px rgba(99, 102, 241, 0.06), 0 2px 8px -1px rgba(139, 92, 246, 0.04), 0 8px 32px -4px rgba(99, 102, 241, 0.03)'
-                }}
-              >
-                <CardContent className="p-6 h-full flex flex-col">
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2">
-                        <Home className="h-5 w-5 text-gray-600" />
-                        <h3 className="text-lg font-semibold text-gray-900">Märkte</h3>
-                      </div>
-                    </div>
-                    
-                    {/* Region Filter Pills */}
-                    <div className="flex items-center justify-between space-x-3">
-                      <div className="flex items-center space-x-3">
-                      {["ALLE", "W/NÖ/BGL", "ST", "S", "OÖ", "T", "V", "K"].map((region) => {
-                        const isSelected = regionFilter === region || (regionFilter === "ALLE" && region === "ALLE");
-                        return (
-                          <button
-                            key={region}
-                            onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
-                            className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
-                              isSelected 
-                                ? 'bg-gray-100 text-gray-700 scale-110' 
-                                : 'bg-white text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {region}
-                          </button>
-                        );
-                      })}
-                      </div>
-                      
-                      {/* Search Bar */}
-                      <div className="relative">
-                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400 z-10 pointer-events-none" />
-                        <input
-                          type="text"
-                          placeholder="Suchen..."
-                          value={maerkteSearch}
-                          onChange={(e) => setMaerkteSearch(e.target.value)}
-                          className="w-48 pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-0 bg-white placeholder-gray-400"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="flex-1 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="space-y-2">
-                      {/* Empty rows matching einsatzplan format */}
-                      {[1, 2, 3, 4, 5, 6].map((index) => (
-                        <div 
-                          key={index} 
-                          className="p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-white"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="grid grid-cols-5 gap-4 flex-1 items-center">
-                              <div className="min-w-0">
-                                {/* Empty placeholder for promotor */}
-                              </div>
-                              <div className="text-xs text-gray-600 text-center">
-                                {/* Empty placeholder for PLZ/city */}
-                              </div>
-                              <div className="text-xs text-gray-600 text-center">
-                                {/* Empty placeholder for date */}
-                              </div>
-                              <div className="text-xs text-gray-600 text-center">
-                                {/* Empty placeholder for time */}
-                              </div>
-                              <div className="text-xs text-center flex items-center justify-end space-x-2">
-                                {/* Empty placeholder for status */}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            /* Original Einsatzplan View */
+          {/* Einsatzplan View */}
           <div className="flex gap-6">
             {/* Big Card - Left Side */}
             <div className="flex-[3] relative">
@@ -2203,10 +2085,8 @@ export default function EinsatzplanPage() {
               </Card>
             </div>
           </div>
-          )}
 
-          {/* Promotion Distribution Component - Only for Einsatzplan view */}
-          {!showMaerkteView && (
+          {/* Promotion Distribution Component */}
           <div className="mt-8">
             <Card 
               className="border-0 w-full bg-gradient-to-br from-white to-blue-50/40"
@@ -2447,7 +2327,6 @@ export default function EinsatzplanPage() {
               </CardContent>
             </Card>
           </div>
-          )}
         </main>
       </div>
 
@@ -3110,7 +2989,7 @@ export default function EinsatzplanPage() {
           <div className="bg-white rounded-lg shadow-lg w-96 max-w-[90vw]">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">{showMaerkteView ? 'Import POS' : 'Import EP'}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Import EP</h3>
               <button
                 onClick={() => setShowImportModal(false)}
                 className="p-1 rounded hover:bg-gray-100 transition-colors"
@@ -3121,33 +3000,31 @@ export default function EinsatzplanPage() {
 
             {/* Modal Content */}
             <div className="p-6">
-              {/* Import Type Selection - Only show for EP imports */}
-              {!showMaerkteView && (
-                <div className="mb-6">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setImportType('roh')}
-                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                        importType === 'roh'
-                          ? 'bg-gray-100 text-gray-700 border border-gray-200'
-                          : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      Roh Excel
-                    </button>
-                    <button
-                      onClick={() => setImportType('intern')}
-                      className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                        importType === 'intern'
-                          ? 'bg-gray-100 text-gray-700 border border-gray-200'
-                          : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      EP intern
-                    </button>
-                  </div>
+              {/* Import Type Selection */}
+              <div className="mb-6">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setImportType('roh')}
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                      importType === 'roh'
+                        ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    Roh Excel
+                  </button>
+                  <button
+                    onClick={() => setImportType('intern')}
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                      importType === 'intern'
+                        ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                        : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    EP intern
+                  </button>
                 </div>
-              )}
+              </div>
 
               {/* Drag and Drop Area */}
               <div 
