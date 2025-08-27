@@ -1027,75 +1027,37 @@ export default function EinsatzplanPage() {
           if (conflictingAssignment) {
             processedExistingIds.add(conflictingAssignment.id);
             
-            // Check if there are actual differences
-            // Compare times more intelligently - same date/time might have different ISO strings
-            const existingStart = new Date(conflictingAssignment.start_ts);
-            const existingEnd = new Date(conflictingAssignment.end_ts);
-            const newStart = new Date(newRow.start_ts);
-            const newEnd = new Date(newRow.end_ts);
+            // ONLY check for status conflicts
+            // Existing is Verplant (has promotor) but new would be Offen (no promotor)
+            const existingIsVerplant = (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant') &&
+                                      !!(conflictingAssignment.promotor || conflictingAssignment.lead_name);
+            const newWouldBeOffen = true; // New imports are always Offen
             
-            const hasTimeChanges = 
-              existingStart.getTime() !== newStart.getTime() ||
-              existingEnd.getTime() !== newEnd.getTime();
-              
-            // Handle different field names from database
-            const existingTitle = conflictingAssignment.title || 'Promotion';
-            const existingCity = conflictingAssignment.city || '';
-            const existingRegion = conflictingAssignment.region || '';
-            
-            const hasOtherChanges = 
-              existingTitle !== newRow.title ||
-              existingCity !== newRow.city ||
-              existingRegion !== newRow.region;
-            
-            // Only show conflicts if:
-            // 1. There are actual data changes (time, title, city, region)
-            // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
-            const hasActualChanges = hasTimeChanges || hasOtherChanges;
-            // Check both possible promotor field names from database
-            const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
-                                     (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
-            
-            // Final check: If everything is identical and no promotor would be lost, skip
-            const isIdentical = !hasActualChanges && !wouldLosePromotor && 
-                               (conflictingAssignment.status === 'open' || conflictingAssignment.status === 'Offen');
+            // Only show conflict if status would change from Verplant to Offen
+            const hasStatusConflict = existingIsVerplant && newWouldBeOffen;
             
             // Log for debugging
             if (processedExistingIds.size < 3) {
-              console.log('🔵 Conflict check details:', {
+              console.log('🔵 Status conflict check:', {
                 location: conflictingAssignment.location_text,
                 existing: {
-                  start: conflictingAssignment.start_ts,
-                  end: conflictingAssignment.end_ts,
                   status: conflictingAssignment.status,
-                  promotor: conflictingAssignment.promotor,
-                  title: conflictingAssignment.title
+                  promotor: conflictingAssignment.promotor || conflictingAssignment.lead_name
                 },
-                new: {
-                  start: newRow.start_ts,
-                  end: newRow.end_ts,
-                  title: newRow.title
-                },
-                comparison: {
-                  existingStartTime: existingStart.toISOString(),
-                  newStartTime: newStart.toISOString(),
-                  timesMatch: existingStart.getTime() === newStart.getTime(),
-                  hasTimeChanges,
-                  hasOtherChanges,
-                  wouldLosePromotor,
-                  isIdentical,
-                  willShowConflict: !isIdentical && (hasActualChanges || wouldLosePromotor)
+                check: {
+                  existingIsVerplant,
+                  hasStatusConflict
                 }
               });
             }
             
-            if (!isIdentical && (hasActualChanges || wouldLosePromotor)) {
+            if (hasStatusConflict) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
                 existing: conflictingAssignment,
-                hasPromotor: wouldLosePromotor,
-                hasChanges: hasActualChanges
+                hasPromotor: existingIsVerplant,
+                hasChanges: false // Only status matters now
               });
             }
           } else {
@@ -1296,75 +1258,37 @@ export default function EinsatzplanPage() {
           if (conflictingAssignment) {
             processedExistingIds.add(conflictingAssignment.id);
             
-            // Check if there are actual differences
-            // Compare times more intelligently - same date/time might have different ISO strings
-            const existingStart = new Date(conflictingAssignment.start_ts);
-            const existingEnd = new Date(conflictingAssignment.end_ts);
-            const newStart = new Date(newRow.start_ts);
-            const newEnd = new Date(newRow.end_ts);
+            // ONLY check for status conflicts
+            // Existing is Verplant (has promotor) but new would be Offen (no promotor)
+            const existingIsVerplant = (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant') &&
+                                      !!(conflictingAssignment.promotor || conflictingAssignment.lead_name);
+            const newWouldBeOffen = true; // New imports are always Offen
             
-            const hasTimeChanges = 
-              existingStart.getTime() !== newStart.getTime() ||
-              existingEnd.getTime() !== newEnd.getTime();
-              
-            // Handle different field names from database
-            const existingTitle = conflictingAssignment.title || 'Promotion';
-            const existingCity = conflictingAssignment.city || '';
-            const existingRegion = conflictingAssignment.region || '';
-            
-            const hasOtherChanges = 
-              existingTitle !== newRow.title ||
-              existingCity !== newRow.city ||
-              existingRegion !== newRow.region;
-            
-            // Only show conflicts if:
-            // 1. There are actual data changes (time, title, city, region)
-            // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
-            const hasActualChanges = hasTimeChanges || hasOtherChanges;
-            // Check both possible promotor field names from database
-            const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
-                                     (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
-            
-            // Final check: If everything is identical and no promotor would be lost, skip
-            const isIdentical = !hasActualChanges && !wouldLosePromotor && 
-                               (conflictingAssignment.status === 'open' || conflictingAssignment.status === 'Offen');
+            // Only show conflict if status would change from Verplant to Offen
+            const hasStatusConflict = existingIsVerplant && newWouldBeOffen;
             
             // Log for debugging
             if (processedExistingIds.size < 3) {
-              console.log('🔵 Conflict check details:', {
+              console.log('🔵 Status conflict check:', {
                 location: conflictingAssignment.location_text,
                 existing: {
-                  start: conflictingAssignment.start_ts,
-                  end: conflictingAssignment.end_ts,
                   status: conflictingAssignment.status,
-                  promotor: conflictingAssignment.promotor,
-                  title: conflictingAssignment.title
+                  promotor: conflictingAssignment.promotor || conflictingAssignment.lead_name
                 },
-                new: {
-                  start: newRow.start_ts,
-                  end: newRow.end_ts,
-                  title: newRow.title
-                },
-                comparison: {
-                  existingStartTime: existingStart.toISOString(),
-                  newStartTime: newStart.toISOString(),
-                  timesMatch: existingStart.getTime() === newStart.getTime(),
-                  hasTimeChanges,
-                  hasOtherChanges,
-                  wouldLosePromotor,
-                  isIdentical,
-                  willShowConflict: !isIdentical && (hasActualChanges || wouldLosePromotor)
+                check: {
+                  existingIsVerplant,
+                  hasStatusConflict
                 }
               });
             }
             
-            if (!isIdentical && (hasActualChanges || wouldLosePromotor)) {
+            if (hasStatusConflict) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
                 existing: conflictingAssignment,
-                hasPromotor: wouldLosePromotor,
-                hasChanges: hasActualChanges
+                hasPromotor: existingIsVerplant,
+                hasChanges: false // Only status matters now
               });
             }
           } else {
@@ -3693,9 +3617,7 @@ Import EP
                               ) : 'Ungültige Zeit'}
                             </p>
                             <p>Status: <span className="text-yellow-600 font-medium">Offen</span></p>
-                            {conflict.hasChanges && (
-                              <p className="text-orange-600 text-xs mt-1">⚠️ Zeitänderung oder andere Unterschiede</p>
-                            )}
+
                           </div>
                         </div>
                       </div>
