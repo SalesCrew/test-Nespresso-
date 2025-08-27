@@ -33,7 +33,8 @@ import {
   Brain,
   User,
   Loader2,
-  Sparkles
+  Sparkles,
+  Plus
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -155,6 +156,78 @@ export default function EinsatzplanPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
   
+  // Create assignment modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newAssignment, setNewAssignment] = useState({
+    title: 'Promotion',
+    location_text: '',
+    postal_code: '',
+    city: '',
+    start_date: '',
+    start_time: '09:30',
+    end_time: '18:30',
+    notes: ''
+  });
+  
+  // Function to create new assignment
+  const createNewAssignment = async () => {
+    try {
+      // Validate required fields
+      if (!newAssignment.location_text || !newAssignment.postal_code || !newAssignment.start_date) {
+        alert('Bitte füllen Sie alle Pflichtfelder aus.');
+        return;
+      }
+      
+      // Create start and end timestamps
+      const startDateTime = new Date(`${newAssignment.start_date}T${newAssignment.start_time}:00.000Z`);
+      const endDateTime = new Date(`${newAssignment.start_date}T${newAssignment.end_time}:00.000Z`);
+      
+      // Determine region from PLZ
+      const region = getRegionFromPLZ(newAssignment.postal_code);
+      
+      const assignmentData = {
+        title: newAssignment.title,
+        location_text: newAssignment.location_text,
+        postal_code: newAssignment.postal_code,
+        city: newAssignment.city,
+        region,
+        start_ts: startDateTime.toISOString(),
+        end_ts: endDateTime.toISOString(),
+        type: 'promotion',
+        notes: newAssignment.notes
+      };
+      
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(assignmentData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Fehler beim Erstellen des Einsatzes');
+      }
+      
+      // Reset form and close modal
+      setNewAssignment({
+        title: 'Promotion',
+        location_text: '',
+        postal_code: '',
+        city: '',
+        start_date: '',
+        start_time: '09:30',
+        end_time: '18:30',
+        notes: ''
+      });
+      setShowCreateModal(false);
+      
+      // Refresh assignments
+      await loadAssignments(true);
+      
+    } catch (error: any) {
+      console.error('Error creating assignment:', error);
+      alert(error.message || 'Fehler beim Erstellen des Einsatzes');
+    }
+  };
 
   
   // Load distribution history from database
@@ -1404,6 +1477,13 @@ Import EP
                         <h3 className="text-lg font-semibold text-gray-900">Einsatzplan</h3>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                          title="Neuen Einsatz erstellen"
+                        >
+                          <Plus className="h-4 w-4 text-gray-600" />
+                        </button>
                         <button
                           onClick={() => setIsMainCardExpanded(!isMainCardExpanded)}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
@@ -3319,7 +3399,166 @@ Import EP
         </div>
       )}
 
+      {/* Create Assignment Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Neuen Einsatz erstellen</h3>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewAssignment({
+                    title: 'Promotion',
+                    location_text: '',
+                    postal_code: '',
+                    city: '',
+                    start_date: '',
+                    start_time: '09:30',
+                    end_time: '18:30',
+                    notes: ''
+                  });
+                }}
+                className="p-1 rounded hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
 
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-6">
+                {/* Title */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Titel</label>
+                  <input
+                    type="text"
+                    value={newAssignment.title}
+                    onChange={(e) => setNewAssignment(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    placeholder="z.B. Promotion"
+                  />
+                </div>
+
+                {/* Location */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Standort *</label>
+                  <input
+                    type="text"
+                    value={newAssignment.location_text}
+                    onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
+                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    placeholder="z.B. Interspar Graz"
+                    required
+                  />
+                </div>
+
+                {/* PLZ and City */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">PLZ *</label>
+                    <input
+                      type="text"
+                      value={newAssignment.postal_code}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                      placeholder="z.B. 8010"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stadt</label>
+                    <input
+                      type="text"
+                      value={newAssignment.city}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, city: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                      placeholder="z.B. Graz"
+                    />
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Datum *</label>
+                  <input
+                    type="date"
+                    value={newAssignment.start_date}
+                    onChange={(e) => setNewAssignment(prev => ({ ...prev, start_date: e.target.value }))}
+                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    required
+                  />
+                </div>
+
+                {/* Times */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Start Zeit</label>
+                    <input
+                      type="time"
+                      value={newAssignment.start_time}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, start_time: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">End Zeit</label>
+                    <input
+                      type="time"
+                      value={newAssignment.end_time}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, end_time: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notizen</label>
+                  <textarea
+                    value={newAssignment.notes}
+                    onChange={(e) => setNewAssignment(prev => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400 resize-none"
+                    rows={3}
+                    placeholder="Zusätzliche Informationen..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-100">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNewAssignment({
+                      title: 'Promotion',
+                      location_text: '',
+                      postal_code: '',
+                      city: '',
+                      start_date: '',
+                      start_time: '09:30',
+                      end_time: '18:30',
+                      notes: ''
+                    });
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={createNewAssignment}
+                  className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
