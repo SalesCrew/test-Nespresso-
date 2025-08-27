@@ -79,7 +79,7 @@ export default function EinsatzplanPage() {
     .typing-effect {
       overflow: hidden;
       white-space: normal;
-      animation: typewriter 0.8s steps(40, end) forwards;
+      animation: typewriter 2.5s steps(80, end) forwards;
     }
     .slide-out-left {
       transform: translateX(-120%);
@@ -2041,7 +2041,7 @@ Import EP
                                   'hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-indigo-50/60 hover:border-blue-200/80'
                                 }`}
                               >
-                                <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-3 h-12">
                                   {/* Rank Badge - Clickable */}
                                   <div 
                                     onClick={(e) => {
@@ -2054,47 +2054,61 @@ Import EP
                                       }
                                       setExpandedRecommendations(newExpanded);
                                     }}
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer ${getRankColor(rec.rank)}`}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer flex-shrink-0 ${getRankColor(rec.rank)}`}
                                     style={getRankStyle(rec.rank)}
                                   >
                                     {rec.rank}
                                   </div>
 
-                                  {/* Promotor Info */}
-                                  <div className={`flex-1 min-w-0 ${isExpanded ? 'slide-out-left' : 'slide-in'}`}>
-                                    <div className="flex items-center mb-1">
-                                      <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
-                                      <span className="font-medium text-gray-900 text-sm truncate">
-                                        {rec.promotorName}
-                                      </span>
-                                    </div>
-                                    
-                                    {/* Phone Number - Plain below name */}
-                                    {rec.phone && (
-                                      <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
-                                        {rec.phone}
+                                  {/* Content Area */}
+                                  {!isExpanded ? (
+                                    <>
+                                      {/* Promotor Info */}
+                                      <div className={`flex-1 min-w-0 ${isExpanded ? 'slide-out-left' : 'slide-in'}`}>
+                                        <div className="flex items-center mb-1">
+                                          <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
+                                          <span className="font-medium text-gray-900 text-sm truncate">
+                                            {rec.promotorName}
+                                          </span>
+                                        </div>
+                                        
+                                        {/* Phone Number - Plain below name */}
+                                        {rec.phone && (
+                                          <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
+                                            {rec.phone}
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
 
-                                  {/* Confidence - Right side */}
-                                  <div className={`flex-shrink-0 ${isExpanded ? 'slide-out-right' : 'slide-in'}`}>
-                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
-                                      {Math.round(rec.confidence * 100)}%
-                                    </span>
-                                  </div>
+                                      {/* Confidence - Right side */}
+                                      <div className={`flex-shrink-0 ${isExpanded ? 'slide-out-right' : 'slide-in'}`}>
+                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
+                                          {Math.round(rec.confidence * 100)}%
+                                        </span>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    /* Reasoning Text - Shows when expanded */
+                                    <div 
+                                      ref={(el) => {
+                                        if (el && isExpanded) {
+                                          // Auto-scroll during typing animation
+                                          const scrollInterval = setInterval(() => {
+                                            el.scrollTop = el.scrollHeight;
+                                          }, 50);
+                                          setTimeout(() => clearInterval(scrollInterval), 2600);
+                                        }
+                                      }}
+                                      className={`flex-1 text-xs text-gray-600 overflow-y-auto no-scrollbar h-10 ${isExpanded ? 'typing-effect' : ''}`}
+                                      style={{ 
+                                        opacity: isExpanded ? 1 : 0,
+                                        transition: 'opacity 0.3s ease-in-out 0.2s',
+                                        lineHeight: '1.4'
+                                      }}>
+                                      {rec.reasoning}
+                                    </div>
+                                  )}
                                 </div>
-                                
-                                {/* Reasoning Text - Shows when expanded */}
-                                {isExpanded && rec.reasoning && (
-                                  <div className={`mt-3 text-xs text-gray-600 overflow-y-auto no-scrollbar max-h-20 ${isExpanded ? 'typing-effect' : ''}`}
-                                       style={{ 
-                                         opacity: isExpanded ? 1 : 0,
-                                         transition: 'opacity 0.3s ease-in-out 0.2s'
-                                       }}>
-                                    {rec.reasoning}
-                                  </div>
-                                )}
                               </div>
                             );
                           })
