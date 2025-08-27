@@ -74,4 +74,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const svc = createSupabaseServiceClient()
+
+    const { error } = await svc
+      .from('assignments')
+      .delete()
+      .eq('id', params.id)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    return NextResponse.json({ success: true })
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
+  }
+}
+
 
