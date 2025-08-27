@@ -356,12 +356,13 @@ STRIKTE REGELN:
 - Erfinde NICHTS, nutze keine externen Quellen
 - Führe keine Nebenaufgaben aus
 - HARTE REGEL (Cluster/Bundesland): Das Cluster/Bundesland der/des Promotor:in MUSS 1:1 mit dem Cluster/Bundesland des Einsatzes übereinstimmen. Keine Cross-Cluster-Vorschläge. Beispiel: "Wien/NÖ/BGL" ↔ nur Einsätze in "Wien/NÖ/BGL".
+- EINDEUTIGKEIT: Jede/r Promotor:in darf nur EINMAL in den Empfehlungen erscheinen - keine Duplikate!
 - Prüfe harte Eignung: Verfügbarkeit, verbleibende Wochenstunden, Muss-Anforderungen, keine Sperren
 - Bewerte geeignete Personen nach: Nähe/Anreise, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
 - Löse Gleichstände strikt deterministisch (alphabetische Reihenfolge bei gleicher Bewertung)
 
 AUSGABEFORMAT:
-Antworte ausschließlich mit einem JSON-Array mit exakt ${maxRecommendations} Einträgen:
+Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} Einträgen. Falls weniger als ${maxRecommendations} geeignete Promotor:innen gefunden werden, ist es völlig in Ordnung, weniger Empfehlungen zurückzugeben:
 [
   {
     "keyword": "promotor_[erste8ZeichenDerID]",
@@ -369,7 +370,7 @@ Antworte ausschließlich mit einem JSON-Array mit exakt ${maxRecommendations} Ei
     "promotorId": "string",
     "phone": "string", 
     "confidence": number zwischen 0.0 und 1.0,
-    "rank": number von 1 bis ${maxRecommendations},
+    "rank": number von 1 bis zur Anzahl der tatsächlichen Empfehlungen,
     "reasoning": "Kurze Begründung der Eignung"
   }
 ]
@@ -401,7 +402,7 @@ WICHTIGE PRÜFKRITERIEN:
 3. DETERMINISTISCHE RANGFOLGE:
    - Bei Gleichstand: alphabetische Reihenfolge nach Name
    
-Analysiere und empfehle die besten ${maxRecommendations} Promotor:innen für KW ${currentKW}.`,
+Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum: ${maxRecommendations} Empfehlungen. Falls weniger geeignete Kandidaten verfügbar sind, gib entsprechend weniger zurück.`,
           reasoning: {
             effort: "minimal" // For fast response times with GPT-5-nano
           },
