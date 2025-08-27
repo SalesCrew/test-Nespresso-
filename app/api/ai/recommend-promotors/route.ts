@@ -384,6 +384,15 @@ STRIKTE REGELN WICHTIG!!!!
 
 ⦁ Für Strecken, die zu lang für öffentliche Verkehrsmittel sind, PRÜFE zwingend, ob die Promotoren Führerschein und Auto haben, und schlage BEVORZUGT diese vor.
 
+PLZ-zu-Cluster-Regeln (Österreich – Zuordnung für Bundesland/Cluster):
+- W/NÖ/BGL: PLZ 1000–1610 (Wien) sowie 2000–3999 grundsätzlich W/NÖ/BGL. In 7000–7999 ist Burgenland ebenfalls W/NÖ/BGL (Ausnahme: 7421 → ST).
+- OÖ: PLZ 4000–4999 (Ausnahmen, die zu W/NÖ/BGL gehören: 4300, 4303, 4431–4432, 4441, 4482, 4392). Zusätzlich OÖ-Inseln im 5xxx-Bereich: 5120–5145, 5166, 5211–5283, 5310, 5311, 5360.
+- S (Salzburg): PLZ 5000–5999 abzüglich der oben genannten OÖ-Inseln in 5xxx.
+- T (Tirol): PLZ 6000–6699 sowie 9782 und 9900–9999.
+- V (Vorarlberg): PLZ 6700–6999.
+- ST (Steiermark): PLZ 8000–8999 (Ausnahme: 8380–8385 → W/NÖ/BGL) sowie 7421 (aus 7xxx) und 9323 (aus 9xxx) → ST.
+- K (Kärnten): PLZ 9000–9999 (Ausnahmen: 9323 → ST; 9782 und 9900–9999 → T).
+
 AUSGABEFORMAT:
 Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} Einträgen. Falls weniger als ${maxRecommendations} geeignete Promotor:innen gefunden werden, ist es völlig in Ordnung, weniger Empfehlungen zurückzugeben:
 [
