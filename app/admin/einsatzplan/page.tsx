@@ -932,6 +932,19 @@ export default function EinsatzplanPage() {
               end_ts: end.toISOString(),
               type: 'promotion' as const,
             };
+            
+            // Debug first few assignments
+            if (r < 3 && rows.length < 6) {
+              console.log('🔵 Created assignment:', {
+                location: location_text,
+                date: start.toLocaleDateString('de-DE'),
+                startTime: start.toLocaleTimeString('de-DE'),
+                endTime: end.toLocaleTimeString('de-DE'),
+                start_ts: base.start_ts,
+                end_ts: base.end_ts
+              });
+            }
+            
             rows.push(base);
             if (val === 2) rows.push(base);
           }
@@ -1002,20 +1015,46 @@ export default function EinsatzplanPage() {
             processedExistingIds.add(conflictingAssignment.id);
             
             // Check if there are actual differences
-            const hasChanges = 
+            // Compare times more intelligently - same date/time might have different ISO strings
+            const existingStart = new Date(conflictingAssignment.start_ts);
+            const existingEnd = new Date(conflictingAssignment.end_ts);
+            const newStart = new Date(newRow.start_ts);
+            const newEnd = new Date(newRow.end_ts);
+            
+            const hasTimeChanges = 
+              existingStart.getTime() !== newStart.getTime() ||
+              existingEnd.getTime() !== newEnd.getTime();
+              
+            const hasOtherChanges = 
               conflictingAssignment.title !== newRow.title ||
               conflictingAssignment.city !== newRow.city ||
-              conflictingAssignment.region !== newRow.region ||
-              conflictingAssignment.start_ts !== newRow.start_ts ||
-              conflictingAssignment.end_ts !== newRow.end_ts;
+              conflictingAssignment.region !== newRow.region;
             
-            if (hasChanges || conflictingAssignment.status !== 'Offen') {
+            // Only show conflicts if:
+            // 1. There are actual data changes (time, title, city, region)
+            // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
+            const hasActualChanges = hasTimeChanges || hasOtherChanges;
+            const wouldLosePromotor = !!conflictingAssignment.promotor;
+            
+            // Log for debugging
+            if (processedExistingIds.size < 5) {
+              console.log('🔵 Conflict check:', {
+                location: conflictingAssignment.location_text,
+                hasTimeChanges,
+                hasOtherChanges,
+                existingStatus: conflictingAssignment.status,
+                hasPromotor: wouldLosePromotor,
+                willShowConflict: hasActualChanges || wouldLosePromotor
+              });
+            }
+            
+            if (hasActualChanges || wouldLosePromotor) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
                 existing: conflictingAssignment,
-                hasPromotor: !!conflictingAssignment.promotor,
-                hasChanges: hasChanges
+                hasPromotor: wouldLosePromotor,
+                hasChanges: hasActualChanges
               });
             }
           } else {
@@ -1127,6 +1166,19 @@ export default function EinsatzplanPage() {
               end_ts: end.toISOString(),
               type: 'promotion' as const,
             };
+            
+            // Debug first few assignments
+            if (r < 3 && rows.length < 6) {
+              console.log('🔵 Created assignment:', {
+                location: location_text,
+                date: start.toLocaleDateString('de-DE'),
+                startTime: start.toLocaleTimeString('de-DE'),
+                endTime: end.toLocaleTimeString('de-DE'),
+                start_ts: base.start_ts,
+                end_ts: base.end_ts
+              });
+            }
+            
             rows.push(base);
             if (val === 2) rows.push(base);
           }
@@ -1191,20 +1243,46 @@ export default function EinsatzplanPage() {
             processedExistingIds.add(conflictingAssignment.id);
             
             // Check if there are actual differences
-            const hasChanges = 
+            // Compare times more intelligently - same date/time might have different ISO strings
+            const existingStart = new Date(conflictingAssignment.start_ts);
+            const existingEnd = new Date(conflictingAssignment.end_ts);
+            const newStart = new Date(newRow.start_ts);
+            const newEnd = new Date(newRow.end_ts);
+            
+            const hasTimeChanges = 
+              existingStart.getTime() !== newStart.getTime() ||
+              existingEnd.getTime() !== newEnd.getTime();
+              
+            const hasOtherChanges = 
               conflictingAssignment.title !== newRow.title ||
               conflictingAssignment.city !== newRow.city ||
-              conflictingAssignment.region !== newRow.region ||
-              conflictingAssignment.start_ts !== newRow.start_ts ||
-              conflictingAssignment.end_ts !== newRow.end_ts;
+              conflictingAssignment.region !== newRow.region;
             
-            if (hasChanges || conflictingAssignment.status !== 'Offen') {
+            // Only show conflicts if:
+            // 1. There are actual data changes (time, title, city, region)
+            // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
+            const hasActualChanges = hasTimeChanges || hasOtherChanges;
+            const wouldLosePromotor = !!conflictingAssignment.promotor;
+            
+            // Log for debugging
+            if (processedExistingIds.size < 5) {
+              console.log('🔵 Conflict check:', {
+                location: conflictingAssignment.location_text,
+                hasTimeChanges,
+                hasOtherChanges,
+                existingStatus: conflictingAssignment.status,
+                hasPromotor: wouldLosePromotor,
+                willShowConflict: hasActualChanges || wouldLosePromotor
+              });
+            }
+            
+            if (hasActualChanges || wouldLosePromotor) {
               conflicts.push({
                 id: conflictingAssignment.id,
                 new: newRow,
                 existing: conflictingAssignment,
-                hasPromotor: !!conflictingAssignment.promotor,
-                hasChanges: hasChanges
+                hasPromotor: wouldLosePromotor,
+                hasChanges: hasActualChanges
               });
             }
           } else {
@@ -3479,9 +3557,9 @@ Import EP
                             <p>{conflict.existing.start_ts ? new Date(conflict.existing.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
                             <p>Status: <span className={`font-medium ${
                               conflict.existing.status === 'Verplant' ? 'text-green-600' : 
-                              conflict.existing.status === 'Offen' ? 'text-yellow-600' : 
+                              (conflict.existing.status === 'Offen' || conflict.existing.status === 'open') ? 'text-yellow-600' : 
                               'text-gray-600'
-                            }`}>{conflict.existing.status}</span></p>
+                            }`}>{conflict.existing.status === 'open' ? 'Offen' : conflict.existing.status}</span></p>
                             {conflict.existing.promotor && (
                               <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor}</p>
                             )}
