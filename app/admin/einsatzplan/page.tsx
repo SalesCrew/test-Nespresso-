@@ -105,6 +105,19 @@ export default function EinsatzplanPage() {
       from { opacity: 0; }
       to { opacity: 1; }
     }
+    .wobble {
+      animation: wobble 0.5s ease-in-out;
+    }
+    @keyframes wobble {
+      0% { transform: rotate(0deg); }
+      15% { transform: rotate(-8deg); }
+      30% { transform: rotate(8deg); }
+      45% { transform: rotate(-6deg); }
+      60% { transform: rotate(6deg); }
+      75% { transform: rotate(-4deg); }
+      90% { transform: rotate(4deg); }
+      100% { transform: rotate(0deg); }
+    }
 
   `;
   const router = useRouter();
@@ -168,6 +181,56 @@ export default function EinsatzplanPage() {
     end_time: '18:30',
     notes: ''
   });
+  
+  // Delete assignment state
+  const [pendingAssignmentDelete, setPendingAssignmentDelete] = useState<Record<string, boolean>>({});
+  
+  // Function to delete assignment
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (pendingAssignmentDelete[assignmentId]) {
+      // Second click - delete the assignment
+      try {
+        const response = await fetch(`/api/assignments/${assignmentId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Fehler beim Löschen des Einsatzes');
+        }
+        
+        // Remove from local state
+        setEinsatzplanData(prev => prev.filter(item => item.id !== assignmentId));
+        
+        // Close modal
+        setShowDetailModal(false);
+        setSelectedEinsatz(null);
+        setEditingEinsatz(null);
+        
+        // Clear pending delete state
+        setPendingAssignmentDelete(prev => {
+          const newState = { ...prev };
+          delete newState[assignmentId];
+          return newState;
+        });
+        
+      } catch (error: any) {
+        console.error('Error deleting assignment:', error);
+        alert(error.message || 'Fehler beim Löschen des Einsatzes');
+      }
+    } else {
+      // First click - start wobble and set pending state
+      setPendingAssignmentDelete(prev => ({ ...prev, [assignmentId]: true }));
+      
+      // Clear pending state after 2 seconds
+      setTimeout(() => {
+        setPendingAssignmentDelete(prev => {
+          const newState = { ...prev };
+          delete newState[assignmentId];
+          return newState;
+        });
+      }, 2000);
+    }
+  };
   
   // Function to create new assignment
   const createNewAssignment = async () => {
@@ -2769,10 +2832,18 @@ Import EP
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[95vh] flex flex-col">
             {/* Modal Header */}
             <div className="relative p-6 border-b border-gray-100">
-              <div className="pr-8">
+              <div className="pr-20">
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">Einsatz Details</h3>
                 <p className="text-sm text-gray-500">{editingEinsatz.address}</p>
               </div>
+              <button 
+                className={`absolute top-6 right-16 p-1.5 rounded-lg transition-colors text-red-500 hover:text-red-600 ${pendingAssignmentDelete[editingEinsatz.id] ? 'wobble' : ''}`}
+                onClick={() => handleDeleteAssignment(editingEinsatz.id)}
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6M10 11v6M14 11v6" />
+                </svg>
+              </button>
               <button
                 onClick={() => {
                   setShowDetailModal(false);
