@@ -155,6 +155,12 @@ export default function EinsatzplanPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
   
+  // Import conflict resolution state
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [importConflicts, setImportConflicts] = useState<any[]>([]);
+  const [conflictResolutions, setConflictResolutions] = useState<Map<string, 'new' | 'existing' | 'add'>>(new Map());
+  const [newNonConflictingRows, setNewNonConflictingRows] = useState<any[]>([]);
+  
   // Load distribution history from database
   const loadInvitationHistory = async () => {
     try {
@@ -935,19 +941,54 @@ export default function EinsatzplanPage() {
           console.log('🔵 First assignment:', rows[0]);
           console.log('🔵 Sample dates:', rows.slice(0, 3).map(r => r.start_ts));
         }
-        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
-        console.log('🔵 Import response:', res.status);
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        
+        // Check for conflicts with existing assignments
+        const existingAssignments = einsatzplanData;
+        const conflicts = [];
+        const newAssignments = [];
+        
+        for (const newRow of rows) {
+          const conflictingAssignment = existingAssignments.find(existing => 
+            existing.location_text === newRow.location_text &&
+            existing.postal_code === newRow.postal_code &&
+            existing.start_ts === newRow.start_ts
+          );
+          
+          if (conflictingAssignment) {
+            conflicts.push({
+              id: conflictingAssignment.id,
+              new: newRow,
+              existing: conflictingAssignment,
+              hasPromotor: !!conflictingAssignment.promotor
+            });
+          } else {
+            newAssignments.push(newRow);
+          }
         }
-        const importResult = await res.json();
-        console.log('🔵 Import result:', importResult);
-        setShowImportModal(false)
-        // Load ALL assignments after import to see the new ones
-        console.log('🔵 Calling loadAssignments...');
-        await loadAssignments(true)
-        console.log('🔵 Import complete!');
+        
+        if (conflicts.length > 0) {
+          // Show conflict resolution modal
+          setImportConflicts(conflicts);
+          setNewNonConflictingRows(newAssignments);
+          setConflictResolutions(new Map());
+          setShowConflictModal(true);
+          setShowImportModal(false);
+        } else {
+          // No conflicts, proceed with import
+          const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+          console.log('🔵 Import response:', res.status);
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+          }
+          const importResult = await res.json();
+          console.log('🔵 Import result:', importResult);
+          setShowImportModal(false)
+          // Load ALL assignments after import to see the new ones
+          console.log('🔵 Calling loadAssignments...');
+          await loadAssignments(true)
+          console.log('🔵 Import complete!');
+        }
       } catch (error: any) {
         console.error('🔴 Error processing Roh Excel:', error);
         console.error('🔴 Stack trace:', error?.stack);
@@ -1027,14 +1068,48 @@ export default function EinsatzplanPage() {
             if (val === 2) rows.push(base);
           }
         }
-        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        // Check for conflicts with existing assignments
+        const existingAssignments = einsatzplanData;
+        const conflicts = [];
+        const newAssignments = [];
+        
+        for (const newRow of rows) {
+          const conflictingAssignment = existingAssignments.find(existing => 
+            existing.location_text === newRow.location_text &&
+            existing.postal_code === newRow.postal_code &&
+            existing.start_ts === newRow.start_ts
+          );
+          
+          if (conflictingAssignment) {
+            conflicts.push({
+              id: conflictingAssignment.id,
+              new: newRow,
+              existing: conflictingAssignment,
+              hasPromotor: !!conflictingAssignment.promotor
+            });
+          } else {
+            newAssignments.push(newRow);
+          }
         }
-        setShowImportModal(false)
-        // Load ALL assignments after import to see the new ones
-        await loadAssignments(true)
+        
+        if (conflicts.length > 0) {
+          // Show conflict resolution modal
+          setImportConflicts(conflicts);
+          setNewNonConflictingRows(newAssignments);
+          setConflictResolutions(new Map());
+          setShowConflictModal(true);
+          setShowImportModal(false);
+        } else {
+          // No conflicts, proceed with import
+          const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
+          if (!res.ok) {
+            const t = await res.text();
+            throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+          }
+          setShowImportModal(false)
+          // Load ALL assignments after import to see the new ones
+          await loadAssignments(true)
+        }
       } catch (error: any) {
         console.error('Error processing EP intern Excel file:', error);
         alert(error?.message || 'Fehler beim Verarbeiten der EP intern Excel-Datei');
@@ -1043,6 +1118,63 @@ export default function EinsatzplanPage() {
     reader.readAsArrayBuffer(file);
   };
 
+  // Handle conflict resolution
+  const applyConflictResolutions = async () => {
+    try {
+      const toImport = [];
+      const toUpdate = [];
+      
+      // Process conflict resolutions
+      for (const conflict of importConflicts) {
+        const resolution = conflictResolutions.get(conflict.id) || 'existing';
+        
+        if (resolution === 'new') {
+          // Use new data
+          toUpdate.push({ id: conflict.id, ...conflict.new });
+        } else if (resolution === 'add' && !conflict.hasPromotor) {
+          // Add only if no promotor assigned
+          toImport.push(conflict.new);
+        }
+        // 'existing' means keep current data, do nothing
+      }
+      
+      // Process updates
+      if (toUpdate.length > 0) {
+        for (const update of toUpdate) {
+          await fetch(`/api/assignments/${update.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(update)
+          });
+        }
+      }
+      
+      // Process new imports (including non-conflicting new assignments)
+      const allToImport = [...toImport, ...newNonConflictingRows];
+      if (allToImport.length > 0) {
+        const res = await fetch('/api/assignments/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows: allToImport })
+        });
+        
+        if (!res.ok) {
+          throw new Error('Import fehlgeschlagen');
+        }
+      }
+      
+      setShowConflictModal(false);
+      setImportConflicts([]);
+      setConflictResolutions(new Map());
+      setNewNonConflictingRows([]);
+      await loadAssignments(true);
+      alert('Import erfolgreich abgeschlossen!');
+    } catch (error) {
+      console.error('Error applying conflict resolutions:', error);
+      alert('Fehler beim Anwenden der Änderungen');
+    }
+  };
+  
   // Handle replacement assignment selection
   const handleReplacementAssignmentSelect = (assignmentId: string) => {
     setSelectedReplacementAssignments(prev => 
@@ -3166,6 +3298,150 @@ Import EP
                   Importieren
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Conflict Resolution Modal */}
+      {showConflictModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Import-Konflikte gefunden</h3>
+              <button
+                onClick={() => {
+                  setShowConflictModal(false);
+                  setImportConflicts([]);
+                  setConflictResolutions(new Map());
+                  setNewNonConflictingRows([]);
+                }}
+                className="p-1 rounded hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
+            
+            {/* Conflict List */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Es wurden {importConflicts.length} Konflikte gefunden. Wählen Sie für jeden Konflikt, wie verfahren werden soll:
+              </p>
+              {newNonConflictingRows.length > 0 && (
+                <p className="text-sm text-green-600 mb-4">
+                  Zusätzlich werden {newNonConflictingRows.length} neue Einsätze ohne Konflikte importiert.
+                </p>
+              )}
+              
+              <div className="space-y-4">
+                {importConflicts.map((conflict) => {
+                  const resolution = conflictResolutions.get(conflict.id) || 'existing';
+                  return (
+                    <div key={conflict.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">Bestehend</h4>
+                          <div className="text-sm text-gray-600">
+                            <p>{conflict.existing.location_text} - {conflict.existing.postal_code}</p>
+                            <p>{new Date(conflict.existing.start_ts).toLocaleString('de-DE')}</p>
+                            {conflict.existing.promotor && (
+                              <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-1">Neu (Import)</h4>
+                          <div className="text-sm text-gray-600">
+                            <p>{conflict.new.location_text} - {conflict.new.postal_code}</p>
+                            <p>{new Date(conflict.new.start_ts).toLocaleString('de-DE')}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const newResolutions = new Map(conflictResolutions);
+                            newResolutions.set(conflict.id, 'existing');
+                            setConflictResolutions(newResolutions);
+                          }}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                            resolution === 'existing'
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          Bestehendes behalten
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newResolutions = new Map(conflictResolutions);
+                            newResolutions.set(conflict.id, 'new');
+                            setConflictResolutions(newResolutions);
+                          }}
+                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                            resolution === 'new'
+                              ? 'bg-green-100 text-green-700 border border-green-300'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          Mit neuem überschreiben
+                        </button>
+                        {!conflict.hasPromotor && (
+                          <button
+                            onClick={() => {
+                              const newResolutions = new Map(conflictResolutions);
+                              newResolutions.set(conflict.id, 'add');
+                              setConflictResolutions(newResolutions);
+                            }}
+                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                              resolution === 'add'
+                                ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            Als zusätzlich hinzufügen
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-100 flex justify-between">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const newResolutions = new Map();
+                    importConflicts.forEach(c => newResolutions.set(c.id, 'existing'));
+                    setConflictResolutions(newResolutions);
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Alle behalten
+                </button>
+                <button
+                  onClick={() => {
+                    const newResolutions = new Map();
+                    importConflicts.forEach(c => newResolutions.set(c.id, 'new'));
+                    setConflictResolutions(newResolutions);
+                  }}
+                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Alle überschreiben
+                </button>
+              </div>
+              <button
+                onClick={applyConflictResolutions}
+                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+              >
+                Änderungen anwenden
+              </button>
             </div>
           </div>
         </div>
