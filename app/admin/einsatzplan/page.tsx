@@ -155,11 +155,10 @@ export default function EinsatzplanPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
   
-  // Import conflict resolution state
+  // Import conflict state
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [importConflicts, setImportConflicts] = useState<any[]>([]);
-  const [conflictResolutions, setConflictResolutions] = useState<Map<string, 'new' | 'existing'>>(new Map());
-  const [newNonConflictingRows, setNewNonConflictingRows] = useState<any[]>([]);
+  const [conflictDecisions, setConflictDecisions] = useState<Map<string, 'excel' | 'existing'>>(new Map());
   
   // Load distribution history from database
   const loadInvitationHistory = async () => {
@@ -839,6 +838,51 @@ export default function EinsatzplanPage() {
     return '';
   };
 
+  // Check if two assignments match (same location, date, time)
+  const assignmentsMatch = (a1: any, a2: any) => {
+    return a1.location_text === a2.location_text &&
+           a1.postal_code === a2.postal_code &&
+           a1.start_ts === a2.start_ts &&
+           a1.end_ts === a2.end_ts;
+  };
+  
+  // Handle conflict resolution
+  const handleConflictResolution = async () => {
+    const assignmentsToImport: any[] = [];
+    const assignmentsToUpdate: any[] = [];
+    
+    // Process each conflict based on user decisions
+    for (const conflict of importConflicts) {
+      const decision = conflictDecisions.get(conflict.existing.id) || 'existing';
+      
+      if (decision === 'excel') {
+        // User wants the Excel version - update existing assignment to "Offen"
+        assignmentsToUpdate.push({
+          id: conflict.existing.id,
+          status: 'Offen'
+        });
+      }
+      // If 'existing', we keep the current state and ignore the Excel import
+    }
+    
+    // Update existing assignments if needed
+    if (assignmentsToUpdate.length > 0) {
+      for (const update of assignmentsToUpdate) {
+        await fetch(`/api/assignments/${update.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: update.status })
+        });
+      }
+    }
+    
+    // Close modal and refresh
+    setShowConflictModal(false);
+    setImportConflicts([]);
+    setConflictDecisions(new Map());
+    await loadAssignments(true);
+  };
+
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
     console.log('🔵 processRohExcel START - file:', file.name, 'size:', file.size);
@@ -902,8 +946,8 @@ export default function EinsatzplanPage() {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
               const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              // Create date in local timezone with correct times
-              start = new Date(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0);
+              // Create date in UTC to avoid timezone shifts
+              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
             } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -914,13 +958,13 @@ export default function EinsatzplanPage() {
               const month = months[monthName as keyof typeof months];
               if (month == null || isNaN(day)) continue;
               const year = new Date().getFullYear();
-              start = new Date(year, month, day, 9, 30, 0, 0);
+              start = new Date(Date.UTC(year, month, day, 9, 30));
             }
             const end = new Date(start);
             if (val === 1 || val === 2) {
-              end.setHours(18, 30, 0, 0);
+              end.setUTCHours(18, 30, 0, 0);
             } else if (val === 0.75) {
-              end.setHours(15, 30, 0, 0);
+              end.setUTCHours(15, 30, 0, 0);
             }
             const base = {
               title: 'Promotion',
@@ -932,19 +976,6 @@ export default function EinsatzplanPage() {
               end_ts: end.toISOString(),
               type: 'promotion' as const,
             };
-            
-            // Debug first few assignments
-            if (r < 3 && rows.length < 6) {
-              console.log('🔵 Created assignment:', {
-                location: location_text,
-                date: start.toLocaleDateString('de-DE'),
-                startTime: start.toLocaleTimeString('de-DE'),
-                endTime: end.toLocaleTimeString('de-DE'),
-                start_ts: base.start_ts,
-                end_ts: base.end_ts
-              });
-            }
-            
             rows.push(base);
             if (val === 2) rows.push(base);
           }
@@ -956,144 +987,65 @@ export default function EinsatzplanPage() {
         }
         
         // Check for conflicts with existing assignments
-        let conflicts = [];
-        let newAssignments = [];
+        const newAssignments: any[] = [];
+        const conflicts: any[] = [];
         
-        try {
-          // Fetch ALL assignments from database for accurate conflict detection
-          console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
-          if (!allAssignmentsRes.ok) {
-            throw new Error('Failed to fetch existing assignments');
-          }
-          const allAssignmentsData = await allAssignmentsRes.json();
-          const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
-          console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+        for (const newRow of rows) {
+          const existingMatch = einsatzplanData.find(existing => assignmentsMatch(existing, newRow));
           
-          // Log first assignment to see structure and timezone info
-          if (existingAssignments.length > 0) {
-            const testDate = new Date(existingAssignments[0].start_ts);
-            console.log('🔵 First existing assignment timezone check:', {
-              id: existingAssignments[0].id,
-              start_ts_raw: existingAssignments[0].start_ts,
-              start_ts_parsed: testDate.toString(),
-              utc_hours: testDate.getUTCHours(),
-              local_hours: testDate.getHours(),
-              timezone_offset: testDate.getTimezoneOffset()
-            });
-          }
-          
-          const processedExistingIds = new Set();
-          
-          for (const newRow of rows) {
-          // Validate dates before processing
-          const newStartDate = new Date(newRow.start_ts);
-          const newEndDate = new Date(newRow.end_ts);
-          
-          if (isNaN(newStartDate.getTime()) || isNaN(newEndDate.getTime())) {
-            console.warn('Skipping row with invalid dates:', newRow);
-            newAssignments.push(newRow); // Add to new assignments to let the API handle validation
-            continue;
-          }
-          
-          // Extract date and time slot from assignments - use UTC hours for consistent comparison
-          const newDate = newStartDate.toISOString().split('T')[0];
-          const newStartHour = newStartDate.getUTCHours();
-          const newEndHour = newEndDate.getUTCHours();
-          const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
-          
-          // Find matching existing assignment
-          const conflictingAssignment = existingAssignments.find((existing: any) => {
-            if (processedExistingIds.has(existing.id)) return false;
-            
-            const existingStartDate = new Date(existing.start_ts);
-            const existingEndDate = new Date(existing.end_ts);
-            
-            if (isNaN(existingStartDate.getTime()) || isNaN(existingEndDate.getTime())) {
-              return false;
-            }
-            
-            const existingDate = existingStartDate.toISOString().split('T')[0];
-            const existingStartHour = existingStartDate.getUTCHours();
-            const existingEndHour = existingEndDate.getUTCHours();
-            const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
-            
-            return existing.location_text === newRow.location_text &&
-                   (existing.postal_code === newRow.postal_code || existing.plz === newRow.postal_code) &&
-                   existingDate === newDate &&
-                   existingTimeSlot === newTimeSlot;
-          });
-          
-          if (conflictingAssignment) {
-            processedExistingIds.add(conflictingAssignment.id);
-            
-            // ONLY check for status conflicts
-            // Existing is Verplant (has promotor) but new would be Offen (no promotor)
-            const existingIsVerplant = (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant') &&
-                                      !!(conflictingAssignment.promotor || conflictingAssignment.lead_name);
-            const newWouldBeOffen = true; // New imports are always Offen
-            
-            // Only show conflict if status would change from Verplant to Offen
-            const hasStatusConflict = existingIsVerplant && newWouldBeOffen;
-            
-            // Log for debugging
-            if (processedExistingIds.size < 3) {
-              console.log('🔵 Status conflict check:', {
-                location: conflictingAssignment.location_text,
-                existing: {
-                  status: conflictingAssignment.status,
-                  promotor: conflictingAssignment.promotor || conflictingAssignment.lead_name
-                },
-                check: {
-                  existingIsVerplant,
-                  hasStatusConflict
-                }
-              });
-            }
-            
-            if (hasStatusConflict) {
+          if (existingMatch) {
+            // Check if it's identical (including status)
+            if (existingMatch.status === 'Offen') {
+              // Identical, skip
+              continue;
+            } else {
+              // Different status - this is a conflict
               conflicts.push({
-                id: conflictingAssignment.id,
-                new: newRow,
-                existing: conflictingAssignment,
-                hasPromotor: existingIsVerplant,
-                hasChanges: false // Only status matters now
+                excel: newRow,
+                existing: existingMatch
               });
             }
           } else {
+            // New assignment
             newAssignments.push(newRow);
           }
         }
-        } catch (conflictError) {
-          console.error('Error during conflict detection:', conflictError);
-          // If conflict detection fails, treat all as new
-          newAssignments = rows;
-          conflicts = [];
-        }
+        
+        console.log('🔵 New assignments:', newAssignments.length);
+        console.log('🔵 Conflicts:', conflicts.length);
         
         if (conflicts.length > 0) {
-          // Show conflict resolution modal
+          // Show conflict modal
           setImportConflicts(conflicts);
-          setNewNonConflictingRows(newAssignments);
-          setConflictResolutions(new Map());
+          // Set default decisions to 'existing'
+          const defaultDecisions = new Map();
+          conflicts.forEach(c => defaultDecisions.set(c.existing.id, 'existing'));
+          setConflictDecisions(defaultDecisions);
           setShowConflictModal(true);
           setShowImportModal(false);
-        } else {
-          // No conflicts, proceed with import
-          const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
-          console.log('🔵 Import response:', res.status);
-          if (!res.ok) {
-            const t = await res.text();
-            throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
-          }
-          const importResult = await res.json();
-          console.log('🔵 Import result:', importResult);
-          setShowImportModal(false)
-          // Load ALL assignments after import to see the new ones
-          console.log('🔵 Calling loadAssignments...');
-          await loadAssignments(true)
-          console.log('🔵 Import complete!');
+          return;
         }
+        
+        // No conflicts, proceed with import
+        if (newAssignments.length === 0) {
+          alert('Keine neuen Einsätze zum Importieren gefunden.');
+          setShowImportModal(false);
+          return;
+        }
+        
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows: newAssignments }) })
+        console.log('🔵 Import response:', res.status);
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        }
+        const importResult = await res.json();
+        console.log('🔵 Import result:', importResult);
+        setShowImportModal(false)
+        // Load ALL assignments after import to see the new ones
+        console.log('🔵 Calling loadAssignments...');
+        await loadAssignments(true)
+        console.log('🔵 Import complete!');
       } catch (error: any) {
         console.error('🔴 Error processing Roh Excel:', error);
         console.error('🔴 Stack trace:', error?.stack);
@@ -1139,8 +1091,8 @@ export default function EinsatzplanPage() {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
               const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              // Create date in local timezone with correct times
-              start = new Date(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0);
+              // Create date in UTC to avoid timezone shifts
+              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
           } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -1151,13 +1103,13 @@ export default function EinsatzplanPage() {
               const month = months[monthName as keyof typeof months];
               if (month == null || isNaN(day)) continue;
               const year = new Date().getFullYear();
-              start = new Date(year, month, day, 9, 30, 0, 0);
+              start = new Date(Date.UTC(year, month, day, 9, 30));
             }
             const end = new Date(start);
             if (val === 1 || val === 2) {
-              end.setHours(18, 30, 0, 0);
+              end.setUTCHours(18, 30, 0, 0);
             } else if (val === 0.75) {
-              end.setHours(15, 30, 0, 0);
+              end.setUTCHours(15, 30, 0, 0);
             }
             const base = {
               title: 'Promotion',
@@ -1169,157 +1121,63 @@ export default function EinsatzplanPage() {
               end_ts: end.toISOString(),
               type: 'promotion' as const,
             };
-            
-            // Debug first few assignments
-            if (r < 3 && rows.length < 6) {
-              console.log('🔵 Created assignment:', {
-                location: location_text,
-                date: start.toLocaleDateString('de-DE'),
-                startTime: start.toLocaleTimeString('de-DE'),
-                endTime: end.toLocaleTimeString('de-DE'),
-                start_ts: base.start_ts,
-                end_ts: base.end_ts
-              });
-            }
-            
             rows.push(base);
             if (val === 2) rows.push(base);
           }
         }
-        // Check for conflicts with existing assignments
-        let conflicts = [];
-        let newAssignments = [];
         
-        try {
-          // Fetch ALL assignments from database for accurate conflict detection
-          console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
-          if (!allAssignmentsRes.ok) {
-            throw new Error('Failed to fetch existing assignments');
-          }
-          const allAssignmentsData = await allAssignmentsRes.json();
-          const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
-          console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+        // Check for conflicts with existing assignments
+        const newAssignments: any[] = [];
+        const conflicts: any[] = [];
+        
+        for (const newRow of rows) {
+          const existingMatch = einsatzplanData.find(existing => assignmentsMatch(existing, newRow));
           
-          // Log first assignment to see structure and timezone info
-          if (existingAssignments.length > 0) {
-            const testDate = new Date(existingAssignments[0].start_ts);
-            console.log('🔵 First existing assignment timezone check:', {
-              id: existingAssignments[0].id,
-              start_ts_raw: existingAssignments[0].start_ts,
-              start_ts_parsed: testDate.toString(),
-              utc_hours: testDate.getUTCHours(),
-              local_hours: testDate.getHours(),
-              timezone_offset: testDate.getTimezoneOffset()
-            });
-          }
-          
-          const processedExistingIds = new Set();
-          
-          for (const newRow of rows) {
-          // Validate dates before processing
-          const newStartDate = new Date(newRow.start_ts);
-          const newEndDate = new Date(newRow.end_ts);
-          
-          if (isNaN(newStartDate.getTime()) || isNaN(newEndDate.getTime())) {
-            console.warn('Skipping row with invalid dates:', newRow);
-            newAssignments.push(newRow); // Add to new assignments to let the API handle validation
-            continue;
-          }
-          
-          // Extract date and time slot from assignments - use UTC hours for consistent comparison
-          const newDate = newStartDate.toISOString().split('T')[0];
-          const newStartHour = newStartDate.getUTCHours();
-          const newEndHour = newEndDate.getUTCHours();
-          const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
-          
-          // Find matching existing assignment
-          const conflictingAssignment = existingAssignments.find((existing: any) => {
-            if (processedExistingIds.has(existing.id)) return false;
-            
-            const existingStartDate = new Date(existing.start_ts);
-            const existingEndDate = new Date(existing.end_ts);
-            
-            if (isNaN(existingStartDate.getTime()) || isNaN(existingEndDate.getTime())) {
-              return false;
-            }
-            
-            const existingDate = existingStartDate.toISOString().split('T')[0];
-            const existingStartHour = existingStartDate.getUTCHours();
-            const existingEndHour = existingEndDate.getUTCHours();
-            const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
-            
-            return existing.location_text === newRow.location_text &&
-                   (existing.postal_code === newRow.postal_code || existing.plz === newRow.postal_code) &&
-                   existingDate === newDate &&
-                   existingTimeSlot === newTimeSlot;
-          });
-          
-          if (conflictingAssignment) {
-            processedExistingIds.add(conflictingAssignment.id);
-            
-            // ONLY check for status conflicts
-            // Existing is Verplant (has promotor) but new would be Offen (no promotor)
-            const existingIsVerplant = (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant') &&
-                                      !!(conflictingAssignment.promotor || conflictingAssignment.lead_name);
-            const newWouldBeOffen = true; // New imports are always Offen
-            
-            // Only show conflict if status would change from Verplant to Offen
-            const hasStatusConflict = existingIsVerplant && newWouldBeOffen;
-            
-            // Log for debugging
-            if (processedExistingIds.size < 3) {
-              console.log('🔵 Status conflict check:', {
-                location: conflictingAssignment.location_text,
-                existing: {
-                  status: conflictingAssignment.status,
-                  promotor: conflictingAssignment.promotor || conflictingAssignment.lead_name
-                },
-                check: {
-                  existingIsVerplant,
-                  hasStatusConflict
-                }
-              });
-            }
-            
-            if (hasStatusConflict) {
+          if (existingMatch) {
+            // Check if it's identical (including status)
+            if (existingMatch.status === 'Offen') {
+              // Identical, skip
+              continue;
+            } else {
+              // Different status - this is a conflict
               conflicts.push({
-                id: conflictingAssignment.id,
-                new: newRow,
-                existing: conflictingAssignment,
-                hasPromotor: existingIsVerplant,
-                hasChanges: false // Only status matters now
+                excel: newRow,
+                existing: existingMatch
               });
             }
           } else {
+            // New assignment
             newAssignments.push(newRow);
           }
         }
-        } catch (conflictError) {
-          console.error('Error during conflict detection:', conflictError);
-          // If conflict detection fails, treat all as new
-          newAssignments = rows;
-          conflicts = [];
-        }
         
         if (conflicts.length > 0) {
-          // Show conflict resolution modal
+          // Show conflict modal
           setImportConflicts(conflicts);
-          setNewNonConflictingRows(newAssignments);
-          setConflictResolutions(new Map());
+          // Set default decisions to 'existing'
+          const defaultDecisions = new Map();
+          conflicts.forEach(c => defaultDecisions.set(c.existing.id, 'existing'));
+          setConflictDecisions(defaultDecisions);
           setShowConflictModal(true);
           setShowImportModal(false);
-        } else {
-          // No conflicts, proceed with import
-          const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
-          if (!res.ok) {
-            const t = await res.text();
-            throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
-          }
-          setShowImportModal(false)
-          // Load ALL assignments after import to see the new ones
-          await loadAssignments(true)
+          return;
         }
+        
+        // No conflicts, proceed with import
+        if (newAssignments.length === 0) {
+          alert('Keine neuen Einsätze zum Importieren gefunden.');
+          setShowImportModal(false);
+          return;
+        }
+        
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows: newAssignments }) })
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        }
+        setShowImportModal(false)
+        // Load ALL assignments after import to see the new ones
+        await loadAssignments(true)
       } catch (error: any) {
         console.error('Error processing EP intern Excel file:', error);
         alert(error?.message || 'Fehler beim Verarbeiten der EP intern Excel-Datei');
@@ -1328,69 +1186,6 @@ export default function EinsatzplanPage() {
     reader.readAsArrayBuffer(file);
   };
 
-  // Handle conflict resolution
-  const applyConflictResolutions = async () => {
-    try {
-      const toImport: any[] = [];
-      const toUpdate: any[] = [];
-      
-      // Process conflict resolutions
-      for (const conflict of importConflicts) {
-        const resolution = conflictResolutions.get(conflict.id) || 'existing';
-        
-        if (resolution === 'new') {
-          // Use new data - update the existing assignment
-          toUpdate.push({ 
-            id: conflict.id, 
-            ...conflict.new,
-            // Preserve promotor and status if assignment was already "Verplant"
-            ...(conflict.existing.status === 'Verplant' && {
-              promotor: conflict.existing.promotor,
-              promotorId: conflict.existing.promotorId,
-              status: conflict.existing.status
-            })
-          });
-        }
-        // 'existing' means keep current data, do nothing
-      }
-      
-      // Process updates
-      if (toUpdate.length > 0) {
-        for (const update of toUpdate) {
-          await fetch(`/api/assignments/${update.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(update)
-          });
-        }
-      }
-      
-      // Process new imports (including non-conflicting new assignments)
-      const allToImport = [...toImport, ...newNonConflictingRows];
-      if (allToImport.length > 0) {
-        const res = await fetch('/api/assignments/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rows: allToImport })
-        });
-        
-        if (!res.ok) {
-          throw new Error('Import fehlgeschlagen');
-        }
-      }
-      
-      setShowConflictModal(false);
-      setImportConflicts([]);
-      setConflictResolutions(new Map());
-      setNewNonConflictingRows([]);
-      await loadAssignments(true);
-      alert('Import erfolgreich abgeschlossen!');
-    } catch (error) {
-      console.error('Error applying conflict resolutions:', error);
-      alert('Fehler beim Anwenden der Änderungen');
-    }
-  };
-  
   // Handle replacement assignment selection
   const handleReplacementAssignmentSelect = (assignmentId: string) => {
     setSelectedReplacementAssignments(prev => 
@@ -3518,177 +3313,133 @@ Import EP
           </div>
         </div>
       )}
-      
-      {/* Conflict Resolution Modal */}
+
+      {/* Import Conflict Modal */}
       {showConflictModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Import-Konflikte gefunden</h3>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Import Konflikte</h3>
+                <p className="text-sm text-gray-500 mt-1">{importConflicts.length} Einsätze haben unterschiedliche Status</p>
+              </div>
               <button
                 onClick={() => {
                   setShowConflictModal(false);
                   setImportConflicts([]);
-                  setConflictResolutions(new Map());
-                  setNewNonConflictingRows([]);
+                  setConflictDecisions(new Map());
                 }}
                 className="p-1 rounded hover:bg-gray-100 transition-colors"
               >
                 <X className="h-5 w-5 text-gray-400" />
               </button>
             </div>
-            
-            {/* Conflict List */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Es wurden {importConflicts.length} Konflikte gefunden. Wählen Sie für jeden Konflikt, wie verfahren werden soll:
-              </p>
-              {newNonConflictingRows.length > 0 && (
-                <p className="text-sm text-green-600 mb-4">
-                  Zusätzlich werden {newNonConflictingRows.length} neue Einsätze ohne Konflikte importiert.
-                </p>
-              )}
-              
-              <div className="space-y-4">
-                {importConflicts.map((conflict) => {
-                  const resolution = conflictResolutions.get(conflict.id) || 'existing';
-                  return (
-                    <div key={conflict.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Aktuell im System</h4>
-                          <div className="text-sm text-gray-600">
-                            <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code || conflict.existing.plz}</p>
-                            <p>
-                              {conflict.existing.start_ts && conflict.existing.end_ts ? (
-                                <>
-                                  {(() => {
-                                    // Parse UTC timestamps and display in local timezone
-                                    const startDate = new Date(conflict.existing.start_ts);
-                                    const endDate = new Date(conflict.existing.end_ts);
-                                    // For display, we want to show the intended local time (9:30-18:30)
-                                    // Since the DB stores UTC times that represent local times, we need to adjust
-                                    const displayDate = startDate.toLocaleDateString('de-DE');
-                                    const startHour = startDate.getUTCHours();
-                                    const endHour = endDate.getUTCHours();
-                                    const startMinutes = startDate.getUTCMinutes();
-                                    const endMinutes = endDate.getUTCMinutes();
-                                    return `${displayDate} ${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-                                  })()}
-                                </>
-                              ) : 'Ungültige Zeit'}
-                            </p>
-                            <p>Status: <span className={`font-medium ${
-                              (conflict.existing.status === 'Verplant' || conflict.existing.status === 'assigned') ? 'text-green-600' : 
-                              (conflict.existing.status === 'Offen' || conflict.existing.status === 'open') ? 'text-yellow-600' : 
-                              'text-gray-600'
-                            }`}>{
-                              conflict.existing.status === 'open' ? 'Offen' : 
-                              conflict.existing.status === 'assigned' ? 'Verplant' :
-                              conflict.existing.status
-                            }</span></p>
-                            {(conflict.existing.promotor || conflict.existing.lead_name) && (
-                              <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor || conflict.existing.lead_name}</p>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Neu aus Excel</h4>
-                          <div className="text-sm text-gray-600">
-                            <p className="font-medium">{conflict.new.location_text} - {conflict.new.postal_code}</p>
-                            <p>
-                              {conflict.new.start_ts && conflict.new.end_ts ? (
-                                <>
-                                  {(() => {
-                                    // Parse UTC timestamps and display in local timezone
-                                    const startDate = new Date(conflict.new.start_ts);
-                                    const endDate = new Date(conflict.new.end_ts);
-                                    // For display, we want to show the intended local time (9:30-18:30)
-                                    // Since the DB stores UTC times that represent local times, we need to adjust
-                                    const displayDate = startDate.toLocaleDateString('de-DE');
-                                    const startHour = startDate.getUTCHours();
-                                    const endHour = endDate.getUTCHours();
-                                    const startMinutes = startDate.getUTCMinutes();
-                                    const endMinutes = endDate.getUTCMinutes();
-                                    return `${displayDate} ${String(startHour).padStart(2, '0')}:${String(startMinutes).padStart(2, '0')} - ${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-                                  })()}
-                                </>
-                              ) : 'Ungültige Zeit'}
-                            </p>
-                            <p>Status: <span className="text-yellow-600 font-medium">Offen</span></p>
 
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {importConflicts.map((conflict, index) => {
+                  const startDate = new Date(conflict.existing.start_ts);
+                  const dateStr = startDate.toLocaleDateString('de-AT', { day: '2-digit', month: 'short' });
+                  const timeStr = startDate.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
+                  
+                  return (
+                    <div key={conflict.existing.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{conflict.existing.location_text}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            PLZ: {conflict.existing.postal_code} • {dateStr} • {timeStr}
+                          </div>
+                          <div className="flex items-center gap-4 mt-3">
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`conflict-${conflict.existing.id}`}
+                                checked={conflictDecisions.get(conflict.existing.id) === 'existing'}
+                                onChange={() => {
+                                  const newDecisions = new Map(conflictDecisions);
+                                  newDecisions.set(conflict.existing.id, 'existing');
+                                  setConflictDecisions(newDecisions);
+                                }}
+                                className="mr-2"
+                              />
+                              <span className="text-sm">
+                                Einsatzplan behalten: <span className="font-medium text-gray-900">{conflict.existing.status}</span>
+                                {conflict.existing.promotor && <span className="text-gray-600"> ({conflict.existing.promotor})</span>}
+                              </span>
+                            </label>
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="radio"
+                                name={`conflict-${conflict.existing.id}`}
+                                checked={conflictDecisions.get(conflict.existing.id) === 'excel'}
+                                onChange={() => {
+                                  const newDecisions = new Map(conflictDecisions);
+                                  newDecisions.set(conflict.existing.id, 'excel');
+                                  setConflictDecisions(newDecisions);
+                                }}
+                                className="mr-2"
+                              />
+                              <span className="text-sm">
+                                Excel übernehmen: <span className="font-medium text-green-600">Offen</span>
+                              </span>
+                            </label>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            const newResolutions = new Map(conflictResolutions);
-                            newResolutions.set(conflict.id, 'existing');
-                            setConflictResolutions(newResolutions);
-                          }}
-                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                            resolution === 'existing'
-                              ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          Aktuellen Stand behalten
-                        </button>
-                        <button
-                          onClick={() => {
-                            const newResolutions = new Map(conflictResolutions);
-                            newResolutions.set(conflict.id, 'new');
-                            setConflictResolutions(newResolutions);
-                          }}
-                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                            resolution === 'new'
-                              ? 'bg-green-100 text-green-700 border border-green-300'
-                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          Mit Excel-Daten aktualisieren
-                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            
+
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-100 flex justify-between">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const newResolutions = new Map();
-                    importConflicts.forEach(c => newResolutions.set(c.id, 'existing'));
-                    setConflictResolutions(newResolutions);
-                  }}
-                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Alle aktuell behalten
-                </button>
-                <button
-                  onClick={() => {
-                    const newResolutions = new Map();
-                    importConflicts.forEach(c => newResolutions.set(c.id, 'new'));
-                    setConflictResolutions(newResolutions);
-                  }}
-                  className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Alle mit Excel aktualisieren
-                </button>
+            <div className="p-6 border-t border-gray-100">
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const newDecisions = new Map();
+                      importConflicts.forEach(c => newDecisions.set(c.existing.id, 'existing'));
+                      setConflictDecisions(newDecisions);
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Alle Einsatzplan behalten
+                  </button>
+                  <span className="text-gray-400">•</span>
+                  <button
+                    onClick={() => {
+                      const newDecisions = new Map();
+                      importConflicts.forEach(c => newDecisions.set(c.existing.id, 'excel'));
+                      setConflictDecisions(newDecisions);
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Alle Excel übernehmen
+                  </button>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowConflictModal(false);
+                      setImportConflicts([]);
+                      setConflictDecisions(new Map());
+                    }}
+                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={handleConflictResolution}
+                    className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Anwenden
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={applyConflictResolutions}
-                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
-                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
-              >
-                Änderungen anwenden
-              </button>
             </div>
           </div>
         </div>
