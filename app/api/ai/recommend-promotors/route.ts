@@ -361,7 +361,7 @@ export async function POST(req: Request) {
           model: "gpt-5-nano",
           input: `Du bist GPT-5 nano und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
 
-STRIKTE REGELN:
+grobe regeln
 - Nutze ausschließlich die übergebenen Angaben
 - Erfinde NICHTS, nutze keine externen Quellen
 - Führe keine Nebenaufgaben aus
@@ -371,7 +371,7 @@ STRIKTE REGELN:
 - Bewerte geeignete Personen nach: Nähe/Anreise, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
 - Löse Gleichstände strikt deterministisch (alphabetische Reihenfolge bei gleicher Bewertung)
 
-ZUSÄTZLICHE REGELN:
+STRIKTE REGELN WICHTIG!!!!
 ⦁ Wenn ein Promotor aus demselben Bundesland verfügbar ist, MUSS AUSNAHMSLOS zuerst ein Promotor aus demselben Bundesland zugeteilt werden. Bundesland sind die Cluster sowie KNT oder Wien/Nö/Bgl. Ziel ist es IMMER, dass das Cluster vom Einsatz gleich ist wie das vom Promotor. Gibt es in diesem Cluster KEINE freien Promotoren, wechsle strikt zum geografisch nächstmöglichen Cluster, berechne anhand der markt adresse und PLZ und der Adresse des promotors die Distanz und nimm IMMER den nächstgelegenen verfügbaren Promotor.
 
 ⦁ Viele Promotoren haben einen Stammmarkt; DIESER HAT OBERSTE PRIORITÄT. Versuche IMMER an erster Stelle, Promotoren ihrem Stammmarkt zuzuordnen – ABER NUR, wenn sie am Tag des zu matchenden Termins tatsächlich frei sind.
