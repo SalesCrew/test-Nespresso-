@@ -33,8 +33,7 @@ import {
   Brain,
   User,
   Loader2,
-  Sparkles,
-  MapPin
+  Sparkles
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -66,19 +65,36 @@ export default function EinsatzplanPage() {
     .overflow-y-auto::-webkit-scrollbar {
       display: none;
     }
-    .hide-scrollbar {
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    .hide-scrollbar::-webkit-scrollbar {
-      display: none;
+    @keyframes typewriter {
+      from { width: 0; }
+      to { width: 100%; }
     }
-    @keyframes typing {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    .typing-effect {
+      overflow: hidden;
+      white-space: normal;
+      animation: typewriter 0.8s steps(40, end) forwards;
     }
-    .typing-animation {
-      animation: typing 0.5s ease-in forwards;
+    .slide-out-left {
+      transform: translateX(-120%);
+      opacity: 0;
+      transition: all 0.3s ease-out;
+    }
+    .slide-out-right {
+      transform: translateX(120%);
+      opacity: 0;
+      transition: all 0.3s ease-out;
+    }
+    .slide-in {
+      transform: translateX(0);
+      opacity: 1;
+      transition: all 0.3s ease-out;
     }
   `;
   const router = useRouter();
@@ -255,7 +271,6 @@ export default function EinsatzplanPage() {
 
     setAiLoading(true);
     setAiError(null);
-    setExpandedRecommendations(new Set());
     console.log('🔄 [CLIENT] Setting loading state, calling API...');
 
     try {
@@ -1945,10 +1960,8 @@ Import EP
                         if (!aiMode) {
                           setAiRecommendations([]);
                           setAiError(null);
-                          setExpandedRecommendations(new Set());
                           console.log('🧠 [CLIENT] AI mode activated, cleared previous data');
                         } else {
-                          setExpandedRecommendations(new Set());
                           console.log('🧠 [CLIENT] AI mode deactivated');
                         }
                       }}
@@ -2009,118 +2022,79 @@ Import EP
                             };
 
                             const isExpanded = expandedRecommendations.has(rec.keyword);
-
+                            
                             return (
                               <div
                                 key={rec.keyword}
-                                className={`rounded-lg border border-gray-100 transition-all bg-white overflow-hidden ${
+                                onClick={() => {
+                                  if (selectedEinsatz && !isExpanded) {
+                                    assignPromotionToPromotor(rec.promotorName, rec.promotorId);
+                                    setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
+                                  }
+                                }}
+                                className={`p-3 rounded-lg border border-gray-100 transition-all bg-white relative overflow-hidden ${
+                                  !isExpanded ? 'cursor-pointer' : ''
+                                } ${
                                   rec.rank === 1 ? 'hover:bg-gradient-to-r hover:from-yellow-50/60 hover:to-amber-50/60 hover:border-yellow-200/80' :
                                   rec.rank === 2 ? 'hover:bg-gradient-to-r hover:from-gray-50/60 hover:to-slate-50/60 hover:border-gray-200/80' :
                                   rec.rank === 3 ? 'hover:bg-gradient-to-r hover:from-amber-50/60 hover:to-orange-50/60 hover:border-amber-200/80' :
                                   'hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-indigo-50/60 hover:border-blue-200/80'
                                 }`}
                               >
-                                <div className="p-3">
-                                  <div className="flex items-center space-x-3">
-                                    {/* MapPin Icon - Clickable */}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setExpandedRecommendations(prev => {
-                                          const newSet = new Set(prev);
-                                          if (newSet.has(rec.keyword)) {
-                                            newSet.delete(rec.keyword);
-                                          } else {
-                                            newSet.add(rec.keyword);
-                                          }
-                                          return newSet;
-                                        });
-                                      }}
-                                      className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                                    >
-                                      <MapPin className="h-4 w-4 text-gray-500" />
-                                    </button>
-
-                                    {/* Rank Badge */}
-                                    <div 
-                                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankColor(rec.rank)}`}
-                                      style={getRankStyle(rec.rank)}
-                                    >
-                                      {rec.rank}
-                                    </div>
-
-                                    {/* Animated Content Container */}
-                                    <div 
-                                      className="flex-1 flex items-center justify-between cursor-pointer"
-                                      onClick={() => {
-                                        if (selectedEinsatz && !isExpanded) {
-                                          assignPromotionToPromotor(rec.promotorName, rec.promotorId);
-                                          setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
-                                        }
-                                      }}
-                                    >
-                                      {!isExpanded ? (
-                                        <>
-                                          {/* Normal State - Promotor Info */}
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center mb-1">
-                                              <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
-                                              <span className="font-medium text-gray-900 text-sm truncate">
-                                                {rec.promotorName}
-                                              </span>
-                                            </div>
-                                            
-                                            {/* Phone Number */}
-                                            {rec.phone && (
-                                              <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
-                                                {rec.phone}
-                                              </div>
-                                            )}
-                                          </div>
-
-                                          {/* Confidence - Right side */}
-                                          <div className="flex-shrink-0">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
-                                              {Math.round(rec.confidence * 100)}%
-                                            </span>
-                                          </div>
-                                        </>
-                                      ) : (
-                                        <div className="flex items-center justify-between w-full">
-                                          {/* Expanded State - Name and Phone slide left */}
-                                          <div className="flex items-center space-x-2 transition-all duration-300 transform -translate-x-2">
-                                            <div>
-                                              <div className="font-medium text-gray-900 text-sm">
-                                                {rec.promotorName}
-                                              </div>
-                                              {rec.phone && (
-                                                <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
-                                                  {rec.phone}
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-
-                                          {/* Confidence pill slides right */}
-                                          <div className="flex-shrink-0 transition-all duration-300 transform translate-x-2">
-                                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
-                                              {Math.round(rec.confidence * 100)}%
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
+                                <div className="flex items-center space-x-3">
+                                  {/* Rank Badge - Clickable */}
+                                  <div 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const newExpanded = new Set(expandedRecommendations);
+                                      if (newExpanded.has(rec.keyword)) {
+                                        newExpanded.delete(rec.keyword);
+                                      } else {
+                                        newExpanded.add(rec.keyword);
+                                      }
+                                      setExpandedRecommendations(newExpanded);
+                                    }}
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer ${getRankColor(rec.rank)}`}
+                                    style={getRankStyle(rec.rank)}
+                                  >
+                                    {rec.rank}
                                   </div>
 
-                                  {/* Reasoning Text - Expands below */}
-                                  {isExpanded && rec.reasoning && (
-                                    <div className="mt-3 pt-3 border-t border-gray-100">
-                                      <div className="text-xs text-gray-600 leading-relaxed typing-animation hide-scrollbar overflow-y-auto max-h-20">
-                                        {rec.reasoning}
-                                      </div>
+                                  {/* Promotor Info */}
+                                  <div className={`flex-1 min-w-0 ${isExpanded ? 'slide-out-left' : 'slide-in'}`}>
+                                    <div className="flex items-center mb-1">
+                                      <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
+                                      <span className="font-medium text-gray-900 text-sm truncate">
+                                        {rec.promotorName}
+                                      </span>
                                     </div>
-                                  )}
+                                    
+                                    {/* Phone Number - Plain below name */}
+                                    {rec.phone && (
+                                      <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
+                                        {rec.phone}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Confidence - Right side */}
+                                  <div className={`flex-shrink-0 ${isExpanded ? 'slide-out-right' : 'slide-in'}`}>
+                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
+                                      {Math.round(rec.confidence * 100)}%
+                                    </span>
+                                  </div>
                                 </div>
+                                
+                                {/* Reasoning Text - Shows when expanded */}
+                                {isExpanded && rec.reasoning && (
+                                  <div className={`mt-3 text-xs text-gray-600 overflow-y-auto no-scrollbar max-h-20 ${isExpanded ? 'typing-effect' : ''}`}
+                                       style={{ 
+                                         opacity: isExpanded ? 1 : 0,
+                                         transition: 'opacity 0.3s ease-in-out 0.2s'
+                                       }}>
+                                    {rec.reasoning}
+                                  </div>
+                                )}
                               </div>
                             );
                           })
