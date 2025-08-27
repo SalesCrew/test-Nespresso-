@@ -2037,14 +2037,12 @@ Import EP
                               <div
                                 key={rec.keyword}
                                 onClick={() => {
-                                  if (selectedEinsatz && !isExpanded) {
+                                  if (selectedEinsatz) {
                                     assignPromotionToPromotor(rec.promotorName, rec.promotorId);
                                     setEditingEinsatz({ ...selectedEinsatz, promotor: rec.promotorName, promotorId: rec.promotorId, status: 'Verplant' });
                                   }
                                 }}
-                                className={`p-3 rounded-lg border border-gray-100 transition-all bg-white relative overflow-hidden ${
-                                  !isExpanded ? 'cursor-pointer' : ''
-                                } ${
+                                className={`p-3 rounded-lg border border-gray-100 cursor-pointer transition-all bg-white relative overflow-hidden ${
                                   rec.rank === 1 ? 'hover:bg-gradient-to-r hover:from-yellow-50/60 hover:to-amber-50/60 hover:border-yellow-200/80' :
                                   rec.rank === 2 ? 'hover:bg-gradient-to-r hover:from-gray-50/60 hover:to-slate-50/60 hover:border-gray-200/80' :
                                   rec.rank === 3 ? 'hover:bg-gradient-to-r hover:from-amber-50/60 hover:to-orange-50/60 hover:border-amber-200/80' :
