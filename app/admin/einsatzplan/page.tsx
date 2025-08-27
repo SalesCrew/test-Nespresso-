@@ -902,8 +902,8 @@ export default function EinsatzplanPage() {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
               const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              // Create date in UTC to avoid timezone shifts
-              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
+              // Create date in local timezone with correct times
+              start = new Date(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0);
             } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -914,13 +914,13 @@ export default function EinsatzplanPage() {
               const month = months[monthName as keyof typeof months];
               if (month == null || isNaN(day)) continue;
               const year = new Date().getFullYear();
-              start = new Date(Date.UTC(year, month, day, 9, 30));
+              start = new Date(year, month, day, 9, 30, 0, 0);
             }
             const end = new Date(start);
             if (val === 1 || val === 2) {
-              end.setUTCHours(18, 30, 0, 0);
+              end.setHours(18, 30, 0, 0);
             } else if (val === 0.75) {
-              end.setUTCHours(15, 30, 0, 0);
+              end.setHours(15, 30, 0, 0);
             }
             const base = {
               title: 'Promotion',
@@ -962,13 +962,25 @@ export default function EinsatzplanPage() {
         try {
           // Fetch ALL assignments from database for accurate conflict detection
           console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
+          const allAssignmentsRes = await fetch(`/api/assignments?raw=true`, { cache: 'no-store' });
           if (!allAssignmentsRes.ok) {
             throw new Error('Failed to fetch existing assignments');
           }
           const allAssignmentsData = await allAssignmentsRes.json();
           const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
           console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+          
+          // Log first assignment to see structure
+          if (existingAssignments.length > 0) {
+            console.log('🔵 First existing assignment structure:', {
+              id: existingAssignments[0].id,
+              location_text: existingAssignments[0].location_text,
+              start_ts: existingAssignments[0].start_ts,
+              end_ts: existingAssignments[0].end_ts,
+              postal_code: existingAssignments[0].postal_code,
+              status: existingAssignments[0].status
+            });
+          }
           
           const processedExistingIds = new Set();
           
@@ -1025,26 +1037,49 @@ export default function EinsatzplanPage() {
               existingStart.getTime() !== newStart.getTime() ||
               existingEnd.getTime() !== newEnd.getTime();
               
+            // Handle different field names from database
+            const existingTitle = conflictingAssignment.title || 'Promotion';
+            const existingCity = conflictingAssignment.city || '';
+            const existingRegion = conflictingAssignment.region || '';
+            
             const hasOtherChanges = 
-              conflictingAssignment.title !== newRow.title ||
-              conflictingAssignment.city !== newRow.city ||
-              conflictingAssignment.region !== newRow.region;
+              existingTitle !== newRow.title ||
+              existingCity !== newRow.city ||
+              existingRegion !== newRow.region;
             
             // Only show conflicts if:
             // 1. There are actual data changes (time, title, city, region)
             // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
             const hasActualChanges = hasTimeChanges || hasOtherChanges;
-            const wouldLosePromotor = !!conflictingAssignment.promotor;
+            // Check both possible promotor field names from database
+            const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
+                                     (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
             
             // Log for debugging
-            if (processedExistingIds.size < 5) {
-              console.log('🔵 Conflict check:', {
+            if (processedExistingIds.size < 3) {
+              console.log('🔵 Conflict check details:', {
                 location: conflictingAssignment.location_text,
-                hasTimeChanges,
-                hasOtherChanges,
-                existingStatus: conflictingAssignment.status,
-                hasPromotor: wouldLosePromotor,
-                willShowConflict: hasActualChanges || wouldLosePromotor
+                existing: {
+                  start: conflictingAssignment.start_ts,
+                  end: conflictingAssignment.end_ts,
+                  status: conflictingAssignment.status,
+                  promotor: conflictingAssignment.promotor,
+                  title: conflictingAssignment.title
+                },
+                new: {
+                  start: newRow.start_ts,
+                  end: newRow.end_ts,
+                  title: newRow.title
+                },
+                comparison: {
+                  existingStartTime: existingStart.toISOString(),
+                  newStartTime: newStart.toISOString(),
+                  timesMatch: existingStart.getTime() === newStart.getTime(),
+                  hasTimeChanges,
+                  hasOtherChanges,
+                  wouldLosePromotor,
+                  willShowConflict: hasActualChanges || wouldLosePromotor
+                }
               });
             }
             
@@ -1136,8 +1171,8 @@ export default function EinsatzplanPage() {
               // Excel serial date (days since 1900-01-01, but with leap year bug)
               const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
               const dateOnly = new Date(excelEpoch.getTime() + numericLabel * 24 * 60 * 60 * 1000);
-              // Create date in UTC to avoid timezone shifts
-              start = new Date(Date.UTC(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0));
+              // Create date in local timezone with correct times
+              start = new Date(dateOnly.getFullYear(), dateOnly.getMonth(), dateOnly.getDate(), 9, 30, 0, 0);
           } else {
               // Try parsing as text date (e.g., "04.Aug")
               const parts = label.split('.');
@@ -1148,13 +1183,13 @@ export default function EinsatzplanPage() {
               const month = months[monthName as keyof typeof months];
               if (month == null || isNaN(day)) continue;
               const year = new Date().getFullYear();
-              start = new Date(Date.UTC(year, month, day, 9, 30));
+              start = new Date(year, month, day, 9, 30, 0, 0);
             }
             const end = new Date(start);
             if (val === 1 || val === 2) {
-              end.setUTCHours(18, 30, 0, 0);
+              end.setHours(18, 30, 0, 0);
             } else if (val === 0.75) {
-              end.setUTCHours(15, 30, 0, 0);
+              end.setHours(15, 30, 0, 0);
             }
             const base = {
               title: 'Promotion',
@@ -1190,13 +1225,25 @@ export default function EinsatzplanPage() {
         try {
           // Fetch ALL assignments from database for accurate conflict detection
           console.log('🔵 Fetching all assignments for conflict check...');
-          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
+          const allAssignmentsRes = await fetch(`/api/assignments?raw=true`, { cache: 'no-store' });
           if (!allAssignmentsRes.ok) {
             throw new Error('Failed to fetch existing assignments');
           }
           const allAssignmentsData = await allAssignmentsRes.json();
           const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
           console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+          
+          // Log first assignment to see structure
+          if (existingAssignments.length > 0) {
+            console.log('🔵 First existing assignment structure:', {
+              id: existingAssignments[0].id,
+              location_text: existingAssignments[0].location_text,
+              start_ts: existingAssignments[0].start_ts,
+              end_ts: existingAssignments[0].end_ts,
+              postal_code: existingAssignments[0].postal_code,
+              status: existingAssignments[0].status
+            });
+          }
           
           const processedExistingIds = new Set();
           
@@ -1253,26 +1300,49 @@ export default function EinsatzplanPage() {
               existingStart.getTime() !== newStart.getTime() ||
               existingEnd.getTime() !== newEnd.getTime();
               
+            // Handle different field names from database
+            const existingTitle = conflictingAssignment.title || 'Promotion';
+            const existingCity = conflictingAssignment.city || '';
+            const existingRegion = conflictingAssignment.region || '';
+            
             const hasOtherChanges = 
-              conflictingAssignment.title !== newRow.title ||
-              conflictingAssignment.city !== newRow.city ||
-              conflictingAssignment.region !== newRow.region;
+              existingTitle !== newRow.title ||
+              existingCity !== newRow.city ||
+              existingRegion !== newRow.region;
             
             // Only show conflicts if:
             // 1. There are actual data changes (time, title, city, region)
             // 2. OR existing has a promotor assigned (status would change from 'Verplant' to 'Offen')
             const hasActualChanges = hasTimeChanges || hasOtherChanges;
-            const wouldLosePromotor = !!conflictingAssignment.promotor;
+            // Check both possible promotor field names from database
+            const wouldLosePromotor = !!(conflictingAssignment.promotor || conflictingAssignment.lead_name) && 
+                                     (conflictingAssignment.status === 'assigned' || conflictingAssignment.status === 'Verplant');
             
             // Log for debugging
-            if (processedExistingIds.size < 5) {
-              console.log('🔵 Conflict check:', {
+            if (processedExistingIds.size < 3) {
+              console.log('🔵 Conflict check details:', {
                 location: conflictingAssignment.location_text,
-                hasTimeChanges,
-                hasOtherChanges,
-                existingStatus: conflictingAssignment.status,
-                hasPromotor: wouldLosePromotor,
-                willShowConflict: hasActualChanges || wouldLosePromotor
+                existing: {
+                  start: conflictingAssignment.start_ts,
+                  end: conflictingAssignment.end_ts,
+                  status: conflictingAssignment.status,
+                  promotor: conflictingAssignment.promotor,
+                  title: conflictingAssignment.title
+                },
+                new: {
+                  start: newRow.start_ts,
+                  end: newRow.end_ts,
+                  title: newRow.title
+                },
+                comparison: {
+                  existingStartTime: existingStart.toISOString(),
+                  newStartTime: newStart.toISOString(),
+                  timesMatch: existingStart.getTime() === newStart.getTime(),
+                  hasTimeChanges,
+                  hasOtherChanges,
+                  wouldLosePromotor,
+                  willShowConflict: hasActualChanges || wouldLosePromotor
+                }
               });
             }
             
@@ -3554,14 +3624,26 @@ Import EP
                           <h4 className="text-sm font-medium text-gray-700 mb-1">Aktuell im System</h4>
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code || conflict.existing.plz}</p>
-                            <p>{conflict.existing.start_ts ? new Date(conflict.existing.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
+                            <p>
+                              {conflict.existing.start_ts && conflict.existing.end_ts ? (
+                                <>
+                                  {new Date(conflict.existing.start_ts).toLocaleDateString('de-DE')} {' '}
+                                  {new Date(conflict.existing.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - 
+                                  {new Date(conflict.existing.end_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                </>
+                              ) : 'Ungültige Zeit'}
+                            </p>
                             <p>Status: <span className={`font-medium ${
-                              conflict.existing.status === 'Verplant' ? 'text-green-600' : 
+                              (conflict.existing.status === 'Verplant' || conflict.existing.status === 'assigned') ? 'text-green-600' : 
                               (conflict.existing.status === 'Offen' || conflict.existing.status === 'open') ? 'text-yellow-600' : 
                               'text-gray-600'
-                            }`}>{conflict.existing.status === 'open' ? 'Offen' : conflict.existing.status}</span></p>
-                            {conflict.existing.promotor && (
-                              <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor}</p>
+                            }`}>{
+                              conflict.existing.status === 'open' ? 'Offen' : 
+                              conflict.existing.status === 'assigned' ? 'Verplant' :
+                              conflict.existing.status
+                            }</span></p>
+                            {(conflict.existing.promotor || conflict.existing.lead_name) && (
+                              <p className="text-green-600 font-medium">Promotor: {conflict.existing.promotor || conflict.existing.lead_name}</p>
                             )}
                           </div>
                         </div>
@@ -3569,7 +3651,15 @@ Import EP
                           <h4 className="text-sm font-medium text-gray-700 mb-1">Neu aus Excel</h4>
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">{conflict.new.location_text} - {conflict.new.postal_code}</p>
-                            <p>{conflict.new.start_ts ? new Date(conflict.new.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
+                            <p>
+                              {conflict.new.start_ts && conflict.new.end_ts ? (
+                                <>
+                                  {new Date(conflict.new.start_ts).toLocaleDateString('de-DE')} {' '}
+                                  {new Date(conflict.new.start_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - 
+                                  {new Date(conflict.new.end_ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                                </>
+                              ) : 'Ungültige Zeit'}
+                            </p>
                             <p>Status: <span className="text-yellow-600 font-medium">Offen</span></p>
                             {conflict.hasChanges && (
                               <p className="text-orange-600 text-xs mt-1">⚠️ Zeitänderung oder andere Unterschiede</p>
