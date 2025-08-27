@@ -947,7 +947,16 @@ export default function EinsatzplanPage() {
         let newAssignments = [];
         
         try {
-          const existingAssignments = einsatzplanData;
+          // Fetch ALL assignments from database for accurate conflict detection
+          console.log('🔵 Fetching all assignments for conflict check...');
+          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
+          if (!allAssignmentsRes.ok) {
+            throw new Error('Failed to fetch existing assignments');
+          }
+          const allAssignmentsData = await allAssignmentsRes.json();
+          const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
+          console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+          
           const processedExistingIds = new Set();
           
           for (const newRow of rows) {
@@ -968,7 +977,7 @@ export default function EinsatzplanPage() {
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
-          const conflictingAssignment = existingAssignments.find(existing => {
+          const conflictingAssignment = existingAssignments.find((existing: any) => {
             if (processedExistingIds.has(existing.id)) return false;
             
             const existingStartDate = new Date(existing.start_ts);
@@ -984,7 +993,7 @@ export default function EinsatzplanPage() {
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
-                   existing.postal_code === newRow.postal_code &&
+                   (existing.postal_code === newRow.postal_code || existing.plz === newRow.postal_code) &&
                    existingDate === newDate &&
                    existingTimeSlot === newTimeSlot;
           });
@@ -1127,7 +1136,16 @@ export default function EinsatzplanPage() {
         let newAssignments = [];
         
         try {
-          const existingAssignments = einsatzplanData;
+          // Fetch ALL assignments from database for accurate conflict detection
+          console.log('🔵 Fetching all assignments for conflict check...');
+          const allAssignmentsRes = await fetch(`/api/assignments`, { cache: 'no-store' });
+          if (!allAssignmentsRes.ok) {
+            throw new Error('Failed to fetch existing assignments');
+          }
+          const allAssignmentsData = await allAssignmentsRes.json();
+          const existingAssignments = Array.isArray(allAssignmentsData.assignments) ? allAssignmentsData.assignments : [];
+          console.log('🔵 Found', existingAssignments.length, 'existing assignments for conflict check');
+          
           const processedExistingIds = new Set();
           
           for (const newRow of rows) {
@@ -1148,7 +1166,7 @@ export default function EinsatzplanPage() {
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
-          const conflictingAssignment = existingAssignments.find(existing => {
+          const conflictingAssignment = existingAssignments.find((existing: any) => {
             if (processedExistingIds.has(existing.id)) return false;
             
             const existingStartDate = new Date(existing.start_ts);
@@ -1164,7 +1182,7 @@ export default function EinsatzplanPage() {
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
-                   existing.postal_code === newRow.postal_code &&
+                   (existing.postal_code === newRow.postal_code || existing.plz === newRow.postal_code) &&
                    existingDate === newDate &&
                    existingTimeSlot === newTimeSlot;
           });
@@ -3457,7 +3475,7 @@ Import EP
                         <div>
                           <h4 className="text-sm font-medium text-gray-700 mb-1">Aktuell im System</h4>
                           <div className="text-sm text-gray-600">
-                            <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code}</p>
+                            <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code || conflict.existing.plz}</p>
                             <p>{conflict.existing.start_ts ? new Date(conflict.existing.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
                             <p>Status: <span className={`font-medium ${
                               conflict.existing.status === 'Verplant' ? 'text-green-600' : 
