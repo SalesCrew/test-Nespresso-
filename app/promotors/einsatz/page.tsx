@@ -1816,7 +1816,13 @@ const loadProcessState = async () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4 scrollbar-hide">
+              <div 
+                className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4 [&::-webkit-scrollbar]:hidden"
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+              >
                 {processState.invitedAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
@@ -2012,7 +2018,13 @@ const loadProcessState = async () => {
                 <CardDescription className="text-gray-600 dark:text-gray-400 text-center">Wähle einen verfügbaren Einsatz für die kommenden Tage aus.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4 scrollbar-hide">
+                <div 
+                  className="space-y-3 max-h-[280px] overflow-y-auto py-3 px-4 [&::-webkit-scrollbar]:hidden"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
+                  }}
+                >
                   {assignments.slice(0, 6).map((assignment) => (
                     <div
                       key={assignment.id}
