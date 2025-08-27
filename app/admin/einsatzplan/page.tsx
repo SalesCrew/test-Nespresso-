@@ -155,10 +155,7 @@ export default function EinsatzplanPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
   
-  // Import conflict state
-  const [showConflictModal, setShowConflictModal] = useState(false);
-  const [importConflicts, setImportConflicts] = useState<any[]>([]);
-  const [conflictDecisions, setConflictDecisions] = useState<Map<string, 'excel' | 'existing'>>(new Map());
+
   
   // Load distribution history from database
   const loadInvitationHistory = async () => {
@@ -838,72 +835,7 @@ export default function EinsatzplanPage() {
     return '';
   };
 
-  // Check if two assignments match (same location, date, time)
-  const assignmentsMatch = (a1: any, a2: any) => {
-    // Compare locations - handle different field names
-    const loc1 = a1.location_text || a1.address || '';
-    const loc2 = a2.location_text || a2.address || '';
-    const plz1 = String(a1.postal_code || a1.plz || '');
-    const plz2 = String(a2.postal_code || a2.plz || '');
-    
-    // Compare locations and PLZ
-    if (loc1 !== loc2 || plz1 !== plz2) return false;
-    
-    // For dates, compare the timestamps
-    if (!a1.start_ts || !a2.start_ts) return false;
-    
-    // Compare the actual timestamps
-    const match = a1.start_ts === a2.start_ts && a1.end_ts === a2.end_ts;
-    
-    // Debug logging for first few comparisons
-    if (match) {
-      console.log('🔵 Match found!', {
-        loc1, loc2, plz1, plz2,
-        start1: a1.start_ts,
-        start2: a2.start_ts,
-        status: a2.status
-      });
-    }
-    
-    return match;
-  };
-  
-  // Handle conflict resolution
-  const handleConflictResolution = async () => {
-    const assignmentsToImport: any[] = [];
-    const assignmentsToUpdate: any[] = [];
-    
-    // Process each conflict based on user decisions
-    for (const conflict of importConflicts) {
-      const decision = conflictDecisions.get(conflict.existing.id) || 'existing';
-      
-      if (decision === 'excel') {
-        // User wants the Excel version - update existing assignment to "Offen"
-        assignmentsToUpdate.push({
-          id: conflict.existing.id,
-          status: 'Offen'
-        });
-      }
-      // If 'existing', we keep the current state and ignore the Excel import
-    }
-    
-    // Update existing assignments if needed
-    if (assignmentsToUpdate.length > 0) {
-      for (const update of assignmentsToUpdate) {
-        await fetch(`/api/assignments/${update.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: update.status })
-        });
-      }
-    }
-    
-    // Close modal and refresh
-    setShowConflictModal(false);
-    setImportConflicts([]);
-    setConflictDecisions(new Map());
-    await loadAssignments(true);
-  };
+
 
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
@@ -1008,79 +940,7 @@ export default function EinsatzplanPage() {
           console.log('🔵 Sample dates:', rows.slice(0, 3).map(r => r.start_ts));
         }
         
-        // Fetch current assignments to ensure fresh data
-        console.log('🔵 Fetching current assignments for conflict check...');
-        const currentRes = await fetch('/api/assignments');
-        if (!currentRes.ok) {
-          throw new Error('Failed to load current assignments');
-        }
-        const currentData = await currentRes.json();
-        const currentAssignments = Array.isArray(currentData.assignments) ? currentData.assignments : [];
-        console.log('🔵 Loaded', currentAssignments.length, 'current assignments');
-        
-        // Map the assignments to preserve the fields we need
-        const mappedCurrent = currentAssignments.map((r: any) => ({
-          ...r,
-          location_text: r.location_text,
-          postal_code: r.postal_code,
-          start_ts: r.start_ts,
-          end_ts: r.end_ts,
-          status: r.status
-        }));
-        
-        console.log('🔵 Checking conflicts against', mappedCurrent.length, 'existing assignments');
-        
-        // Check for conflicts with existing assignments
-        const newAssignments: any[] = [];
-        const conflicts: any[] = [];
-        
-        for (const newRow of rows) {
-          const existingMatch = mappedCurrent.find((existing: any) => assignmentsMatch(existing, newRow));
-          
-          if (existingMatch) {
-            // Check if it's identical (including status)
-            // Excel imports are always 'open' status
-            if (existingMatch.status === 'open') {
-              // Identical, skip
-              console.log('🔵 Skipping identical assignment:', newRow.location_text);
-              continue;
-            } else {
-              // Different status - this is a conflict
-              console.log('🔵 Found conflict - existing status:', existingMatch.status);
-              conflicts.push({
-                excel: newRow,
-                existing: existingMatch
-              });
-            }
-          } else {
-            // New assignment
-            newAssignments.push(newRow);
-          }
-        }
-        
-        console.log('🔵 New assignments:', newAssignments.length);
-        console.log('🔵 Conflicts:', conflicts.length);
-        
-        if (conflicts.length > 0) {
-          // Show conflict modal
-          setImportConflicts(conflicts);
-          // Set default decisions to 'existing'
-          const defaultDecisions = new Map();
-          conflicts.forEach(c => defaultDecisions.set(c.existing.id, 'existing'));
-          setConflictDecisions(defaultDecisions);
-          setShowConflictModal(true);
-          setShowImportModal(false);
-          return;
-        }
-        
-        // No conflicts, proceed with import
-        if (newAssignments.length === 0) {
-          alert('Keine neuen Einsätze zum Importieren gefunden.');
-          setShowImportModal(false);
-          return;
-        }
-        
-        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows: newAssignments }) })
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
         console.log('🔵 Import response:', res.status);
         if (!res.ok) {
           const t = await res.text();
@@ -1173,74 +1033,7 @@ export default function EinsatzplanPage() {
           }
         }
         
-        // Fetch current assignments to ensure fresh data
-        console.log('🔵 Fetching current assignments for conflict check...');
-        const currentRes = await fetch('/api/assignments');
-        if (!currentRes.ok) {
-          throw new Error('Failed to load current assignments');
-        }
-        const currentData = await currentRes.json();
-        const currentAssignments = Array.isArray(currentData.assignments) ? currentData.assignments : [];
-        console.log('🔵 Loaded', currentAssignments.length, 'current assignments');
-        
-        // Map the assignments to preserve the fields we need
-        const mappedCurrent = currentAssignments.map((r: any) => ({
-          ...r,
-          location_text: r.location_text,
-          postal_code: r.postal_code,
-          start_ts: r.start_ts,
-          end_ts: r.end_ts,
-          status: r.status
-        }));
-        
-        // Check for conflicts with existing assignments
-        const newAssignments: any[] = [];
-        const conflicts: any[] = [];
-        
-        for (const newRow of rows) {
-          const existingMatch = mappedCurrent.find((existing: any) => assignmentsMatch(existing, newRow));
-          
-          if (existingMatch) {
-            // Check if it's identical (including status)
-            // Excel imports are always 'open' status
-            if (existingMatch.status === 'open') {
-              // Identical, skip
-              console.log('🔵 Skipping identical assignment:', newRow.location_text);
-              continue;
-            } else {
-              // Different status - this is a conflict
-              console.log('🔵 Found conflict - existing status:', existingMatch.status);
-              conflicts.push({
-                excel: newRow,
-                existing: existingMatch
-              });
-            }
-          } else {
-            // New assignment
-            newAssignments.push(newRow);
-          }
-        }
-        
-        if (conflicts.length > 0) {
-          // Show conflict modal
-          setImportConflicts(conflicts);
-          // Set default decisions to 'existing'
-          const defaultDecisions = new Map();
-          conflicts.forEach(c => defaultDecisions.set(c.existing.id, 'existing'));
-          setConflictDecisions(defaultDecisions);
-          setShowConflictModal(true);
-          setShowImportModal(false);
-          return;
-        }
-        
-        // No conflicts, proceed with import
-        if (newAssignments.length === 0) {
-          alert('Keine neuen Einsätze zum Importieren gefunden.');
-          setShowImportModal(false);
-          return;
-        }
-        
-        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows: newAssignments }) })
+        const res = await fetch('/api/assignments/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) })
         if (!res.ok) {
           const t = await res.text();
           throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
@@ -1516,14 +1309,10 @@ export default function EinsatzplanPage() {
           time: timeText,
           city: r.city || r.location_text || '',
           address: r.location_text || '',
-          location_text: r.location_text || '', // Preserve for matching
           planStart: timeStart,
           planEnd: timeEnd,
           plz: r.postal_code || '',
-          postal_code: r.postal_code || '', // Preserve for matching
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
-          start_ts: r.start_ts, // Preserve for matching
-          end_ts: r.end_ts, // Preserve for matching
           // If there's a buddy, force status to Buddy Tag regardless of database status
           status: (r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
                   // Map all database statuses to UI statuses
@@ -3388,136 +3177,7 @@ Import EP
         </div>
       )}
 
-      {/* Import Conflict Modal */}
-      {showConflictModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Import Konflikte</h3>
-                <p className="text-sm text-gray-500 mt-1">{importConflicts.length} Einsätze haben unterschiedliche Status</p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowConflictModal(false);
-                  setImportConflicts([]);
-                  setConflictDecisions(new Map());
-                }}
-                className="p-1 rounded hover:bg-gray-100 transition-colors"
-              >
-                <X className="h-5 w-5 text-gray-400" />
-              </button>
-            </div>
 
-            {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4">
-                {importConflicts.map((conflict, index) => {
-                  const startDate = new Date(conflict.existing.start_ts);
-                  const dateStr = startDate.toLocaleDateString('de-AT', { day: '2-digit', month: 'short' });
-                  const timeStr = startDate.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' });
-                  
-                  return (
-                    <div key={conflict.existing.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">{conflict.existing.location_text}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            PLZ: {conflict.existing.postal_code} • {dateStr} • {timeStr}
-                          </div>
-                          <div className="flex items-center gap-4 mt-3">
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`conflict-${conflict.existing.id}`}
-                                checked={conflictDecisions.get(conflict.existing.id) === 'existing'}
-                                onChange={() => {
-                                  const newDecisions = new Map(conflictDecisions);
-                                  newDecisions.set(conflict.existing.id, 'existing');
-                                  setConflictDecisions(newDecisions);
-                                }}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">
-                                Einsatzplan behalten: <span className="font-medium text-gray-900">{conflict.existing.status}</span>
-                                {conflict.existing.promotor && <span className="text-gray-600"> ({conflict.existing.promotor})</span>}
-                              </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer">
-                              <input
-                                type="radio"
-                                name={`conflict-${conflict.existing.id}`}
-                                checked={conflictDecisions.get(conflict.existing.id) === 'excel'}
-                                onChange={() => {
-                                  const newDecisions = new Map(conflictDecisions);
-                                  newDecisions.set(conflict.existing.id, 'excel');
-                                  setConflictDecisions(newDecisions);
-                                }}
-                                className="mr-2"
-                              />
-                              <span className="text-sm">
-                                Excel übernehmen: <span className="font-medium text-green-600">Offen</span>
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-100">
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      const newDecisions = new Map();
-                      importConflicts.forEach(c => newDecisions.set(c.existing.id, 'existing'));
-                      setConflictDecisions(newDecisions);
-                    }}
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    Alle Einsatzplan behalten
-                  </button>
-                  <span className="text-gray-400">•</span>
-                  <button
-                    onClick={() => {
-                      const newDecisions = new Map();
-                      importConflicts.forEach(c => newDecisions.set(c.existing.id, 'excel'));
-                      setConflictDecisions(newDecisions);
-                    }}
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    Alle Excel übernehmen
-                  </button>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setShowConflictModal(false);
-                      setImportConflicts([]);
-                      setConflictDecisions(new Map());
-                    }}
-                    className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Abbrechen
-                  </button>
-                  <button
-                    onClick={handleConflictResolution}
-                    className="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Anwenden
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Replacement Assignments Modal */}
       {showReplacementModal && declinedPromotor && (
