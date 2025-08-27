@@ -42,6 +42,34 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
+// Typing animation component
+const TypingText = ({ text, isTyping }: { text: string; isTyping: boolean }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  
+  useEffect(() => {
+    if (!isTyping) {
+      setDisplayedText('');
+      return;
+    }
+    
+    let index = 0;
+    setDisplayedText('');
+    
+    const timer = setInterval(() => {
+      if (index <= text.length) {
+        setDisplayedText(text.slice(0, index));
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 25); // 25ms per character for smooth typing
+    
+    return () => clearInterval(timer);
+  }, [text, isTyping]);
+  
+  return <>{displayedText}</>;
+};
+
 export default function EinsatzplanPage() {
   // Custom scrollbar styles
   const customScrollbarStyle = `
@@ -72,30 +100,11 @@ export default function EinsatzplanPage() {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    @keyframes typewriter {
-      from { width: 0; }
-      to { width: 100%; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .typing-effect {
-      overflow: hidden;
-      white-space: normal;
-      animation: typewriter 2.5s steps(80, end) forwards;
-    }
-    .slide-out-left {
-      transform: translateX(-120%);
-      opacity: 0;
-      transition: all 0.3s ease-out;
-    }
-    .slide-out-right {
-      transform: translateX(120%);
-      opacity: 0;
-      transition: all 0.3s ease-out;
-    }
-    .slide-in {
-      transform: translateX(0);
-      opacity: 1;
-      transition: all 0.3s ease-out;
-    }
+
   `;
   const router = useRouter();
   const pathname = usePathname();
@@ -2041,7 +2050,7 @@ Import EP
                                   'hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-indigo-50/60 hover:border-blue-200/80'
                                 }`}
                               >
-                                <div className="flex items-center space-x-3 h-12">
+                                <div className="flex items-center space-x-3 h-12 relative">
                                   {/* Rank Badge - Clickable */}
                                   <div 
                                     onClick={(e) => {
@@ -2060,35 +2069,41 @@ Import EP
                                     {rec.rank}
                                   </div>
 
-                                  {/* Content Area */}
-                                  {!isExpanded ? (
-                                    <>
-                                      {/* Promotor Info */}
-                                      <div className={`flex-1 min-w-0 ${isExpanded ? 'slide-out-left' : 'slide-in'}`}>
+                                  {/* Content Area - Both states remain in DOM */}
+                                  <div className="flex-1 relative h-full">
+                                    {/* Promotor Info */}
+                                    <div 
+                                      className="absolute inset-0 flex items-center space-x-3"
+                                      style={{
+                                        transform: isExpanded ? 'translateX(-120%)' : 'translateX(0)',
+                                        opacity: isExpanded ? 0 : 1,
+                                        transition: 'all 0.3s ease-out',
+                                        pointerEvents: isExpanded ? 'none' : 'auto'
+                                      }}
+                                    >
+                                      <div className="flex-1 min-w-0">
                                         <div className="flex items-center mb-1">
                                           <User className="h-3 w-3 text-gray-400 mr-1 flex-shrink-0" />
                                           <span className="font-medium text-gray-900 text-sm truncate">
                                             {rec.promotorName}
                                           </span>
                                         </div>
-                                        
-                                        {/* Phone Number - Plain below name */}
                                         {rec.phone && (
                                           <div className="text-xs text-gray-600" style={{ opacity: 0.7 }}>
                                             {rec.phone}
                                           </div>
                                         )}
                                       </div>
-
+                                      
                                       {/* Confidence - Right side */}
-                                      <div className={`flex-shrink-0 ${isExpanded ? 'slide-out-right' : 'slide-in'}`}>
+                                      <div className="flex-shrink-0">
                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getConfidenceColor(rec.confidence)}`}>
                                           {Math.round(rec.confidence * 100)}%
                                         </span>
                                       </div>
-                                    </>
-                                  ) : (
-                                    /* Reasoning Text - Shows when expanded */
+                                    </div>
+
+                                    {/* Reasoning Text */}
                                     <div 
                                       ref={(el) => {
                                         if (el && isExpanded) {
@@ -2096,18 +2111,22 @@ Import EP
                                           const scrollInterval = setInterval(() => {
                                             el.scrollTop = el.scrollHeight;
                                           }, 50);
-                                          setTimeout(() => clearInterval(scrollInterval), 2600);
+                                          setTimeout(() => clearInterval(scrollInterval), (rec.reasoning?.length || 0) * 25 + 500);
                                         }
                                       }}
-                                      className={`flex-1 text-xs text-gray-600 overflow-y-auto no-scrollbar h-10 ${isExpanded ? 'typing-effect' : ''}`}
+                                      className="absolute inset-0 text-xs text-gray-600 overflow-y-auto no-scrollbar flex items-center"
                                       style={{ 
                                         opacity: isExpanded ? 1 : 0,
-                                        transition: 'opacity 0.3s ease-in-out 0.2s',
+                                        transition: isExpanded ? 'opacity 0.4s ease-in 0.3s' : 'opacity 0.2s ease-out',
+                                        pointerEvents: isExpanded ? 'auto' : 'none',
                                         lineHeight: '1.4'
-                                      }}>
-                                      {rec.reasoning}
+                                      }}
+                                    >
+                                      <div className="w-full">
+                                        <TypingText text={rec.reasoning || ''} isTyping={isExpanded} />
+                                      </div>
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                             );
