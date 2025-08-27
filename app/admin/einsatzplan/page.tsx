@@ -943,25 +943,44 @@ export default function EinsatzplanPage() {
         }
         
         // Check for conflicts with existing assignments
-        const existingAssignments = einsatzplanData;
-        const conflicts = [];
-        const newAssignments = [];
-        const processedExistingIds = new Set();
+        let conflicts = [];
+        let newAssignments = [];
         
-        for (const newRow of rows) {
+        try {
+          const existingAssignments = einsatzplanData;
+          const processedExistingIds = new Set();
+          
+          for (const newRow of rows) {
+          // Validate dates before processing
+          const newStartDate = new Date(newRow.start_ts);
+          const newEndDate = new Date(newRow.end_ts);
+          
+          if (isNaN(newStartDate.getTime()) || isNaN(newEndDate.getTime())) {
+            console.warn('Skipping row with invalid dates:', newRow);
+            newAssignments.push(newRow); // Add to new assignments to let the API handle validation
+            continue;
+          }
+          
           // Extract date and time slot from assignments
-          const newDate = new Date(newRow.start_ts).toISOString().split('T')[0];
-          const newStartHour = new Date(newRow.start_ts).getHours();
-          const newEndHour = new Date(newRow.end_ts).getHours();
+          const newDate = newStartDate.toISOString().split('T')[0];
+          const newStartHour = newStartDate.getHours();
+          const newEndHour = newEndDate.getHours();
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
           const conflictingAssignment = existingAssignments.find(existing => {
             if (processedExistingIds.has(existing.id)) return false;
             
-            const existingDate = new Date(existing.start_ts).toISOString().split('T')[0];
-            const existingStartHour = new Date(existing.start_ts).getHours();
-            const existingEndHour = new Date(existing.end_ts).getHours();
+            const existingStartDate = new Date(existing.start_ts);
+            const existingEndDate = new Date(existing.end_ts);
+            
+            if (isNaN(existingStartDate.getTime()) || isNaN(existingEndDate.getTime())) {
+              return false;
+            }
+            
+            const existingDate = existingStartDate.toISOString().split('T')[0];
+            const existingStartHour = existingStartDate.getHours();
+            const existingEndHour = existingEndDate.getHours();
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
@@ -993,6 +1012,12 @@ export default function EinsatzplanPage() {
           } else {
             newAssignments.push(newRow);
           }
+        }
+        } catch (conflictError) {
+          console.error('Error during conflict detection:', conflictError);
+          // If conflict detection fails, treat all as new
+          newAssignments = rows;
+          conflicts = [];
         }
         
         if (conflicts.length > 0) {
@@ -1098,25 +1123,44 @@ export default function EinsatzplanPage() {
           }
         }
         // Check for conflicts with existing assignments
-        const existingAssignments = einsatzplanData;
-        const conflicts = [];
-        const newAssignments = [];
-        const processedExistingIds = new Set();
+        let conflicts = [];
+        let newAssignments = [];
         
-        for (const newRow of rows) {
+        try {
+          const existingAssignments = einsatzplanData;
+          const processedExistingIds = new Set();
+          
+          for (const newRow of rows) {
+          // Validate dates before processing
+          const newStartDate = new Date(newRow.start_ts);
+          const newEndDate = new Date(newRow.end_ts);
+          
+          if (isNaN(newStartDate.getTime()) || isNaN(newEndDate.getTime())) {
+            console.warn('Skipping row with invalid dates:', newRow);
+            newAssignments.push(newRow); // Add to new assignments to let the API handle validation
+            continue;
+          }
+          
           // Extract date and time slot from assignments
-          const newDate = new Date(newRow.start_ts).toISOString().split('T')[0];
-          const newStartHour = new Date(newRow.start_ts).getHours();
-          const newEndHour = new Date(newRow.end_ts).getHours();
+          const newDate = newStartDate.toISOString().split('T')[0];
+          const newStartHour = newStartDate.getHours();
+          const newEndHour = newEndDate.getHours();
           const newTimeSlot = newEndHour <= 16 ? 'morning' : 'full';
           
           // Find matching existing assignment
           const conflictingAssignment = existingAssignments.find(existing => {
             if (processedExistingIds.has(existing.id)) return false;
             
-            const existingDate = new Date(existing.start_ts).toISOString().split('T')[0];
-            const existingStartHour = new Date(existing.start_ts).getHours();
-            const existingEndHour = new Date(existing.end_ts).getHours();
+            const existingStartDate = new Date(existing.start_ts);
+            const existingEndDate = new Date(existing.end_ts);
+            
+            if (isNaN(existingStartDate.getTime()) || isNaN(existingEndDate.getTime())) {
+              return false;
+            }
+            
+            const existingDate = existingStartDate.toISOString().split('T')[0];
+            const existingStartHour = existingStartDate.getHours();
+            const existingEndHour = existingEndDate.getHours();
             const existingTimeSlot = existingEndHour <= 16 ? 'morning' : 'full';
             
             return existing.location_text === newRow.location_text &&
@@ -1148,6 +1192,12 @@ export default function EinsatzplanPage() {
           } else {
             newAssignments.push(newRow);
           }
+        }
+        } catch (conflictError) {
+          console.error('Error during conflict detection:', conflictError);
+          // If conflict detection fails, treat all as new
+          newAssignments = rows;
+          conflicts = [];
         }
         
         if (conflicts.length > 0) {
@@ -3408,7 +3458,7 @@ Import EP
                           <h4 className="text-sm font-medium text-gray-700 mb-1">Aktuell im System</h4>
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">{conflict.existing.location_text} - {conflict.existing.postal_code}</p>
-                            <p>{new Date(conflict.existing.start_ts).toLocaleString('de-DE')}</p>
+                            <p>{conflict.existing.start_ts ? new Date(conflict.existing.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
                             <p>Status: <span className={`font-medium ${
                               conflict.existing.status === 'Verplant' ? 'text-green-600' : 
                               conflict.existing.status === 'Offen' ? 'text-yellow-600' : 
@@ -3423,7 +3473,7 @@ Import EP
                           <h4 className="text-sm font-medium text-gray-700 mb-1">Neu aus Excel</h4>
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">{conflict.new.location_text} - {conflict.new.postal_code}</p>
-                            <p>{new Date(conflict.new.start_ts).toLocaleString('de-DE')}</p>
+                            <p>{conflict.new.start_ts ? new Date(conflict.new.start_ts).toLocaleString('de-DE') : 'Ungültige Zeit'}</p>
                             <p>Status: <span className="text-yellow-600 font-medium">Offen</span></p>
                             {conflict.hasChanges && (
                               <p className="text-orange-600 text-xs mt-1">⚠️ Zeitänderung oder andere Unterschiede</p>
