@@ -479,7 +479,12 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ status: 'buddy_tag' })
         })
       } else if (!buddyName) {
-        // Remove buddy if no name provided
+        // Remove buddy if no name provided: delete buddy participant and normalize status
+        try {
+          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
+            method: 'DELETE'
+          })
+        } catch {}
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
