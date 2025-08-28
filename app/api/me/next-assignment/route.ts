@@ -53,7 +53,7 @@ export async function GET() {
     // First, let's check if there's an assignment happening right now (already started but not ended)
     const { data: currentAssignments, error: currErr } = await svc
       .from('assignments')
-      .select('id, title, location_text, address, postal_code, city, region, start_ts, end_ts, status')
+      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status')
       .in('id', assignmentIds)
       .in('status', ['assigned', 'buddy_tag'])
       .lte('start_ts', nowIso) // Started before or at current time
@@ -71,13 +71,20 @@ export async function GET() {
     if (currentAssignments && currentAssignments.length > 0) {
       console.log('[next-assignment] Returning current assignment')
       const assignment = currentAssignments[0]
-      return NextResponse.json({ assignment })
+      // Add computed address field
+      const enhancedAssignment = {
+        ...assignment,
+        address: assignment.postal_code && assignment.city 
+          ? `${assignment.postal_code} ${assignment.city}` 
+          : assignment.location_text
+      }
+      return NextResponse.json({ assignment: enhancedAssignment })
     }
     
     // Otherwise, fetch upcoming assignments
     const { data: assignments, error: asgErr } = await svc
       .from('assignments')
-      .select('id, title, location_text, address, postal_code, city, region, start_ts, end_ts, status')
+      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status')
       .in('id', assignmentIds)
       .in('status', ['assigned', 'buddy_tag'])
       .gt('start_ts', nowIso) // Starts after current time
@@ -101,7 +108,17 @@ export async function GET() {
     console.log('[next-assignment] All user assignments:', allAssignments)
 
     const assignment = (assignments && assignments[0]) || null
-    return NextResponse.json({ assignment })
+    if (assignment) {
+      // Add computed address field
+      const enhancedAssignment = {
+        ...assignment,
+        address: assignment.postal_code && assignment.city 
+          ? `${assignment.postal_code} ${assignment.city}` 
+          : assignment.location_text
+      }
+      return NextResponse.json({ assignment: enhancedAssignment })
+    }
+    return NextResponse.json({ assignment: null })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }
