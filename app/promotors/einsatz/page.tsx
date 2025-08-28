@@ -405,14 +405,21 @@ const loadProcessState = async () => {
   const loadNextAssignment = async () => {
     try {
       setNextAssignmentLoading(true);
+      console.log('[loadNextAssignment] Fetching next assignment...');
       const res = await fetch('/api/me/next-assignment', { cache: 'no-store', credentials: 'include' });
+      console.log('[loadNextAssignment] Response status:', res.status);
       if (res.ok) {
         const data = await res.json();
+        console.log('[loadNextAssignment] Response data:', data);
         setNextAssignment(data.assignment || null);
       } else {
+        console.error('[loadNextAssignment] Failed with status:', res.status);
+        const errorData = await res.text();
+        console.error('[loadNextAssignment] Error response:', errorData);
         setNextAssignment(null);
       }
     } catch (e) {
+      console.error('[loadNextAssignment] Exception:', e);
       setNextAssignment(null);
     } finally {
       setNextAssignmentLoading(false);
@@ -438,6 +445,12 @@ const loadProcessState = async () => {
     console.log('=== PROCESS STATE CHANGED ===');
     console.log('New processState:', processState);
   }, [processState]);
+  
+  // Track nextAssignment changes
+  useEffect(() => {
+    console.log('=== NEXT ASSIGNMENT CHANGED ===');
+    console.log('nextAssignment:', nextAssignment);
+  }, [nextAssignment]);
 
   
   // Load process state from database on mount
@@ -926,16 +939,10 @@ const loadProcessState = async () => {
 
   // New Timer Logic
   useEffect(() => {
-    if (einsatzStatus === "started") {
-      const timeParts = nextAssignment?.time?.split(" - ") || [];
-      const endTimeString = timeParts[1];
-      const [endHours, endMinutes] = endTimeString.split(":").map(Number);
-
+    if (einsatzStatus === "started" && nextAssignment?.end_ts) {
       const now = new Date();
-      // Ensure endDate is based on nextAssignment.start_ts for multi-day scenarios
-      const assignmentDateForEndDate = new Date(nextAssignment?.start_ts || 0);
-      const endDate = new Date(assignmentDateForEndDate);
-      endDate.setHours(endHours, endMinutes, 0, 0);
+      // Use the actual end_ts from the assignment
+      const endDate = new Date(nextAssignment.end_ts);
       assignmentEndDateRef.current = new Date(endDate); // Store the actual end date for this assignment
 
       let initialRemaining = Math.floor((endDate.getTime() - now.getTime()) / 1000);
@@ -985,7 +992,7 @@ const loadProcessState = async () => {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [einsatzStatus, nextAssignment?.start_ts, nextAssignment?.time]); // Added dependencies
+  }, [einsatzStatus, nextAssignment?.start_ts, nextAssignment?.end_ts]); // Added dependencies
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);

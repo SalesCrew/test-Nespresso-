@@ -5,14 +5,28 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ assignment: null }, { status: 401 })
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    console.log('[next-assignment] Auth check:', { userId: user?.id, authError })
+    
+    if (!user) {
+      console.log('[next-assignment] No authenticated user')
+      return NextResponse.json({ assignment: null }, { status: 401 })
+    }
     
     // Use service client for data queries to bypass RLS
     const svc = createSupabaseServiceClient()
 
     // Get all assignment IDs where this user is a participant (lead or buddy)
-    console.log('[next-assignment] Fetching for user:', user.id)
+    console.log('[next-assignment] Fetching assignments for user:', user.id)
+    
+    // First, let's check if the user exists in assignment_participants at all
+    const { data: allParticipants, error: allPartErr } = await svc
+      .from('assignment_participants')
+      .select('*')
+      .eq('user_id', user.id)
+    
+    console.log('[next-assignment] All participant records for user:', allParticipants)
     
     const { data: participantRows, error: partErr } = await svc
       .from('assignment_participants')

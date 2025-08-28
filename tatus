@@ -1,0 +1,5 @@
+[33m23b5584[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m Fix next-assignment API: Use service client to bypass RLS, add current assignment check, improve debug logging
+[33m40969d1[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix React error #321: Move nextAssignment hooks inside component function
+[33m7ed507b[m Promotors: Next-Einsatz card uses live next assignment (assigned/buddy_tag), countdown, time/address; add /api/me/next-assignment endpoint; empty state
+[33m3da33e0[m Prompt: add PLZCluster explanation (from einsatzplan logic) without removing anything
+[33ma373adc[m Prompt: rename 'STRIKTE REGELN' -> 'grobe regeln' and 'ZUSÄTZLICHE REGELN' -> 'STRIKTE REGELN WICHTIG!!!!'
