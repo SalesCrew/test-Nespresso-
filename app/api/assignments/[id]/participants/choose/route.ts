@@ -40,25 +40,25 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
     if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
 
-    // Inspect remaining participants to compute new status
+    // If lead still exists keep status as assigned, otherwise set to open
     const { data: leadRows } = await svc
       .from('assignment_participants')
       .select('user_id')
       .eq('assignment_id', params.id)
       .eq('role', 'lead')
 
-    const { data: buddyRows } = await svc
-      .from('assignment_participants')
-      .select('user_id')
-      .eq('assignment_id', params.id)
-      .eq('role', 'buddy')
+    const newStatus = (leadRows && leadRows.length > 0) ? 'assigned' : 'open'
 
-    const leadCount = Array.isArray(leadRows) ? leadRows.length : 0
-    const buddyCount = Array.isArray(buddyRows) ? buddyRows.length : 0
-    const newStatus = leadCount > 0 ? 'assigned' : (buddyCount > 0 ? 'buddy_tag' : 'open')
+    // Build updates: always update status; if removing buddy, also clear buddy fields
+    const updates: Record<string, any> = { status: newStatus }
+    if (role === 'buddy') {
+      updates.buddy_user_id = null
+      updates.buddy_name = null
+    }
+
     const { error: upErr } = await svc
       .from('assignments')
-      .update({ status: newStatus })
+      .update(updates)
       .eq('id', params.id)
 
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
