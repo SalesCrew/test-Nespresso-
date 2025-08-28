@@ -2872,8 +2872,23 @@ Import EP
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Promotor</label>
                       <Select
-                        value={editingEinsatz.promotorId || ''}
-                        onValueChange={(val) => {
+                        value={editingEinsatz.promotorId || 'none'}
+                        onValueChange={async (val) => {
+                          if (val === 'none') {
+                            // Remove lead promotor
+                            try {
+                              await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=lead`, { method: 'DELETE' })
+                            } catch {}
+                            // Update status depending on buddy presence
+                            await fetch(`/api/assignments/${editingEinsatz.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: editingEinsatz.buddy_user_id ? 'buddy_tag' : 'open' })
+                            })
+                            setEditingEinsatz({ ...editingEinsatz, promotor: null, promotorId: null, status: editingEinsatz.buddy_user_id ? 'Buddy Tag' : 'Offen' });
+                            setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: null, promotorId: null, status: editingEinsatz.buddy_user_id ? 'Buddy Tag' : 'Offen' } : item))
+                            return;
+                          }
                           const p = promotorsList.find((x: any) => x.id === val);
                           if (!p) return;
                           assignPromotionToPromotor(p.name, p.id);
@@ -2892,6 +2907,7 @@ Import EP
                           <SelectValue placeholder={editingEinsatz.promotor || 'Promotor auswählen'} />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                          <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
                           {promotorsList.map((p: any) => (
                             <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
                           ))}

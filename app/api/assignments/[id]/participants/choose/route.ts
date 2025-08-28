@@ -40,14 +40,22 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
     if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
 
-    // If lead still exists keep status as assigned, otherwise set to open
+    // Inspect remaining participants to compute new status
     const { data: leadRows } = await svc
       .from('assignment_participants')
       .select('user_id')
       .eq('assignment_id', params.id)
       .eq('role', 'lead')
 
-    const newStatus = (leadRows && leadRows.length > 0) ? 'assigned' : 'open'
+    const { data: buddyRows } = await svc
+      .from('assignment_participants')
+      .select('user_id')
+      .eq('assignment_id', params.id)
+      .eq('role', 'buddy')
+
+    const leadCount = Array.isArray(leadRows) ? leadRows.length : 0
+    const buddyCount = Array.isArray(buddyRows) ? buddyRows.length : 0
+    const newStatus = leadCount > 0 ? 'assigned' : (buddyCount > 0 ? 'buddy_tag' : 'open')
     const { error: upErr } = await svc
       .from('assignments')
       .update({ status: newStatus })
