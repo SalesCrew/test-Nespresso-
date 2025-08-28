@@ -62,39 +62,34 @@ const getFutureDate = (days: number): Date => {
   return date;
 };
 
-// Array of assignments instead of single mock
-const assignmentsMock = [
-  {
-    id: 101,
-    title: "Samsung Galaxy S24 Launch Event",
-    location: "Saturn Alexanderplatz, Berlin",
-    time: "15:00 - 16:15", // Shift ends at 4:15 PM for today
-    date: new Date(), // Assignment is for today
-    type: "promotion",
-    details: "Presentation and sales support for the new Samsung Galaxy S24 series. Focus on key selling points and customer engagement."
-  },
-  {
-    id: 102,
-    title: "Huawei Nova 12 Product Demo",
-    location: "MediaMarkt Europa-Center, Berlin",
-    time: "09:30 - 17:30",
-    date: getFutureDate(3), // Assignment is 3 days from now
-    type: "promotion",
-    details: "Product demonstration and customer support for the new Huawei Nova series."
+// State for next upcoming assignment
+const [nextAssignment, setNextAssignment] = useState<any | null>(null);
+const [nextAssignmentLoading, setNextAssignmentLoading] = useState<boolean>(false);
+
+// Load next upcoming assignment (status assigned or buddy_tag) for this promotor
+const loadNextAssignment = async () => {
+  try {
+    setNextAssignmentLoading(true);
+    const res = await fetch('/api/me/next-assignment', { cache: 'no-store', credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setNextAssignment(data.assignment || null);
+    } else {
+      setNextAssignment(null);
+    }
+  } catch (e) {
+    setNextAssignment(null);
+  } finally {
+    setNextAssignmentLoading(false);
   }
-];
+};
 
-// For convenience - today's assignment is the first one
-const todayAssignmentMock = assignmentsMock[0];
-
-// Mock data for newcomer proposals
-const newcomerProposalsMock = [
-  { id: 1, date: "Mo 12.06.2023 10:00-16:00", location: "MediaMarkt Spandau", description: "Smartphone Promotion" },
-  { id: 2, date: "Di 13.06.2023 12:00-18:00", location: "Saturn Charlottenburg", description: "Tablet Sales Demo" },
-  { id: 3, date: "Mi 14.06.2023 09:00-15:00", location: "Telekom Shop Mitte", description: "Router Support Event" },
-  { id: 4, date: "Do 15.06.2023 11:00-17:00", location: "Vodafone Store Steglitz", description: "New Tariff Info Day" },
-  { id: 5, date: "Fr 16.06.2023 13:00-19:00", location: "O2 Shop Zehlendorf", description: "Accessory Sales" },
-];
+useEffect(() => {
+  loadNextAssignment();
+  // Optionally, refresh every 60s to reflect instant changes
+  const iv = setInterval(loadNextAssignment, 60000);
+  return () => clearInterval(iv);
+}, []);
 
 // Removed temp data: assignment selection mock now empty (real invites only)
 const assignmentSelectionMock: any[] = [];
@@ -934,13 +929,13 @@ const loadProcessState = async () => {
   // New Timer Logic
   useEffect(() => {
     if (einsatzStatus === "started") {
-      const timeParts = todayAssignmentMock.time.split(" - ");
+      const timeParts = nextAssignment?.time?.split(" - ") || [];
       const endTimeString = timeParts[1];
       const [endHours, endMinutes] = endTimeString.split(":").map(Number);
 
       const now = new Date();
-      // Ensure endDate is based on todayAssignmentMock.date for multi-day scenarios
-      const assignmentDateForEndDate = new Date(todayAssignmentMock.date);
+      // Ensure endDate is based on nextAssignment.start_ts for multi-day scenarios
+      const assignmentDateForEndDate = new Date(nextAssignment?.start_ts || 0);
       const endDate = new Date(assignmentDateForEndDate);
       endDate.setHours(endHours, endMinutes, 0, 0);
       assignmentEndDateRef.current = new Date(endDate); // Store the actual end date for this assignment
@@ -955,7 +950,7 @@ const loadProcessState = async () => {
       // For the purpose of testing the "completed" state by setting a past time, this is okay.
       // For a real scenario, one wouldn't "start" a future assignment this way.
 
-      if (new Date(todayAssignmentMock.date).toDateString() !== now.toDateString() && initialRemaining > 0) {
+      if (new Date(nextAssignment?.start_ts || 0).toDateString() !== now.toDateString() && initialRemaining > 0) {
          // If starting a future assignment, we might not want the timer to run realistically yet.
          // However, for testing the 'completed' state by setting a past time on the mock, we let it run.
       }
@@ -992,7 +987,7 @@ const loadProcessState = async () => {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [einsatzStatus, todayAssignmentMock.date, todayAssignmentMock.time]); // Added dependencies
+  }, [einsatzStatus, nextAssignment?.start_ts, nextAssignment?.time]); // Added dependencies
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -1456,24 +1451,18 @@ const loadProcessState = async () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Determine which assignment to display in the top card
-  // Logic: If today's assignment is completed, show the next future assignment
-  const shouldShowNextAssignment = einsatzStatus === "completed" && 
-                                   lastCompletedAssignmentDate && 
-                                   isDateToday(lastCompletedAssignmentDate);
-  
-  const displayedAssignment = shouldShowNextAssignment ? assignmentsMock[1] : assignmentsMock[0];
-
-  // Prepare data for the top card
-  const assignmentDate = new Date(displayedAssignment.date);
-  const isAssignmentForToday = isDateToday(assignmentDate);
-  const daysUntilAssignment = getCalendarDaysUntil(assignmentDate);
+  // Determine which assignment to display: always show next upcoming if available
+  const displayedAssignment = nextAssignment;
+  const assignmentDate = displayedAssignment?.start_ts ? new Date(displayedAssignment.start_ts) : null;
+  const endDate = displayedAssignment?.end_ts ? new Date(displayedAssignment.end_ts) : null;
+  const isAssignmentForToday = assignmentDate ? isDateToday(assignmentDate) : false;
+  const daysUntilAssignment = assignmentDate ? getCalendarDaysUntil(assignmentDate) : 0;
 
   let cardTitle = isAssignmentForToday ? "Heutiger Einsatz" : "Nächster Einsatz";
   let daysIndicatorValue: number | null = null;
   let daysIndicatorUnit: string | null = null;
 
-  if (!isAssignmentForToday && daysUntilAssignment >= 0) {
+  if (displayedAssignment && !isAssignmentForToday && daysUntilAssignment >= 0) {
     daysIndicatorValue = daysUntilAssignment;
     if (daysUntilAssignment === 1) {
       daysIndicatorUnit = "Tag";
@@ -1503,10 +1492,10 @@ const loadProcessState = async () => {
                 <Briefcase className="mr-2 h-5 w-5" /> {cardTitle}
               </CardTitle>
               <CardDescription className="text-blue-100 mt-0.5 text-xs md:text-sm">
-                {assignmentDate.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {assignmentDate ? assignmentDate.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : ''}
               </CardDescription>
             </div>
-            {daysIndicatorValue !== null && daysIndicatorUnit !== null && (
+            {displayedAssignment && daysIndicatorValue !== null && daysIndicatorUnit !== null && (
               <div className="text-right">
                 <p className="text-2xl font-bold">{daysIndicatorValue}</p>
                 <p className="text-xs uppercase -mt-1">{daysIndicatorUnit}</p>
@@ -1514,21 +1503,26 @@ const loadProcessState = async () => {
             )}
           </CardHeader>
           <CardContent className="pt-4">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{displayedAssignment.title}</h3>
+            {!displayedAssignment ? (
+              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Kein Einsatz für heute geplant.</h3>
+            ) : (
+            <>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{displayedAssignment.location_text || displayedAssignment.title}</h3>
             {/* Time display with pill style - made smaller */}
             <div className="mb-2 mt-1">
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
                 <Clock className="h-3.5 w-3.5 mr-1" /> 
-                <span className="text-xs font-medium">{displayedAssignment.time}</span>
+                <span className="text-xs font-medium">{assignmentDate && endDate ? `${String(assignmentDate.getUTCHours()).padStart(2,'0')}:${String(assignmentDate.getUTCMinutes()).padStart(2,'0')}-${String(endDate.getUTCHours()).padStart(2,'0')}:${String(endDate.getUTCMinutes()).padStart(2,'0')}` : ''}</span>
               </div>
             </div>
             <div 
               className="text-sm text-gray-600 dark:text-gray-400 flex items-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-3"
-              onClick={() => handleAddressClick(displayedAssignment.location)}
+              onClick={() => displayedAssignment && handleAddressClick(displayedAssignment.address || displayedAssignment.location_text || '')}
             >
-              <MapPin className="h-4 w-4 mr-1.5 text-blue-500" /> {displayedAssignment.location}
+              <MapPin className="h-4 w-4 mr-1.5 text-blue-500" /> {displayedAssignment?.address || displayedAssignment?.location_text || ''}
             </div>
-            
+            </>
+            )}
             {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
                           {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !isSickConfirmed && !isEmergencyConfirmed && (
               <div className="mt-4">
