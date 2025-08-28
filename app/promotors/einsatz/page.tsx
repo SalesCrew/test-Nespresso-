@@ -62,35 +62,6 @@ const getFutureDate = (days: number): Date => {
   return date;
 };
 
-// State for next upcoming assignment
-const [nextAssignment, setNextAssignment] = useState<any | null>(null);
-const [nextAssignmentLoading, setNextAssignmentLoading] = useState<boolean>(false);
-
-// Load next upcoming assignment (status assigned or buddy_tag) for this promotor
-const loadNextAssignment = async () => {
-  try {
-    setNextAssignmentLoading(true);
-    const res = await fetch('/api/me/next-assignment', { cache: 'no-store', credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      setNextAssignment(data.assignment || null);
-    } else {
-      setNextAssignment(null);
-    }
-  } catch (e) {
-    setNextAssignment(null);
-  } finally {
-    setNextAssignmentLoading(false);
-  }
-};
-
-useEffect(() => {
-  loadNextAssignment();
-  // Optionally, refresh every 60s to reflect instant changes
-  const iv = setInterval(loadNextAssignment, 60000);
-  return () => clearInterval(iv);
-}, []);
-
 // Removed temp data: assignment selection mock now empty (real invites only)
 const assignmentSelectionMock: any[] = [];
 
@@ -102,7 +73,7 @@ export default function EinsatzPage() {
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedProposal, setSelectedProposal] = useState<typeof newcomerProposalsMock[0] | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<any | null>(null);
 
   const [einsatzStatus, setEinsatzStatus] = useState<"idle" | "started" | "completed">("idle");
   const [remainingTime, setRemainingTime] = useState(0); // in seconds
@@ -166,6 +137,10 @@ export default function EinsatzPage() {
   const [assignmentStatuses, setAssignmentStatuses] = useState<{[key: string]: 'pending' | 'confirmed' | 'declined'}>({});
   const [hasAvailableAssignments, setHasAvailableAssignments] = useState(false);
   const [replacementAssignments, setReplacementAssignments] = useState<any[]>([]);
+  
+  // State for next upcoming assignment
+  const [nextAssignment, setNextAssignment] = useState<any | null>(null);
+  const [nextAssignmentLoading, setNextAssignmentLoading] = useState<boolean>(false);
   
   // Load process state from API
   const loadBuddyTags = async () => {
@@ -426,6 +401,24 @@ const loadProcessState = async () => {
     }
   };
   
+  // Load next upcoming assignment (status assigned or buddy_tag) for this promotor
+  const loadNextAssignment = async () => {
+    try {
+      setNextAssignmentLoading(true);
+      const res = await fetch('/api/me/next-assignment', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setNextAssignment(data.assignment || null);
+      } else {
+        setNextAssignment(null);
+      }
+    } catch (e) {
+      setNextAssignment(null);
+    } finally {
+      setNextAssignmentLoading(false);
+    }
+  };
+  
   useEffect(() => {
     console.log('=== MOUNTING EINSATZ PAGE ===');
     console.log('Initial processState:', processState);
@@ -433,6 +426,11 @@ const loadProcessState = async () => {
     console.log('Initial assignments:', assignments);
     loadProcessState();
     loadBuddyTags();
+    loadNextAssignment();
+    
+    // Refresh next assignment every 60s to reflect instant changes
+    const iv = setInterval(loadNextAssignment, 60000);
+    return () => clearInterval(iv);
   }, []);
   
   // Track processState changes
@@ -902,7 +900,7 @@ const loadProcessState = async () => {
   };
 
   // Handle info icon click to show details modal
-  const handleInfoClick = (e: React.MouseEvent, proposal: typeof newcomerProposalsMock[0]) => {
+  const handleInfoClick = (e: React.MouseEvent, proposal: any) => {
     e.stopPropagation(); // Prevent triggering the parent card onClick
     setSelectedProposal(proposal);
     setShowDetailsModal(true);
