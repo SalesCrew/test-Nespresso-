@@ -1,35 +1,90 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function GET() {
   try {
     const supabase = createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ assignment: null }, { status: 401 })
+    
+    // Use service client for data queries to bypass RLS
+    const svc = createSupabaseServiceClient()
 
     // Get all assignment IDs where this user is a participant (lead or buddy)
-    const { data: participantRows, error: partErr } = await supabase
+    console.log('[next-assignment] Fetching for user:', user.id)
+    
+    const { data: participantRows, error: partErr } = await svc
       .from('assignment_participants')
       .select('assignment_id, role')
       .eq('user_id', user.id)
 
-    if (partErr) return NextResponse.json({ error: partErr.message }, { status: 500 })
+    if (partErr) {
+      console.error('[next-assignment] Participant query error:', partErr)
+      return NextResponse.json({ error: partErr.message }, { status: 500 })
+    }
+    
+    console.log('[next-assignment] Participant rows:', participantRows)
     const assignmentIds = [...new Set((participantRows || []).map(r => r.assignment_id))]
-    if (assignmentIds.length === 0) return NextResponse.json({ assignment: null })
+    
+    if (assignmentIds.length === 0) {
+      console.log('[next-assignment] No assignments found for user')
+      return NextResponse.json({ assignment: null })
+    }
 
     const nowIso = new Date().toISOString()
+    console.log('[next-assignment] Current time:', nowIso)
+    console.log('[next-assignment] Assignment IDs for user:', assignmentIds)
 
-    // Fetch upcoming assignments for this user where status is assigned or buddy_tag
-    const { data: assignments, error: asgErr } = await supabase
+    // First, let's check if there's an assignment happening right now (already started but not ended)
+    const { data: currentAssignments, error: currErr } = await svc
       .from('assignments')
       .select('id, title, location_text, address, postal_code, city, region, start_ts, end_ts, status')
       .in('id', assignmentIds)
       .in('status', ['assigned', 'buddy_tag'])
-      .gt('start_ts', nowIso)
+      .lte('start_ts', nowIso) // Started before or at current time
+      .gte('end_ts', nowIso)   // Ends after or at current time
+      .order('start_ts', { ascending: true })
+      .limit(1)
+    
+    if (currErr) {
+      console.error('[next-assignment] Current assignment query error:', currErr)
+    }
+    
+    console.log('[next-assignment] Current assignments:', currentAssignments)
+    
+    // If there's a current assignment, return it
+    if (currentAssignments && currentAssignments.length > 0) {
+      console.log('[next-assignment] Returning current assignment')
+      const assignment = currentAssignments[0]
+      return NextResponse.json({ assignment })
+    }
+    
+    // Otherwise, fetch upcoming assignments
+    const { data: assignments, error: asgErr } = await svc
+      .from('assignments')
+      .select('id, title, location_text, address, postal_code, city, region, start_ts, end_ts, status')
+      .in('id', assignmentIds)
+      .in('status', ['assigned', 'buddy_tag'])
+      .gt('start_ts', nowIso) // Starts after current time
       .order('start_ts', { ascending: true })
       .limit(1)
 
-    if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
+    if (asgErr) {
+      console.error('[next-assignment] Assignment query error:', asgErr)
+      return NextResponse.json({ error: asgErr.message }, { status: 500 })
+    }
+
+    console.log('[next-assignment] Found assignments:', assignments)
+    
+    // Also log all assignments for this user regardless of status for debugging
+    const { data: allAssignments } = await svc
+      .from('assignments')
+      .select('id, title, status, start_ts')
+      .in('id', assignmentIds)
+      .order('start_ts', { ascending: true })
+    
+    console.log('[next-assignment] All user assignments:', allAssignments)
 
     const assignment = (assignments && assignments[0]) || null
     return NextResponse.json({ assignment })
