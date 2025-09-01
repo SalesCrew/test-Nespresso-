@@ -1126,9 +1126,13 @@ export default function DashboardPage() {
                                 const uploadedFiles = [];
 
                                 // Upload each file
+                                console.log('Upload URLs received:', uploads);
                                 for (let i = 0; i < uploads.length; i++) {
                                   const upload = uploads[i];
                                   const file = messageFiles[i];
+
+                                  console.log(`Uploading file ${i + 1}/${uploads.length}:`, file.name);
+                                  console.log('Upload URL:', upload.uploadUrl);
 
                                   const formData = new FormData();
                                   formData.append('file', file);
@@ -1138,14 +1142,22 @@ export default function DashboardPage() {
                                     body: formData
                                   });
 
+                                  console.log(`File ${file.name} upload status:`, fileUploadResponse.status);
+
                                   if (fileUploadResponse.ok) {
+                                    console.log(`✅ File ${file.name} uploaded successfully`);
                                     uploadedFiles.push({
                                       filename: upload.filename,
                                       path: upload.path,
                                       size: file.size
                                     });
+                                  } else {
+                                    const errorText = await fileUploadResponse.text();
+                                    console.error(`❌ File ${file.name} upload failed:`, fileUploadResponse.status, errorText);
                                   }
                                 }
+
+                                console.log('Successfully uploaded files:', uploadedFiles.length, 'out of', uploads.length);
 
                                 // Confirm uploads in database
                                 await fetch(`/api/me/messages/${message.id}/upload`, {
