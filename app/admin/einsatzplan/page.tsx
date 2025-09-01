@@ -383,27 +383,54 @@ export default function EinsatzplanPage() {
   const assignPromotionToPromotor = async (promotorName: string, promotorId?: string) => {
     if (!editingEinsatz) return;
     try {
-      if (promotorId) {
-        // Update participant
+      if (!promotorId || promotorName === '') {
+        // Remove lead promotor
+        const currentParticipants = await fetch(`/api/assignments/${editingEinsatz.id}/participants`).then(r => r.json());
+        const leadParticipant = currentParticipants.participants?.find((p: any) => p.role === 'lead');
+        
+        if (leadParticipant) {
+          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: leadParticipant.user_id, role: 'lead' })
+          });
+        }
+        
+        // Update local state to reflect no promotor
+        const newStatus = editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Offen';
+        setEditingEinsatz({ ...editingEinsatz, promotor: '', promotorId: undefined, status: newStatus });
+        setEinsatzplanData(prev => prev.map(item => 
+          item.id === editingEinsatz.id 
+            ? { ...item, promotor: '', promotorId: undefined, status: newStatus } 
+            : item
+        ));
+      } else {
+        // Add/update lead promotor
         await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: promotorId, role: 'lead' })
-        })
+        });
         
         // Update invitation status to accepted
         await fetch(`/api/assignments/${editingEinsatz.id}/invites/accept`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: promotorId })
-        })
+        });
+        
+        // Update local state
+        const newStatus = editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Verplant';
+        setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, promotorId: promotorId, status: newStatus });
+        setEinsatzplanData(prev => prev.map(item => 
+          item.id === editingEinsatz.id 
+            ? { ...item, promotor: promotorName, promotorId: promotorId, status: newStatus } 
+            : item
+        ));
       }
     } catch (error) {
-      console.error('Error assigning promotor:', error);
+      console.error('Error assigning/removing promotor:', error);
     }
-    // optimistic UI
-    setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, status: 'Verplant' })
-    setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: promotorName, status: 'Verplant' } : item))
   };
 
   // Function to get AI recommendations
@@ -1470,6 +1497,7 @@ export default function EinsatzplanPage() {
                    (r.status || 'Offen')),
           // Include buddy information
           promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
+          promotorId: r.lead_user_id, // Add lead_user_id for the Select dropdown
           buddy_name: r.buddy_name || r.buddy_display_name,
           buddy_user_id: r.buddy_user_id,
           promotionCount: 1,
@@ -2873,26 +2901,17 @@ Import EP
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Promotor</label>
                       <Select
                         value={editingEinsatz.promotorId || 'none'}
-                        onValueChange={async (val) => {
+                        onValueChange={(val) => {
                           if (val === 'none') {
-                            // Remove lead promotor
-                            try {
-                              await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=lead`, { method: 'DELETE' })
-                            } catch {}
-                            // Update status depending on buddy presence
-                            await fetch(`/api/assignments/${editingEinsatz.id}`, {
-                              method: 'PATCH',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ status: editingEinsatz.buddy_user_id ? 'buddy_tag' : 'open' })
-                            })
-                            setEditingEinsatz({ ...editingEinsatz, promotor: null, promotorId: null, status: editingEinsatz.buddy_user_id ? 'Buddy Tag' : 'Offen' });
-                            setEinsatzplanData(prev => prev.map(item => item.id === editingEinsatz.id ? { ...item, promotor: null, promotorId: null, status: editingEinsatz.buddy_user_id ? 'Buddy Tag' : 'Offen' } : item))
-                            return;
+                            // Remove promotor
+                            assignPromotionToPromotor('', undefined);
+                            setEditingEinsatz({ ...editingEinsatz, promotor: '', promotorId: undefined, status: 'Offen' });
+                          } else {
+                            const p = promotorsList.find((x: any) => x.id === val);
+                            if (!p) return;
+                            assignPromotionToPromotor(p.name, p.id);
+                            setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
                           }
-                          const p = promotorsList.find((x: any) => x.id === val);
-                          if (!p) return;
-                          assignPromotionToPromotor(p.name, p.id);
-                          setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
                         }}
                       >
                         <SelectTrigger 
@@ -2904,7 +2923,7 @@ Import EP
                             transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
-                          <SelectValue placeholder={editingEinsatz.promotor || 'Promotor auswählen'} />
+                          <SelectValue placeholder="Promotor auswählen" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
@@ -2931,7 +2950,7 @@ Import EP
                         }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
-                          <SelectValue placeholder={editingEinsatz.buddy_name || 'Buddy auswählen'} />
+                          <SelectValue placeholder="Buddy auswählen" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
@@ -2946,13 +2965,14 @@ Import EP
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
                     <Select
-                      value={editingEinsatz.buddy_name ? 'Buddy Tag' : editingEinsatz.status}
+                      value={editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : editingEinsatz.status}
                       onValueChange={(value) => {
                         // If there's a buddy, force status to stay as Buddy Tag
-                        if (editingEinsatz.buddy_name) {
+                        if (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none') {
                           return; // Don't allow status change when buddy exists
                         }
                         updateAssignmentStatus(editingEinsatz.id, value);
+                        setEditingEinsatz({ ...editingEinsatz, status: value });
                       }}
                     >
                       <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
@@ -3214,6 +3234,7 @@ Import EP
               <button
                 onClick={async () => {
                   try {
+                    // Save basic assignment data
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
@@ -3226,7 +3247,19 @@ Import EP
                         status: editingEinsatz.status
                       })
                     });
-                  } catch {}
+                    
+                    // If promotor is assigned, ensure it's saved
+                    if (editingEinsatz.promotorId) {
+                      await assignPromotionToPromotor(editingEinsatz.promotor, editingEinsatz.promotorId);
+                    }
+                    
+                    // If buddy is assigned, ensure it's saved
+                    if (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none') {
+                      await assignBuddyToPromotion(editingEinsatz.buddy_name, editingEinsatz.buddy_user_id);
+                    }
+                  } catch (error) {
+                    console.error('Error saving assignment:', error);
+                  }
                   // Update the einsatzplan data
                   setEinsatzplanData(prev => prev.map(item => 
                     item.id === editingEinsatz.id ? editingEinsatz : item
