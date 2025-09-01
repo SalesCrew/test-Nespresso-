@@ -14,70 +14,61 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized', details: authError?.message }, { status: 401 });
     }
 
+    // Use service client to bypass RLS
     const svc = createSupabaseServiceClient();
 
-    // Get messages for this user using the view
+    // Simple direct query to get messages for this user
     console.log('Fetching messages for user:', user.id);
     
-    // First check if the view exists and what data is in the base tables
-    const { data: allMessages, error: allError } = await svc
-      .from('messages')
-      .select('*');
-    
-    const { data: allRecipients, error: recipError } = await svc
+    // Get all recipient records for this user
+    const { data: recipientRecords, error: recipError } = await svc
       .from('message_recipients')
       .select('*')
       .eq('recipient_user_id', user.id);
     
-    console.log('All messages in database:', allMessages?.length || 0);
-    console.log('Recipients for this user:', allRecipients?.length || 0);
-    console.log('Recipient data:', allRecipients);
+    console.log('Found recipient records:', recipientRecords?.length || 0);
     
-    // Try to fetch directly from tables with joins instead of view
-    const { data: messagesWithJoin, error: joinError } = await svc
-      .from('message_recipients')
-      .select(`
-        *,
-        messages!inner(
-          id,
-          sender_id,
-          message_text,
-          message_type,
-          scheduled_send_time,
-          created_at,
-          sent_at,
-          status
-        )
-      `)
-      .eq('recipient_user_id', user.id)
-      .eq('messages.status', 'sent')
-      .order('messages.created_at', { ascending: false });
-
-    console.log('Messages with join:', messagesWithJoin?.length || 0);
-    console.log('Join data:', messagesWithJoin);
-
-    if (joinError) {
-      console.error('Error with join query:', joinError);
+    if (!recipientRecords || recipientRecords.length === 0) {
+      console.log('No messages for this user');
+      return NextResponse.json({ messages: [] });
     }
-
-    // Format the messages for the frontend
-    const formattedMessages = (messagesWithJoin || []).map(mr => {
-      // Handle both nested and flat structures
-      const messageData = mr.messages || mr;
+    
+    // Get the message IDs
+    const messageIds = recipientRecords.map(r => r.message_id);
+    console.log('Message IDs to fetch:', messageIds);
+    
+    // Get the actual messages
+    const { data: messages, error: msgError } = await svc
+      .from('messages')
+      .select('*')
+      .in('id', messageIds)
+      .eq('status', 'sent')
+      .order('created_at', { ascending: false });
+    
+    console.log('Found messages:', messages?.length || 0);
+    
+    if (msgError) {
+      console.error('Error fetching messages:', msgError);
+      return NextResponse.json({ error: msgError.message }, { status: 500 });
+    }
+    
+    // Combine message data with recipient data
+    const formattedMessages = (messages || []).map(msg => {
+      const recipientData = recipientRecords.find(r => r.message_id === msg.id);
       return {
-        id: messageData.id,
-        sender_id: messageData.sender_id,
-        message_text: messageData.message_text,
-        message_type: messageData.message_type,
-        read_at: mr.read_at,
-        acknowledged_at: mr.acknowledged_at,
-        created_at: messageData.created_at,
-        sent_at: messageData.sent_at,
-        sender_name: 'Admin' // We'll add this later from user_profiles
+        id: msg.id,
+        sender_id: msg.sender_id,
+        message_text: msg.message_text,
+        message_type: msg.message_type,
+        read_at: recipientData?.read_at || null,
+        acknowledged_at: recipientData?.acknowledged_at || null,
+        created_at: msg.created_at,
+        sent_at: msg.sent_at,
+        sender_name: 'Admin'
       };
     });
 
-    console.log('Formatted messages:', formattedMessages);
+    console.log('Returning messages:', formattedMessages);
 
     return NextResponse.json({ messages: formattedMessages });
 

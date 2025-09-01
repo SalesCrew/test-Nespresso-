@@ -72,8 +72,21 @@ export default function DashboardPage() {
     try {
       setMessagesLoading(true);
       console.log('🔄 Loading messages...');
-      const response = await fetch('/api/me/messages');
+      console.log('📍 API URL:', '/api/me/messages');
+      
+      const response = await fetch('/api/me/messages', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store'
+      });
+      
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+      
       const data = await response.json();
+      console.log('📦 Raw response data:', data);
       
       if (response.ok) {
         console.log('✅ Messages loaded:', data.messages?.length || 0);
@@ -82,9 +95,10 @@ export default function DashboardPage() {
       } else {
         console.error('❌ Failed to load messages, status:', response.status);
         console.error('❌ Error data:', data);
+        setMessages([]);
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('❌ Error loading messages:', error);
       setMessages([]);
     } finally {
       setMessagesLoading(false);
@@ -855,6 +869,19 @@ export default function DashboardPage() {
           </div>
                 </>
               )}
+
+        {/* Debug: Manual refresh button */}
+        <div className="mb-4 text-center">
+          <button 
+            onClick={() => {
+              console.log('🔄 Manual refresh triggered');
+              loadMessages();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Refresh Messages
+          </button>
+        </div>
 
         {/* Bitte Lesen Cards - Show all normal messages */}
         {(() => {
