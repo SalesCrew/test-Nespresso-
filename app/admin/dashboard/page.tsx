@@ -1680,41 +1680,22 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       {isEnhancing && (
                         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 rounded-lg">
                           <div 
-                            className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg"
+                            className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg animate-pulse"
                             style={{
-                              left: '0%',
-                              animation: 'scan-across 2s ease-in-out infinite',
+                              left: '50%',
                               filter: 'blur(1px)'
                             }}
                           />
                           <div 
-                            className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg"
+                            className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg animate-pulse"
                             style={{
-                              top: '0%',
-                              animation: 'scan-down 2s ease-in-out infinite',
+                              top: '50%',
                               filter: 'blur(1px)'
                             }}
                           />
                         </div>
                       )}
-                      
-                      <style jsx>{`
-                        @keyframes scan-across {
-                          0% { left: -2%; opacity: 0; }
-                          10% { opacity: 0.9; }
-                          50% { opacity: 1; }
-                          90% { opacity: 0.9; }
-                          100% { left: 102%; opacity: 0; }
-                        }
-                        
-                        @keyframes scan-down {
-                          0% { top: -2%; opacity: 0; }
-                          10% { opacity: 0.9; }
-                          50% { opacity: 1; }
-                          90% { opacity: 0.9; }
-                          100% { top: 102%; opacity: 0; }
-                        }
-                      `}</style>
+
                     </div>
                     <div className="flex space-x-2">
                       <button 
@@ -2949,8 +2930,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   
                   console.log('🔍 Modal render - filtered promotors:', filtered.length);
                   return filtered;
-                })()}
-                .map((promotor) => {
+                })().map((promotor) => {
                   const isSelected = selectedPromotors.includes(promotor.name);
                   return (
                     <button
