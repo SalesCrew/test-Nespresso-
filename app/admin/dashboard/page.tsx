@@ -170,30 +170,29 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   // Function to select all filtered promotors
   const selectAllFiltered = () => {
-    // Use real promotors data from state instead of hardcoded array
-         const filteredNames = allPromotors
-       .filter(promotor => 
-         (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-         promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
-       )
-       .map(promotor => promotor.name);
+    const filteredNames = allPromotors
+      .filter(promotor => 
+        (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+        promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+      )
+      .map(promotor => promotor.name);
      
-     // Check if we should deselect (if all filtered items are currently selected and match last selection)
-     const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
-     const matchesLastSelection = lastSelectedByIcon.length > 0 && 
-       filteredNames.every(name => lastSelectedByIcon.includes(name)) &&
-       lastSelectedByIcon.every(name => filteredNames.includes(name));
+    // Check if we should deselect (if all filtered items are currently selected and match last selection)
+    const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
+    const matchesLastSelection = lastSelectedByIcon.length > 0 && 
+      filteredNames.every(name => lastSelectedByIcon.includes(name)) &&
+      lastSelectedByIcon.every(name => filteredNames.includes(name));
      
-     if (allFilteredSelected && matchesLastSelection) {
-       // Deselect the ones that were selected by this icon
-       setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
-       setLastSelectedByIcon([]);
-     } else {
-       // Select all filtered
-       setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
-       setLastSelectedByIcon(filteredNames);
-     }
-      };
+    if (allFilteredSelected && matchesLastSelection) {
+      // Deselect the ones that were selected by this icon
+      setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
+      setLastSelectedByIcon([]);
+    } else {
+      // Select all filtered
+      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
+      setLastSelectedByIcon(filteredNames);
+    }
+  };
 
   // Function to enhance message with AI
   const enhanceMessage = async () => {
