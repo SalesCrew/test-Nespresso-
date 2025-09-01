@@ -27,6 +27,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.city !== undefined) updates.city = String(body.city)
     if (body.region !== undefined) updates.region = String(body.region)
     if (body.notes !== undefined) updates.notes = String(body.notes)
+    if (body.buddy_user_id !== undefined) updates.buddy_user_id = body.buddy_user_id
+    if (body.buddy_name !== undefined) updates.buddy_name = body.buddy_name
 
     // Handle status updates - accept both UI and DB status formats
     if (body.status) {

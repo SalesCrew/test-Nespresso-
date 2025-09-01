@@ -500,11 +500,15 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ user_id: buddyId, role: 'buddy' })
         })
         
-        // Update assignment status to buddy_tag
+        // Update assignment with buddy info - this is critical for persistence!
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'buddy_tag' })
+          body: JSON.stringify({ 
+            status: 'buddy_tag',
+            buddy_user_id: buddyId,
+            buddy_name: buddyName
+          })
         })
       } else if (!buddyName) {
         // Remove buddy if no name provided: delete buddy participant and normalize status
