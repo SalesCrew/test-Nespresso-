@@ -1,25 +1,10 @@
 -- Setup for message-responses storage bucket
 -- Run this in Supabase SQL Editor
 
--- Create the message-responses bucket
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'message-responses', 
-  'message-responses', 
-  false, 
-  10485760, -- 10MB limit per file
-  ARRAY[
-    'image/jpeg',
-    'image/png', 
-    'image/gif',
-    'image/bmp',
-    'image/tiff',
-    'image/webp',
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ]::text[]
-) ON CONFLICT (id) DO NOTHING;
+-- Create the message-responses bucket (simplified version)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('message-responses', 'message-responses', false)
+ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for message-responses bucket
 -- Promotors can upload files to their own folder
