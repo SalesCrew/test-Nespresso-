@@ -73,13 +73,15 @@ export default function DashboardPage() {
       setMessagesLoading(true);
       console.log('🔄 Loading messages...');
       const response = await fetch('/api/me/messages');
+      const data = await response.json();
+      
       if (response.ok) {
-        const data = await response.json();
         console.log('✅ Messages loaded:', data.messages?.length || 0);
         console.log('📬 Messages data:', data.messages);
         setMessages(data.messages || []);
       } else {
         console.error('❌ Failed to load messages, status:', response.status);
+        console.error('❌ Error data:', data);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
