@@ -71,10 +71,15 @@ export default function DashboardPage() {
   const loadMessages = async () => {
     try {
       setMessagesLoading(true);
+      console.log('🔄 Loading messages...');
       const response = await fetch('/api/me/messages');
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Messages loaded:', data.messages?.length || 0);
+        console.log('📬 Messages data:', data.messages);
         setMessages(data.messages || []);
+      } else {
+        console.error('❌ Failed to load messages, status:', response.status);
       }
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -850,7 +855,13 @@ export default function DashboardPage() {
               )}
 
         {/* Bitte Lesen Cards - Show all normal messages */}
-        {messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).map((message) => (
+        {(() => {
+          console.log('🔍 Filtering normal messages. Total messages:', messages.length);
+          const normalUnread = messages.filter(msg => msg.message_type === 'normal' && !msg.read_at);
+          console.log('📧 Normal unread messages:', normalUnread.length);
+          console.log('📧 Normal unread data:', normalUnread);
+          return normalUnread;
+        })().map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow effect */}
@@ -900,7 +911,13 @@ export default function DashboardPage() {
         ))}
 
         {/* Bitte Lesen Card 2 (Zwei-Schritt) - Show confirmation_required messages */}
-        {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => (
+        {(() => {
+          console.log('🔍 Filtering confirmation required messages. Total messages:', messages.length);
+          const confirmationUnread = messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at);
+          console.log('📧 Confirmation unread messages:', confirmationUnread.length);
+          console.log('📧 Confirmation unread data:', confirmationUnread);
+          return confirmationUnread;
+        })().map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow */}
