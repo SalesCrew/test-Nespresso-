@@ -1709,6 +1709,13 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                               return promotor?.id;
                             }).filter(Boolean);
                             
+                            console.log('📤 Sending message with data:', {
+                              message_text: messageText,
+                              message_type: enableTwoStep ? 'confirmation_required' : 'normal',
+                              recipient_ids: promotorIds,
+                              send_immediately: true
+                            });
+                            
                             const response = await fetch('/api/messages', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },

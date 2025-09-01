@@ -34,6 +34,15 @@ export async function POST(req: Request) {
     const sent_at = send_immediately ? now.toISOString() : null;
 
     // Create the message
+    console.log('📝 Creating message with:', {
+      sender_id: user.id,
+      message_text,
+      message_type,
+      scheduled_send_time,
+      status,
+      sent_at
+    });
+    
     const { data: message, error: messageError } = await svc
       .from('messages')
       .insert({
@@ -52,11 +61,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: messageError.message }, { status: 500 });
     }
 
+    console.log('✅ Message created:', message);
+
     // Create recipient records
     const recipients = recipient_ids.map((recipient_id: string) => ({
       message_id: message.id,
       recipient_user_id: recipient_id
     }));
+
+    console.log('👥 Creating recipients:', recipients);
 
     const { error: recipientsError } = await svc
       .from('message_recipients')
@@ -66,6 +79,8 @@ export async function POST(req: Request) {
       console.error('Error creating recipients:', recipientsError);
       return NextResponse.json({ error: recipientsError.message }, { status: 500 });
     }
+
+    console.log('✅ Recipients created successfully');
 
     return NextResponse.json({ 
       message: message,
