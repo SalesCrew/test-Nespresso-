@@ -940,7 +940,7 @@ export default function DashboardPage() {
               </Card>
             </div>
           </div>
-        )}
+        ))}
 
       {/* Rotating Calendar Component */}
         <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
