@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const [bitteLesen2Confirmed, setBitteLesen2Confirmed] = useState<{[key: string]: boolean}>({});
   const [bitteLesen2Progress, setBitteLesen2Progress] = useState<{[key: string]: number}>({});
   const [bitteLesen2Files, setBitteLesen2Files] = useState<{[key: string]: File[]}>({});
+  const [bitteLesen2Uploading, setBitteLesen2Uploading] = useState<{[key: string]: boolean}>({});
   
   // Real messages data
   const [messages, setMessages] = useState<any[]>([]);
@@ -942,6 +943,7 @@ export default function DashboardPage() {
           const currentStep = bitteLesen2Step[message.id] || 'message';
           const currentProgress = bitteLesen2Progress[message.id] || 0;
           const messageFiles = bitteLesen2Files[message.id] || [];
+          const isUploading = bitteLesen2Uploading[message.id] || false;
           
           return (
             <div key={message.id} className="w-full max-w-md mx-auto mb-6">
@@ -1091,51 +1093,109 @@ export default function DashboardPage() {
                           
                           <button 
                             onClick={async () => {
-                              if (messageFiles.length === 0) return;
+                              if (messageFiles.length === 0 || isUploading) return;
                               
-                              // TODO: Upload files to storage
-                              console.log('Uploading files for message:', message.id, messageFiles);
+                              setBitteLesen2Uploading(prev => ({ ...prev, [message.id]: true }));
                               
-                              // Complete the process
-                              await markMessageAsAcknowledged(message.id);
-                              setBitteLesen2Progress(prev => ({ ...prev, [message.id]: 100 }));
-                              setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
-                              
-                              // After 7 seconds, remove from state completely
-                              setTimeout(() => {
-                                setMessages(prev => prev.filter(msg => msg.id !== message.id));
-                                setBitteLesen2Confirmed(prev => {
-                                  const newState = { ...prev };
-                                  delete newState[message.id];
-                                  return newState;
+                              try {
+                                // Get upload URLs
+                                const uploadResponse = await fetch(`/api/me/messages/${message.id}/upload`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    files: messageFiles.map(file => ({
+                                      filename: file.name,
+                                      size: file.size,
+                                      type: file.type
+                                    }))
+                                  })
                                 });
-                                setBitteLesen2Step(prev => {
-                                  const newState = { ...prev };
-                                  delete newState[message.id];
-                                  return newState;
+
+                                if (!uploadResponse.ok) {
+                                  throw new Error('Failed to get upload URLs');
+                                }
+
+                                const { uploads } = await uploadResponse.json();
+                                const uploadedFiles = [];
+
+                                // Upload each file
+                                for (let i = 0; i < uploads.length; i++) {
+                                  const upload = uploads[i];
+                                  const file = messageFiles[i];
+
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+
+                                  const fileUploadResponse = await fetch(upload.uploadUrl, {
+                                    method: 'POST',
+                                    body: formData
+                                  });
+
+                                  if (fileUploadResponse.ok) {
+                                    uploadedFiles.push({
+                                      filename: upload.filename,
+                                      path: upload.path,
+                                      size: file.size
+                                    });
+                                  }
+                                }
+
+                                // Confirm uploads in database
+                                await fetch(`/api/me/messages/${message.id}/upload`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ uploadedFiles })
                                 });
-                                setBitteLesen2Progress(prev => {
-                                  const newState = { ...prev };
-                                  delete newState[message.id];
-                                  return newState;
-                                });
-                                setBitteLesen2Files(prev => {
-                                  const newState = { ...prev };
-                                  delete newState[message.id];
-                                  return newState;
-                                });
-                              }, 7000);
+
+                                // Complete the process
+                                await markMessageAsAcknowledged(message.id);
+                                setBitteLesen2Progress(prev => ({ ...prev, [message.id]: 100 }));
+                                setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
+                                
+                                // After 7 seconds, remove from state completely
+                                setTimeout(() => {
+                                  setMessages(prev => prev.filter(msg => msg.id !== message.id));
+                                  setBitteLesen2Confirmed(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[message.id];
+                                    return newState;
+                                  });
+                                  setBitteLesen2Step(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[message.id];
+                                    return newState;
+                                  });
+                                  setBitteLesen2Progress(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[message.id];
+                                    return newState;
+                                  });
+                                  setBitteLesen2Files(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[message.id];
+                                    return newState;
+                                  });
+                                }, 7000);
+
+                              } catch (error) {
+                                console.error('Error uploading files:', error);
+                                alert('Fehler beim Hochladen der Dateien');
+                              } finally {
+                                setBitteLesen2Uploading(prev => ({ ...prev, [message.id]: false }));
+                              }
                             }}
-                            disabled={messageFiles.length === 0}
+                            disabled={messageFiles.length === 0 || isUploading}
                             className={`font-medium py-2 px-4 rounded-lg shadow-md transform hover:scale-105 transition-all duration-200 border border-white/50 ${
-                              messageFiles.length === 0 
+                              messageFiles.length === 0 || isUploading
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                                 : 'bg-white text-orange-600 hover:bg-gray-50 hover:shadow-lg'
                             }`}
                           >
-                            {messageFiles.length === 0 
-                              ? 'Dateien auswählen' 
-                              : `✓ Bestätigen (${messageFiles.length} ${messageFiles.length === 1 ? 'Datei' : 'Dateien'})`
+                            {isUploading 
+                              ? 'Hochladen...' 
+                              : messageFiles.length === 0 
+                                ? 'Dateien auswählen' 
+                                : `✓ Bestätigen (${messageFiles.length} ${messageFiles.length === 1 ? 'Datei' : 'Dateien'})`
                             }
                           </button>
                         </div>

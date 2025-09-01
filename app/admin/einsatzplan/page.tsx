@@ -2916,10 +2916,10 @@ Import EP
                             assignPromotionToPromotor('', undefined);
                             setEditingEinsatz({ ...editingEinsatz, promotor: '', promotorId: undefined, status: 'Offen' });
                           } else {
-                            const p = promotorsList.find((x: any) => x.id === val);
-                            if (!p) return;
-                            assignPromotionToPromotor(p.name, p.id);
-                            setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
+                          const p = promotorsList.find((x: any) => x.id === val);
+                          if (!p) return;
+                          assignPromotionToPromotor(p.name, p.id);
+                          setEditingEinsatz({ ...editingEinsatz, promotor: p.name, promotorId: p.id, status: 'Verplant' });
                           }
                         }}
                       >
