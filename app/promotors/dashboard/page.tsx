@@ -1134,20 +1134,12 @@ export default function DashboardPage() {
                                   console.log(`Uploading file ${i + 1}/${uploads.length}:`, file.name);
                                   console.log('Upload URL:', upload.uploadUrl);
 
-                                  const formData = new FormData();
-                                  formData.append('file', file);
+                                  // Use Supabase client upload method instead of raw fetch
+                                  const { error: uploadError } = await supabase.storage
+                                    .from('message-responses')
+                                    .uploadToSignedUrl(upload.path, upload.token, file);
 
-                                  const fileUploadResponse = await fetch(upload.uploadUrl, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Authorization': `Bearer ${upload.token}`
-                                    },
-                                    body: formData
-                                  });
-
-                                  console.log(`File ${file.name} upload status:`, fileUploadResponse.status);
-
-                                  if (fileUploadResponse.ok) {
+                                  if (!uploadError) {
                                     console.log(`✅ File ${file.name} uploaded successfully`);
                                     uploadedFiles.push({
                                       filename: upload.filename,
@@ -1155,8 +1147,7 @@ export default function DashboardPage() {
                                       size: file.size
                                     });
                                   } else {
-                                    const errorText = await fileUploadResponse.text();
-                                    console.error(`❌ File ${file.name} upload failed:`, fileUploadResponse.status, errorText);
+                                    console.error(`❌ File ${file.name} upload failed:`, uploadError);
                                   }
                                 }
 
