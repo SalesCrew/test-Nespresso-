@@ -468,7 +468,7 @@ export default function DashboardPage() {
   };
 
   const handleEinsatzStart = (assignment: any) => {
-    router.push("/einsatz");
+    router.push("/promotors/einsatz");
   };
 
   // Get highest priority assignment type for a given day
@@ -1566,7 +1566,8 @@ export default function DashboardPage() {
                             {assignment.time}
                           </span>
         </div>
-                        {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && (
+                        {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && 
+                         selectedCalendarDate.toDateString() === new Date().toDateString() && (
                           <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
                             onClick={() => handleEinsatzStart(assignment)}
                           >
@@ -1608,15 +1609,17 @@ export default function DashboardPage() {
                 </div>
                     <div className="flex flex-col items-end h-full py-1 justify-end space-y-0">
                                               {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && (
-                          <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
-                            onClick={() => handleEinsatzStart(assignment)}
-                            style={{ marginTop: '5px' }}
-                          >
-                            <span className="flex items-center">
-                              Einsatz starten
-                              <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
-                            </span>
-                </div>
+                          selectedCalendarDate.toDateString() === new Date().toDateString() && (
+                            <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
+                              onClick={() => handleEinsatzStart(assignment)}
+                              style={{ marginTop: '5px' }}
+                            >
+                              <span className="flex items-center">
+                                Einsatz starten
+                                <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
+                              </span>
+                  </div>
+                          )
                         )}
               </div>
                   </div>
