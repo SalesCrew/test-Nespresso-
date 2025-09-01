@@ -42,7 +42,7 @@ CREATE POLICY "Admins can read all message responses" ON storage.objects
     bucket_id = 'message-responses' AND
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() AND role = 'admin'
+      WHERE user_id = auth.uid() AND role IN ('admin_of_admins', 'admin_staff')
     )
   );
 
@@ -52,6 +52,6 @@ CREATE POLICY "Admins can delete message responses" ON storage.objects
     bucket_id = 'message-responses' AND
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() AND role = 'admin'
+      WHERE user_id = auth.uid() AND role IN ('admin_of_admins', 'admin_staff')
     )
   );

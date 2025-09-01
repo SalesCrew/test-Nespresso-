@@ -57,7 +57,7 @@ CREATE POLICY "Admins can manage messages" ON public.messages
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() AND role = 'admin'
+      WHERE user_id = auth.uid() AND role IN ('admin_of_admins', 'admin_staff')
     )
   );
 
@@ -75,7 +75,7 @@ CREATE POLICY "Admins can manage message recipients" ON public.message_recipient
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() AND role = 'admin'
+      WHERE user_id = auth.uid() AND role IN ('admin_of_admins', 'admin_staff')
     )
   );
 
@@ -91,7 +91,7 @@ CREATE POLICY "Admins can view all responses" ON public.message_responses
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles 
-      WHERE user_id = auth.uid() AND role = 'admin'
+      WHERE user_id = auth.uid() AND role IN ('admin_of_admins', 'admin_staff')
     )
   );
 
