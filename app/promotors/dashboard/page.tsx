@@ -992,25 +992,42 @@ export default function DashboardPage() {
                         {message.message_text}
                       </div>
                     </div>
-                    <button 
-                      onClick={async () => {
-                        await markMessageAsAcknowledged(message.id);
-                        setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
-                        
-                        // After 7 seconds, remove from state completely
-                        setTimeout(() => {
-                          setMessages(prev => prev.filter(msg => msg.id !== message.id));
-                          setBitteLesen2Confirmed(prev => {
-                            const newState = { ...prev };
-                            delete newState[message.id];
-                            return newState;
-                          });
-                        }, 7000);
-                      }}
-                      className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                    >
-                      ✓ Bestätigt
-                    </button>
+                                          <input
+                        type="file"
+                        id={`file-upload-${message.id}`}
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
+                        onChange={async (e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length === 0) return;
+                          
+                          // TODO: Upload files to storage
+                          console.log('Files selected for message:', message.id, files);
+                          
+                          // Mark as acknowledged and show thank you card
+                          await markMessageAsAcknowledged(message.id);
+                          setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
+                          
+                          // After 7 seconds, remove from state completely
+                          setTimeout(() => {
+                            setMessages(prev => prev.filter(msg => msg.id !== message.id));
+                            setBitteLesen2Confirmed(prev => {
+                              const newState = { ...prev };
+                              delete newState[message.id];
+                              return newState;
+                            });
+                          }, 7000);
+                        }}
+                      />
+                      <button 
+                        onClick={() => {
+                          document.getElementById(`file-upload-${message.id}`)?.click();
+                        }}
+                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                      >
+                        📎 Datei hochladen
+                      </button>
                   </div>
                 </CardContent>
               </Card>
