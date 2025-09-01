@@ -38,12 +38,26 @@ export async function GET() {
       const startDate = new Date(assignment.start_ts)
       const endDate = new Date(assignment.end_ts)
       
-      // Check if user is lead and there's a buddy
+      // Check user role and buddy presence
       const userRole = participantRows?.find(p => p.assignment_id === assignment.id)?.role
       const hasBuddy = assignment.buddy_user_id || assignment.buddy_name || assignment.buddy_display_name
       
-      // Determine type: if user is lead and there's a buddy → "buddy", otherwise → "promotion"
-      const type = (userRole === 'lead' && hasBuddy) ? 'buddy' : 'promotion'
+      // If there's a buddy, always show in buddy section regardless of user role
+      const type = hasBuddy ? 'buddy' : 'promotion'
+      
+      // Determine whose name to show in buddy pill:
+      // - If user is lead: show buddy's name
+      // - If user is buddy: show lead's name
+      let buddyDisplayName = null
+      if (hasBuddy) {
+        if (userRole === 'lead') {
+          // User is lead, show buddy's name
+          buddyDisplayName = assignment.buddy_name || assignment.buddy_display_name
+        } else if (userRole === 'buddy') {
+          // User is buddy, show lead's name
+          buddyDisplayName = assignment.lead_name
+        }
+      }
       
       return {
         id: assignment.id,
@@ -54,7 +68,7 @@ export async function GET() {
         time: `${String(startDate.getUTCHours()).padStart(2,'0')}:${String(startDate.getUTCMinutes()).padStart(2,'0')}-${String(endDate.getUTCHours()).padStart(2,'0')}:${String(endDate.getUTCMinutes()).padStart(2,'0')}`,
         date: startDate,
         type: type,
-        buddyName: assignment.buddy_name || assignment.buddy_display_name || null
+        buddyName: buddyDisplayName
       }
     })
 
