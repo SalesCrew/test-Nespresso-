@@ -1139,6 +1139,9 @@ export default function DashboardPage() {
 
                                   const fileUploadResponse = await fetch(upload.uploadUrl, {
                                     method: 'POST',
+                                    headers: {
+                                      'Authorization': `Bearer ${upload.token}`
+                                    },
                                     body: formData
                                   });
 
