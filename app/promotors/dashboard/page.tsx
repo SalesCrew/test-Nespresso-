@@ -1405,8 +1405,8 @@ export default function DashboardPage() {
                     : "bg-gray-300 dark:bg-gray-600"
                 }`}></div>
                 Promotion
-                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0 && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length > 0 && selectedAssignmentType !== "promotion" && (
+                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "promotion").length}
                               </span>
@@ -1433,8 +1433,8 @@ export default function DashboardPage() {
                     : "bg-gray-300 dark:bg-gray-600"
                 }`}></div>
                 Schulung
-                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0 && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length > 0 && selectedAssignmentType !== "schulung" && (
+                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "schulung").length}
                           </span>
@@ -1462,7 +1462,7 @@ export default function DashboardPage() {
                 }`}></div>
                 Buddy
                 {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length > 0 && selectedAssignmentType !== "buddy" && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-[10px] font-bold">
                       {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString() && a.type === "buddy").length}
                         </span>
