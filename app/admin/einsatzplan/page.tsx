@@ -490,6 +490,7 @@ export default function EinsatzplanPage() {
   // Function to assign buddy to promotion
   const assignBuddyToPromotion = async (buddyName: string, buddyId?: string) => {
     if (!editingEinsatz) return;
+
     try {
       if (buddyId) {
         // Update participant as buddy
@@ -523,10 +524,10 @@ export default function EinsatzplanPage() {
     }
     // optimistic UI update
     const newStatus = buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen');
-    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || 'none', status: newStatus })
+    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus })
     setEinsatzplanData(prev => prev.map(item => 
       item.id === editingEinsatz.id 
-        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || 'none', status: newStatus } 
+        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus } 
         : item
     ))
   };
@@ -2057,13 +2058,15 @@ Import EP
                                   : einsatz.promotor;
                                 // Auto-set status to Buddy Tag if buddy_name exists
                                 const autoStatus = einsatz.buddy_name ? 'Buddy Tag' : einsatz.status;
-                                setEditingEinsatz({
+                                const editingData = {
                                   ...einsatz,
                                   promotor: rawPromotorName,
                                   status: autoStatus,
-                                  buddy_user_id: einsatz.buddy_user_id || 'none',
+                                  buddy_user_id: einsatz.buddy_user_id,
                                   buddy_name: einsatz.buddy_name
-                                });
+                                };
+
+                                setEditingEinsatz(editingData);
                                 setShowDetailModal(true);
                               }
                             }}
@@ -2925,7 +2928,11 @@ Import EP
                             transition: 'box-shadow 0.3s ease-in-out'
                           }}
                         >
-                          <SelectValue placeholder="Promotor auswählen" />
+                          <SelectValue placeholder="Promotor auswählen">
+                            {editingEinsatz.promotorId && editingEinsatz.promotorId !== 'none' 
+                              ? (promotorsList.find((p: any) => p.id === editingEinsatz.promotorId)?.name || editingEinsatz.promotor || 'Promotor auswählen')
+                              : 'Kein Promotor'}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
@@ -2941,10 +2948,12 @@ Import EP
                       <Select
                         value={editingEinsatz.buddy_user_id || 'none'}
                         onValueChange={(val) => {
+
                           if (val === 'none') {
                             assignBuddyToPromotion('', undefined);
                           } else {
                             const buddy = promotorsList.find((x: any) => x.id === val);
+
                             if (buddy) {
                               assignBuddyToPromotion(buddy.name, buddy.id);
                             }
@@ -2952,7 +2961,11 @@ Import EP
                         }}
                       >
                         <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
-                          <SelectValue placeholder="Buddy auswählen" />
+                          <SelectValue placeholder="Buddy auswählen">
+                            {editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' 
+                              ? (promotorsList.find((p: any) => p.id === editingEinsatz.buddy_user_id)?.name || editingEinsatz.buddy_name || 'Buddy auswählen')
+                              : 'Kein Buddy'}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg">
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
@@ -3257,7 +3270,12 @@ Import EP
                     
                     // If buddy is assigned, ensure it's saved
                     if (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none') {
+
                       await assignBuddyToPromotion(editingEinsatz.buddy_name, editingEinsatz.buddy_user_id);
+                    } else if (!editingEinsatz.buddy_user_id || editingEinsatz.buddy_user_id === 'none') {
+                      // Ensure buddy is cleared if set to 'none'
+
+                      await assignBuddyToPromotion('', undefined);
                     }
                   } catch (error) {
                     console.error('Error saving assignment:', error);
