@@ -1098,6 +1098,9 @@ export default function DashboardPage() {
                               setBitteLesen2Uploading(prev => ({ ...prev, [message.id]: true }));
                               
                               try {
+                                console.log('Starting file upload for message:', message.id);
+                                console.log('Files to upload:', messageFiles.map(f => f.name));
+                                
                                 // Get upload URLs
                                 const uploadResponse = await fetch(`/api/me/messages/${message.id}/upload`, {
                                   method: 'POST',
@@ -1111,8 +1114,12 @@ export default function DashboardPage() {
                                   })
                                 });
 
+                                console.log('Upload URL response status:', uploadResponse.status);
+
                                 if (!uploadResponse.ok) {
-                                  throw new Error('Failed to get upload URLs');
+                                  const errorData = await uploadResponse.json();
+                                  console.error('Upload URL error:', errorData);
+                                  throw new Error(`Failed to get upload URLs: ${errorData.error || 'Unknown error'}`);
                                 }
 
                                 const { uploads } = await uploadResponse.json();

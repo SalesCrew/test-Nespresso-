@@ -33,13 +33,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       const path = `${auth.user.id}/${messageId}/${timestamp}_${cleanFilename}`;
 
       // Create signed upload URL for message-responses bucket
+      console.log('Creating upload URL for path:', path);
       const { data: uploadData, error: uploadError } = await svc.storage
         .from('message-responses')
         .createSignedUploadUrl(path, 600); // 10 minutes
 
       if (uploadError) {
-        console.error('Error creating upload URL:', uploadError);
-        return NextResponse.json({ error: uploadError.message }, { status: 500 });
+        console.error('Error creating upload URL for path:', path);
+        console.error('Upload error details:', uploadError);
+        return NextResponse.json({ 
+          error: `Upload URL creation failed: ${uploadError.message}. Make sure 'message-responses' bucket exists.`,
+          details: uploadError 
+        }, { status: 500 });
       }
 
       uploadResults.push({
