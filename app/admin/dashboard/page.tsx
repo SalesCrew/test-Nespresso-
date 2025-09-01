@@ -94,24 +94,22 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   // Real promotors data
   const [allPromotors, setAllPromotors] = useState<any[]>([]);
   
-  // Load promotors on component mount
+  // Load promotors on component mount (same as einsatzplan)
   useEffect(() => {
     const loadPromotors = async () => {
       try {
-        const response = await fetch('/api/promotors/list');
-        if (response.ok) {
-          const data = await response.json();
-          const formattedPromotors = data.promotors.map((p: any) => ({
-            id: p.user_id,
-            name: p.display_name,
-            email: p.email,
-            region: "wien-noe-bgl" // TODO: Add region mapping logic when region data is available
-          }));
-          setAllPromotors(formattedPromotors);
-        }
+        const res = await fetch('/api/promotors', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        const list = Array.isArray(data?.promotors) ? data.promotors.map((p: any) => ({ 
+          id: p.id, 
+          name: p.name, 
+          region: p.region || 'wien-noe-bgl' // Use actual region from API
+        })) : [];
+        console.log('✅ Loaded promotors for admin dashboard:', list.length, 'promotors');
+        console.log('✅ First promotor:', list[0]);
+        setAllPromotors(list);
       } catch (error) {
         console.error('Error loading promotors:', error);
-        // Fallback to empty array if loading fails
         setAllPromotors([]);
       }
     };
@@ -228,10 +226,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     if (!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0) return;
     
     try {
-      // Get promotor IDs from names
+      // Get promotor IDs from selected names
       const promotorIds = selectedPromotors.map(name => {
         const promotor = allPromotors.find(p => p.name === name);
-        return promotor?.id; // Assuming allPromotors will have IDs
+        return promotor?.id;
       }).filter(Boolean);
       
       // Combine date and time for scheduled send
@@ -1725,10 +1723,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           if (!messageText.trim() || selectedPromotors.length === 0) return;
                           
                           try {
-                            // Get promotor IDs from names
+                            // Get promotor IDs from selected names
                             const promotorIds = selectedPromotors.map(name => {
                               const promotor = allPromotors.find(p => p.name === name);
-                              return promotor?.id; // Assuming allPromotors will have IDs
+                              return promotor?.id;
                             }).filter(Boolean);
                             
                             const response = await fetch('/api/messages', {
@@ -2940,11 +2938,19 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
             >
               <div className="flex-1 overflow-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {allPromotors
-                .filter(promotor => 
-                  (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-                  promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
-                )
+                {(() => {
+                  console.log('🔍 Modal render - allPromotors:', allPromotors.length);
+                  console.log('🔍 Modal render - activeRegionFilter:', activeRegionFilter);
+                  console.log('🔍 Modal render - promotorSelectionSearch:', promotorSelectionSearch);
+                  
+                  const filtered = allPromotors.filter(promotor => 
+                    (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                    promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+                  );
+                  
+                  console.log('🔍 Modal render - filtered promotors:', filtered.length);
+                  return filtered;
+                })()}
                 .map((promotor) => {
                   const isSelected = selectedPromotors.includes(promotor.name);
                   return (
