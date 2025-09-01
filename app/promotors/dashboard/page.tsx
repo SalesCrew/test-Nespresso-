@@ -1101,6 +1101,9 @@ export default function DashboardPage() {
                                 console.log('Starting file upload for message:', message.id);
                                 console.log('Files to upload:', messageFiles.map(f => f.name));
                                 
+                                // Initialize Supabase client
+                                const supabase = createSupabaseBrowserClient();
+                                
                                 // Get upload URLs
                                 const uploadResponse = await fetch(`/api/me/messages/${message.id}/upload`, {
                                   method: 'POST',
