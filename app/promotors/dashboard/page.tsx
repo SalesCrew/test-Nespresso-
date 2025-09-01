@@ -367,20 +367,32 @@ export default function DashboardPage() {
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
 
-  const [assignments, setAssignments] = useState([
-    { id: 1, title: "Mediamarkt, Seiersberg", location: "Wien, Mariahilferstraße", time: "10:00 - 18:00", date: new Date(), type: "promotion" },
-    { id: 10, title: "Produktschulung Smartphones", location: "Online Meetingraum", time: "19:00 - 20:30", date: new Date(), type: "schulung" },
-    { id: 2, title: "Mediamarkt, Klagenfurt", location: "Klagenfurt, Völkermarkter Straße", time: "09:00 - 17:30", date: new Date(new Date().setDate(new Date().getDate() + 1)), type: "buddy" },
-    { id: 11, title: "Verkaufstechniken Basics", location: "Online Meetingraum", time: "18:30 - 20:00", date: new Date(new Date().setDate(new Date().getDate() + 1)), type: "schulung" },
-    { id: 3, title: "Android Pro Schulung", location: "Online Meetingraum", time: "13:00 - 17:00", date: new Date(new Date().setDate(new Date().getDate() + 3)), type: "schulung" },
-    { id: 4, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 5)), type: "krankenstand" },
-    { id: 12, title: "Mediamarkt, Graz", location: "Graz, Annenstraße", time: "10:00 - 18:00", date: new Date(new Date().setDate(new Date().getDate() + 5)), type: "promotion" },
-    { id: 5, title: "🤒 Krankenstand", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 6)), type: "krankenstand" },
-    { id: 6, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 8)), type: "urlaub" },
-    { id: 8, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 9)), type: "urlaub" },
-    { id: 9, title: "🏖️ Urlaub", location: "", time: "", date: new Date(new Date().setDate(new Date().getDate() + 10)), type: "urlaub" },
-    { id: 7, title: "Newcomer Schulung", location: "Online Meetingraum", time: "14:00 - 18:00", date: new Date(new Date().setDate(new Date().getDate() + 20)), type: "schulung" },
-  ]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  
+  // Load calendar assignments
+  const loadCalendarAssignments = async () => {
+    try {
+      setAssignmentsLoading(true);
+      const res = await fetch('/api/me/calendar-assignments', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const processedAssignments = (data.assignments || []).map((a: any) => ({
+          ...a,
+          date: new Date(a.date) // Ensure date is a Date object
+        }));
+        setAssignments(processedAssignments);
+      } else {
+        console.error('Failed to load calendar assignments:', res.status);
+        setAssignments([]);
+      }
+    } catch (e) {
+      console.error('Error loading calendar assignments:', e);
+      setAssignments([]);
+    } finally {
+      setAssignmentsLoading(false);
+    }
+  };
 
   const formatDateRange = (startDate: Date, endDate: Date): string => {
     const startMonth = startDate.toLocaleDateString('de-DE', { month: 'short' });
@@ -486,10 +498,18 @@ export default function DashboardPage() {
     } catch {}
   };
 
+  // Load calendar assignments on mount
+  useEffect(() => {
+    loadCalendarAssignments();
+    // Refresh every 2 minutes to reflect changes
+    const iv = setInterval(loadCalendarAssignments, 120000);
+    return () => clearInterval(iv);
+  }, []);
+
   // Set initial assignment type based on current date
   useEffect(() => {
     setSelectedAssignmentType(getHighestPriorityAssignmentType(selectedCalendarDate));
-  }, []);
+  }, [assignments]);
 
   // Add Intersection Observer for progress bars
   useEffect(() => {
@@ -1538,7 +1558,7 @@ export default function DashboardPage() {
             </div>
                       <div className="flex flex-col items-end h-full py-1 justify-center space-y-1">
                         <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
-                          <span className="flex items-center">Buddy: Cesira</span>
+                          <span className="flex items-center">Buddy: {assignment.buddyName || 'Partner'}</span>
           </div>
                         <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
                           <span className="flex items-center">
