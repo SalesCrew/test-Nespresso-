@@ -1516,14 +1516,14 @@ export default function DashboardPage() {
                       key={assignment.id} 
                       className="h-full p-3 rounded-md border border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-900/20 flex items-center justify-between"
                     >
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <div className="relative pl-3">
                       <span className="absolute left-0 top-0 bottom-0 w-1.5 rounded-sm bg-gradient-to-b from-orange-500 to-amber-500"></span>
-                          <p className="text-sm font-medium">{assignment.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+                          <p className="text-sm font-medium truncate">{assignment.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors truncate"
                              onClick={() => handleAddressClick(assignment.location)}>
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {assignment.location}
+                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{assignment.location}</span>
                       </p>
                     </div>
                   </div>
@@ -1545,14 +1545,14 @@ export default function DashboardPage() {
                       key={assignment.id} 
                       className="h-full p-3 rounded-md border border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-900/20 flex items-center justify-between"
                     >
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="relative pl-3">
                           <span className="absolute left-0 top-0 bottom-0 w-1.5 rounded-sm bg-gradient-to-b from-purple-500 to-pink-500"></span>
-                          <p className="text-sm font-medium">{assignment.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+                          <p className="text-sm font-medium truncate">{assignment.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors truncate"
                              onClick={() => handleAddressClick(assignment.location)}>
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {assignment.location}
+                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{assignment.location}</span>
                           </p>
           </div>
             </div>
@@ -1587,14 +1587,14 @@ export default function DashboardPage() {
                     key={assignment.id} 
                     className="h-full p-3 rounded-md border border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20 flex items-center justify-between"
                   >
-              <div>
+              <div className="flex-1 min-w-0">
                       <div className="relative pl-3">
                         <span className="absolute left-0 top-0 bottom-0 w-1.5 rounded-sm bg-gradient-to-b from-blue-400 to-indigo-600"></span>
-                        <p className="text-sm font-medium">{assignment.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+                        <p className="text-sm font-medium truncate">{assignment.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center cursor-pointer hover:text-blue-600 transition-colors truncate"
                            onClick={() => handleAddressClick(assignment.location)}>
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {assignment.location}
+                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{assignment.location}</span>
                         </p>
                         <div className="mt-1.5">
                           <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full inline-block">
