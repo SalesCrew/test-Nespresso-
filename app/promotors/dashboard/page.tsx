@@ -57,12 +57,11 @@ export default function DashboardPage() {
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showBitteLesen, setShowBitteLesen] = useState(true);
   const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState<{[key: string]: boolean}>({});
-  // Zwei-Schritt "Bitte lesen" Karte
-  const [showBitteLesen2, setShowBitteLesen2] = useState(true);
-  const [bitteLesen2Step, setBitteLesen2Step] = useState<'message' | 'upload' | 'done'>('message');
+  // Zwei-Schritt "Bitte lesen" Karte (per message)
+  const [bitteLesen2Step, setBitteLesen2Step] = useState<{[key: string]: 'message' | 'upload' | 'done'}>({});
   const [bitteLesen2Confirmed, setBitteLesen2Confirmed] = useState<{[key: string]: boolean}>({});
-  const [bitteLesen2Files, setBitteLesen2Files] = useState<File[]>([]);
-  const [bitteLesen2Progress, setBitteLesen2Progress] = useState<number>(0);
+  const [bitteLesen2Progress, setBitteLesen2Progress] = useState<{[key: string]: number}>({});
+  const [bitteLesen2Files, setBitteLesen2Files] = useState<{[key: string]: File[]}>({});
   
   // Real messages data
   const [messages, setMessages] = useState<any[]>([]);
@@ -132,18 +131,7 @@ export default function DashboardPage() {
     }
   };
 
-  useEffect(() => {
-    if (!showBitteLesen2) return;
-    // Step 1 (message): keep empty
-    if (bitteLesen2Step === 'message') {
-      setBitteLesen2Progress(0);
-      return;
-    }
-    // After finishing step one (entering upload): fill to 50%
-    if (bitteLesen2Step === 'upload') {
-      requestAnimationFrame(() => setBitteLesen2Progress(50));
-    }
-  }, [showBitteLesen2, bitteLesen2Step]);
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedAssignmentType, setSelectedAssignmentType] = useState<string>("promotion");
 
@@ -950,91 +938,177 @@ export default function DashboardPage() {
         ))}
 
         {/* Bitte Lesen Card 2 (Zwei-Schritt) - Show confirmation_required messages */}
-        {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => (
-          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
-            {bitteLesen2Confirmed[message.id] ? (
-              /* Danke fürs Bestätigen Card */
-              <Card className="bg-green-50 border-green-200 transform transition-all duration-500">
-                <CardContent className="py-4 px-6">
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+        {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => {
+          const currentStep = bitteLesen2Step[message.id] || 'message';
+          const currentProgress = bitteLesen2Progress[message.id] || 0;
+          const messageFiles = bitteLesen2Files[message.id] || [];
+          
+          return (
+            <div key={message.id} className="w-full max-w-md mx-auto mb-6">
+              {bitteLesen2Confirmed[message.id] ? (
+                /* Danke fürs Bestätigen Card - Final Step */
+                <Card className="bg-green-50 border-green-200 transform transition-all duration-500">
+                  <CardContent className="py-4 px-6">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                        <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-green-700 font-medium">Danke fürs Bestätigen!</span>
                     </div>
-                    <span className="text-green-700 font-medium">Danke fürs Bestätigen!</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              /* Original Bitte Lesen (mit Bestätigung) Card */
-              <div className="relative">
-                {/* Outer glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
+                  </CardContent>
+                </Card>
+              ) : (
+                /* Two-Step Bitte Lesen (mit Bestätigung) Card */
+                <div className="relative">
+                  {/* Outer glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
 
-                <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
-                {/* Header */}
-                <div className="relative py-3 px-4 text-center">
-                  <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
-                    <AlertCircle className="h-5 w-5 mr-2 text-white" />
-                    Bitte Lesen (mit Bestätigung)
-                  </h3>
-                  <p className="text-white/90 text-sm mt-1 drop-shadow">
-                    {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Zweischrittige Bestätigung erforderlich'}
-                  </p>
-                </div>
+                  <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                    {/* Header */}
+                    <div className="relative py-3 px-4 text-center">
+                      <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                        <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                        Bitte Lesen (mit Bestätigung)
+                      </h3>
+                      <p className="text-white/90 text-sm mt-1 drop-shadow">
+                        {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Zweischrittige Bestätigung erforderlich'}
+                      </p>
+                    </div>
 
-                <CardContent className="relative p-4 pt-0">
-                  <div className="text-center">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
-                      <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                      <div className="text-white text-sm leading-relaxed text-left relative">
-                        {message.message_text}
+                    {/* Progress Bar */}
+                    <div className="relative px-6 pb-2">
+                      <div className="bg-white/20 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="h-full bg-white rounded-full transition-all duration-500"
+                          style={{ width: `${currentProgress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-white/80 mt-1">
+                        <span>Step 1</span>
+                        <span>Step 2</span>
                       </div>
                     </div>
-                                          <input
-                        type="file"
-                        id={`file-upload-${message.id}`}
-                        className="hidden"
-                        multiple
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
-                        onChange={async (e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length === 0) return;
+
+                    <CardContent className="relative p-4 pt-2">
+                      {currentStep === 'message' && (
+                        /* Step 1: Show message and "Gelesen" button */
+                        <div className="text-center">
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
+                            <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                            <div className="text-white text-sm leading-relaxed text-left relative">
+                              {message.message_text}
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              setBitteLesen2Step(prev => ({ ...prev, [message.id]: 'upload' }));
+                              setBitteLesen2Progress(prev => ({ ...prev, [message.id]: 50 }));
+                            }}
+                            className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                          >
+                            ✓ Gelesen
+                          </button>
+                        </div>
+                      )}
+
+                      {currentStep === 'upload' && (
+                        /* Step 2: File upload interface */
+                        <div className="text-center">
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20">
+                            <p className="text-white text-sm mb-3">Bitte lade deine Dateien hoch:</p>
+                            
+                            {/* File upload area */}
+                            <div className="border-2 border-dashed border-white/30 rounded-lg p-4 bg-white/5">
+                              <input
+                                type="file"
+                                id={`file-upload-${message.id}`}
+                                className="hidden"
+                                multiple
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
+                                onChange={(e) => {
+                                  const files = Array.from(e.target.files || []);
+                                  setBitteLesen2Files(prev => ({ ...prev, [message.id]: files }));
+                                }}
+                              />
+                              <button 
+                                onClick={() => document.getElementById(`file-upload-${message.id}`)?.click()}
+                                className="text-white/80 hover:text-white transition-colors"
+                              >
+                                <FileText className="h-8 w-8 mx-auto mb-2" />
+                                <p className="text-sm">Dateien auswählen</p>
+                              </button>
+                            </div>
+                            
+                            {/* Show selected files */}
+                            {messageFiles.length > 0 && (
+                              <div className="mt-3 text-left">
+                                <p className="text-white/80 text-xs mb-1">Ausgewählt:</p>
+                                {messageFiles.map((file, idx) => (
+                                  <div key={idx} className="text-white text-xs truncate">
+                                    📎 {file.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           
-                          // TODO: Upload files to storage
-                          console.log('Files selected for message:', message.id, files);
-                          
-                          // Mark as acknowledged and show thank you card
-                          await markMessageAsAcknowledged(message.id);
-                          setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
-                          
-                          // After 7 seconds, remove from state completely
-                          setTimeout(() => {
-                            setMessages(prev => prev.filter(msg => msg.id !== message.id));
-                            setBitteLesen2Confirmed(prev => {
-                              const newState = { ...prev };
-                              delete newState[message.id];
-                              return newState;
-                            });
-                          }, 7000);
-                        }}
-                      />
-                      <button 
-                        onClick={() => {
-                          document.getElementById(`file-upload-${message.id}`)?.click();
-                        }}
-                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                      >
-                        📎 Datei hochladen
-                      </button>
-                  </div>
-                </CardContent>
-              </Card>
+                          <button 
+                            onClick={async () => {
+                              if (messageFiles.length === 0) return;
+                              
+                              // TODO: Upload files to storage
+                              console.log('Uploading files for message:', message.id, messageFiles);
+                              
+                              // Complete the process
+                              await markMessageAsAcknowledged(message.id);
+                              setBitteLesen2Progress(prev => ({ ...prev, [message.id]: 100 }));
+                              setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
+                              
+                              // After 7 seconds, remove from state completely
+                              setTimeout(() => {
+                                setMessages(prev => prev.filter(msg => msg.id !== message.id));
+                                setBitteLesen2Confirmed(prev => {
+                                  const newState = { ...prev };
+                                  delete newState[message.id];
+                                  return newState;
+                                });
+                                setBitteLesen2Step(prev => {
+                                  const newState = { ...prev };
+                                  delete newState[message.id];
+                                  return newState;
+                                });
+                                setBitteLesen2Progress(prev => {
+                                  const newState = { ...prev };
+                                  delete newState[message.id];
+                                  return newState;
+                                });
+                                setBitteLesen2Files(prev => {
+                                  const newState = { ...prev };
+                                  delete newState[message.id];
+                                  return newState;
+                                });
+                              }, 7000);
+                            }}
+                            disabled={messageFiles.length === 0}
+                            className={`font-medium py-2 px-4 rounded-lg shadow-md transform hover:scale-105 transition-all duration-200 border border-white/50 ${
+                              messageFiles.length === 0 
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                : 'bg-white text-orange-600 hover:bg-gray-50 hover:shadow-lg'
+                            }`}
+                          >
+                            ✓ Bestätigen
+                          </button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
             </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
 
       {/* Rotating Calendar Component */}
         <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
