@@ -1029,7 +1029,10 @@ export default function DashboardPage() {
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
                                 onChange={(e) => {
                                   const files = Array.from(e.target.files || []);
-                                  setBitteLesen2Files(prev => ({ ...prev, [message.id]: files }));
+                                  setBitteLesen2Files(prev => ({ 
+                                    ...prev, 
+                                    [message.id]: [...(prev[message.id] || []), ...files]
+                                  }));
                                 }}
                               />
                               <button 
@@ -1037,19 +1040,51 @@ export default function DashboardPage() {
                                 className="text-white/80 hover:text-white transition-colors"
                               >
                                 <FileText className="h-8 w-8 mx-auto mb-2" />
-                                <p className="text-sm">Dateien auswählen</p>
+                                <p className="text-sm">{messageFiles.length === 0 ? 'Dateien auswählen' : 'Weitere Dateien hinzufügen'}</p>
+                                <p className="text-xs text-white/60 mt-1">Mehrere Dateien möglich</p>
                               </button>
                             </div>
                             
                             {/* Show selected files */}
                             {messageFiles.length > 0 && (
                               <div className="mt-3 text-left">
-                                <p className="text-white/80 text-xs mb-1">Ausgewählt:</p>
-                                {messageFiles.map((file, idx) => (
-                                  <div key={idx} className="text-white text-xs truncate">
-                                    📎 {file.name}
-                                  </div>
-                                ))}
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="text-white/80 text-xs">
+                                    Ausgewählt ({messageFiles.length} {messageFiles.length === 1 ? 'Datei' : 'Dateien'}):
+                                  </p>
+                                  {messageFiles.length > 1 && (
+                                    <button
+                                      onClick={() => {
+                                        setBitteLesen2Files(prev => ({ ...prev, [message.id]: [] }));
+                                      }}
+                                      className="text-white/60 hover:text-white text-xs"
+                                    >
+                                      Alle löschen
+                                    </button>
+                                  )}
+                                </div>
+                                <div className="max-h-20 overflow-y-auto">
+                                  {messageFiles.map((file, idx) => (
+                                    <div key={idx} className="text-white text-xs truncate flex items-center justify-between">
+                                      <div className="flex items-center flex-1 min-w-0">
+                                        <span className="mr-1">📎</span>
+                                        <span className="truncate">{file.name}</span>
+                                        <span className="ml-1 text-white/60">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          setBitteLesen2Files(prev => ({
+                                            ...prev,
+                                            [message.id]: prev[message.id]?.filter((_, i) => i !== idx) || []
+                                          }));
+                                        }}
+                                        className="ml-2 text-white/60 hover:text-white text-xs"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1098,7 +1133,10 @@ export default function DashboardPage() {
                                 : 'bg-white text-orange-600 hover:bg-gray-50 hover:shadow-lg'
                             }`}
                           >
-                            ✓ Bestätigen
+                            {messageFiles.length === 0 
+                              ? 'Dateien auswählen' 
+                              : `✓ Bestätigen (${messageFiles.length} ${messageFiles.length === 1 ? 'Datei' : 'Dateien'})`
+                            }
                           </button>
                         </div>
                       )}
