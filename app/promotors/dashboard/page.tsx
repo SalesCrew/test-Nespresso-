@@ -908,145 +908,34 @@ export default function DashboardPage() {
 
               <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
                 {/* Header */}
-                {bitteLesen2Step !== 'done' && (
-                  <div className="relative py-3 px-4 text-center">
-                    <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
-                      <AlertCircle className="h-5 w-5 mr-2 text-white" />
-                      Bitte Lesen (mit Bestätigung)
-                    </h3>
-                    <p className="text-white/90 text-sm mt-1 drop-shadow">
-                      Zweischrittige Bestätigung erforderlich
-                    </p>
+                <div className="relative py-3 px-4 text-center">
+                  <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                    Bitte Lesen (mit Bestätigung)
+                  </h3>
+                  <p className="text-white/90 text-sm mt-1 drop-shadow">
+                    {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Zweischrittige Bestätigung erforderlich'}
+                  </p>
+                </div>
+
+                <CardContent className="relative p-4 pt-0">
+                  <div className="text-center">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
+                      <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                      <div className="text-white text-sm leading-relaxed text-left relative">
+                        {message.message_text}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        await markMessageAsAcknowledged(message.id);
+                        loadMessages(); // Refresh to remove this message from the list
+                      }}
+                      className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                    >
+                      ✓ Bestätigt
+                    </button>
                   </div>
-                )}
-
-                <CardContent className={`relative ${bitteLesen2Step === 'done' ? 'p-0' : 'p-4 pt-0'}`}> 
-                  {/* Progress bar */}
-                  {bitteLesen2Step !== 'done' && (
-                    <div className="mx-2 mb-3 bg-white/20 rounded-full h-1 overflow-hidden">
-                      <div className="h-full bg-white/90 rounded-full transition-[width] duration-700 ease-out" style={{ width: `${bitteLesen2Progress}%` }} />
-                    </div>
-                  )}
-                  {/* Step 1: Nachricht */}
-                  {bitteLesen2Step === 'message' && (
-                    <div className="text-center">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
-                        <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                        <div className="text-white text-sm leading-relaxed text-left relative">
-                          {message.message_text}
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setBitteLesen2Step('upload')}
-                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                      >
-                        ✓ Gelesen
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Step 2: Datei Upload */}
-                  {bitteLesen2Step === 'upload' && (
-                    <div className="text-center">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-3 border border-white/20">
-                        <p className="text-white text-sm mb-2">Bitte lade die zugehörige Datei hoch und bestätige.</p>
-                        <div className="flex items-center justify-center">
-                          <label className="cursor-pointer inline-flex items-center text-white/90 text-sm underline underline-offset-2 decoration-white/40 hover:text-white hover:decoration-white transition-colors">
-                            <input 
-                              type="file" 
-                              className="hidden"
-                              multiple
-                              onChange={(e) => {
-                                const incoming = e.target.files ? Array.from(e.target.files) : [];
-                                setBitteLesen2Files(prev => {
-                                  const combined = [...prev, ...incoming];
-                                  const seen = new Set<string>();
-                                  const unique: File[] = [];
-                                  for (const file of combined) {
-                                    const key = `${file.name}-${file.size}-${(file as any).lastModified}`;
-                                    if (!seen.has(key)) {
-                                      seen.add(key);
-                                      unique.push(file);
-                                    }
-                                    if (unique.length >= 3) break;
-                                  }
-                                  return unique;
-                                });
-                                // Allow re-selecting the same file to add again if needed
-                                (e.target as HTMLInputElement).value = '';
-                              }}
-                            />
-                            Dateien auswählen
-                          </label>
-                        </div>
-                        {bitteLesen2Files.length > 0 && (
-                          <div className="mt-3 grid grid-cols-3 gap-2">
-                            {bitteLesen2Files.map((file) => {
-                              const key = `${file.name}-${file.size}-${(file as any).lastModified}`;
-                              return (
-                                <div key={key} className="group relative rounded-md bg-white/10 border border-white/20 p-2 flex items-center gap-2 backdrop-blur-sm hover:bg-white/15 transition-colors">
-                                {file.type.startsWith('image/') ? (
-                                  <div className="w-6 h-6 rounded-sm bg-white/20 flex items-center justify-center overflow-hidden">
-                                    <ImageIcon className="w-4 h-4 text-white/80" />
-                                  </div>
-                                ) : (
-                                  <div className="w-6 h-6 rounded-sm bg-white/20 flex items-center justify-center">
-                                    <FileText className="w-4 h-4 text-white/80" />
-                                  </div>
-                                )}
-                                <span className="text-[11px] text-white/90 truncate">{file.name}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      <button 
-                        onClick={() => {
-                          // simulate progress fill to 100%, then collapse after 0.5s
-                          setBitteLesen2Progress(100);
-                          setTimeout(() => {
-                            setBitteLesen2Step('done');
-                            setTimeout(() => setShowBitteLesen2(false), 7000);
-                          }, 500);
-                        }}
-                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50 disabled:opacity-50"
-                        disabled={bitteLesen2Files.length === 0}
-                      >
-                        Absenden
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Done: Bestätigungskarte */}
-                  {bitteLesen2Step === 'done' && (
-                    <div className="flex items-center justify-center w-full px-4 py-4">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center w-full">
-                        <div className="text-white">
-                          <div className="text-lg font-semibold mb-2">✓ Danke! Dateien empfangen</div>
-                          <div className="text-sm mb-3">Deine Bestätigung wurde gespeichert.</div>
-                          {bitteLesen2Files.length > 0 && (
-                            <div className="grid grid-cols-3 gap-2">
-                              {bitteLesen2Files.map((file, idx) => (
-                                <div key={idx} className="rounded-md bg-white/10 border border-white/20 p-2 flex items-center gap-2">
-                                  {file.type.startsWith('image/') ? (
-                                    <div className="w-6 h-6 rounded-sm bg-white/20 flex items-center justify-center">
-                                      <ImageIcon className="w-4 h-4 text-white/80" />
-                                    </div>
-                                  ) : (
-                                    <div className="w-6 h-6 rounded-sm bg-white/20 flex items-center justify-center">
-                                      <FileText className="w-4 h-4 text-white/80" />
-                                    </div>
-                                  )}
-                                  <span className="text-[11px] text-white/90 truncate">{file.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
