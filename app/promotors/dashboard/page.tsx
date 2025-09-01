@@ -870,27 +870,8 @@ export default function DashboardPage() {
                 </>
               )}
 
-        {/* Debug: Manual refresh button */}
-        <div className="mb-4 text-center">
-          <button 
-            onClick={() => {
-              console.log('🔄 Manual refresh triggered');
-              loadMessages();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Refresh Messages
-          </button>
-        </div>
-
         {/* Bitte Lesen Cards - Show all normal messages */}
-        {(() => {
-          console.log('🔍 Filtering normal messages. Total messages:', messages.length);
-          const normalUnread = messages.filter(msg => msg.message_type === 'normal' && !msg.read_at);
-          console.log('📧 Normal unread messages:', normalUnread.length);
-          console.log('📧 Normal unread data:', normalUnread);
-          return normalUnread;
-        })().map((message) => (
+        {messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow effect */}
@@ -926,7 +907,12 @@ export default function DashboardPage() {
                     <button 
                         onClick={async () => {
                           await markMessageAsRead(message.id);
-                          loadMessages(); // Refresh to remove this message from the list
+                          // Update local state to mark message as read
+                          setMessages(prev => prev.map(msg => 
+                            msg.id === message.id 
+                              ? { ...msg, read_at: new Date().toISOString() }
+                              : msg
+                          ));
                         }}
                         className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
                     >
@@ -939,14 +925,26 @@ export default function DashboardPage() {
           </div>
         ))}
 
+        {/* Danke fürs Lesen Cards - Show read normal messages */}
+        {messages.filter(msg => msg.message_type === 'normal' && msg.read_at).map((message) => (
+          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="py-4 px-6">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-green-700 font-medium">Danke fürs Lesen!</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ))}
+
         {/* Bitte Lesen Card 2 (Zwei-Schritt) - Show confirmation_required messages */}
-        {(() => {
-          console.log('🔍 Filtering confirmation required messages. Total messages:', messages.length);
-          const confirmationUnread = messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at);
-          console.log('📧 Confirmation unread messages:', confirmationUnread.length);
-          console.log('📧 Confirmation unread data:', confirmationUnread);
-          return confirmationUnread;
-        })().map((message) => (
+        {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow */}
@@ -975,7 +973,12 @@ export default function DashboardPage() {
                     <button 
                       onClick={async () => {
                         await markMessageAsAcknowledged(message.id);
-                        loadMessages(); // Refresh to remove this message from the list
+                        // Update local state to mark message as acknowledged
+                        setMessages(prev => prev.map(msg => 
+                          msg.id === message.id 
+                            ? { ...msg, acknowledged_at: new Date().toISOString() }
+                            : msg
+                        ));
                       }}
                       className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
                     >
@@ -985,6 +988,24 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        ))}
+
+        {/* Danke fürs Bestätigen Cards - Show acknowledged confirmation messages */}
+        {messages.filter(msg => msg.message_type === 'confirmation_required' && msg.acknowledged_at).map((message) => (
+          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="py-4 px-6">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-green-700 font-medium">Danke fürs Bestätigen!</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ))}
 
