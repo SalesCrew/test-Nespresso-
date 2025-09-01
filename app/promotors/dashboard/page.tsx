@@ -56,10 +56,11 @@ export default function DashboardPage() {
   const [showMapsModal, setShowMapsModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
   const [showBitteLesen, setShowBitteLesen] = useState(true);
-  const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState(false);
+  const [bitteLesenConfirmed, setBitteLesenConfirmed] = useState<{[key: string]: boolean}>({});
   // Zwei-Schritt "Bitte lesen" Karte
   const [showBitteLesen2, setShowBitteLesen2] = useState(true);
   const [bitteLesen2Step, setBitteLesen2Step] = useState<'message' | 'upload' | 'done'>('message');
+  const [bitteLesen2Confirmed, setBitteLesen2Confirmed] = useState<{[key: string]: boolean}>({});
   const [bitteLesen2Files, setBitteLesen2Files] = useState<File[]>([]);
   const [bitteLesen2Progress, setBitteLesen2Progress] = useState<number>(0);
   
@@ -870,87 +871,108 @@ export default function DashboardPage() {
                 </>
               )}
 
+
         {/* Bitte Lesen Cards - Show all normal messages */}
         {messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
-            <div className="relative">
-              {/* Outer glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
-              
-              {/* Main card */}
-              <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
-                {/* Animated background pattern */}
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
-                
-              {/* Header */}
-              <div className="relative py-3 px-4 text-center">
-                <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
-                  <AlertCircle className="h-5 w-5 mr-2 text-white" />
-                  Bitte Lesen
-                </h3>
-                <p className="text-white/90 text-sm mt-1 drop-shadow">
-                  {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Wichtige Mitteilung'}
-                </p>
-              </div>
-                
-                {/* Content */}
-              <CardContent className="relative p-4 pt-0">
-                  <div className="text-center">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
-                      <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                      <div className="text-white text-sm leading-relaxed text-left relative">
-                        {message.message_text}
-                      </div>
+            {bitteLesenConfirmed[message.id] ? (
+              /* Danke fürs Lesen Card */
+              <Card className="bg-green-50 border-green-200 transform transition-all duration-500">
+                <CardContent className="py-4 px-6">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
-                    
-                    {/* Read button */}
-                    <button 
-                        onClick={async () => {
-                          await markMessageAsRead(message.id);
-                          // Update local state to mark message as read
-                          setMessages(prev => prev.map(msg => 
-                            msg.id === message.id 
-                              ? { ...msg, read_at: new Date().toISOString() }
-                              : msg
-                          ));
-                        }}
-                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                    >
-                      ✓ Gelesen
-                    </button>
+                    <span className="text-green-700 font-medium">Danke fürs Lesen!</span>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
-        ))}
-
-        {/* Danke fürs Lesen Cards - Show read normal messages */}
-        {messages.filter(msg => msg.message_type === 'normal' && msg.read_at).map((message) => (
-          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="py-4 px-6">
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-green-700 font-medium">Danke fürs Lesen!</span>
+            ) : (
+              /* Original Bitte Lesen Card */
+              <div className="relative">
+                {/* Outer glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+                
+                {/* Main card */}
+                <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                  {/* Animated background pattern */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
+                  
+                {/* Header */}
+                <div className="relative py-3 px-4 text-center">
+                  <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                    Bitte Lesen
+                  </h3>
+                  <p className="text-white/90 text-sm mt-1 drop-shadow">
+                    {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Wichtige Mitteilung'}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+                  
+                  {/* Content */}
+                <CardContent className="relative p-4 pt-0">
+                    <div className="text-center">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
+                        <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                        <div className="text-white text-sm leading-relaxed text-left relative">
+                          {message.message_text}
+                        </div>
+                      </div>
+                      
+                      {/* Read button */}
+                      <button 
+                          onClick={async () => {
+                            await markMessageAsRead(message.id);
+                            setBitteLesenConfirmed(prev => ({ ...prev, [message.id]: true }));
+                            
+                            // After 7 seconds, remove from state completely
+                            setTimeout(() => {
+                              setMessages(prev => prev.filter(msg => msg.id !== message.id));
+                              setBitteLesenConfirmed(prev => {
+                                const newState = { ...prev };
+                                delete newState[message.id];
+                                return newState;
+                              });
+                            }, 7000);
+                          }}
+                          className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                      >
+                        ✓ Gelesen
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         ))}
 
         {/* Bitte Lesen Card 2 (Zwei-Schritt) - Show confirmation_required messages */}
         {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => (
           <div key={message.id} className="w-full max-w-md mx-auto mb-6">
-            <div className="relative">
-              {/* Outer glow */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
+            {bitteLesen2Confirmed[message.id] ? (
+              /* Danke fürs Bestätigen Card */
+              <Card className="bg-green-50 border-green-200 transform transition-all duration-500">
+                <CardContent className="py-4 px-6">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                      <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-green-700 font-medium">Danke fürs Bestätigen!</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* Original Bitte Lesen (mit Bestätigung) Card */
+              <div className="relative">
+                {/* Outer glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
 
-              <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
                 {/* Header */}
                 <div className="relative py-3 px-4 text-center">
                   <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
@@ -973,12 +995,17 @@ export default function DashboardPage() {
                     <button 
                       onClick={async () => {
                         await markMessageAsAcknowledged(message.id);
-                        // Update local state to mark message as acknowledged
-                        setMessages(prev => prev.map(msg => 
-                          msg.id === message.id 
-                            ? { ...msg, acknowledged_at: new Date().toISOString() }
-                            : msg
-                        ));
+                        setBitteLesen2Confirmed(prev => ({ ...prev, [message.id]: true }));
+                        
+                        // After 7 seconds, remove from state completely
+                        setTimeout(() => {
+                          setMessages(prev => prev.filter(msg => msg.id !== message.id));
+                          setBitteLesen2Confirmed(prev => {
+                            const newState = { ...prev };
+                            delete newState[message.id];
+                            return newState;
+                          });
+                        }, 7000);
                       }}
                       className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
                     >
@@ -988,24 +1015,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        ))}
-
-        {/* Danke fürs Bestätigen Cards - Show acknowledged confirmation messages */}
-        {messages.filter(msg => msg.message_type === 'confirmation_required' && msg.acknowledged_at).map((message) => (
-          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="py-4 px-6">
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-green-700 font-medium">Danke fürs Bestätigen!</span>
-                </div>
-              </CardContent>
-            </Card>
+            )}
           </div>
         ))}
 
