@@ -523,10 +523,10 @@ export default function EinsatzplanPage() {
     }
     // optimistic UI update
     const newStatus = buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen');
-    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus })
+    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || 'none', status: newStatus })
     setEinsatzplanData(prev => prev.map(item => 
       item.id === editingEinsatz.id 
-        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus } 
+        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || 'none', status: newStatus } 
         : item
     ))
   };
@@ -2060,7 +2060,9 @@ Import EP
                                 setEditingEinsatz({
                                   ...einsatz,
                                   promotor: rawPromotorName,
-                                  status: autoStatus
+                                  status: autoStatus,
+                                  buddy_user_id: einsatz.buddy_user_id || 'none',
+                                  buddy_name: einsatz.buddy_name
                                 });
                                 setShowDetailModal(true);
                               }
