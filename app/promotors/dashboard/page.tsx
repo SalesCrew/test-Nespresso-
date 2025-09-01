@@ -62,6 +62,53 @@ export default function DashboardPage() {
   const [bitteLesen2Step, setBitteLesen2Step] = useState<'message' | 'upload' | 'done'>('message');
   const [bitteLesen2Files, setBitteLesen2Files] = useState<File[]>([]);
   const [bitteLesen2Progress, setBitteLesen2Progress] = useState<number>(0);
+  
+  // Real messages data
+  const [messages, setMessages] = useState<any[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  
+  // Load messages for this promotor
+  const loadMessages = async () => {
+    try {
+      setMessagesLoading(true);
+      const response = await fetch('/api/me/messages');
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  };
+  
+  // Mark message as read
+  const markMessageAsRead = async (messageId: string) => {
+    try {
+      await fetch(`/api/me/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'read' })
+      });
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+    }
+  };
+  
+  // Mark message as acknowledged (for confirmation_required type)
+  const markMessageAsAcknowledged = async (messageId: string) => {
+    try {
+      await fetch(`/api/me/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'acknowledge' })
+      });
+    } catch (error) {
+      console.error('Error acknowledging message:', error);
+    }
+  };
 
   useEffect(() => {
     if (!showBitteLesen2) return;
@@ -501,8 +548,12 @@ export default function DashboardPage() {
   // Load calendar assignments on mount
   useEffect(() => {
     loadCalendarAssignments();
+    loadMessages();
     // Refresh every 2 minutes to reflect changes
-    const iv = setInterval(loadCalendarAssignments, 120000);
+    const iv = setInterval(() => {
+      loadCalendarAssignments();
+      loadMessages();
+    }, 120000);
     return () => clearInterval(iv);
   }, []);
 
@@ -798,9 +849,9 @@ export default function DashboardPage() {
                 </>
               )}
 
-        {/* Bitte Lesen Card */}
-        {showBitteLesen && (
-          <div className="w-full max-w-md mx-auto mb-6">
+        {/* Bitte Lesen Cards - Show all normal messages */}
+        {messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).map((message) => (
+          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
@@ -811,69 +862,46 @@ export default function DashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
                 
               {/* Header */}
-              {!bitteLesenConfirmed && (
-                <div className="relative py-3 px-4 text-center">
-                  <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
-                    <AlertCircle className="h-5 w-5 mr-2 text-white" />
-                    Bitte Lesen
-                  </h3>
-                  <p className="text-white/90 text-sm mt-1 drop-shadow">
-                    Wichtige Mitteilung von der Geschäftsleitung
-                  </p>
-                </div>
-              )}
+              <div className="relative py-3 px-4 text-center">
+                <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                  Bitte Lesen
+                </h3>
+                <p className="text-white/90 text-sm mt-1 drop-shadow">
+                  {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Wichtige Mitteilung'}
+                </p>
+              </div>
                 
                 {/* Content */}
-              <CardContent className={`relative ${bitteLesenConfirmed ? 'p-0' : 'p-4 pt-0'}`}>
+              <CardContent className="relative p-4 pt-0">
                   <div className="text-center">
-                  {!bitteLesenConfirmed ? (
-                    <>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
-                        <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                        <div className="text-white text-sm leading-relaxed text-left relative">
-                        Liebe Promotoren,
-                        <br /><br />
-                        ab sofort gelten neue Richtlinien für die Zeiterfassung. Bitte stellt sicher, dass ihr eure Arbeitszeiten täglich und korrekt eintragt.
-                        <br /><br />
-                        Bei Fragen wendet euch an euren Teamleiter.
-                        <br /><br />
-                        Vielen Dank für euer Verständnis!
-                        <br /><br />
-                        Euer SalesCrew Team
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
+                      <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                      <div className="text-white text-sm leading-relaxed text-left relative">
+                        {message.message_text}
                       </div>
                     </div>
                     
                     {/* Read button */}
                     <button 
-                        onClick={() => {
-                          setBitteLesenConfirmed(true);
-                          setTimeout(() => setShowBitteLesen(false), 7000);
+                        onClick={async () => {
+                          await markMessageAsRead(message.id);
+                          loadMessages(); // Refresh to remove this message from the list
                         }}
                         className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
                     >
                       ✓ Gelesen
                     </button>
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-center h-[140px] w-full px-4">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 text-center">
-                        <div className="text-white">
-                          <div className="text-lg font-semibold mb-2">✓ Danke fürs Lesen!</div>
-                          <div className="text-sm">Die Aufgabe ist in der To-Do Liste als erledigt markiert.</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
-        )}
+        ))}
 
-        {/* Bitte Lesen Card 2 (Zwei-Schritt) */}
-        {showBitteLesen2 && (
-          <div className="w-full max-w-md mx-auto mb-6">
+        {/* Bitte Lesen Card 2 (Zwei-Schritt) - Show confirmation_required messages */}
+        {messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).map((message) => (
+          <div key={message.id} className="w-full max-w-md mx-auto mb-6">
             <div className="relative">
               {/* Outer glow */}
               <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
@@ -905,11 +933,7 @@ export default function DashboardPage() {
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
                         <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
                         <div className="text-white text-sm leading-relaxed text-left relative">
-                          Liebe Promotoren,
-                          <br /><br />
-                          bitte bestätigt das Lesen dieser Nachricht und ladet im nächsten Schritt die erhaltene Datei hoch.
-                          <br /><br />
-                          Vielen Dank!
+                          {message.message_text}
                         </div>
                       </div>
                       <button 

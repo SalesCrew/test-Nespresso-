@@ -91,6 +91,34 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [enableTwoStep, setEnableTwoStep] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   
+  // Real promotors data
+  const [allPromotors, setAllPromotors] = useState<any[]>([]);
+  
+  // Load promotors on component mount
+  useEffect(() => {
+    const loadPromotors = async () => {
+      try {
+        const response = await fetch('/api/promotors/list');
+        if (response.ok) {
+          const data = await response.json();
+          const formattedPromotors = data.promotors.map((p: any) => ({
+            id: p.user_id,
+            name: p.display_name,
+            email: p.email,
+            region: "wien-noe-bgl" // TODO: Add region mapping logic when region data is available
+          }));
+          setAllPromotors(formattedPromotors);
+        }
+      } catch (error) {
+        console.error('Error loading promotors:', error);
+        // Fallback to empty array if loading fails
+        setAllPromotors([]);
+      }
+    };
+    
+    loadPromotors();
+  }, []);
+  
   // Scheduling states
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
@@ -144,71 +172,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   // Function to select all filtered promotors
   const selectAllFiltered = () => {
-    const allPromotors = [
-      { name: "Sarah Schmidt", region: "wien-noe-bgl" },
-      { name: "Michael Weber", region: "steiermark" },
-      { name: "Jan Müller", region: "salzburg" },
-      { name: "Lisa König", region: "wien-noe-bgl" },
-      { name: "Anna Bauer", region: "oberoesterreich" },
-      { name: "Tom Fischer", region: "tirol" },
-      { name: "Maria Huber", region: "steiermark" },
-      { name: "David Klein", region: "vorarlberg" },
-      { name: "Emma Wagner", region: "kaernten" },
-      { name: "Paul Berger", region: "wien-noe-bgl" },
-      { name: "Julia Mayer", region: "salzburg" },
-      { name: "Felix Gruber", region: "oberoesterreich" },
-      { name: "Sophie Reiter", region: "steiermark" },
-      { name: "Max Köhler", region: "tirol" },
-      { name: "Lena Fuchs", region: "vorarlberg" },
-      { name: "Klaus Müller", region: "wien-noe-bgl" },
-      { name: "Sandra Hofer", region: "steiermark" },
-      { name: "Martin Schneider", region: "salzburg" },
-      { name: "Nina Weiss", region: "oberoesterreich" },
-      { name: "Patrick Schwarz", region: "tirol" },
-      { name: "Andrea Roth", region: "vorarlberg" },
-      { name: "Florian Braun", region: "kaernten" },
-      { name: "Jessica Grün", region: "wien-noe-bgl" },
-      { name: "Daniel Gelb", region: "steiermark" },
-      { name: "Sabrina Blau", region: "salzburg" },
-      { name: "Thomas Orange", region: "oberoesterreich" },
-      { name: "Melanie Violett", region: "tirol" },
-      { name: "Christian Rosa", region: "vorarlberg" },
-      { name: "Vanessa Grau", region: "kaernten" },
-      { name: "Marco Silber", region: "wien-noe-bgl" },
-      { name: "Tanja Gold", region: "steiermark" },
-      { name: "Oliver Bronze", region: "salzburg" },
-      { name: "Carina Kupfer", region: "oberoesterreich" },
-      { name: "Lukas Platin", region: "tirol" },
-      { name: "Stephanie Kristall", region: "vorarlberg" },
-      { name: "Benjamin Diamant", region: "kaernten" },
-      { name: "Michelle Rubin", region: "wien-noe-bgl" },
-      { name: "Tobias Saphir", region: "steiermark" },
-      { name: "Nadine Smaragd", region: "salzburg" },
-      { name: "Kevin Topas", region: "oberoesterreich" },
-      { name: "Franziska Opal", region: "tirol" },
-      { name: "Dominik Achat", region: "vorarlberg" },
-      { name: "Simone Jade", region: "kaernten" },
-      { name: "Philip Onyx", region: "wien-noe-bgl" },
-      { name: "Verena Quarz", region: "steiermark" },
-      { name: "Fabian Marmor", region: "salzburg" },
-      { name: "Isabella Granit", region: "oberoesterreich" },
-      { name: "Maximilian Schiefer", region: "tirol" },
-      { name: "Katharina Basalt", region: "vorarlberg" },
-      { name: "Wolfgang Kalk", region: "kaernten" },
-      { name: "Elena Ton", region: "wien-noe-bgl" },
-      { name: "Robert Sand", region: "steiermark" },
-      { name: "Nicole Lehm", region: "salzburg" },
-      { name: "Stefan Kies", region: "oberoesterreich" },
-      { name: "Petra Fels", region: "tirol" },
-      { name: "Alexander Stein", region: "vorarlberg" },
-      { name: "Christina Berg", region: "kaernten" },
-      { name: "Manuel Tal", region: "wien-noe-bgl" },
-      { name: "Andrea Bach", region: "steiermark" },
-      { name: "Daniel See", region: "salzburg" },
-      { name: "Sabine Meer", region: "oberoesterreich" },
-      { name: "Thomas Ozean", region: "tirol" }
-    ];
-
+    // Use real promotors data from state instead of hardcoded array
          const filteredNames = allPromotors
        .filter(promotor => 
          (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
@@ -260,35 +224,70 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   };
 
   // Function to handle message scheduling
-  const handleScheduleMessage = () => {
+  const handleScheduleMessage = async () => {
     if (!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0) return;
     
-    // Create new scheduled message
-    const newMessage = {
-      id: Date.now(), // Simple ID generation
-      preview: messageText.substring(0, 50) + (messageText.length > 50 ? "..." : ""),
-      fullText: messageText,
-      time: scheduleTime,
-      date: new Date(scheduleDate).toLocaleDateString('de-DE', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'short' 
-      }),
-      dateISO: scheduleDate, // Store original date for sorting
-      recipients: selectedPromotors.length === 1 
-        ? selectedPromotors[0] 
-        : `${selectedPromotors.length} Promotoren`,
-      promotors: [...selectedPromotors]
-    };
-    
-    // Add to scheduled messages
-    setScheduledMessages(prev => [...prev, newMessage]);
-    
-    // Reset form
-    setMessageText("");
-    setScheduleDate("");
-    setScheduleTime("");
-    setShowScheduleModal(false);
+    try {
+      // Get promotor IDs from names
+      const promotorIds = selectedPromotors.map(name => {
+        const promotor = allPromotors.find(p => p.name === name);
+        return promotor?.id; // Assuming allPromotors will have IDs
+      }).filter(Boolean);
+      
+      // Combine date and time for scheduled send
+      const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString();
+      
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message_text: messageText,
+          message_type: enableTwoStep ? 'confirmation_required' : 'normal',
+          recipient_ids: promotorIds,
+          scheduled_send_time: scheduledDateTime,
+          send_immediately: false
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Create display object for local state (keep existing UI working)
+        const newMessage = {
+          id: result.message.id,
+          preview: messageText.substring(0, 50) + (messageText.length > 50 ? "..." : ""),
+          fullText: messageText,
+          time: scheduleTime,
+          date: new Date(scheduleDate).toLocaleDateString('de-DE', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'short' 
+          }),
+          dateISO: scheduleDate,
+          recipients: selectedPromotors.length === 1 
+            ? selectedPromotors[0] 
+            : `${selectedPromotors.length} Promotoren`,
+          promotors: [...selectedPromotors]
+        };
+        
+        // Add to scheduled messages
+        setScheduledMessages(prev => [...prev, newMessage]);
+        
+        // Reset form
+        setMessageText("");
+        setScheduleDate("");
+        setScheduleTime("");
+        setSelectedPromotors([]);
+        setEnableTwoStep(false);
+        setShowScheduleModal(false);
+        
+        console.log('Message scheduled successfully');
+      } else {
+        console.error('Failed to schedule message');
+      }
+    } catch (error) {
+      console.error('Error scheduling message:', error);
+    }
   };
 
   // Function to handle message detail view
@@ -412,7 +411,14 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   // Get promotor region
   const getPromotorRegion = (promotorName: string) => {
-    const allPromotors = [
+    // Use real promotors data from state
+    const promotor = allPromotors.find(p => p.name === promotorName);
+    return promotor?.region || "wien-noe-bgl"; // Default region
+  };
+  
+  // This function is now replaced by the above, removing the hardcoded array
+  const getPromotorRegionOld = (promotorName: string) => {
+    const oldAllPromotors = [
       { name: "Sarah Schmidt", region: "wien-noe-bgl" },
       { name: "Michael Weber", region: "steiermark" },
       { name: "Jan Müller", region: "salzburg" },
@@ -1779,7 +1785,43 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       `}</style>
                     </div>
                     <div className="flex space-x-2">
-                      <button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all">
+                      <button 
+                        onClick={async () => {
+                          if (!messageText.trim() || selectedPromotors.length === 0) return;
+                          
+                          try {
+                            // Get promotor IDs from names
+                            const promotorIds = selectedPromotors.map(name => {
+                              const promotor = allPromotors.find(p => p.name === name);
+                              return promotor?.id; // Assuming allPromotors will have IDs
+                            }).filter(Boolean);
+                            
+                            const response = await fetch('/api/messages', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                message_text: messageText,
+                                message_type: enableTwoStep ? 'confirmation_required' : 'normal',
+                                recipient_ids: promotorIds,
+                                send_immediately: true
+                              })
+                            });
+                            
+                            if (response.ok) {
+                              // Reset form
+                              setMessageText("");
+                              setSelectedPromotors([]);
+                              setEnableTwoStep(false);
+                              console.log('Message sent successfully');
+                            } else {
+                              console.error('Failed to send message');
+                            }
+                          } catch (error) {
+                            console.error('Error sending message:', error);
+                          }
+                        }}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all"
+                      >
                         Sofort senden
                       </button>
                       <button 
