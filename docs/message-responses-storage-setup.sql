@@ -7,6 +7,12 @@ VALUES ('message-responses', 'message-responses', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for message-responses bucket
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Promotors can upload message responses" ON storage.objects;
+DROP POLICY IF EXISTS "Promotors can read their message responses" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can read all message responses" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete message responses" ON storage.objects;
+
 -- Promotors can upload files to their own folder
 CREATE POLICY "Promotors can upload message responses" ON storage.objects
   FOR INSERT WITH CHECK (
