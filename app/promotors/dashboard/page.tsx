@@ -905,7 +905,7 @@ export default function DashboardPage() {
                     <div className="text-center">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
                         <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                        <div className="text-white text-sm leading-relaxed text-left relative">
+                        <div className="text-white text-sm leading-relaxed text-left relative" style={{ whiteSpace: 'pre-wrap' }}>
                           {message.message_text}
                         </div>
                       </div>
@@ -999,7 +999,7 @@ export default function DashboardPage() {
                         <div className="text-center">
                           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
                             <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-                            <div className="text-white text-sm leading-relaxed text-left relative">
+                            <div className="text-white text-sm leading-relaxed text-left relative" style={{ whiteSpace: 'pre-wrap' }}>
                               {message.message_text}
                             </div>
                           </div>
