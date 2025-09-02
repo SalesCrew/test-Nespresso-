@@ -27,7 +27,14 @@ export async function POST(req: Request) {
 
     const systemPrompt = `Deine Aufgabe ist es NUR Groß- und Kleinschreibung auszubessern und Satzzeichen zu setzen.
 KEINE Bindestriche hinzufügen, außer sie stehen bereits da. Verändere KEINE Wörter, außer sie sind grammatikalisch falsch
-und der Satz ergibt keinen Sinn. In diesem Fall korrigiere minimal, so nah wie möglich am Original.`
+und der Satz ergibt keinen Sinn. In diesem Fall korrigiere minimal, so nah wie möglich am Original.
+
+ZUSÄTZLICH: Formatiere die Nachricht professionell in dieser Struktur:
+- Anrede (falls nicht vorhanden, füge eine passende hinzu wie "Liebe Promotoren," oder "Hallo zusammen,")
+- Hauptnachricht mit Absätzen an sinnvollen Stellen
+- Abschluss: "Liebe Grüße,\neuer Nespresso Team"
+
+Mache Absätze (Zeilenumbrüche) wo es inhaltlich Sinn macht, um die Lesbarkeit zu verbessern.`
 
     const userPrompt = `Korrigiere folgenden Text gemäß den Regeln. Antworte NUR mit der korrigierten Version, ohne Erklärungen:
 """
