@@ -3256,7 +3256,7 @@ Import EP
               <button
                 onClick={async () => {
                   try {
-                    // Save basic assignment data
+                    // Save basic assignment data (NOT including status - that's handled by status dropdown)
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
@@ -3265,8 +3265,8 @@ Import EP
                         planStart: editingEinsatz.planStart,
                         planEnd: editingEinsatz.planEnd,
                         location_text: editingEinsatz.address,
-                        postal_code: editingEinsatz.plz,
-                        status: editingEinsatz.status
+                        postal_code: editingEinsatz.plz
+                        // REMOVED status - it should only be changed through the status dropdown
                       })
                     });
                     
