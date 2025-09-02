@@ -2371,9 +2371,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   .map((promotor) => (
                   <div 
                     key={promotor.id} 
-                    className="p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:border-gray-300 hover:shadow-sm hover:scale-[1.02] bg-gradient-to-br from-white to-blue-50"
+                    className="relative p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:border-gray-300 hover:shadow-sm hover:scale-[1.02] bg-gradient-to-br from-white to-blue-50"
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-3 pb-6">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium text-gray-900 truncate">{promotor.name}</h4>
                         <div className="w-2 h-2 rounded-full bg-green-400"></div>
@@ -2383,9 +2383,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         <p className="text-xs text-gray-600 truncate">{promotor.email}</p>
                         <p className="text-xs text-gray-600">{promotor.location}</p>
                       </div>
-                      <div className="flex items-center justify-start pt-2">
-                        <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
-                      </div>
+                    </div>
+                    <div className="absolute bottom-4 left-4">
+                      <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
                     </div>
                   </div>
                 ))}
