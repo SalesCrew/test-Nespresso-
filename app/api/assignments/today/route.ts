@@ -118,43 +118,74 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if admin
-    const { data: profile } = await service
-      .from('user_profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
+    const body = await request.json();
+    const { assignment_id, user_id, action, status, actual_start_time, actual_end_time } = body;
 
-    if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!assignment_id) {
+      return NextResponse.json({ error: 'Missing assignment_id' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { assignment_id, user_id, action, status } = body;
+    // If user_id is provided, check admin role. If not, use current user (promotor updating their own)
+    const targetUserId = user_id || user.id;
+    
+    if (user_id && user_id !== user.id) {
+      // Admin updating someone else's tracking
+      const { data: profile } = await service
+        .from('user_profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
 
-    if (!assignment_id || !user_id) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // Promotor updating their own - verify they're assigned to this assignment
+      const { data: participation } = await service
+        .from('assignment_participants')
+        .select('user_id')
+        .eq('assignment_id', assignment_id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!participation) {
+        return NextResponse.json({ error: 'Not assigned to this assignment' }, { status: 403 });
+      }
     }
 
     let updateData: any = { updated_at: new Date().toISOString() };
 
-    switch (action) {
-      case 'start':
-        updateData.actual_start_time = new Date().toISOString();
-        updateData.status = 'gestartet';
-        break;
-      case 'stop':
-        updateData.actual_end_time = new Date().toISOString();
-        updateData.status = 'beendet';
-        break;
-      case 'update_status':
-        if (!status || !['krankenstand', 'urlaub', 'zeitausgleich'].includes(status)) {
-          return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-        }
-        updateData.status = status;
-        break;
-      default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    // Handle direct timestamp updates (from promotor app)
+    if (actual_start_time) {
+      updateData.actual_start_time = actual_start_time;
+    }
+    if (actual_end_time) {
+      updateData.actual_end_time = actual_end_time;
+    }
+    if (status) {
+      updateData.status = status;
+    }
+
+    // Handle action-based updates (legacy admin interface)
+    if (action) {
+      switch (action) {
+        case 'start':
+          updateData.actual_start_time = new Date().toISOString();
+          updateData.status = 'gestartet';
+          break;
+        case 'stop':
+          updateData.actual_end_time = new Date().toISOString();
+          updateData.status = 'beendet';
+          break;
+        case 'update_status':
+          if (!status || !['krankenstand', 'urlaub', 'zeitausgleich'].includes(status)) {
+            return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+          }
+          updateData.status = status;
+          break;
+        default:
+          return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+      }
     }
 
     // Update or create tracking record
@@ -162,7 +193,7 @@ export async function PATCH(request: Request) {
       .from('assignment_tracking')
       .select('id')
       .eq('assignment_id', assignment_id)
-      .eq('user_id', user_id)
+      .eq('user_id', targetUserId)
       .single();
 
     let result;
@@ -180,7 +211,7 @@ export async function PATCH(request: Request) {
         .from('assignment_tracking')
         .insert({
           assignment_id,
-          user_id,
+          user_id: targetUserId,
           ...updateData
         })
         .select()

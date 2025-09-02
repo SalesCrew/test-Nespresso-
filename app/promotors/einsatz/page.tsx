@@ -965,8 +965,7 @@ const loadProcessState = async () => {
       setRemainingTime(initialRemaining);
 
       if (initialRemaining === 0) {
-        setEinsatzStatus("completed");
-        setLastCompletedAssignmentDate(assignmentEndDateRef.current ? new Date(assignmentEndDateRef.current) : new Date());
+        await handleCompleteEinsatz();
         return;
       }
 
@@ -974,8 +973,7 @@ const loadProcessState = async () => {
         setRemainingTime(prevTime => {
           if (prevTime <= 1) {
             if(timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-            setEinsatzStatus("completed");
-            setLastCompletedAssignmentDate(assignmentEndDateRef.current ? new Date(assignmentEndDateRef.current) : new Date());
+            handleCompleteEinsatz();
             return 0;
           }
           return prevTime - 1;
@@ -1001,9 +999,35 @@ const loadProcessState = async () => {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   };
   
-  const handleStartEinsatz = () => {
-    setEinsatzStatus("started");
-    setIsSwiped(true); // Set swiped to true
+  const handleStartEinsatz = async () => {
+    try {
+      // Update assignment tracking with actual start time
+      if (displayedAssignment?.id) {
+        const response = await fetch('/api/assignments/today', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assignment_id: displayedAssignment.id,
+            actual_start_time: new Date().toISOString(),
+            status: 'gestartet'
+          })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to update start time');
+        } else {
+          console.log('✅ Successfully updated start time for assignment:', displayedAssignment.id);
+        }
+      }
+      
+      setEinsatzStatus("started");
+      setIsSwiped(true); // Set swiped to true
+    } catch (error) {
+      console.error('Error starting einsatz:', error);
+      // Still update UI even if API fails
+      setEinsatzStatus("started");
+      setIsSwiped(true);
+    }
   };
 
   const handleSwipeStart = () => {
@@ -1049,12 +1073,42 @@ const loadProcessState = async () => {
     setShowEarlyEndModal(true);
   };
 
-  const handleEarlyEndSubmit = () => {
+  const handleEarlyEndSubmit = async () => {
     if (earlyEndReason.trim()) {
       setShowEarlyEndModal(false);
       setEarlyEndReason("");
+      await handleCompleteEinsatz();
+    }
+  };
+
+  const handleCompleteEinsatz = async () => {
+    try {
+      // Update assignment tracking with actual end time
+      if (displayedAssignment?.id) {
+        const response = await fetch('/api/assignments/today', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assignment_id: displayedAssignment.id,
+            actual_end_time: new Date().toISOString(),
+            status: 'beendet'
+          })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to update end time');
+        } else {
+          console.log('✅ Successfully updated end time for assignment:', displayedAssignment.id);
+        }
+      }
+      
       setEinsatzStatus("completed");
-      setLastCompletedAssignmentDate(new Date());
+      setLastCompletedAssignmentDate(assignmentEndDateRef.current ? new Date(assignmentEndDateRef.current) : new Date());
+    } catch (error) {
+      console.error('Error completing einsatz:', error);
+      // Still update UI even if API fails
+      setEinsatzStatus("completed");
+      setLastCompletedAssignmentDate(assignmentEndDateRef.current ? new Date(assignmentEndDateRef.current) : new Date());
     }
   };
 
