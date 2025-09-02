@@ -112,15 +112,32 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
         })) : [];
         console.log('✅ Loaded promotors for admin dashboard:', list.length, 'promotors');
         
-        // Prepare active promotors data from the full promotor data
-        const activePromsData = (data?.promotors || []).map((promotor: any) => ({
-          id: promotor.id,
-          name: promotor.name || 'Unbekannt',
-          phone: promotor.phone || '',
-          email: promotor.email || '',
-          location: promotor.address || promotor.region || 'Unbekannt',
-          status: 'aktiv',
-          totalEinsaetze: promotor.assignments || 0  // Use assignments count from API if available
+        // Prepare active promotors data and count their past assignments
+        const activePromsData = await Promise.all((data?.promotors || []).map(async (promotor: any) => {
+          // Count assignments where this promotor was "verplant" (assigned)
+          let totalEinsaetze = 0;
+          try {
+            const svc = await fetch('/api/assignments', { cache: 'no-store' });
+            const assignmentData = await svc.json();
+            if (Array.isArray(assignmentData?.assignments)) {
+              // Count assignments where this promotor is the lead
+              totalEinsaetze = assignmentData.assignments.filter((assignment: any) => 
+                assignment.lead_user_id === promotor.id
+              ).length;
+            }
+          } catch (err) {
+            console.error('Error counting assignments for promotor:', promotor.id, err);
+          }
+          
+          return {
+            id: promotor.id,
+            name: promotor.name || 'Unbekannt',
+            phone: promotor.phone || '',
+            email: promotor.email || '',
+            location: promotor.address || promotor.region || 'Unbekannt',
+            status: 'aktiv',
+            totalEinsaetze
+          };
         }));
         
         setActivePromotorsData(activePromsData);
@@ -2366,7 +2383,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         <p className="text-xs text-gray-600 truncate">{promotor.email}</p>
                         <p className="text-xs text-gray-600">{promotor.location}</p>
                       </div>
-                      <div className="flex items-center justify-end pt-2">
+                      <div className="flex items-center justify-start pt-2">
                         <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
                       </div>
                     </div>
