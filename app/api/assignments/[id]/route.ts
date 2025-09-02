@@ -36,37 +36,35 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       updates.special_status = body.special_status || null
     }
 
-    // Handle status updates - SIMPLIFIED AND DIRECT
+    // Handle status updates - EXACTLY like assigned/buddy_tag
     if (body.status) {
       const status = String(body.status)
-      console.log('🔵 [API] Processing status:', status)
       
-      // Special statuses - save to special_status column
-      const specialStatusMap: Record<string, string> = {
-        'Krankenstand': 'krankenstand',
-        'Notfall': 'notfall', 
-        'Urlaub': 'urlaub',
-        'Zeitausgleich': 'zeitausgleich',
-        'Markierte': 'markierte',
-        'Bestätigt': 'bestätigt',
-        'Geplant': 'geplant'
-      }
-      
-      if (specialStatusMap[status]) {
-        // IT'S A SPECIAL STATUS - SET special_status COLUMN
-        updates.special_status = specialStatusMap[status]
-        console.log('🔴 SETTING SPECIAL_STATUS TO:', updates.special_status)
-        // DON'T TOUCH THE MAIN STATUS
-      } else {
-        // Regular status - set main status and CLEAR special_status
-        const regularStatusMap: Record<string, string> = {
-          'Offen': 'open',
-          'Verplant': 'assigned',
-          'Buddy Tag': 'buddy_tag'
+      // Check if it's a special status
+      if (status === 'Krankenstand' || status === 'Notfall' || status === 'Urlaub' || 
+          status === 'Zeitausgleich' || status === 'Markierte' || status === 'Bestätigt' || 
+          status === 'Geplant') {
+        // Special status - save to special_status DIRECTLY
+        const specialMap: Record<string, string> = {
+          'Krankenstand': 'krankenstand',
+          'Notfall': 'notfall',
+          'Urlaub': 'urlaub',
+          'Zeitausgleich': 'zeitausgleich',
+          'Markierte': 'markierte',
+          'Bestätigt': 'bestätigt',
+          'Geplant': 'geplant'
         }
-        updates.status = regularStatusMap[status] || status
-        updates.special_status = null // CLEAR special status
-        console.log('🔵 Setting regular status:', updates.status, 'and clearing special_status')
+        updates.special_status = specialMap[status]
+        // IMPORTANT: Don't change the main status field
+      } else {
+        // Regular status - update status field
+        if (status === 'Offen') updates.status = 'open'
+        else if (status === 'Verplant') updates.status = 'assigned'
+        else if (status === 'Buddy Tag') updates.status = 'buddy_tag'
+        else updates.status = status
+        
+        // Clear special_status when setting regular status
+        updates.special_status = null
       }
     }
 
@@ -85,6 +83,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (error) {
       console.error('🔴 Assignment update error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // EXTRA SAFETY: If we're setting special_status, do a direct update JUST for that field
+    if (updates.special_status !== undefined) {
+      console.log('🔴 DOING EXTRA UPDATE FOR special_status:', updates.special_status)
+      const { error: specialError } = await svc
+        .from('assignments')
+        .update({ special_status: updates.special_status })
+        .eq('id', params.id)
+      
+      if (specialError) {
+        console.error('🔴 Special status update error:', specialError)
+      }
     }
 
     console.log('🟢 Assignment updated successfully:', data)
