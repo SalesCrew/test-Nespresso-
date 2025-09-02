@@ -301,23 +301,45 @@ export default function AdminDashboard() {
   const enhanceMessage = async () => {
     if (!messageText.trim() || isEnhancing) return;
     
+    console.log('🤖 Starting AI enhancement for text:', messageText.substring(0, 100) + '...');
     setIsEnhancing(true);
     
     try {
+      console.log('📤 Sending request to /api/ai/enhance-message');
       const res = await fetch('/api/ai/enhance-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: messageText })
       })
+      
+      console.log('📥 Response status:', res.status);
+      
       if (!res.ok) {
-        console.error('AI enhance error:', await res.text())
+        const errorText = await res.text();
+        console.error('❌ AI enhance error:', {
+          status: res.status,
+          statusText: res.statusText,
+          errorBody: errorText
+        });
       } else {
-        const data = await res.json().catch(() => ({}))
-        if (data?.text) setMessageText(data.text)
+        const data = await res.json().catch(() => ({}));
+        console.log('📝 Enhancement response:', {
+          hasText: !!data?.text,
+          enhancedLength: data?.text?.length || 0,
+          enhancedPreview: data?.text ? data.text.substring(0, 100) + '...' : 'No text'
+        });
+        
+        if (data?.text) {
+          console.log('✅ Setting enhanced text');
+          setMessageText(data.text);
+        } else {
+          console.warn('⚠️ No enhanced text in response');
+        }
       }
     } catch (error) {
-      console.error('Error enhancing text:', error);
+      console.error('❌ Error enhancing text:', error);
     } finally {
+      console.log('🏁 AI enhancement process completed');
       setIsEnhancing(false);
     }
   };
@@ -1772,23 +1794,37 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         />
                       </div>
                       
-                      {/* Single Scanning Line Animation - Covers entire container including footer icons */}
+                      {/* Scanning Line Animation - Moving scan lines */}
                       {isEnhancing && (
                         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20 rounded-lg">
+                          {/* Vertical scanning line */}
                           <div 
-                            className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg animate-pulse"
+                            className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg"
                             style={{
-                              left: '50%',
-                              filter: 'blur(1px)'
+                              left: '0%',
+                              filter: 'blur(1px)',
+                              animation: 'scanHorizontal 2s linear infinite'
                             }}
                           />
+                          {/* Horizontal scanning line */}
                           <div 
-                            className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg animate-pulse"
+                            className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg"
                             style={{
-                              top: '50%',
-                              filter: 'blur(1px)'
+                              top: '0%',
+                              filter: 'blur(1px)',
+                              animation: 'scanVertical 2s linear infinite'
                             }}
                           />
+                          <style jsx>{`
+                            @keyframes scanHorizontal {
+                              0% { left: -1px; }
+                              100% { left: calc(100% + 1px); }
+                            }
+                            @keyframes scanVertical {
+                              0% { top: -1px; }
+                              100% { top: calc(100% + 1px); }
+                            }
+                          `}</style>
                         </div>
                       )}
 
