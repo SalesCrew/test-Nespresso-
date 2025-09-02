@@ -412,8 +412,11 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ user_id: promotorId })
         });
         
-        // Update local state
-        const newStatus = editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Verplant';
+        // Update local state - preserve special statuses like Krankenstand, Urlaub etc
+        const specialStatuses = ['Krankenstand', 'Notfall', 'Urlaub', 'Zeitausgleich', 'Markierte', 'Bestätigt', 'Geplant'];
+        const currentStatus = editingEinsatz.status;
+        const newStatus = specialStatuses.includes(currentStatus) ? currentStatus : 
+                         (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Verplant');
         setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, promotorId: promotorId, status: newStatus });
         setEinsatzplanData(prev => prev.map(item => 
           item.id === editingEinsatz.id 
@@ -494,11 +497,14 @@ export default function EinsatzplanPage() {
         })
         
         // Update assignment with buddy info - this is critical for persistence!
+        const specialStatuses = ['krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 'bestätigt', 'geplant'];
+        const currentDbStatus = editingEinsatz.status?.toLowerCase();
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            status: 'buddy_tag',
+            // Preserve special statuses, otherwise set to buddy_tag
+            status: specialStatuses.includes(currentDbStatus) ? currentDbStatus : 'buddy_tag',
             buddy_user_id: buddyId,
             buddy_name: buddyName
           })
@@ -511,17 +517,25 @@ export default function EinsatzplanPage() {
             method: 'DELETE'
           });
         } catch {}
-        await fetch(`/api/assignments/${editingEinsatz.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
-        })
+        // Only update status if it's not a special status
+        const specialStatuses = ['krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 'bestätigt', 'geplant'];
+        const currentDbStatus = editingEinsatz.status?.toLowerCase();
+        if (!specialStatuses.includes(currentDbStatus)) {
+          await fetch(`/api/assignments/${editingEinsatz.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
+          })
+        }
       }
     } catch (error) {
       console.error('Error assigning buddy:', error);
     }
-    // optimistic UI update
-    const newStatus = buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen');
+    // optimistic UI update - preserve special statuses
+    const specialStatuses = ['Krankenstand', 'Notfall', 'Urlaub', 'Zeitausgleich', 'Markierte', 'Bestätigt', 'Geplant'];
+    const currentStatus = editingEinsatz.status;
+    const newStatus = specialStatuses.includes(currentStatus) ? currentStatus :
+                     (buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen'));
     setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus })
     setEinsatzplanData(prev => prev.map(item => 
       item.id === editingEinsatz.id 
