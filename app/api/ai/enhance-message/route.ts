@@ -32,7 +32,7 @@ und der Satz ergibt keinen Sinn. In diesem Fall korrigiere minimal, so nah wie m
 ZUSÄTZLICH: Formatiere die Nachricht professionell in dieser Struktur:
 - Anrede (falls nicht vorhanden, füge eine passende hinzu wie "Liebe Promotoren," oder "Hallo zusammen,")
 - Hauptnachricht mit Absätzen an sinnvollen Stellen
-- Abschluss: "Liebe Grüße,\neuer Nespresso Team"
+- Abschluss: "Liebe Grüße, euer Nespresso Team"
 
 Mache Absätze (Zeilenumbrüche) wo es inhaltlich Sinn macht, um die Lesbarkeit zu verbessern.`
 

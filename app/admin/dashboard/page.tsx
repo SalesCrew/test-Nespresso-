@@ -75,6 +75,10 @@ export default function AdminDashboard() {
   const [isEinsaetzeExpanded, setIsEinsaetzeExpanded] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
   
+  // State for today's assignments
+  const [todaysEinsaetze, setTodaysEinsaetze] = useState<any[]>([]);
+  const [todaysEinsaetzeLoading, setTodaysEinsaetzeLoading] = useState(true);
+  
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
   const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
@@ -139,6 +143,7 @@ export default function AdminDashboard() {
     loadPromotors();
     loadScheduledMessages();
     loadMessageHistory();
+    loadTodaysAssignments(); // Load today's assignments
     
     // Check for scheduled messages immediately and then every minute
     checkScheduledMessages();
@@ -958,37 +963,45 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     { id: 60, name: "Jonas Onyx", phone: "+43 664 012 3461", email: "jonas.onyx@nespresso.at", location: "Linz", status: "aktiv", rating: 4.5, totalEinsaetze: 83 }
   ];
 
-  // Mock data for today's Einsätze with actual start/end times
-  const todaysEinsaetze = [
-    { id: 1, market: "Interspar Graz", address: "Weblinger Gürtel 25", plz: "8054", city: "Graz", promotor: "Jan Müller", planStart: "09:00", planEnd: "17:00", actualStart: "09:15", actualEnd: null, status: "active" },
-    { id: 2, market: "Billa Plus Wien", address: "Mariahilfer Straße 85", plz: "1060", city: "Wien", promotor: "Sarah Schmidt", planStart: "10:00", planEnd: "18:00", actualStart: "10:05", actualEnd: null, status: "active" },
-    { id: 3, market: "Merkur Salzburg", address: "Alpenstraße 107", plz: "5020", city: "Salzburg", promotor: "Michael Weber", planStart: "08:30", planEnd: "16:30", actualStart: "08:45", actualEnd: "16:25", status: "completed" },
-    { id: 4, market: "Spar Innsbruck", address: "Innrain 25", plz: "6020", city: "Innsbruck", promotor: "Lisa König", planStart: "09:30", planEnd: "19:00", actualStart: null, actualEnd: null, status: "pending" },
-    { id: 5, market: "Hofer Linz", address: "Landstraße 49", plz: "4020", city: "Linz", promotor: "Thomas Bauer", planStart: "12:00", planEnd: "20:00", actualStart: "12:10", actualEnd: null, status: "active" },
-    { id: 6, market: "Billa Klagenfurt", address: "Völkermarkter Ring 21", plz: "9020", city: "Klagenfurt", promotor: "Anna Steiner", planStart: "10:00", planEnd: "18:00", actualStart: null, actualEnd: null, status: "cancelled", cancelReason: "krankenstand" },
-    { id: 7, market: "Spar Villach", address: "Hauptplatz 15", plz: "9500", city: "Villach", promotor: "Peter Huber", planStart: "11:00", planEnd: "19:00", actualStart: null, actualEnd: null, status: "cancelled", cancelReason: "notfall" },
-    // Additional test data with gestartet status
-    { id: 8, market: "Billa Wien Nord", address: "Prager Straße 180", plz: "1210", city: "Wien", promotor: "Markus Fischer", planStart: "08:00", planEnd: "16:00", actualStart: "08:05", actualEnd: null, status: "active" },
-    { id: 9, market: "Spar Graz Süd", address: "Gradner Straße 42", plz: "8055", city: "Graz", promotor: "Julia Wagner", planStart: "09:30", planEnd: "17:30", actualStart: "09:25", actualEnd: null, status: "active" },
-    { id: 10, market: "Merkur Linz", address: "Wiener Straße 25", plz: "4020", city: "Linz", promotor: "Robert Klein", planStart: "10:15", planEnd: "18:15", actualStart: "10:20", actualEnd: null, status: "active" },
-    { id: 11, market: "Hofer Salzburg", address: "Münchner Straße 33", plz: "5020", city: "Salzburg", promotor: "Elena Hofer", planStart: "11:00", planEnd: "19:00", actualStart: "11:10", actualEnd: null, status: "active" },
-    { id: 12, market: "Billa Plus Innsbruck", address: "Maria-Theresien-Straße 50", plz: "6020", city: "Innsbruck", promotor: "David Moser", planStart: "08:45", planEnd: "16:45", actualStart: "08:50", actualEnd: null, status: "active" },
-    { id: 13, market: "Interspar Wien", address: "Lugner City", plz: "1150", city: "Wien", promotor: "Sophie Wimmer", planStart: "09:00", planEnd: "17:00", actualStart: "09:08", actualEnd: null, status: "active" },
-    { id: 14, market: "Spar Klagenfurt", address: "Bahnhofstraße 44", plz: "9020", city: "Klagenfurt", promotor: "Martin Gruber", planStart: "10:30", planEnd: "18:30", actualStart: "10:35", actualEnd: null, status: "active" },
-    { id: 15, market: "Merkur Villach", address: "Ringmauergasse 8", plz: "9500", city: "Villach", promotor: "Christina Pichler", planStart: "12:15", planEnd: "20:15", actualStart: "12:18", actualEnd: null, status: "active" },
-    { id: 16, market: "Billa Graz West", address: "Eggenberger Straße 65", plz: "8020", city: "Graz", promotor: "Alexander Steiner", planStart: "07:30", planEnd: "15:30", actualStart: "07:35", actualEnd: null, status: "active" },
-    { id: 17, market: "Hofer Wien Süd", address: "Triester Straße 210", plz: "1230", city: "Wien", promotor: "Petra Maier", planStart: "13:00", planEnd: "21:00", actualStart: "13:05", actualEnd: null, status: "active" },
-    { id: 18, market: "Spar Linz Nord", address: "Freistädter Straße 315", plz: "4040", city: "Linz", promotor: "Stefan Berger", planStart: "09:15", planEnd: "17:15", actualStart: "09:18", actualEnd: null, status: "active" },
-    { id: 19, market: "Interspar Salzburg", address: "Europark", plz: "5015", city: "Salzburg", promotor: "Nicole Huber", planStart: "10:45", planEnd: "18:45", actualStart: "10:50", actualEnd: null, status: "active" },
-    { id: 20, market: "Billa Innsbruck West", address: "Olympiastraße 10", plz: "6020", city: "Innsbruck", promotor: "Thomas Lechner", planStart: "11:30", planEnd: "19:30", actualStart: "11:33", actualEnd: null, status: "active" },
-    { id: 21, market: "Merkur Klagenfurt", address: "St. Veiter Ring 47", plz: "9020", city: "Klagenfurt", promotor: "Sabine Wolf", planStart: "08:15", planEnd: "16:15", actualStart: "08:20", actualEnd: null, status: "active" },
-    { id: 22, market: "Spar Villach Ost", address: "Ossiacher Zeile 45", plz: "9500", city: "Villach", promotor: "Daniel Kraus", planStart: "14:00", planEnd: "22:00", actualStart: "14:03", actualEnd: null, status: "active" },
-    { id: 23, market: "Hofer Graz Ost", address: "Liebenauer Hauptstraße 120", plz: "8041", city: "Graz", promotor: "Andrea Fuchs", planStart: "07:45", planEnd: "15:45", actualStart: "07:48", actualEnd: null, status: "active" },
-    { id: 24, market: "Billa Wien Mitte", address: "Landstraßer Hauptstraße 1", plz: "1030", city: "Wien", promotor: "Manuel Bauer", planStart: "13:30", planEnd: "21:30", actualStart: "13:35", actualEnd: null, status: "active" },
-    { id: 25, market: "Interspar Linz", address: "PlusCity", plz: "4061", city: "Linz", promotor: "Vanessa Köhler", planStart: "09:45", planEnd: "17:45", actualStart: "09:48", actualEnd: null, status: "active" },
-    { id: 26, market: "Merkur Salzburg Nord", address: "Vogelweiderstraße 70", plz: "5020", city: "Salzburg", promotor: "Florian Reiter", planStart: "11:15", planEnd: "19:15", actualStart: "11:20", actualEnd: null, status: "active" },
-    { id: 27, market: "Spar Innsbruck Ost", address: "Amraser Straße 8", plz: "6020", city: "Innsbruck", promotor: "Lisa Mayer", planStart: "12:45", planEnd: "20:45", actualStart: "12:50", actualEnd: null, status: "active" }
-  ];
+  // Function to load today's assignments
+  const loadTodaysAssignments = async () => {
+    try {
+      setTodaysEinsaetzeLoading(true);
+      const response = await fetch('/api/assignments/today');
+      const data = await response.json();
+      
+      if (response.ok && data.assignments) {
+        // Transform the data to match the expected format
+        const transformedData = data.assignments.map((a: any) => ({
+          id: a.assignment_id,
+          market: a.title || 'N/A',
+          address: a.location_text || '',
+          plz: a.postal_code || '',
+          city: a.city || '',
+          promotor: a.promotor_name || 'N/A',
+          buddyName: a.buddy_name,
+          planStart: new Date(a.planned_start).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }),
+          planEnd: new Date(a.planned_end).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }),
+          actualStart: a.actual_start_time ? new Date(a.actual_start_time).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }) : null,
+          actualEnd: a.actual_end_time ? new Date(a.actual_end_time).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }) : null,
+          status: a.display_status,
+          tracking_status: a.tracking_status,
+          participant_status: a.participant_status,
+          user_id: a.user_id,
+          tracking_id: a.tracking_id
+        }));
+        setTodaysEinsaetze(transformedData);
+      } else {
+        console.error('Failed to load assignments:', data.error);
+        setTodaysEinsaetze([]);
+      }
+    } catch (error) {
+      console.error('Error loading today\'s assignments:', error);
+      setTodaysEinsaetze([]);
+    } finally {
+      setTodaysEinsaetzeLoading(false);
+    }
+  };
 
   // Recent activities
   const recentActivities = [
@@ -1003,28 +1016,19 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   };
 
   const getStatusColor = (einsatz: any) => {
-    // Red for cancelled (krankenstand or notfall)
-    if (einsatz.status === 'cancelled' && (einsatz.cancelReason === 'krankenstand' || einsatz.cancelReason === 'notfall')) {
+    // Red for special statuses (krankenstand, urlaub, zeitausgleich)
+    if (['krankenstand', 'urlaub', 'zeitausgleich'].includes(einsatz.status)) {
       return 'red';
     }
     
-    // Green for started
-    if (einsatz.actualStart) {
+    // Green for started or completed
+    if (einsatz.status === 'gestartet' || einsatz.status === 'beendet' || einsatz.actualStart) {
       return 'green';
     }
     
-    // Orange if not started 30 minutes after planned start
-    if (!einsatz.actualStart && einsatz.planStart) {
-      const now = new Date();
-      const [hours, minutes] = einsatz.planStart.split(':').map(Number);
-      const planStart = new Date();
-      planStart.setHours(hours, minutes, 0, 0);
-      
-      const thirtyMinutesLater = new Date(planStart.getTime() + 30 * 60 * 1000);
-      
-      if (now > thirtyMinutesLater) {
-        return 'orange';
-      }
+    // Orange for verspätet
+    if (einsatz.status === 'verspätet') {
+      return 'orange';
     }
     
     // Default gray for pending
@@ -1044,9 +1048,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
   // Calculate completion statistics
   const getCompletionStats = () => {
-    const started = filteredEinsaetze.filter(e => e.actualStart).length;
-    const cancelled = filteredEinsaetze.filter(e => e.status === 'cancelled').length;
-    const notStarted = filteredEinsaetze.filter(e => !e.actualStart && e.status !== 'cancelled').length;
+    const started = filteredEinsaetze.filter(e => e.status === 'gestartet' || e.status === 'beendet' || e.actualStart).length;
+    const cancelled = filteredEinsaetze.filter(e => ['krankenstand', 'urlaub', 'zeitausgleich'].includes(e.status)).length;
+    const notStarted = filteredEinsaetze.filter(e => ['pending', 'verspätet'].includes(e.status)).length;
     const completed = started + cancelled;
     const total = filteredEinsaetze.length;
     const completionPercentage = total > 0 ? (completed / total) * 100 : 0;
@@ -1058,26 +1062,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   const getLocationStatusColor = (location: string) => {
     const locationEinsaetze = todaysEinsaetze.filter(e => `${e.plz} ${e.city}` === location);
     
-    // Check for cancelled first (highest priority)
-    if (locationEinsaetze.some(e => e.status === 'cancelled')) return 'red';
+    // Check for special statuses first (highest priority)
+    if (locationEinsaetze.some(e => ['krankenstand', 'urlaub', 'zeitausgleich'].includes(e.status))) return 'red';
     
     // Check for started
-    if (locationEinsaetze.some(e => e.actualStart)) return 'green';
+    if (locationEinsaetze.some(e => e.status === 'gestartet' || e.status === 'beendet' || e.actualStart)) return 'green';
     
-    // Check for late (verspätet) - not started 30 minutes after planned start
-    const hasLateEinsatz = locationEinsaetze.some(e => {
-      if (!e.actualStart && e.planStart) {
-        const now = new Date();
-        const [hours, minutes] = e.planStart.split(':').map(Number);
-        const planStart = new Date();
-        planStart.setHours(hours, minutes, 0, 0);
-        const thirtyMinutesLater = new Date(planStart.getTime() + 30 * 60 * 1000);
-        return now > thirtyMinutesLater;
-      }
-      return false;
-    });
-    
-    if (hasLateEinsatz) return 'orange';
+    // Check for verspätet
+    if (locationEinsaetze.some(e => e.status === 'verspätet')) return 'orange';
     
     return 'gray';
   };
@@ -1325,7 +1317,21 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     msOverflowStyle: 'none'
                   }}
                 >
-                  {viewMode === 'list' ? (
+                  {todaysEinsaetzeLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-500">Lade heutige Einsätze...</p>
+                      </div>
+                    </div>
+                  ) : filteredEinsaetze.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-sm text-gray-500">Keine Einsätze für heute</p>
+                      </div>
+                    </div>
+                  ) : viewMode === 'list' ? (
                     <div className="space-y-2">
                       {filteredEinsaetze.map((einsatz) => {
                         const statusColor = getStatusColor(einsatz);
