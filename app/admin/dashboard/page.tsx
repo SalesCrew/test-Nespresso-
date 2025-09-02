@@ -276,18 +276,17 @@ export default function AdminDashboard() {
     setIsEnhancing(true);
     
     try {
-      // Simulate API call to ChatGPT for text enhancement
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock enhanced text (in real implementation, this would be the ChatGPT response)
-      const enhancedText = messageText
-        .replace(/\s+/g, ' ')
-        .trim()
-        .split('. ')
-        .map(sentence => sentence.charAt(0).toUpperCase() + sentence.slice(1))
-        .join('. ');
-      
-      setMessageText(enhancedText);
+      const res = await fetch('/api/ai/enhance-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: messageText })
+      })
+      if (!res.ok) {
+        console.error('AI enhance error:', await res.text())
+      } else {
+        const data = await res.json().catch(() => ({}))
+        if (data?.text) setMessageText(data.text)
+      }
     } catch (error) {
       console.error('Error enhancing text:', error);
     } finally {
