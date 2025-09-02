@@ -965,7 +965,7 @@ const loadProcessState = async () => {
       setRemainingTime(initialRemaining);
 
       if (initialRemaining === 0) {
-        await handleCompleteEinsatz();
+        handleCompleteEinsatz();
         return;
       }
 
