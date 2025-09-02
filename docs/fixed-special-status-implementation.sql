@@ -1,11 +1,10 @@
--- Complete implementation of special_status column
--- This allows assignments to be "assigned" but also have special statuses like Urlaub, Krankenstand
+-- Fixed implementation of special_status column (no duplicate columns)
 
 -- 1. Add special_status column to assignments table
 ALTER TABLE public.assignments 
 ADD COLUMN IF NOT EXISTS special_status text;
 
--- 2. Update the assignments_with_buddy_info view to include special_status
+-- 2. Update the assignments_with_buddy_info view (a.* already includes special_status)
 DROP VIEW IF EXISTS public.assignments_with_buddy_info CASCADE;
 
 CREATE OR REPLACE VIEW public.assignments_with_buddy_info AS
@@ -27,7 +26,7 @@ LEFT JOIN public.user_profiles buddy_profile ON a.buddy_user_id = buddy_profile.
 
 GRANT SELECT ON public.assignments_with_buddy_info TO authenticated;
 
--- 3. Update todays_assignments view to include special_status
+-- 3. Update todays_assignments view with special_status support
 DROP VIEW IF EXISTS public.todays_assignments;
 
 CREATE VIEW public.todays_assignments AS
@@ -63,7 +62,7 @@ SELECT
     ELSE 'pending'
   END as display_status
 FROM public.assignments a
--- Key change: INNER JOIN ensures only assignments with participants are shown
+-- Only show assignments with lead participants
 INNER JOIN public.assignment_participants ap ON a.id = ap.assignment_id AND ap.role = 'lead'
 LEFT JOIN public.assignment_tracking at ON a.id = at.assignment_id AND ap.user_id = at.user_id
 LEFT JOIN public.user_profiles up ON ap.user_id = up.user_id
@@ -75,16 +74,9 @@ WHERE
   AND (ap.status IS NULL OR ap.status NOT IN ('verplant', 'buddy'))
   AND a.status NOT IN ('cancelled', 'completed');
 
--- Grant access
 GRANT SELECT ON public.todays_assignments TO authenticated;
 
 -- 4. Create index for performance on special_status
 CREATE INDEX IF NOT EXISTS idx_assignments_special_status 
 ON public.assignments(special_status) 
 WHERE special_status IS NOT NULL;
-
--- How it works:
--- 1. When setting Urlaub, Krankenstand etc, it saves to special_status column
--- 2. The assignment can remain "assigned" status with a promotor
--- 3. UI displays special_status when it exists, otherwise shows regular status
--- 4. This prevents status conflicts when assigning/removing promotors

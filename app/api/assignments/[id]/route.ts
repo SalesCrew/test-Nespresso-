@@ -4,6 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json().catch(() => ({} as any))
+    console.log('🟢 [API] PATCH /assignments/[id] received body:', body)
     const svc = createSupabaseServiceClient()
 
     const updates: Record<string, any> = {}
@@ -54,6 +55,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           'Geplant': 'geplant'
         }
         updates.special_status = statusMap[status] || status.toLowerCase()
+        console.log('🟢 Setting special_status:', updates.special_status, 'from UI status:', status)
         // Don't change main status if it's a special status
       } else {
         // Regular status update
@@ -83,14 +85,20 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ error: 'No valid fields provided' }, { status: 400 })
     }
 
+    console.log('🟢 Updating assignment with:', updates)
+
     const { data, error } = await svc
       .from('assignments')
       .update(updates)
       .eq('id', params.id)
       .select('*')
       .single()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('🔴 Assignment update error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
+    console.log('🟢 Assignment updated successfully:', data)
     return NextResponse.json({ assignment: data })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })

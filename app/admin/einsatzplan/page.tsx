@@ -532,27 +532,23 @@ export default function EinsatzplanPage() {
   // Function to update assignment status
   const updateAssignmentStatus = async (assignmentId: string, newStatus: string) => {
     try {
-      // Convert UI status to database status
-      const statusMap: Record<string, string> = {
-        'Offen': 'open',
-        'Verplant': 'assigned',
-        'Buddy Tag': 'buddy_tag',
-        'Krankenstand': 'krankenstand',
-        'Notfall': 'notfall',
-        'Urlaub': 'urlaub',
-        'Zeitausgleich': 'zeitausgleich',
-        'Markierte': 'markierte',
-        'Bestätigt': 'bestätigt',
-        'Geplant': 'geplant'
-      };
+      console.log('🟢 [CLIENT] Updating assignment status:', { assignmentId, newStatus });
       
-      const dbStatus = statusMap[newStatus] || newStatus.toLowerCase();
-      
-      await fetch(`/api/assignments/${assignmentId}`, {
+      // Send UI status directly - API will handle special_status detection
+      const response = await fetch(`/api/assignments/${assignmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: dbStatus })
+        body: JSON.stringify({ status: newStatus })
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔴 [CLIENT] Status update failed:', response.status, errorText);
+        throw new Error(`Status update failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('🟢 [CLIENT] Status update successful:', result);
       
       // Update local state
       setEditingEinsatz((prev: any) => prev ? { ...prev, status: newStatus } : prev);
@@ -560,7 +556,7 @@ export default function EinsatzplanPage() {
         item.id === assignmentId ? { ...item, status: newStatus } : item
       ));
     } catch (error) {
-      console.error('Error updating assignment status:', error);
+      console.error('🔴 [CLIENT] Error updating assignment status:', error);
     }
   };
 
