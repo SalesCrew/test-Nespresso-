@@ -1001,6 +1001,11 @@ const loadProcessState = async () => {
   
   const handleStartEinsatz = async () => {
     try {
+      // Create Austrian time timestamp
+      const now = new Date();
+      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
+      const austrianISO = austrianTime.toISOString();
+      
       // Update assignment tracking with actual start time
       if (displayedAssignment?.id) {
         const response = await fetch('/api/assignments/today', {
@@ -1008,7 +1013,7 @@ const loadProcessState = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             assignment_id: displayedAssignment.id,
-            actual_start_time: new Date().toISOString(),
+            actual_start_time: austrianISO,
             status: 'gestartet'
           })
         });
@@ -1083,6 +1088,11 @@ const loadProcessState = async () => {
 
   const handleCompleteEinsatz = async () => {
     try {
+      // Create Austrian time timestamp
+      const now = new Date();
+      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
+      const austrianISO = austrianTime.toISOString();
+      
       // Update assignment tracking with actual end time
       if (displayedAssignment?.id) {
         const response = await fetch('/api/assignments/today', {
@@ -1090,7 +1100,7 @@ const loadProcessState = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             assignment_id: displayedAssignment.id,
-            actual_end_time: new Date().toISOString(),
+            actual_end_time: austrianISO,
             status: 'beendet'
           })
         });

@@ -168,13 +168,18 @@ export async function PATCH(request: Request) {
 
     // Handle action-based updates (legacy admin interface)
     if (action) {
+      // Create Austrian time timestamp for admin actions too
+      const now = new Date();
+      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
+      const austrianISO = austrianTime.toISOString();
+      
       switch (action) {
         case 'start':
-          updateData.actual_start_time = new Date().toISOString();
+          updateData.actual_start_time = austrianISO;
           updateData.status = 'gestartet';
           break;
         case 'stop':
-          updateData.actual_end_time = new Date().toISOString();
+          updateData.actual_end_time = austrianISO;
           updateData.status = 'beendet';
           break;
         case 'update_status':
