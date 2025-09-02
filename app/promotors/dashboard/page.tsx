@@ -880,16 +880,16 @@ export default function DashboardPage() {
               </Card>
             ) : (
               /* Original Bitte Lesen Card */
-              <div className="relative">
-                {/* Outer glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+            <div className="relative">
+              {/* Outer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-75 animate-pulse"></div>
+              
+              {/* Main card */}
+              <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                {/* Animated background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
                 
-                {/* Main card */}
-                <Card className="relative bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
-                  {/* Animated background pattern */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 animate-pulse"></div>
-                  
-                {/* Header */}
+              {/* Header */}
                 <div className="relative py-3 px-4 text-center">
                   <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
                     <AlertCircle className="h-5 w-5 mr-2 text-white" />
@@ -899,19 +899,19 @@ export default function DashboardPage() {
                     {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Wichtige Mitteilung'}
                   </p>
                 </div>
-                  
-                  {/* Content */}
+                
+                {/* Content */}
                 <CardContent className="relative p-4 pt-0">
-                    <div className="text-center">
+                  <div className="text-center">
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
                         <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
                         <div className="text-white text-sm leading-relaxed text-left relative" style={{ whiteSpace: 'pre-wrap' }}>
                           {message.message_text}
-                        </div>
                       </div>
-                      
-                      {/* Read button */}
-                      <button 
+                    </div>
+                    
+                    {/* Read button */}
+                    <button 
                           onClick={async () => {
                             await markMessageAsRead(message.id);
                             setBitteLesenConfirmed(prev => ({ ...prev, [message.id]: true }));
@@ -925,16 +925,16 @@ export default function DashboardPage() {
                                 return newState;
                               });
                             }, 7000);
-                          }}
-                          className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                      >
-                        ✓ Gelesen
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                        }}
+                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                    >
+                      ✓ Gelesen
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+          </div>
+        )}
           </div>
         ))}
 
@@ -963,21 +963,21 @@ export default function DashboardPage() {
                 </Card>
               ) : (
                 /* Two-Step Bitte Lesen (mit Bestätigung) Card */
-                <div className="relative">
-                  {/* Outer glow */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
+            <div className="relative">
+              {/* Outer glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-lg blur-sm opacity-60"></div>
 
-                  <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
-                    {/* Header */}
-                    <div className="relative py-3 px-4 text-center">
-                      <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
-                        <AlertCircle className="h-5 w-5 mr-2 text-white" />
-                        Bitte Lesen (mit Bestätigung)
-                      </h3>
-                      <p className="text-white/90 text-sm mt-1 drop-shadow">
+              <Card className="relative bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-0 shadow-xl overflow-hidden">
+                {/* Header */}
+                  <div className="relative py-3 px-4 text-center">
+                    <h3 className="text-white font-bold text-lg drop-shadow-lg flex items-center justify-center">
+                      <AlertCircle className="h-5 w-5 mr-2 text-white" />
+                      Bitte Lesen (mit Bestätigung)
+                    </h3>
+                    <p className="text-white/90 text-sm mt-1 drop-shadow">
                         {message.sender_name ? `Mitteilung von ${message.sender_name}` : 'Zweischrittige Bestätigung erforderlich'}
-                      </p>
-                    </div>
+                    </p>
+                  </div>
 
                     {/* Progress Bar */}
                     <div className="relative px-6 pb-2">
@@ -986,7 +986,7 @@ export default function DashboardPage() {
                           className="h-full bg-white rounded-full transition-all duration-500"
                           style={{ width: `${currentProgress}%` }}
                         />
-                      </div>
+                    </div>
                       <div className="flex justify-between text-xs text-white/80 mt-1">
                         <span>Step 1</span>
                         <span>Step 2</span>
@@ -996,40 +996,40 @@ export default function DashboardPage() {
                     <CardContent className="relative p-4 pt-2">
                       {currentStep === 'message' && (
                         /* Step 1: Show message and "Gelesen" button */
-                        <div className="text-center">
-                          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
-                            <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+                    <div className="text-center">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20 relative">
+                        <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
                             <div className="text-white text-sm leading-relaxed text-left relative" style={{ whiteSpace: 'pre-wrap' }}>
                               {message.message_text}
-                            </div>
-                          </div>
-                          <button 
+                        </div>
+                      </div>
+                      <button 
                             onClick={() => {
                               setBitteLesen2Step(prev => ({ ...prev, [message.id]: 'upload' }));
                               setBitteLesen2Progress(prev => ({ ...prev, [message.id]: 50 }));
                             }}
-                            className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
-                          >
-                            ✓ Gelesen
-                          </button>
-                        </div>
-                      )}
+                        className="bg-white text-orange-600 font-medium py-2 px-4 rounded-lg shadow-md hover:bg-gray-50 hover:shadow-lg transform hover:scale-105 transition-all duration-200 border border-white/50"
+                      >
+                        ✓ Gelesen
+                      </button>
+                    </div>
+                  )}
 
                       {currentStep === 'upload' && (
                         /* Step 2: File upload interface */
-                        <div className="text-center">
+                    <div className="text-center">
                           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 border border-white/20">
                             <p className="text-white text-sm mb-3">Bitte lade deine Dateien hoch:</p>
                             
                             {/* File upload area */}
                             <div className="border-2 border-dashed border-white/30 rounded-lg p-4 bg-white/5">
-                              <input
-                                type="file"
+                            <input 
+                              type="file" 
                                 id={`file-upload-${message.id}`}
-                                className="hidden"
-                                multiple
+                              className="hidden"
+                              multiple
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
-                                onChange={(e) => {
+                              onChange={(e) => {
                                   const files = Array.from(e.target.files || []);
                                   setBitteLesen2Files(prev => ({ 
                                     ...prev, 
@@ -1045,7 +1045,7 @@ export default function DashboardPage() {
                                 <p className="text-sm">{messageFiles.length === 0 ? 'Dateien auswählen' : 'Weitere Dateien hinzufügen'}</p>
                                 <p className="text-xs text-white/60 mt-1">Mehrere Dateien möglich</p>
                               </button>
-                            </div>
+                        </div>
                             
                             {/* Show selected files */}
                             {messageFiles.length > 0 && (
@@ -1072,9 +1072,9 @@ export default function DashboardPage() {
                                         <span className="mr-1">📎</span>
                                         <span className="truncate">{file.name}</span>
                                         <span className="ml-1 text-white/60">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
-                                      </div>
-                                      <button
-                                        onClick={() => {
+                      </div>
+                      <button 
+                        onClick={() => {
                                           setBitteLesen2Files(prev => ({
                                             ...prev,
                                             [message.id]: prev[message.id]?.filter((_, i) => i !== idx) || []
@@ -1083,13 +1083,13 @@ export default function DashboardPage() {
                                         className="ml-2 text-white/60 hover:text-white text-xs"
                                       >
                                         ✕
-                                      </button>
-                                    </div>
+                      </button>
+                    </div>
                                   ))}
+                                    </div>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            )}
-                          </div>
                           
                           <button 
                             onClick={async () => {
@@ -1214,12 +1214,12 @@ export default function DashboardPage() {
                                 : `✓ Bestätigen (${messageFiles.length} ${messageFiles.length === 1 ? 'Datei' : 'Dateien'})`
                             }
                           </button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+          </div>
+        )}
             </div>
           );
         })}
@@ -1805,15 +1805,15 @@ export default function DashboardPage() {
                     <div className="flex flex-col items-end h-full py-1 justify-end space-y-0">
                                               {!assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) && (
                           selectedCalendarDate.toDateString() === new Date().toDateString() && (
-                            <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
-                              onClick={() => handleEinsatzStart(assignment)}
-                              style={{ marginTop: '5px' }}
-                            >
-                              <span className="flex items-center">
-                                Einsatz starten
-                                <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
-                              </span>
-                  </div>
+                          <div className="text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-sm whitespace-nowrap rounded-full cursor-pointer"
+                            onClick={() => handleEinsatzStart(assignment)}
+                            style={{ marginTop: '5px' }}
+                          >
+                            <span className="flex items-center">
+                              Einsatz starten
+                              <ChevronRight className="h-3 w-3 ml-1 opacity-90" />
+                            </span>
+                </div>
                           )
                         )}
               </div>

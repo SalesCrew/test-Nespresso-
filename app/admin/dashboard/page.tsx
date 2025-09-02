@@ -47,7 +47,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
-export default function AdminDashboard() {
+ export default function AdminDashboard() {
   const router = useRouter();
   const pathname = usePathname();
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -287,29 +287,29 @@ export default function AdminDashboard() {
 
   // Function to select all filtered promotors
   const selectAllFiltered = () => {
-    const filteredNames = allPromotors
-      .filter(promotor => 
-        (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-        promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
-      )
-      .map(promotor => promotor.name);
+         const filteredNames = allPromotors
+       .filter(promotor => 
+         (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+         promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+       )
+       .map(promotor => promotor.name);
      
-    // Check if we should deselect (if all filtered items are currently selected and match last selection)
-    const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
-    const matchesLastSelection = lastSelectedByIcon.length > 0 && 
-      filteredNames.every(name => lastSelectedByIcon.includes(name)) &&
-      lastSelectedByIcon.every(name => filteredNames.includes(name));
+     // Check if we should deselect (if all filtered items are currently selected and match last selection)
+     const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
+     const matchesLastSelection = lastSelectedByIcon.length > 0 && 
+       filteredNames.every(name => lastSelectedByIcon.includes(name)) &&
+       lastSelectedByIcon.every(name => filteredNames.includes(name));
      
-    if (allFilteredSelected && matchesLastSelection) {
-      // Deselect the ones that were selected by this icon
-      setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
-      setLastSelectedByIcon([]);
-    } else {
-      // Select all filtered
-      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
-      setLastSelectedByIcon(filteredNames);
-    }
-  };
+     if (allFilteredSelected && matchesLastSelection) {
+       // Deselect the ones that were selected by this icon
+       setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
+       setLastSelectedByIcon([]);
+     } else {
+       // Select all filtered
+       setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
+       setLastSelectedByIcon(filteredNames);
+     }
+      };
 
   // Function to enhance message with AI
   const enhanceMessage = async () => {
@@ -389,14 +389,14 @@ export default function AdminDashboard() {
         
         // Refresh scheduled messages from database
         await loadScheduledMessages();
-        
-        // Reset form
-        setMessageText("");
-        setScheduleDate("");
-        setScheduleTime("");
+    
+    // Reset form
+    setMessageText("");
+    setScheduleDate("");
+    setScheduleTime("");
         setSelectedPromotors([]);
         setEnableTwoStep(false);
-        setShowScheduleModal(false);
+    setShowScheduleModal(false);
         
         console.log('Message scheduled successfully');
       } else {
@@ -1037,7 +1037,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     
     // Orange for verspätet
     if (einsatz.status === 'verspätet') {
-      return 'orange';
+        return 'orange';
     }
     
     // Default gray for pending
@@ -1383,7 +1383,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                       <div>{einsatz.buddyName}: --:-- - --:--</div>
                                     </div>
                                   ) : (
-                                    <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
                                   )}
                                 </div>
                                 <div className="text-xs text-right">
@@ -1848,7 +1848,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                               animation: 'scanVertical 2s linear infinite'
                             }}
                           />
-                          <style jsx>{`
+                      <style jsx>{`
                             @keyframes scanHorizontal {
                               0% { left: -1px; }
                               100% { left: calc(100% + 1px); }
@@ -1856,8 +1856,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             @keyframes scanVertical {
                               0% { top: -1px; }
                               100% { top: calc(100% + 1px); }
-                            }
-                          `}</style>
+                        }
+                      `}</style>
                         </div>
                       )}
 
@@ -1946,28 +1946,28 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 <div className="text-xs text-gray-500">Kein Nachrichtenverlauf</div>
                               </div>
                             ) : (
-                              messageHistory
-                                .sort((a, b) => {
-                                  // Sort by date descending (newest first)
-                                  const dateA = new Date(a.date);
-                                  const dateB = new Date(b.date);
-                                  return dateB.getTime() - dateA.getTime();
-                                })
-                                .map((message) => (
-                                <div 
-                                  key={message.id} 
-                                  onClick={() => handleMessageClick(message)}
-                                  className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                                >
-                                  <div className="space-y-1">
-                                    <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                      <span>{message.date} {message.time}</span>
-                                      <span>{message.recipients}</span>
-                                    </div>
+                            messageHistory
+                              .sort((a, b) => {
+                                // Sort by date descending (newest first)
+                                const dateA = new Date(a.date);
+                                const dateB = new Date(b.date);
+                                return dateB.getTime() - dateA.getTime();
+                              })
+                              .map((message) => (
+                              <div 
+                                key={message.id} 
+                                onClick={() => handleMessageClick(message)}
+                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{message.date} {message.time}</span>
+                                    <span>{message.recipients}</span>
                                   </div>
                                 </div>
-                              ))
+                              </div>
+                            ))
                             )
                           ) : (
                             // Show scheduled messages
@@ -1980,28 +1980,28 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 <div className="text-xs text-gray-500">Keine geplanten Nachrichten</div>
                               </div>
                             ) : (
-                              scheduledMessages
-                                .sort((a, b) => {
-                                  // Properly combine ISO date and time for sorting
-                                  const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
-                                  const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
-                                  return dateA.getTime() - dateB.getTime(); // Earliest first
-                                })
-                                .map((message) => (
-                                <div 
-                                  key={message.id} 
-                                  onClick={() => handleMessageClick(message)}
-                                  className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                                >
-                                  <div className="space-y-1">
-                                    <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                      <span>{message.date} {message.time}</span>
-                                      <span>{message.recipients}</span>
-                                    </div>
+                            scheduledMessages
+                              .sort((a, b) => {
+                                // Properly combine ISO date and time for sorting
+                                const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
+                                const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
+                                return dateA.getTime() - dateB.getTime(); // Earliest first
+                              })
+                              .map((message) => (
+                              <div 
+                                key={message.id} 
+                                onClick={() => handleMessageClick(message)}
+                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                  <div className="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{message.date} {message.time}</span>
+                                    <span>{message.recipients}</span>
                                   </div>
                                 </div>
-                              ))
+                              </div>
+                            ))
                             )
                           )}
                       </div>
@@ -2138,7 +2138,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                       <div>{einsatz.buddyName}: --:-- - --:--</div>
                                     </div>
                                   ) : (
-                                    <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
                                   )}
                                 </div>
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
@@ -3136,8 +3136,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   console.log('🔍 Modal render - promotorSelectionSearch:', promotorSelectionSearch);
                   
                   const filtered = allPromotors.filter(promotor => 
-                    (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-                    promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+                  (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                  promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
                   );
                   
                   console.log('🔍 Modal render - filtered promotors:', filtered.length);
