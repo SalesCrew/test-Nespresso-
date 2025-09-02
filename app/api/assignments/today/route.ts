@@ -168,18 +168,27 @@ export async function PATCH(request: Request) {
 
     // Handle action-based updates (legacy admin interface)
     if (action) {
-      // Create Austrian time timestamp for admin actions too
+      // Get Austrian local time as ISO string WITHOUT timezone conversion
       const now = new Date();
-      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
-      const austrianISO = austrianTime.toISOString();
+      // Use sv-SE locale which gives YYYY-MM-DD HH:mm:ss format
+      const austrianTimeString = now.toLocaleString('sv-SE', { 
+        timeZone: 'Europe/Vienna',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(' ', 'T') + '.000Z';  // Add T and fake Z to make it look like ISO but with Austrian time
       
       switch (action) {
         case 'start':
-          updateData.actual_start_time = austrianISO;
+          updateData.actual_start_time = austrianTimeString;
           updateData.status = 'gestartet';
           break;
         case 'stop':
-          updateData.actual_end_time = austrianISO;
+          updateData.actual_end_time = austrianTimeString;
           updateData.status = 'beendet';
           break;
         case 'update_status':

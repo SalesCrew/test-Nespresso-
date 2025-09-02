@@ -1001,10 +1001,19 @@ const loadProcessState = async () => {
   
   const handleStartEinsatz = async () => {
     try {
-      // Create Austrian time timestamp
+      // Get Austrian local time as ISO string WITHOUT timezone conversion
       const now = new Date();
-      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
-      const austrianISO = austrianTime.toISOString();
+      // Use sv-SE locale which gives YYYY-MM-DD HH:mm:ss format
+      const austrianTimeString = now.toLocaleString('sv-SE', { 
+        timeZone: 'Europe/Vienna',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(' ', 'T') + '.000Z';  // Add T and fake Z to make it look like ISO but with Austrian time
       
       // Update assignment tracking with actual start time
       if (displayedAssignment?.id) {
@@ -1013,7 +1022,7 @@ const loadProcessState = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             assignment_id: displayedAssignment.id,
-            actual_start_time: austrianISO,
+            actual_start_time: austrianTimeString,
             status: 'gestartet'
           })
         });
@@ -1088,10 +1097,19 @@ const loadProcessState = async () => {
 
   const handleCompleteEinsatz = async () => {
     try {
-      // Create Austrian time timestamp
+      // Get Austrian local time as ISO string WITHOUT timezone conversion
       const now = new Date();
-      const austrianTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Vienna' }));
-      const austrianISO = austrianTime.toISOString();
+      // Use sv-SE locale which gives YYYY-MM-DD HH:mm:ss format
+      const austrianTimeString = now.toLocaleString('sv-SE', { 
+        timeZone: 'Europe/Vienna',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(' ', 'T') + '.000Z';  // Add T and fake Z to make it look like ISO but with Austrian time
       
       // Update assignment tracking with actual end time
       if (displayedAssignment?.id) {
@@ -1100,7 +1118,7 @@ const loadProcessState = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             assignment_id: displayedAssignment.id,
-            actual_end_time: austrianISO,
+            actual_end_time: austrianTimeString,
             status: 'beendet'
           })
         });
