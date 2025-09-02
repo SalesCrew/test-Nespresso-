@@ -115,33 +115,59 @@ export default function AdminDashboard() {
     };
     
     loadPromotors();
+    loadScheduledMessages();
   }, []);
   
   // Scheduling states
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
-  const [scheduledMessages, setScheduledMessages] = useState(() => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    
-    const getNextWeekday = (day: number) => {
-      const date = new Date(today);
-      const diff = (day + 7 - date.getDay()) % 7;
-      date.setDate(date.getDate() + (diff === 0 ? 7 : diff));
-      return date;
-    };
-    
-    return [
-      { id: 1, preview: "Wichtiger Termin morgen um 9:00 Uhr...", fullText: "Wichtiger Termin morgen um 9:00 Uhr in der Zentrale. Bitte pünktlich erscheinen.", time: "09:00", date: "Morgen", dateISO: tomorrow.toISOString().split('T')[0], recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber", "Jan Müller"] },
-      { id: 2, preview: "Neue Produktschulung verfügbar...", fullText: "Neue Produktschulung verfügbar für alle Mitarbeiter. Online-Zugang ist freigeschaltet.", time: "14:30", date: "Heute", dateISO: today.toISOString().split('T')[0], recipients: "5 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer", "Maria Huber", "David Klein"] },
-      { id: 3, preview: "Bitte Arbeitszeiten bestätigen...", fullText: "Bitte Arbeitszeiten für diese Woche bis Freitag bestätigen.", time: "16:00", date: "Freitag", dateISO: getNextWeekday(5).toISOString().split('T')[0], recipients: "Region Nord", promotors: ["Emma Wagner", "Paul Berger"] },
-      { id: 4, preview: "Verkaufszahlen für diese Woche...", fullText: "Verkaufszahlen für diese Woche sind sehr gut ausgefallen.", time: "10:00", date: "Montag", dateISO: getNextWeekday(1).toISOString().split('T')[0], recipients: "Team Leads", promotors: ["Julia Mayer", "Felix Gruber", "Sophie Reiter"] },
-      { id: 5, preview: "Neue Sicherheitsrichtlinien beachten...", fullText: "Neue Sicherheitsrichtlinien beachten und umsetzen.", time: "13:00", date: "Dienstag", dateISO: getNextWeekday(2).toISOString().split('T')[0], recipients: "Alle", promotors: ["Max Köhler", "Lena Fuchs", "Klaus Müller", "Sandra Hofer"] },
-      { id: 6, preview: "Monatliche Teambesprech­ung...", fullText: "Monatliche Teambesprechung findet wie geplant statt.", time: "15:30", date: "Mittwoch", dateISO: getNextWeekday(3).toISOString().split('T')[0], recipients: "8 Promotoren", promotors: ["Martin Schneider", "Nina Weiss", "Patrick Schwarz", "Andrea Roth", "Florian Braun", "Jessica Grün", "Daniel Gelb", "Sabrina Blau"] }
-    ];
-  });
+  const [scheduledMessages, setScheduledMessages] = useState<any[]>([]);
+  const [scheduledMessagesLoading, setScheduledMessagesLoading] = useState(false);
+  
+  // Load scheduled messages from database
+  const loadScheduledMessages = async () => {
+    try {
+      setScheduledMessagesLoading(true);
+      const response = await fetch('/api/messages');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter for scheduled messages only and format for UI
+        const scheduledOnly = (data.messages || [])
+          .filter((msg: any) => msg.status === 'scheduled')
+          .map((msg: any) => {
+            const scheduleDate = new Date(msg.scheduled_send_time);
+            const recipients = msg.recipients || [];
+            const recipientCount = recipients.length;
+            
+            return {
+              id: msg.id,
+              preview: msg.message_text.substring(0, 50) + (msg.message_text.length > 50 ? "..." : ""),
+              fullText: msg.message_text,
+              time: scheduleDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+              date: scheduleDate.toLocaleDateString('de-DE', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'short' 
+              }),
+              dateISO: scheduleDate.toISOString().split('T')[0],
+              recipients: recipientCount === 1 
+                ? recipients[0]?.recipient_name || 'Promotor'
+                : `${recipientCount} Promotoren`,
+              promotors: recipients.map((r: any) => r.recipient_name).filter(Boolean),
+              messageType: msg.message_type,
+              sent: false
+            };
+          });
+        setScheduledMessages(scheduledOnly);
+      }
+    } catch (error) {
+      console.error('Error loading scheduled messages:', error);
+      setScheduledMessages([]);
+    } finally {
+      setScheduledMessagesLoading(false);
+    }
+  };
 
   // Toggle state for scheduled messages vs history
   const [showHistory, setShowHistory] = useState(false);
@@ -249,26 +275,8 @@ export default function AdminDashboard() {
       if (response.ok) {
         const result = await response.json();
         
-        // Create display object for local state (keep existing UI working)
-        const newMessage = {
-          id: result.message.id,
-          preview: messageText.substring(0, 50) + (messageText.length > 50 ? "..." : ""),
-          fullText: messageText,
-          time: scheduleTime,
-          date: new Date(scheduleDate).toLocaleDateString('de-DE', { 
-            weekday: 'long', 
-            day: 'numeric', 
-            month: 'short' 
-          }),
-          dateISO: scheduleDate,
-          recipients: selectedPromotors.length === 1 
-            ? selectedPromotors[0] 
-            : `${selectedPromotors.length} Promotoren`,
-          promotors: [...selectedPromotors]
-        };
-        
-        // Add to scheduled messages
-        setScheduledMessages(prev => [...prev, newMessage]);
+        // Refresh scheduled messages from database
+        await loadScheduledMessages();
         
         // Reset form
         setMessageText("");
@@ -324,8 +332,20 @@ export default function AdminDashboard() {
   };
 
   // Function to delete scheduled message
-  const handleDeleteScheduledMessage = (messageId: number) => {
-    setScheduledMessages(prev => prev.filter(msg => msg.id !== messageId));
+  const handleDeleteScheduledMessage = async (messageId: string) => {
+    try {
+      const response = await fetch(`/api/messages/${messageId}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        // Refresh scheduled messages
+        await loadScheduledMessages();
+      } else {
+        console.error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting scheduled message:', error);
+    }
   };
 
   // Function to handle delete button click in message detail popup
@@ -349,7 +369,7 @@ export default function AdminDashboard() {
     } else {
       // Second click within 2 seconds - actually delete
       if (selectedMessage && !selectedMessage.sent) {
-        handleDeleteScheduledMessage(selectedMessage.id);
+        await handleDeleteScheduledMessage(selectedMessage.id);
         setShowMessageDetail(false);
         setDeleteConfirmationState(false);
         if (deleteConfirmationTimer) {
@@ -1794,28 +1814,38 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             ))
                           ) : (
                             // Show scheduled messages
-                            scheduledMessages
-                              .sort((a, b) => {
-                                // Properly combine ISO date and time for sorting
-                                const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
-                                const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
-                                return dateA.getTime() - dateB.getTime(); // Earliest first
-                              })
-                              .map((message) => (
-                              <div 
-                                key={message.id} 
-                                onClick={() => handleMessageClick(message)}
-                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                              >
-                                <div className="space-y-1">
-                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
-                                  <div className="flex items-center justify-between text-xs text-gray-500">
-                                    <span>{message.date} {message.time}</span>
-                                    <span>{message.recipients}</span>
+                            scheduledMessagesLoading ? (
+                              <div className="flex items-center justify-center h-16">
+                                <div className="text-xs text-gray-500">Lade geplante Nachrichten...</div>
+                              </div>
+                            ) : scheduledMessages.length === 0 ? (
+                              <div className="flex items-center justify-center h-16">
+                                <div className="text-xs text-gray-500">Keine geplanten Nachrichten</div>
+                              </div>
+                            ) : (
+                              scheduledMessages
+                                .sort((a, b) => {
+                                  // Properly combine ISO date and time for sorting
+                                  const dateA = new Date(`${a.dateISO || a.date}T${a.time}`);
+                                  const dateB = new Date(`${b.dateISO || b.date}T${b.time}`);
+                                  return dateA.getTime() - dateB.getTime(); // Earliest first
+                                })
+                                .map((message) => (
+                                <div 
+                                  key={message.id} 
+                                  onClick={() => handleMessageClick(message)}
+                                  className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                >
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                      <span>{message.date} {message.time}</span>
+                                      <span>{message.recipients}</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))
+                              ))
+                            )
                           )}
                       </div>
                     </div>
