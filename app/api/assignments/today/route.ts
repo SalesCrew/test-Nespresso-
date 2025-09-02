@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -92,7 +92,7 @@ export async function GET() {
 // Update assignment tracking (start/stop times, status)
 export async function PATCH(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
