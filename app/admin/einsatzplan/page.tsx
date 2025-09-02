@@ -389,20 +389,9 @@ export default function EinsatzplanPage() {
         const leadParticipant = currentParticipants.participants?.find((p: any) => p.role === 'lead');
         
         if (leadParticipant) {
-          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: leadParticipant.user_id, role: 'lead' })
-          });
-          
-          // Also delete assignment_tracking record so it disappears from Heutige Einsätze
-          await fetch('/api/assignments/tracking/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              assignment_id: editingEinsatz.id, 
-              user_id: leadParticipant.user_id 
-            })
+          // DELETE endpoint expects role in query string
+          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=lead`, {
+            method: 'DELETE'
           });
         }
         
@@ -530,16 +519,6 @@ export default function EinsatzplanPage() {
           if (buddyParticipant) {
             await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
               method: 'DELETE'
-            });
-            
-            // Also delete assignment_tracking record for buddy
-            await fetch('/api/assignments/tracking/delete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                assignment_id: editingEinsatz.id, 
-                user_id: buddyParticipant.user_id 
-              })
             });
           }
         } catch {}
