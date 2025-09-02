@@ -1,6 +1,6 @@
--- Final fix for todays_assignments to properly sync with einsatzplan
+-- Final fix for todays_assignments to only show assignments with actual participants
 
--- 1. Update the view to only show assignments with actual participants
+-- 1. Drop and recreate the view with proper filtering
 DROP VIEW IF EXISTS public.todays_assignments;
 
 CREATE VIEW public.todays_assignments AS
@@ -34,15 +34,17 @@ SELECT
     ELSE 'pending'
   END as display_status
 FROM public.assignments a
-INNER JOIN public.assignment_participants ap ON a.id = ap.assignment_id
+-- Key change: INNER JOIN ensures only assignments with participants are shown
+INNER JOIN public.assignment_participants ap ON a.id = ap.assignment_id AND ap.role = 'lead'
 LEFT JOIN public.assignment_tracking at ON a.id = at.assignment_id AND ap.user_id = at.user_id
 LEFT JOIN public.user_profiles up ON ap.user_id = up.user_id
-LEFT JOIN public.user_profiles bup ON at.buddy_user_id = bup.user_id
+-- Join for buddy
+LEFT JOIN public.assignment_participants buddy_ap ON a.id = buddy_ap.assignment_id AND buddy_ap.role = 'buddy'
+LEFT JOIN public.user_profiles bup ON buddy_ap.user_id = bup.user_id
 WHERE 
   DATE(a.start_ts AT TIME ZONE 'Europe/Berlin') = CURRENT_DATE
   AND (ap.status IS NULL OR ap.status NOT IN ('verplant', 'buddy'))
-  AND a.status NOT IN ('cancelled', 'completed')
-  AND ap.role IN ('lead', 'buddy'); -- Only show lead and buddy roles
+  AND a.status NOT IN ('cancelled', 'completed');
 
 -- Grant access
 GRANT SELECT ON public.todays_assignments TO authenticated;
@@ -51,13 +53,13 @@ GRANT SELECT ON public.todays_assignments TO authenticated;
 CREATE OR REPLACE FUNCTION public.check_and_update_tracking_status()
 RETURNS void AS $$
 BEGIN
-  -- First, delete tracking records where the participant no longer exists
+  -- First, delete tracking records where no lead participant exists
   DELETE FROM public.assignment_tracking at
   WHERE NOT EXISTS (
     SELECT 1 FROM public.assignment_participants ap
     WHERE ap.assignment_id = at.assignment_id
     AND ap.user_id = at.user_id
-    AND ap.role IN ('lead', 'buddy')
+    AND ap.role = 'lead'
   );
 
   -- Update status to 'verspätet' for assignments that should have started
@@ -83,8 +85,8 @@ BEGIN
   INNER JOIN public.assignments a ON ap.assignment_id = a.id
   WHERE 
     DATE(a.start_ts AT TIME ZONE 'Europe/Berlin') = CURRENT_DATE
-    AND ap.status NOT IN ('verplant', 'buddy')
-    AND ap.role IN ('lead', 'buddy')
+    AND (ap.status IS NULL OR ap.status NOT IN ('verplant', 'buddy'))
+    AND ap.role = 'lead'
     AND NOT EXISTS (
       SELECT 1 FROM public.assignment_tracking at 
       WHERE at.assignment_id = ap.assignment_id 

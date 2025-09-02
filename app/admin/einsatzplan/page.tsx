@@ -384,16 +384,10 @@ export default function EinsatzplanPage() {
     if (!editingEinsatz) return;
     try {
       if (!promotorId || promotorName === '') {
-        // Remove lead promotor
-        const currentParticipants = await fetch(`/api/assignments/${editingEinsatz.id}/participants`).then(r => r.json());
-        const leadParticipant = currentParticipants.participants?.find((p: any) => p.role === 'lead');
-        
-        if (leadParticipant) {
-          // DELETE endpoint expects role in query string
-          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=lead`, {
-            method: 'DELETE'
-          });
-        }
+        // Remove lead promotor - DELETE endpoint expects role in query string
+        await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=lead`, {
+          method: 'DELETE'
+        });
         
         // Update local state to reflect no promotor
         const newStatus = editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Offen';
@@ -512,15 +506,10 @@ export default function EinsatzplanPage() {
       } else if (!buddyName) {
         // Remove buddy if no name provided: delete buddy participant and normalize status
         try {
-          // First get current buddy participant to get their user_id
-          const currentParticipants = await fetch(`/api/assignments/${editingEinsatz.id}/participants`).then(r => r.json());
-          const buddyParticipant = currentParticipants.participants?.find((p: any) => p.role === 'buddy');
-          
-          if (buddyParticipant) {
-            await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
-              method: 'DELETE'
-            });
-          }
+          // Remove buddy - DELETE endpoint expects role in query string
+          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
+            method: 'DELETE'
+          });
         } catch {}
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
