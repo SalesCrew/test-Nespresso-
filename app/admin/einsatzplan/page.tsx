@@ -511,13 +511,7 @@ export default function EinsatzplanPage() {
             method: 'DELETE'
           });
         } catch {}
-        await fetch(`/api/assignments/${editingEinsatz.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            status: editingEinsatz.promotor ? 'assigned' : 'open'
-          })
-        })
+        // Don't update status here - let the status dropdown handle all status changes
       }
     } catch (error) {
       console.error('Error assigning buddy:', error);
@@ -2989,26 +2983,14 @@ Import EP
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
                     <Select
-                      value={
-                        editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' 
-                          ? 'Buddy Tag' 
-                          : editingEinsatz.special_status 
-                            ? editingEinsatz.special_status.charAt(0).toUpperCase() + editingEinsatz.special_status.slice(1)
-                            : editingEinsatz.status
-                      }
+                      value={editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : editingEinsatz.status}
                       onValueChange={(value) => {
                         // If there's a buddy, force status to stay as Buddy Tag
                         if (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none') {
                           return; // Don't allow status change when buddy exists
                         }
-                        // Only update local state - database save happens on "Speichern"
-                        // Check if it's a special status
-                        const specialStatuses = ['Krankenstand', 'Urlaub', 'Zeitausgleich', 'Notfall'];
-                        if (specialStatuses.includes(value)) {
-                          setEditingEinsatz({ ...editingEinsatz, special_status: value.toLowerCase() });
-                        } else {
-                          setEditingEinsatz({ ...editingEinsatz, status: value, special_status: null });
-                        }
+                        updateAssignmentStatus(editingEinsatz.id, value);
+                        setEditingEinsatz({ ...editingEinsatz, status: value });
                       }}
                     >
                       <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
@@ -3270,29 +3252,18 @@ Import EP
               <button
                 onClick={async () => {
                   try {
-                    // Save basic assignment data including both status and special_status
-                    const updateData: any = {
-                      date: editingEinsatz.date,
-                      planStart: editingEinsatz.planStart,
-                      planEnd: editingEinsatz.planEnd,
-                      location_text: editingEinsatz.address,
-                      postal_code: editingEinsatz.plz
-                    };
-                    
-                    // Include status fields based on what was selected in dropdown
-                    if (editingEinsatz.special_status) {
-                      updateData.special_status = editingEinsatz.special_status;
-                      // Don't change regular status when setting special_status
-                    } else {
-                      // If no special_status, update regular status
-                      updateData.status = editingEinsatz.status;
-                      updateData.special_status = null; // Clear any previous special_status
-                    }
-                    
+                    // Save basic assignment data (NOT including status - that's handled by status dropdown)
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(updateData)
+                      body: JSON.stringify({
+                        date: editingEinsatz.date,
+                        planStart: editingEinsatz.planStart,
+                        planEnd: editingEinsatz.planEnd,
+                        location_text: editingEinsatz.address,
+                        postal_code: editingEinsatz.plz
+                        // REMOVED status - it should only be changed through the status dropdown
+                      })
                     });
                     
                     // If promotor is assigned, ensure it's saved
