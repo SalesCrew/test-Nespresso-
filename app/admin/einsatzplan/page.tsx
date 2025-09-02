@@ -534,10 +534,20 @@ export default function EinsatzplanPage() {
   const updateAssignmentStatus = async (assignmentId: string, newStatus: string) => {
     try {
       // Convert UI status to database status
-      const dbStatus = newStatus === 'Verplant' ? 'assigned' : 
-                       newStatus === 'Buddy Tag' ? 'buddy_tag' :
-                       newStatus === 'Offen' ? 'open' :
-                       newStatus.toLowerCase();
+      const statusMap: Record<string, string> = {
+        'Offen': 'open',
+        'Verplant': 'assigned',
+        'Buddy Tag': 'buddy_tag',
+        'Krankenstand': 'krankenstand',
+        'Notfall': 'notfall',
+        'Urlaub': 'urlaub',
+        'Zeitausgleich': 'zeitausgleich',
+        'Markierte': 'markierte',
+        'Bestätigt': 'bestätigt',
+        'Geplant': 'geplant'
+      };
+      
+      const dbStatus = statusMap[newStatus] || newStatus.toLowerCase();
       
       await fetch(`/api/assignments/${assignmentId}`, {
         method: 'PATCH',
