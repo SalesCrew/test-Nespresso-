@@ -1016,8 +1016,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   };
 
   const getStatusColor = (einsatz: any) => {
-    // Red for special statuses (krankenstand, urlaub, zeitausgleich)
-    if (['krankenstand', 'urlaub', 'zeitausgleich'].includes(einsatz.status)) {
+    // Red for special statuses (krankenstand, urlaub, zeitausgleich, notfall)
+    if (['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status)) {
       return 'red';
     }
     
@@ -1049,7 +1049,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   // Calculate completion statistics
   const getCompletionStats = () => {
     const started = filteredEinsaetze.filter(e => e.status === 'gestartet' || e.status === 'beendet' || e.actualStart).length;
-    const cancelled = filteredEinsaetze.filter(e => ['krankenstand', 'urlaub', 'zeitausgleich'].includes(e.status)).length;
+    const cancelled = filteredEinsaetze.filter(e => ['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(e.status)).length;
     const notStarted = filteredEinsaetze.filter(e => ['pending', 'verspätet'].includes(e.status)).length;
     const completed = started + cancelled;
     const total = filteredEinsaetze.length;
@@ -1063,7 +1063,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     const locationEinsaetze = todaysEinsaetze.filter(e => `${e.plz} ${e.city}` === location);
     
     // Check for special statuses first (highest priority)
-    if (locationEinsaetze.some(e => ['krankenstand', 'urlaub', 'zeitausgleich'].includes(e.status))) return 'red';
+    if (locationEinsaetze.some(e => ['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(e.status))) return 'red';
     
     // Check for started
     if (locationEinsaetze.some(e => e.status === 'gestartet' || e.status === 'beendet' || e.actualStart)) return 'green';
@@ -1369,9 +1369,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
                                 </div>
                                 <div className="text-xs text-right">
-                                  {einsatz.status === 'cancelled' ? (
+                                  {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                     <span className="text-red-600 font-medium">
-                                      {einsatz.cancelReason}
+                                      {einsatz.status}
                                     </span>
                                   ) : statusColor === 'green' ? (
                                     <span className="text-green-600 font-medium">gestartet</span>
@@ -1438,9 +1438,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}
                               </div>
                               <div className="text-xs">
-                                {einsatz.status === 'cancelled' ? (
+                                {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                   <span className="text-red-600 font-medium text-xs">
-                                    {einsatz.cancelReason}
+                                    {einsatz.status}
                                   </span>
                                 ) : statusColor === 'green' ? (
                                   <span className="text-green-600 font-medium">gestartet</span>
@@ -2106,9 +2106,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
                                 </div>
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
-                                  {einsatz.status === 'cancelled' ? (
+                                  {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                     <span className="text-red-600 font-medium text-xs">
-                                      {einsatz.cancelReason}
+                                      {einsatz.status}
                                     </span>
                                   ) : statusColor === 'green' ? (
                                     <span className="text-green-600 font-medium">gestartet</span>
@@ -2175,9 +2175,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}
                               </div>
                               <div className="text-xs">
-                                {einsatz.status === 'cancelled' ? (
+                                {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                   <span className="text-red-600 font-medium text-xs">
-                                    {einsatz.cancelReason}
+                                    {einsatz.status}
                                   </span>
                                 ) : statusColor === 'green' ? (
                                   <span className="text-green-600 font-medium">gestartet</span>
