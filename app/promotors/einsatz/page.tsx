@@ -1571,7 +1571,7 @@ const loadProcessState = async () => {
             <div className="mb-2 mt-1">
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
                 <Clock className="h-3.5 w-3.5 mr-1" /> 
-                <span className="text-xs font-medium">{assignmentDate && endDate ? `${String(assignmentDate.getUTCHours()).padStart(2,'0')}:${String(assignmentDate.getUTCMinutes()).padStart(2,'0')}-${String(endDate.getUTCHours()).padStart(2,'0')}:${String(endDate.getUTCMinutes()).padStart(2,'0')}` : ''}</span>
+                <span className="text-xs font-medium">{displayedAssignment?.start_ts && displayedAssignment?.end_ts ? `${displayedAssignment.start_ts.substring(11, 16)}-${displayedAssignment.end_ts.substring(11, 16)}` : ''}</span>
               </div>
             </div>
             <div 
