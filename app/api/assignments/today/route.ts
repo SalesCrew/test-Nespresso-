@@ -72,6 +72,7 @@ export async function GET() {
         actual_end_time,
         tracking_status,
         display_status,
+        special_status,
         notes
       `)
       .order('planned_start', { ascending: true });
