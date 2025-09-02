@@ -412,15 +412,12 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ user_id: promotorId })
         });
         
-        // Update local state - preserve special statuses like Krankenstand, Urlaub etc
-        const specialStatuses = ['Krankenstand', 'Notfall', 'Urlaub', 'Zeitausgleich', 'Markierte', 'Bestätigt', 'Geplant'];
-        const currentStatus = editingEinsatz.status;
-        const newStatus = specialStatuses.includes(currentStatus) ? currentStatus : 
-                         (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Verplant');
-        setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, promotorId: promotorId, status: newStatus });
+        // Update local state - status logic is simpler now with special_status column
+        const newStatus = editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : 'Verplant';
+        setEditingEinsatz({ ...editingEinsatz, promotor: promotorName, promotorId: promotorId, status: editingEinsatz.status });
         setEinsatzplanData(prev => prev.map(item => 
           item.id === editingEinsatz.id 
-            ? { ...item, promotor: promotorName, promotorId: promotorId, status: newStatus } 
+            ? { ...item, promotor: promotorName, promotorId: promotorId, status: editingEinsatz.status } 
             : item
         ));
       }
@@ -497,14 +494,11 @@ export default function EinsatzplanPage() {
         })
         
         // Update assignment with buddy info - this is critical for persistence!
-        const specialStatuses = ['krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 'bestätigt', 'geplant'];
-        const currentDbStatus = editingEinsatz.status?.toLowerCase();
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            // Preserve special statuses, otherwise set to buddy_tag
-            status: specialStatuses.includes(currentDbStatus) ? currentDbStatus : 'buddy_tag',
+            status: 'buddy_tag',
             buddy_user_id: buddyId,
             buddy_name: buddyName
           })
@@ -517,29 +511,20 @@ export default function EinsatzplanPage() {
             method: 'DELETE'
           });
         } catch {}
-        // Only update status if it's not a special status
-        const specialStatuses = ['krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 'bestätigt', 'geplant'];
-        const currentDbStatus = editingEinsatz.status?.toLowerCase();
-        if (!specialStatuses.includes(currentDbStatus)) {
-          await fetch(`/api/assignments/${editingEinsatz.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
-          })
-        }
+        await fetch(`/api/assignments/${editingEinsatz.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
+        })
       }
     } catch (error) {
       console.error('Error assigning buddy:', error);
     }
-    // optimistic UI update - preserve special statuses
-    const specialStatuses = ['Krankenstand', 'Notfall', 'Urlaub', 'Zeitausgleich', 'Markierte', 'Bestätigt', 'Geplant'];
-    const currentStatus = editingEinsatz.status;
-    const newStatus = specialStatuses.includes(currentStatus) ? currentStatus :
-                     (buddyName ? 'Buddy Tag' : (editingEinsatz.promotor ? 'Verplant' : 'Offen'));
-    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus })
+    // optimistic UI update - status stays the same with special_status handling
+    setEditingEinsatz({ ...editingEinsatz, buddy_name: buddyName || null, buddy_user_id: buddyId || null })
     setEinsatzplanData(prev => prev.map(item => 
       item.id === editingEinsatz.id 
-        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || null, status: newStatus } 
+        ? { ...item, buddy_name: buddyName || null, buddy_user_id: buddyId || null } 
         : item
     ))
   };
@@ -1504,20 +1489,23 @@ export default function EinsatzplanPage() {
           planEnd: timeEnd,
           plz: r.postal_code || '',
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
-          // If there's a buddy, force status to Buddy Tag regardless of database status
-          status: (r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
-                  // Map all database statuses to UI statuses
-                  (r.status === 'assigned' ? 'Verplant' : 
-                   r.status === 'buddy_tag' ? 'Buddy Tag' : 
-                   r.status === 'open' ? 'Offen' :
-                   r.status === 'krankenstand' ? 'Krankenstand' :
-                   r.status === 'notfall' ? 'Notfall' :
-                   r.status === 'urlaub' ? 'Urlaub' :
-                   r.status === 'zeitausgleich' ? 'Zeitausgleich' :
-                   r.status === 'markierte' ? 'Markierte' :
-                   r.status === 'bestätigt' ? 'bestätigt' :
-                   r.status === 'geplant' ? 'geplant' :
-                   (r.status || 'Offen')),
+          // Check special_status first, then regular status
+          status: r.special_status ? 
+                  // Map special statuses to UI format
+                  (r.special_status === 'krankenstand' ? 'Krankenstand' :
+                   r.special_status === 'notfall' ? 'Notfall' :
+                   r.special_status === 'urlaub' ? 'Urlaub' :
+                   r.special_status === 'zeitausgleich' ? 'Zeitausgleich' :
+                   r.special_status === 'markierte' ? 'Markierte' :
+                   r.special_status === 'bestätigt' ? 'Bestätigt' :
+                   r.special_status === 'geplant' ? 'Geplant' :
+                   r.special_status) :
+                  // Otherwise use regular status logic
+                  ((r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
+                   (r.status === 'assigned' ? 'Verplant' : 
+                    r.status === 'buddy_tag' ? 'Buddy Tag' : 
+                    r.status === 'open' ? 'Offen' :
+                    (r.status || 'Offen'))),
           // Include buddy information
           promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
           promotorId: r.lead_user_id, // Add lead_user_id for the Select dropdown
@@ -1527,6 +1515,7 @@ export default function EinsatzplanPage() {
           promotorCount: 0,
           promotions: [{ id: r.id }],
           notes: r.notes || '',
+          special_status: r.special_status || null,
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');

@@ -101,6 +101,7 @@ SELECT
   a.city,
   a.start_ts as planned_start,
   a.end_ts as planned_end,
+  a.special_status,
   ap.user_id,
   ap.role,
   ap.status as participant_status,
@@ -112,8 +113,9 @@ SELECT
   at.actual_end_time,
   at.status as tracking_status,
   at.notes,
-  -- Calculate display status
+  -- Calculate display status - check special_status first
   CASE 
+    WHEN a.special_status IS NOT NULL THEN a.special_status
     WHEN at.status IN ('krankenstand', 'urlaub', 'zeitausgleich') THEN at.status::text
     WHEN at.status = 'beendet' THEN 'beendet'
     WHEN at.status = 'gestartet' THEN 'gestartet'

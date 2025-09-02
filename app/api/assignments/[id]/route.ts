@@ -30,31 +30,52 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.buddy_user_id !== undefined) updates.buddy_user_id = body.buddy_user_id
     if (body.buddy_name !== undefined) updates.buddy_name = body.buddy_name
 
+    // Handle special_status separately
+    if (body.special_status !== undefined) {
+      updates.special_status = body.special_status || null
+    }
+
     // Handle status updates - accept both UI and DB status formats
     if (body.status) {
       const status = String(body.status)
-      // If it's already a valid DB status, use it directly
-      const validDbStatuses = ['open', 'assigned', 'buddy_tag', 'inviting', 'completed', 'cancelled', 
-                               'krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 
-                               'bestätigt', 'geplant']
-      if (validDbStatuses.includes(status)) {
-        updates.status = status
-      } else {
-        // Otherwise map from UI status to DB status
-        const map: Record<string, string> = {
-          'Offen': 'open',
-          'Verplant': 'assigned',
-          'Buddy Tag': 'buddy_tag',
+      const specialStatuses = ['krankenstand', 'notfall', 'urlaub', 'zeitausgleich', 'markierte', 'bestätigt', 'geplant']
+      const specialStatusesUI = ['Krankenstand', 'Notfall', 'Urlaub', 'Zeitausgleich', 'Markierte', 'Bestätigt', 'Geplant']
+      
+      // Check if this is a special status
+      if (specialStatuses.includes(status.toLowerCase()) || specialStatusesUI.includes(status)) {
+        // Set special_status instead of main status
+        const statusMap: Record<string, string> = {
           'Krankenstand': 'krankenstand',
           'Notfall': 'notfall',
           'Urlaub': 'urlaub',
           'Zeitausgleich': 'zeitausgleich',
           'Markierte': 'markierte',
-          'bestätigt': 'bestätigt',
-          'geplant': 'geplant'
+          'Bestätigt': 'bestätigt',
+          'Geplant': 'geplant'
         }
-        const dbStatus = map[status]
-        if (dbStatus) updates.status = dbStatus
+        updates.special_status = statusMap[status] || status.toLowerCase()
+        // Don't change main status if it's a special status
+      } else {
+        // Regular status update
+        const validDbStatuses = ['open', 'assigned', 'buddy_tag', 'inviting', 'completed', 'cancelled']
+        if (validDbStatuses.includes(status)) {
+          updates.status = status
+          // Clear special_status when setting regular status
+          updates.special_status = null
+        } else {
+          // Map from UI status to DB status
+          const map: Record<string, string> = {
+            'Offen': 'open',
+            'Verplant': 'assigned',
+            'Buddy Tag': 'buddy_tag'
+          }
+          const dbStatus = map[status]
+          if (dbStatus) {
+            updates.status = dbStatus
+            // Clear special_status when setting regular status
+            updates.special_status = null
+          }
+        }
       }
     }
 

@@ -13,12 +13,9 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const { error: upErr } = await svc.from('assignment_participants').upsert({ assignment_id: params.id, user_id, role, chosen_by_admin: true, chosen_at: new Date().toISOString() })
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
 
-    // Only set status to assigned if current status is 'open' to preserve other statuses like urlaub, krankenstand etc
-    const { data: assignment } = await svc.from('assignments').select('status').eq('id', params.id).single()
-    if (assignment?.status === 'open') {
-      const { error: asgErr } = await svc.from('assignments').update({ status: 'assigned' }).eq('id', params.id)
-      if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
-    }
+    // Set status to assigned
+    const { error: asgErr } = await svc.from('assignments').update({ status: 'assigned' }).eq('id', params.id)
+    if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
