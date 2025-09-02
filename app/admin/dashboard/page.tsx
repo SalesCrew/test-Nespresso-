@@ -1351,7 +1351,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900">{einsatz.promotor}</h4>
+                                  <h4 className="text-sm font-medium text-gray-900">
+                                    {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
+                                  </h4>
                                   <button
                                     onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
@@ -1366,7 +1368,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   <span>{einsatz.planStart} - {einsatz.planEnd}</span>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
-                                  <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  {einsatz.buddyName ? (
+                                    <div className="space-y-1">
+                                      <div>{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                      <div>{einsatz.buddyName}: --:-- - --:--</div>
+                                    </div>
+                                  ) : (
+                                    <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-right">
                                   {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
@@ -1414,7 +1423,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           >
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-medium text-gray-900 truncate">{einsatz.promotor}</h4>
+                                <h4 className="text-xs font-medium text-gray-900 truncate">
+                                  {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
+                                </h4>
                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                                   statusColor === 'green' ? 'bg-green-400' :
                                   statusColor === 'orange' ? 'bg-orange-400' :
@@ -1435,7 +1446,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {einsatz.planStart} - {einsatz.planEnd}
                               </div>
                               <div className="text-xs text-gray-600">
-                                {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}
+                                {einsatz.buddyName ? (
+                                  <div className="space-y-1">
+                                    <div className="truncate">{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                    <div className="truncate">{einsatz.buddyName}: --:-- - --:--</div>
+                                  </div>
+                                ) : (
+                                  <div>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                )}
                               </div>
                               <div className="text-xs">
                                 {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
@@ -2088,7 +2106,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900">{einsatz.promotor}</h4>
+                                  <h4 className="text-sm font-medium text-gray-900">
+                                    {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
+                                  </h4>
                                   <button
                                     onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
@@ -2103,7 +2123,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   <span>{einsatz.planStart} - {einsatz.planEnd}</span>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
-                                  <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  {einsatz.buddyName ? (
+                                    <div className="space-y-1">
+                                      <div>{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                      <div>{einsatz.buddyName}: --:-- - --:--</div>
+                                    </div>
+                                  ) : (
+                                    <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
                                   {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
@@ -2151,7 +2178,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           >
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-medium text-gray-900 truncate">{einsatz.promotor}</h4>
+                                <h4 className="text-xs font-medium text-gray-900 truncate">
+                                  {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
+                                </h4>
                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                                   statusColor === 'green' ? 'bg-green-400' :
                                   statusColor === 'orange' ? 'bg-orange-400' :
@@ -2172,7 +2201,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {einsatz.planStart} - {einsatz.planEnd}
                               </div>
                               <div className="text-xs text-gray-600">
-                                {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}
+                                {einsatz.buddyName ? (
+                                  <div className="space-y-1">
+                                    <div className="truncate">{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                    <div className="truncate">{einsatz.buddyName}: --:-- - --:--</div>
+                                  </div>
+                                ) : (
+                                  <div>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
+                                )}
                               </div>
                               <div className="text-xs">
                                 {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
