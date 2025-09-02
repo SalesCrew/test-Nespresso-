@@ -394,6 +394,16 @@ export default function EinsatzplanPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: leadParticipant.user_id, role: 'lead' })
           });
+          
+          // Also delete assignment_tracking record so it disappears from Heutige Einsätze
+          await fetch('/api/assignments/tracking/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              assignment_id: editingEinsatz.id, 
+              user_id: leadParticipant.user_id 
+            })
+          });
         }
         
         // Update local state to reflect no promotor
@@ -513,9 +523,25 @@ export default function EinsatzplanPage() {
       } else if (!buddyName) {
         // Remove buddy if no name provided: delete buddy participant and normalize status
         try {
-          await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
-            method: 'DELETE'
-          })
+          // First get current buddy participant to get their user_id
+          const currentParticipants = await fetch(`/api/assignments/${editingEinsatz.id}/participants`).then(r => r.json());
+          const buddyParticipant = currentParticipants.participants?.find((p: any) => p.role === 'buddy');
+          
+          if (buddyParticipant) {
+            await fetch(`/api/assignments/${editingEinsatz.id}/participants/choose?role=buddy`, {
+              method: 'DELETE'
+            });
+            
+            // Also delete assignment_tracking record for buddy
+            await fetch('/api/assignments/tracking/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                assignment_id: editingEinsatz.id, 
+                user_id: buddyParticipant.user_id 
+              })
+            });
+          }
         } catch {}
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',

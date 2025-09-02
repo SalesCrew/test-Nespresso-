@@ -149,7 +149,16 @@ export default function AdminDashboard() {
     checkScheduledMessages();
     const interval = setInterval(checkScheduledMessages, 60000); // Every 60 seconds
     
-    return () => clearInterval(interval);
+    // Refresh today's assignments when window regains focus (after editing in einsatzplan)
+    const handleFocus = () => {
+      loadTodaysAssignments();
+    };
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
   
   // Scheduling states
