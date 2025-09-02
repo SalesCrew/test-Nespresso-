@@ -349,7 +349,7 @@ export default function AdminDashboard() {
   };
 
   // Function to handle delete button click in message detail popup
-  const handleDeleteClick = () => {
+  const handleDeleteClick = async () => {
     if (!deleteConfirmationState) {
       // First click - vibrate and start timer
       setDeleteConfirmationState(true);
