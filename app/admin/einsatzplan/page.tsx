@@ -500,8 +500,7 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ 
             status: 'buddy_tag',
             buddy_user_id: buddyId,
-            buddy_name: buddyName,
-            special_status: editingEinsatz.special_status // Preserve special_status
+            buddy_name: buddyName
           })
         })
       } else if (!buddyName) {
@@ -516,8 +515,7 @@ export default function EinsatzplanPage() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            status: editingEinsatz.promotor ? 'assigned' : 'open',
-            special_status: editingEinsatz.special_status // Preserve special_status
+            status: editingEinsatz.promotor ? 'assigned' : 'open'
           })
         })
       }
@@ -2991,14 +2989,26 @@ Import EP
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
                     <Select
-                      value={editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' ? 'Buddy Tag' : editingEinsatz.status}
+                      value={
+                        editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none' 
+                          ? 'Buddy Tag' 
+                          : editingEinsatz.special_status 
+                            ? editingEinsatz.special_status.charAt(0).toUpperCase() + editingEinsatz.special_status.slice(1)
+                            : editingEinsatz.status
+                      }
                       onValueChange={(value) => {
                         // If there's a buddy, force status to stay as Buddy Tag
                         if (editingEinsatz.buddy_user_id && editingEinsatz.buddy_user_id !== 'none') {
                           return; // Don't allow status change when buddy exists
                         }
-                        updateAssignmentStatus(editingEinsatz.id, value);
-                        setEditingEinsatz({ ...editingEinsatz, status: value });
+                        // Only update local state - database save happens on "Speichern"
+                        // Check if it's a special status
+                        const specialStatuses = ['Krankenstand', 'Urlaub', 'Zeitausgleich', 'Notfall'];
+                        if (specialStatuses.includes(value)) {
+                          setEditingEinsatz({ ...editingEinsatz, special_status: value.toLowerCase() });
+                        } else {
+                          setEditingEinsatz({ ...editingEinsatz, status: value, special_status: null });
+                        }
                       }}
                     >
                       <SelectTrigger className="w-full h-9 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:ring-offset-0">
@@ -3260,18 +3270,29 @@ Import EP
               <button
                 onClick={async () => {
                   try {
-                    // Save basic assignment data including special_status to preserve it
+                    // Save basic assignment data including both status and special_status
+                    const updateData: any = {
+                      date: editingEinsatz.date,
+                      planStart: editingEinsatz.planStart,
+                      planEnd: editingEinsatz.planEnd,
+                      location_text: editingEinsatz.address,
+                      postal_code: editingEinsatz.plz
+                    };
+                    
+                    // Include status fields based on what was selected in dropdown
+                    if (editingEinsatz.special_status) {
+                      updateData.special_status = editingEinsatz.special_status;
+                      // Don't change regular status when setting special_status
+                    } else {
+                      // If no special_status, update regular status
+                      updateData.status = editingEinsatz.status;
+                      updateData.special_status = null; // Clear any previous special_status
+                    }
+                    
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        date: editingEinsatz.date,
-                        planStart: editingEinsatz.planStart,
-                        planEnd: editingEinsatz.planEnd,
-                        location_text: editingEinsatz.address,
-                        postal_code: editingEinsatz.plz,
-                        special_status: editingEinsatz.special_status // Preserve special_status when saving
-                      })
+                      body: JSON.stringify(updateData)
                     });
                     
                     // If promotor is assigned, ensure it's saved

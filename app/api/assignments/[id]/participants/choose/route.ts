@@ -13,17 +13,14 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const { error: upErr } = await svc.from('assignment_participants').upsert({ assignment_id: params.id, user_id, role, chosen_by_admin: true, chosen_at: new Date().toISOString() })
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
 
-    // Set status to assigned but preserve special_status
-    const { data: currentAssignment } = await svc.from('assignments').select('special_status').eq('id', params.id).single()
-    const updateData: any = { status: 'assigned' }
+    // Set status to assigned only if no special_status exists
+    const { data: currentAssignment } = await svc.from('assignments').select('status, special_status').eq('id', params.id).single()
     
-    // Preserve existing special_status if it exists
-    if (currentAssignment?.special_status) {
-      updateData.special_status = currentAssignment.special_status
+    // Only update status if there's no special_status
+    if (!currentAssignment?.special_status && currentAssignment?.status === 'open') {
+      const { error: asgErr } = await svc.from('assignments').update({ status: 'assigned' }).eq('id', params.id)
+      if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
     }
-    
-    const { error: asgErr } = await svc.from('assignments').update(updateData).eq('id', params.id)
-    if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
@@ -48,6 +45,13 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
     if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 })
 
+    // Check if there's a special_status before updating regular status
+    const { data: currentAssignment } = await svc
+      .from('assignments')
+      .select('special_status')
+      .eq('id', params.id)
+      .single()
+    
     // If lead still exists keep status as assigned, otherwise set to open
     const { data: leadRows } = await svc
       .from('assignment_participants')
@@ -55,21 +59,29 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
       .eq('assignment_id', params.id)
       .eq('role', 'lead')
 
-    const newStatus = (leadRows && leadRows.length > 0) ? 'assigned' : 'open'
-
-    // Build updates: always update status; if removing buddy, also clear buddy fields
-    const updates: Record<string, any> = { status: newStatus }
+    // Build updates
+    const updates: Record<string, any> = {}
+    
+    // Only update status if there's no special_status
+    if (!currentAssignment?.special_status) {
+      const newStatus = (leadRows && leadRows.length > 0) ? 'assigned' : 'open'
+      updates.status = newStatus
+    }
+    
     if (role === 'buddy') {
       updates.buddy_user_id = null
       updates.buddy_name = null
     }
 
-    const { error: upErr } = await svc
-      .from('assignments')
-      .update(updates)
-      .eq('id', params.id)
-
-    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
+    // Only update if there are changes to make
+    if (Object.keys(updates).length > 0) {
+      const { error: upErr } = await svc
+        .from('assignments')
+        .update(updates)
+        .eq('id', params.id)
+        
+      if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
+    }
 
     return NextResponse.json({ ok: true })
   } catch (e: any) {
