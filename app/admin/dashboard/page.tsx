@@ -114,9 +114,37 @@ export default function AdminDashboard() {
       }
     };
     
+    // Function to check and send due scheduled messages
+    const checkScheduledMessages = async () => {
+      try {
+        const response = await fetch('/api/messages/send-scheduled', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.sent_count > 0) {
+            console.log(`📤 Auto-sent ${result.sent_count} scheduled messages`);
+            // Refresh both scheduled and history when messages are sent
+            await loadScheduledMessages();
+            await loadMessageHistory();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking scheduled messages:', error);
+      }
+    };
+    
     loadPromotors();
     loadScheduledMessages();
     loadMessageHistory();
+    
+    // Check for scheduled messages immediately and then every minute
+    checkScheduledMessages();
+    const interval = setInterval(checkScheduledMessages, 60000); // Every 60 seconds
+    
+    return () => clearInterval(interval);
   }, []);
   
   // Scheduling states
