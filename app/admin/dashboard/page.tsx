@@ -97,6 +97,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   
   // Real promotors data
   const [allPromotors, setAllPromotors] = useState<any[]>([]);
+  const [activePromotorsData, setActivePromotorsData] = useState<any[]>([]);
   
   // Load promotors on component mount (same as einsatzplan)
   useEffect(() => {
@@ -110,6 +111,20 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
           region: p.region || 'wien-noe-bgl' // Use actual region from API
         })) : [];
         console.log('✅ Loaded promotors for admin dashboard:', list.length, 'promotors');
+        
+        // Prepare active promotors data from the full promotor data
+        const activePromsData = (data?.promotors || []).map((promotor: any) => ({
+          id: promotor.id,
+          name: promotor.name || 'Unbekannt',
+          phone: promotor.phone || '',
+          email: promotor.email || '',
+          location: promotor.address || promotor.region || 'Unbekannt',
+          status: 'aktiv',
+          totalEinsaetze: promotor.assignments || 0  // Use assignments count from API if available
+        }));
+        
+        setActivePromotorsData(activePromsData);
+        console.log('✅ Loaded active promotors:', activePromsData.length);
         console.log('✅ First promotor:', list[0]);
         setAllPromotors(list);
       } catch (error) {
@@ -908,69 +923,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     { id: 2, market: "Spar Wien", address: "Kärntner Straße 25", plz: "1010", city: "Wien", promotor: "Max Weber", requestDate: "2024-01-14", planStart: "10:30", planEnd: "18:30", product: "Original" }
   ];
 
-  // Mock data for active promotors
-  const activePromotors = [
-    { id: 1, name: "Jan Müller", phone: "+43 664 123 4567", email: "jan.mueller@nespresso.at", location: "Wien", status: "aktiv", rating: 4.8, totalEinsaetze: 127 },
-    { id: 2, name: "Sarah Schmidt", phone: "+43 664 234 5678", email: "sarah.schmidt@nespresso.at", location: "Graz", status: "aktiv", rating: 4.9, totalEinsaetze: 98 },
-    { id: 3, name: "Michael Weber", phone: "+43 664 345 6789", email: "michael.weber@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 156 },
-    { id: 4, name: "Lisa König", phone: "+43 664 456 7890", email: "lisa.koenig@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.6, totalEinsaetze: 89 },
-    { id: 5, name: "Thomas Bauer", phone: "+43 664 567 8901", email: "thomas.bauer@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 134 },
-    { id: 6, name: "Anna Steiner", phone: "+43 664 678 9012", email: "anna.steiner@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.5, totalEinsaetze: 67 },
-    { id: 7, name: "Peter Huber", phone: "+43 664 789 0123", email: "peter.huber@nespresso.at", location: "Villach", status: "aktiv", rating: 4.7, totalEinsaetze: 112 },
-    { id: 8, name: "Markus Fischer", phone: "+43 664 890 1234", email: "markus.fischer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 143 },
-    { id: 9, name: "Julia Wagner", phone: "+43 664 901 2345", email: "julia.wagner@nespresso.at", location: "Graz", status: "aktiv", rating: 4.6, totalEinsaetze: 78 },
-    { id: 10, name: "Robert Klein", phone: "+43 664 012 3456", email: "robert.klein@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 167 },
-    { id: 11, name: "Elena Hofer", phone: "+43 664 123 4568", email: "elena.hofer@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 91 },
-    { id: 12, name: "David Moser", phone: "+43 664 234 5679", email: "david.moser@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.5, totalEinsaetze: 105 },
-    { id: 13, name: "Sophie Wimmer", phone: "+43 664 345 6780", email: "sophie.wimmer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 128 },
-    { id: 14, name: "Martin Gruber", phone: "+43 664 456 7891", email: "martin.gruber@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.6, totalEinsaetze: 87 },
-    { id: 15, name: "Christina Pichler", phone: "+43 664 567 8902", email: "christina.pichler@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 119 },
-    { id: 16, name: "Alexander Steiner", phone: "+43 664 678 9013", email: "alexander.steiner@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 145 },
-    { id: 17, name: "Petra Maier", phone: "+43 664 789 0124", email: "petra.maier@nespresso.at", location: "Wien", status: "aktiv", rating: 4.5, totalEinsaetze: 73 },
-    { id: 18, name: "Stefan Berger", phone: "+43 664 890 1235", email: "stefan.berger@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 132 },
-    { id: 19, name: "Nicole Huber", phone: "+43 664 901 2346", email: "nicole.huber@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.6, totalEinsaetze: 96 },
-    { id: 20, name: "Thomas Lechner", phone: "+43 664 012 3457", email: "thomas.lechner@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.7, totalEinsaetze: 111 },
-    { id: 21, name: "Sabine Wolf", phone: "+43 664 123 4569", email: "sabine.wolf@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.9, totalEinsaetze: 158 },
-    { id: 22, name: "Daniel Kraus", phone: "+43 664 234 5680", email: "daniel.kraus@nespresso.at", location: "Villach", status: "aktiv", rating: 4.6, totalEinsaetze: 84 },
-    { id: 23, name: "Andrea Fuchs", phone: "+43 664 345 6781", email: "andrea.fuchs@nespresso.at", location: "Graz", status: "aktiv", rating: 4.8, totalEinsaetze: 137 },
-    { id: 24, name: "Manuel Bauer", phone: "+43 664 456 7892", email: "manuel.bauer@nespresso.at", location: "Wien", status: "aktiv", rating: 4.7, totalEinsaetze: 102 },
-    { id: 25, name: "Vanessa Köhler", phone: "+43 664 567 8903", email: "vanessa.koehler@nespresso.at", location: "Linz", status: "aktiv", rating: 4.5, totalEinsaetze: 79 },
-    { id: 26, name: "Florian Reiter", phone: "+43 664 678 9014", email: "florian.reiter@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.8, totalEinsaetze: 124 },
-    { id: 27, name: "Lisa Mayer", phone: "+43 664 789 0125", email: "lisa.mayer@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.6, totalEinsaetze: 93 },
-    { id: 28, name: "Maximilian Huber", phone: "+43 664 890 1236", email: "max.huber@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 149 },
-    { id: 29, name: "Katharina Braun", phone: "+43 664 901 2347", email: "katharina.braun@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 116 },
-    { id: 30, name: "Wolfgang Schwarz", phone: "+43 664 012 3458", email: "wolfgang.schwarz@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.5, totalEinsaetze: 88 },
-    { id: 31, name: "Melanie Weiß", phone: "+43 664 123 4570", email: "melanie.weiss@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 133 },
-    { id: 32, name: "Patrick Grün", phone: "+43 664 234 5681", email: "patrick.gruen@nespresso.at", location: "Linz", status: "aktiv", rating: 4.6, totalEinsaetze: 107 },
-    { id: 33, name: "Sandra Rot", phone: "+43 664 345 6782", email: "sandra.rot@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.7, totalEinsaetze: 125 },
-    { id: 34, name: "Benjamin Blau", phone: "+43 664 456 7893", email: "benjamin.blau@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.9, totalEinsaetze: 162 },
-    { id: 35, name: "Jessica Gelb", phone: "+43 664 567 8904", email: "jessica.gelb@nespresso.at", location: "Wien", status: "aktiv", rating: 4.5, totalEinsaetze: 71 },
-    { id: 36, name: "Kevin Lila", phone: "+43 664 678 9015", email: "kevin.lila@nespresso.at", location: "Graz", status: "aktiv", rating: 4.8, totalEinsaetze: 139 },
-    { id: 37, name: "Michelle Orange", phone: "+43 664 789 0126", email: "michelle.orange@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.6, totalEinsaetze: 95 },
-    { id: 38, name: "Dominik Rosa", phone: "+43 664 890 1237", email: "dominik.rosa@nespresso.at", location: "Villach", status: "aktiv", rating: 4.7, totalEinsaetze: 118 },
-    { id: 39, name: "Stephanie Grau", phone: "+43 664 901 2348", email: "stephanie.grau@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 142 },
-    { id: 40, name: "Philip Türkis", phone: "+43 664 012 3459", email: "philip.tuerkis@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.5, totalEinsaetze: 86 },
-    { id: 41, name: "Carina Mint", phone: "+43 664 123 4571", email: "carina.mint@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.9, totalEinsaetze: 154 },
-    { id: 42, name: "Oliver Beige", phone: "+43 664 234 5682", email: "oliver.beige@nespresso.at", location: "Wien", status: "aktiv", rating: 4.6, totalEinsaetze: 103 },
-    { id: 43, name: "Tanja Braun", phone: "+43 664 345 6783", email: "tanja.braun@nespresso.at", location: "Graz", status: "aktiv", rating: 4.7, totalEinsaetze: 121 },
-    { id: 44, name: "Marco Silber", phone: "+43 664 456 7894", email: "marco.silber@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.8, totalEinsaetze: 135 },
-    { id: 45, name: "Franziska Gold", phone: "+43 664 567 8905", email: "franziska.gold@nespresso.at", location: "Villach", status: "aktiv", rating: 4.5, totalEinsaetze: 77 },
-    { id: 46, name: "Tobias Kupfer", phone: "+43 664 678 9016", email: "tobias.kupfer@nespresso.at", location: "Linz", status: "aktiv", rating: 4.8, totalEinsaetze: 146 },
-    { id: 47, name: "Nadine Bronze", phone: "+43 664 789 0127", email: "nadine.bronze@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.6, totalEinsaetze: 99 },
-    { id: 48, name: "Lukas Platin", phone: "+43 664 890 1238", email: "lukas.platin@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.7, totalEinsaetze: 113 },
-    { id: 49, name: "Simone Kristall", phone: "+43 664 901 2349", email: "simone.kristall@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 167 },
-    { id: 50, name: "Fabian Perl", phone: "+43 664 012 3460", email: "fabian.perl@nespresso.at", location: "Graz", status: "aktiv", rating: 4.5, totalEinsaetze: 82 },
-    { id: 51, name: "Verena Diamant", phone: "+43 664 123 4572", email: "verena.diamant@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.8, totalEinsaetze: 129 },
-    { id: 52, name: "Christian Rubin", phone: "+43 664 234 5683", email: "christian.rubin@nespresso.at", location: "Villach", status: "aktiv", rating: 4.6, totalEinsaetze: 108 },
-    { id: 53, name: "Isabella Saphir", phone: "+43 664 345 6784", email: "isabella.saphir@nespresso.at", location: "Linz", status: "aktiv", rating: 4.7, totalEinsaetze: 122 },
-    { id: 54, name: "Sebastian Smaragd", phone: "+43 664 456 7895", email: "sebastian.smaragd@nespresso.at", location: "Salzburg", status: "aktiv", rating: 4.8, totalEinsaetze: 148 },
-    { id: 55, name: "Larisa Topas", phone: "+43 664 567 8906", email: "larisa.topas@nespresso.at", location: "Innsbruck", status: "aktiv", rating: 4.5, totalEinsaetze: 75 },
-    { id: 56, name: "Moritz Opal", phone: "+43 664 678 9017", email: "moritz.opal@nespresso.at", location: "Wien", status: "aktiv", rating: 4.9, totalEinsaetze: 156 },
-    { id: 57, name: "Celina Jade", phone: "+43 664 789 0128", email: "celina.jade@nespresso.at", location: "Graz", status: "aktiv", rating: 4.6, totalEinsaetze: 94 },
-    { id: 58, name: "Leon Achat", phone: "+43 664 890 1239", email: "leon.achat@nespresso.at", location: "Klagenfurt", status: "aktiv", rating: 4.7, totalEinsaetze: 117 },
-    { id: 59, name: "Amelie Quarz", phone: "+43 664 901 2350", email: "amelie.quarz@nespresso.at", location: "Villach", status: "aktiv", rating: 4.8, totalEinsaetze: 141 },
-    { id: 60, name: "Jonas Onyx", phone: "+43 664 012 3461", email: "jonas.onyx@nespresso.at", location: "Linz", status: "aktiv", rating: 4.5, totalEinsaetze: 83 }
-  ];
+  // Use real promotor data instead of mock data
+  const activePromotors = activePromotorsData;
 
   // Function to load today's assignments
   const loadTodaysAssignments = async () => {
@@ -2412,11 +2366,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         <p className="text-xs text-gray-600 truncate">{promotor.email}</p>
                         <p className="text-xs text-gray-600">{promotor.location}</p>
                       </div>
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs text-yellow-600">★</span>
-                          <span className="text-xs text-gray-600">{promotor.rating}</span>
-                        </div>
+                      <div className="flex items-center justify-end pt-2">
                         <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
                       </div>
                     </div>
