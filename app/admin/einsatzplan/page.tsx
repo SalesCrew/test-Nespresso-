@@ -500,7 +500,8 @@ export default function EinsatzplanPage() {
           body: JSON.stringify({ 
             status: 'buddy_tag',
             buddy_user_id: buddyId,
-            buddy_name: buddyName
+            buddy_name: buddyName,
+            special_status: editingEinsatz.special_status // Preserve special_status
           })
         })
       } else if (!buddyName) {
@@ -514,7 +515,10 @@ export default function EinsatzplanPage() {
         await fetch(`/api/assignments/${editingEinsatz.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: editingEinsatz.promotor ? 'assigned' : 'open' })
+          body: JSON.stringify({ 
+            status: editingEinsatz.promotor ? 'assigned' : 'open',
+            special_status: editingEinsatz.special_status // Preserve special_status
+          })
         })
       }
     } catch (error) {
@@ -3256,7 +3260,7 @@ Import EP
               <button
                 onClick={async () => {
                   try {
-                    // Save basic assignment data (NOT including status - that's handled by status dropdown)
+                    // Save basic assignment data including special_status to preserve it
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
                       method: 'PATCH',
                       headers: { 'Content-Type': 'application/json' },
@@ -3265,8 +3269,8 @@ Import EP
                         planStart: editingEinsatz.planStart,
                         planEnd: editingEinsatz.planEnd,
                         location_text: editingEinsatz.address,
-                        postal_code: editingEinsatz.plz
-                        // REMOVED status - it should only be changed through the status dropdown
+                        postal_code: editingEinsatz.plz,
+                        special_status: editingEinsatz.special_status // Preserve special_status when saving
                       })
                     });
                     

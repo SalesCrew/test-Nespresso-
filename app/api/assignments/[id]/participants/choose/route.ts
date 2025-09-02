@@ -13,8 +13,16 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const { error: upErr } = await svc.from('assignment_participants').upsert({ assignment_id: params.id, user_id, role, chosen_by_admin: true, chosen_at: new Date().toISOString() })
     if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
 
-    // Set status to assigned
-    const { error: asgErr } = await svc.from('assignments').update({ status: 'assigned' }).eq('id', params.id)
+    // Set status to assigned but preserve special_status
+    const { data: currentAssignment } = await svc.from('assignments').select('special_status').eq('id', params.id).single()
+    const updateData: any = { status: 'assigned' }
+    
+    // Preserve existing special_status if it exists
+    if (currentAssignment?.special_status) {
+      updateData.special_status = currentAssignment.special_status
+    }
+    
+    const { error: asgErr } = await svc.from('assignments').update(updateData).eq('id', params.id)
     if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })
