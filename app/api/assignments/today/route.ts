@@ -1,27 +1,43 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const supabase = createSupabaseServerClient();
+    const server = createSupabaseServerClient();
+    const service = createSupabaseServiceClient();
     
     // Check if user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await server.auth.getUser();
     if (authError || !user) {
       console.error('Auth error in /api/assignments/today:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
+    // Check if user is admin using service client
+    console.log('Checking profile for user:', user.id);
+    const { data: profile, error: profileError } = await service
       .from('user_profiles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      console.error('Profile error:', profileError);
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    if (profileError) {
+      console.error('Profile query error:', profileError);
+      console.error('User ID:', user.id);
+      return NextResponse.json({ 
+        error: 'Profile not found', 
+        details: profileError.message,
+        userId: user.id 
+      }, { status: 404 });
+    }
+    
+    if (!profile) {
+      console.error('No profile found for user:', user.id);
+      return NextResponse.json({ 
+        error: 'Profile not found',
+        userId: user.id 
+      }, { status: 404 });
     }
 
     if (!['admin_of_admins', 'admin_staff'].includes(profile.role)) {
@@ -29,13 +45,13 @@ export async function GET() {
     }
 
     // First, ensure tracking records exist for today's assignments
-    const { error: updateError } = await supabase.rpc('check_and_update_tracking_status');
+    const { error: updateError } = await service.rpc('check_and_update_tracking_status');
     if (updateError) {
       console.error('Error updating tracking status:', updateError);
     }
 
     // Fetch today's assignments with tracking data
-    const { data: assignments, error: assignmentsError } = await supabase
+    const { data: assignments, error: assignmentsError } = await service
       .from('todays_assignments')
       .select(`
         assignment_id,
@@ -92,16 +108,17 @@ export async function GET() {
 // Update assignment tracking (start/stop times, status)
 export async function PATCH(request: Request) {
   try {
-    const supabase = createSupabaseServerClient();
+    const server = createSupabaseServerClient();
+    const service = createSupabaseServiceClient();
     
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await server.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check if admin
-    const { data: profile } = await supabase
+    const { data: profile } = await service
       .from('user_profiles')
       .select('role')
       .eq('user_id', user.id)
@@ -140,7 +157,7 @@ export async function PATCH(request: Request) {
     }
 
     // Update or create tracking record
-    const { data: existing } = await supabase
+    const { data: existing } = await service
       .from('assignment_tracking')
       .select('id')
       .eq('assignment_id', assignment_id)
@@ -150,7 +167,7 @@ export async function PATCH(request: Request) {
     let result;
     if (existing) {
       // Update existing record
-      result = await supabase
+      result = await service
         .from('assignment_tracking')
         .update(updateData)
         .eq('id', existing.id)
@@ -158,7 +175,7 @@ export async function PATCH(request: Request) {
         .single();
     } else {
       // Create new record
-      result = await supabase
+      result = await service
         .from('assignment_tracking')
         .insert({
           assignment_id,
