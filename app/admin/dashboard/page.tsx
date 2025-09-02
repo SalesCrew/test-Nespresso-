@@ -116,6 +116,7 @@ export default function AdminDashboard() {
     
     loadPromotors();
     loadScheduledMessages();
+    loadMessageHistory();
   }, []);
   
   // Scheduling states
@@ -173,14 +174,62 @@ export default function AdminDashboard() {
   const [showHistory, setShowHistory] = useState(false);
 
   // History data for sent messages (both scheduled and instant)
-  const [messageHistory] = useState([
-    { id: 101, preview: "Erinnerung: Teammeeting heute um 14:00...", fullText: "Erinnerung: Teammeeting heute um 14:00 in der Zentrale. Agenda wurde per E-Mail versendet.", time: "08:30", date: "23. Nov 2024", recipients: "Alle", promotors: ["Sarah Schmidt", "Michael Weber"], readBy: ["Sarah Schmidt"], sent: true, type: "scheduled" },
-    { id: 102, preview: "Neue Produktinformationen verfügbar...", fullText: "Neue Produktinformationen verfügbar im Portal. Bitte bis Ende der Woche durcharbeiten.", time: "12:15", date: "22. Nov 2024", recipients: "8 Promotoren", promotors: ["Lisa König", "Anna Bauer", "Tom Fischer"], readBy: ["Lisa König", "Tom Fischer"], sent: true, type: "instant" },
-    { id: 103, preview: "Wichtige Änderung der Arbeitszeiten...", fullText: "Wichtige Änderung der Arbeitszeiten ab nächster Woche. Details in der separaten E-Mail.", time: "16:45", date: "21. Nov 2024", recipients: "Region Süd", promotors: ["Maria Huber", "David Klein"], readBy: [], sent: true, type: "scheduled" },
-    { id: 104, preview: "Verkaufszahlen übertroffen - Gratulation...", fullText: "Verkaufszahlen übertroffen - Gratulation an das gesamte Team für die hervorragende Leistung diese Woche!", time: "17:20", date: "20. Nov 2024", recipients: "Alle", promotors: ["Emma Wagner", "Paul Berger", "Julia Mayer"], readBy: ["Julia Mayer"], sent: true, type: "instant" },
-    { id: 105, preview: "Schulung nächste Woche verschoben...", fullText: "Schulung nächste Woche verschoben auf Donnerstag. Neue Einladung folgt.", time: "09:10", date: "19. Nov 2024", recipients: "5 Promotoren", promotors: ["Felix Gruber", "Sophie Reiter"], readBy: ["Felix Gruber", "Sophie Reiter"], sent: true, type: "scheduled" },
-    { id: 106, preview: "Notfall: Einsatz in Wien abgesagt...", fullText: "Notfall: Einsatz in Wien abgesagt wegen technischer Probleme. Ersatztermin wird bekannt gegeben.", time: "11:30", date: "18. Nov 2024", recipients: "Wien Team", promotors: ["Max Köhler"], readBy: [], sent: true, type: "instant" }
-  ]);
+  const [messageHistory, setMessageHistory] = useState<any[]>([]);
+  const [messageHistoryLoading, setMessageHistoryLoading] = useState(false);
+  
+  // Load message history from database
+  const loadMessageHistory = async () => {
+    try {
+      setMessageHistoryLoading(true);
+      const response = await fetch('/api/messages');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter for sent messages and format for UI
+        const sentMessages = (data.messages || [])
+          .filter((msg: any) => msg.status === 'sent')
+          .map((msg: any) => {
+            const sentDate = new Date(msg.sent_at || msg.created_at);
+            const recipients = msg.recipients || [];
+            const recipientCount = recipients.length;
+            
+            // Extract promotor names and who has read the message
+            const promotorNames = recipients.map((r: any) => r.recipient_name).filter(Boolean);
+            const readByNames = recipients
+              .filter((r: any) => r.read_at)
+              .map((r: any) => r.recipient_name)
+              .filter(Boolean);
+            
+            return {
+              id: msg.id,
+              preview: msg.message_text.substring(0, 50) + (msg.message_text.length > 50 ? "..." : ""),
+              fullText: msg.message_text,
+              time: sentDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+              date: sentDate.toLocaleDateString('de-DE', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+              }),
+              recipients: recipientCount === 1 
+                ? promotorNames[0] || 'Promotor'
+                : recipientCount === promotorNames.length
+                  ? "Alle"
+                  : `${recipientCount} Promotoren`,
+              promotors: promotorNames,
+              readBy: readByNames,
+              sent: true,
+              type: msg.scheduled_send_time ? "scheduled" : "instant",
+              messageType: msg.message_type
+            };
+          });
+        setMessageHistory(sentMessages);
+      }
+    } catch (error) {
+      console.error('Error loading message history:', error);
+      setMessageHistory([]);
+    } finally {
+      setMessageHistoryLoading(false);
+    }
+  };
   
   // Message detail popup states
   const [showMessageDetail, setShowMessageDetail] = useState(false);
@@ -1752,6 +1801,8 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                               setMessageText("");
                               setSelectedPromotors([]);
                               setEnableTwoStep(false);
+                              // Refresh message history since a new message was sent
+                              await loadMessageHistory();
                               console.log('Message sent successfully');
                             } else {
                               console.error('Failed to send message');
@@ -1790,28 +1841,38 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                               <div className="space-y-2 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: '215px' }}>
                           {showHistory ? (
                             // Show message history
-                            messageHistory
-                              .sort((a, b) => {
-                                // Sort by date descending (newest first)
-                                const dateA = new Date(a.date);
-                                const dateB = new Date(b.date);
-                                return dateB.getTime() - dateA.getTime();
-                              })
-                              .map((message) => (
-                              <div 
-                                key={message.id} 
-                                onClick={() => handleMessageClick(message)}
-                                className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                              >
-                                <div className="space-y-1">
-                                  <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
-                                  <div className="flex items-center justify-between text-xs text-gray-500">
-                                    <span>{message.date} {message.time}</span>
-                                    <span>{message.recipients}</span>
+                            messageHistoryLoading ? (
+                              <div className="flex items-center justify-center h-16">
+                                <div className="text-xs text-gray-500">Lade Nachrichtenverlauf...</div>
+                              </div>
+                            ) : messageHistory.length === 0 ? (
+                              <div className="flex items-center justify-center h-16">
+                                <div className="text-xs text-gray-500">Kein Nachrichtenverlauf</div>
+                              </div>
+                            ) : (
+                              messageHistory
+                                .sort((a, b) => {
+                                  // Sort by date descending (newest first)
+                                  const dateA = new Date(a.date);
+                                  const dateB = new Date(b.date);
+                                  return dateB.getTime() - dateA.getTime();
+                                })
+                                .map((message) => (
+                                <div 
+                                  key={message.id} 
+                                  onClick={() => handleMessageClick(message)}
+                                  className="p-3 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50/30 to-indigo-50/30 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                >
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-gray-900 line-clamp-2 leading-relaxed overflow-hidden" style={{ wordBreak: 'break-all' }}>{message.preview.length > 25 ? message.preview.substring(0, 25) + '...' : message.preview}</p>
+                                    <div className="flex items-center justify-between text-xs text-gray-500">
+                                      <span>{message.date} {message.time}</span>
+                                      <span>{message.recipients}</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))
+                              ))
+                            )
                           ) : (
                             // Show scheduled messages
                             scheduledMessagesLoading ? (
