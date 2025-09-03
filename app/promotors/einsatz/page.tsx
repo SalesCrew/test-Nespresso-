@@ -408,13 +408,15 @@ const loadProcessState = async () => {
   const loadAssignmentTracking = async (assignmentId: string) => {
     try {
       console.log('[loadAssignmentTracking] Fetching tracking data for:', assignmentId);
-      const res = await fetch('/api/assignments/today', { cache: 'no-store', credentials: 'include' });
+      const res = await fetch('/api/me/assignment-tracking', { cache: 'no-store', credentials: 'include' });
+      console.log('[loadAssignmentTracking] Response status:', res.status);
       if (res.ok) {
         const data = await res.json();
+        console.log('[loadAssignmentTracking] Raw response data:', data);
         const assignments = data.assignments || [];
         const tracking = assignments.find((a: any) => a.assignment_id === assignmentId);
         setTrackingData(tracking || null);
-        console.log('[loadAssignmentTracking] Tracking data:', tracking);
+        console.log('[loadAssignmentTracking] Found tracking for assignment:', tracking);
         
         // Set persistent status based on tracking data
         if (tracking) {
@@ -445,7 +447,8 @@ const loadProcessState = async () => {
           }
         }
       } else {
-        console.error('[loadAssignmentTracking] Failed to fetch tracking data');
+        const errorText = await res.text().catch(() => 'No error text');
+        console.error('[loadAssignmentTracking] Failed to fetch tracking data:', res.status, errorText);
       }
     } catch (e) {
       console.error('[loadAssignmentTracking] Exception:', e);
