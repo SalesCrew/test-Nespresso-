@@ -142,6 +142,9 @@ export default function EinsatzPage() {
   const [nextAssignment, setNextAssignment] = useState<any | null>(null);
   const [nextAssignmentLoading, setNextAssignmentLoading] = useState<boolean>(false);
   
+  // State for tracking data (for persistent status)
+  const [trackingData, setTrackingData] = useState<any | null>(null);
+  
   // Load process state from API
   const loadBuddyTags = async () => {
   try {
@@ -401,6 +404,54 @@ const loadProcessState = async () => {
     }
   };
   
+  // Load assignment tracking data for persistent status
+  const loadAssignmentTracking = async (assignmentId: string) => {
+    try {
+      console.log('[loadAssignmentTracking] Fetching tracking data for:', assignmentId);
+      const res = await fetch('/api/assignments/today', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const assignments = data.assignments || [];
+        const tracking = assignments.find((a: any) => a.assignment_id === assignmentId);
+        setTrackingData(tracking || null);
+        console.log('[loadAssignmentTracking] Tracking data:', tracking);
+        
+        // Set persistent status based on tracking data
+        if (tracking) {
+          // Check if tracking data is from today (reset if it's from yesterday)
+          const trackingDate = tracking.actual_start_time ? new Date(tracking.actual_start_time) : null;
+          const isTrackingFromToday = trackingDate ? isDateToday(trackingDate) : true; // Allow if no timestamp yet
+          
+          if (!isTrackingFromToday) {
+            // Tracking data is from previous day - reset to idle for new day
+            setEinsatzStatus("idle");
+            setIsSwiped(false);
+            console.log('[loadAssignmentTracking] Status reset to idle (new day)');
+          } else if (tracking.actual_start_time && tracking.actual_end_time) {
+            // Both start and end times exist - completed
+            setEinsatzStatus("completed");
+            setIsSwiped(true);
+            console.log('[loadAssignmentTracking] Status set to completed (both timestamps)');
+          } else if (tracking.actual_start_time && !tracking.actual_end_time) {
+            // Only start time exists - active/started
+            setEinsatzStatus("started");
+            setIsSwiped(true);
+            console.log('[loadAssignmentTracking] Status set to started (start timestamp only)');
+          } else {
+            // No start time - idle
+            setEinsatzStatus("idle");
+            setIsSwiped(false);
+            console.log('[loadAssignmentTracking] Status set to idle (no timestamps)');
+          }
+        }
+      } else {
+        console.error('[loadAssignmentTracking] Failed to fetch tracking data');
+      }
+    } catch (e) {
+      console.error('[loadAssignmentTracking] Exception:', e);
+    }
+  };
+
   // Load next upcoming assignment (status assigned or buddy_tag) for this promotor
   const loadNextAssignment = async () => {
     try {
@@ -412,6 +463,15 @@ const loadProcessState = async () => {
         const data = await res.json();
         console.log('[loadNextAssignment] Response data:', data);
         setNextAssignment(data.assignment || null);
+        
+        // Load tracking data for persistent status if assignment is for today
+        if (data.assignment?.id) {
+          const assignmentDate = data.assignment.start_ts ? new Date(data.assignment.start_ts) : null;
+          const isToday = assignmentDate ? isDateToday(assignmentDate) : false;
+          if (isToday) {
+            await loadAssignmentTracking(data.assignment.id);
+          }
+        }
       } else {
         console.error('[loadNextAssignment] Failed with status:', res.status);
         const errorData = await res.text();
