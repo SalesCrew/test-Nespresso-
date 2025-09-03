@@ -35,34 +35,56 @@ export async function PATCH(
     }
 
     if (action === 'approve') {
-      // Call the approve function
-      console.log('Calling approve_special_status_request with:', {
-        request_id: params.id,
-        admin_user_id: user.id
-      });
-      
-      const { data, error: approveError } = await service.rpc('approve_special_status_request', {
-        request_id: params.id,
-        admin_user_id: user.id
-      });
+      // Get the request details first
+      const { data: requestData, error: requestError } = await service
+        .from('special_status_requests')
+        .select('*')
+        .eq('id', params.id)
+        .eq('status', 'pending')
+        .single();
 
-      if (approveError) {
-        console.error('Error approving request:', approveError);
-        console.error('Error details:', {
-          code: approveError.code,
-          message: approveError.message,
-          details: approveError.details,
-          hint: approveError.hint
-        });
-        return NextResponse.json({ 
-          error: 'Failed to approve request',
-          details: approveError.message,
-          code: approveError.code,
-          hint: approveError.hint
-        }, { status: 500 });
+      if (requestError || !requestData) {
+        return NextResponse.json({ error: 'Request not found' }, { status: 404 });
       }
-      
-      console.log('Approve function completed successfully');
+
+      // 1. Update the request status
+      await service
+        .from('special_status_requests')
+        .update({
+          status: 'approved',
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', params.id);
+
+      // 2. Create/update active special status
+      await service
+        .from('active_special_status')
+        .upsert({
+          user_id: requestData.user_id,
+          status_type: requestData.request_type,
+          is_active: true
+        });
+
+      // 3. Update today's assignments for this user
+      const { data: todaysAssignments } = await service
+        .from('assignment_participants')
+        .select('assignment_id, assignments!inner(start_ts)')
+        .eq('user_id', requestData.user_id);
+
+      if (todaysAssignments) {
+        const today = new Date().toISOString().split('T')[0];
+        const todayAssignmentIds = todaysAssignments
+          .filter((ap: any) => ap.assignments.start_ts.startsWith(today))
+          .map((ap: any) => ap.assignment_id);
+
+        if (todayAssignmentIds.length > 0) {
+          await service
+            .from('assignments')
+            .update({ special_status: requestData.request_type })
+            .in('id', todayAssignmentIds);
+        }
+      }
     } else {
       // Decline the request
       const { error: declineError } = await service
