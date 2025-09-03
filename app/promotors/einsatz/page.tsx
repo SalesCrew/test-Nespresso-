@@ -516,7 +516,14 @@ const loadProcessState = async () => {
     
     // Refresh next assignment every 60s to reflect instant changes
     const iv = setInterval(loadNextAssignment, 60000);
-    return () => clearInterval(iv);
+    
+    // Check special status every 30s to detect approval/changes
+    const statusIv = setInterval(checkActiveSpecialStatus, 30000);
+    
+    return () => {
+      clearInterval(iv);
+      clearInterval(statusIv);
+    };
   }, []);
   
   // Track processState changes
@@ -874,25 +881,67 @@ const loadProcessState = async () => {
   // Active special status
   const [activeSpecialStatus, setActiveSpecialStatus] = useState<any>(null);
   const [checkingSpecialStatus, setCheckingSpecialStatus] = useState(true);
+  const [pendingSpecialStatusRequest, setPendingSpecialStatusRequest] = useState<any>(null);
   
-  // Check for active special status
+  // Check for active special status and pending requests
   const checkActiveSpecialStatus = async () => {
     try {
       setCheckingSpecialStatus(true);
-      const response = await fetch('/api/special-status/active', {
+      
+      // Check for active status
+      const activeResponse = await fetch('/api/special-status/active', {
         credentials: 'include'
       });
       
-      if (response.ok) {
-        const { activeStatus } = await response.json();
+      if (activeResponse.ok) {
+        const { activeStatus } = await activeResponse.json();
         setActiveSpecialStatus(activeStatus);
+        
+        // If we have active status, no need to check pending
+        if (activeStatus?.is_active) {
+          setPendingSpecialStatusRequest(null);
+          setIsWaitingForSickConfirmation(false);
+          setIsWaitingForEmergencyConfirmation(false);
+          return;
+        }
       } else {
-        // Silently fail if the feature is not available
         setActiveSpecialStatus(null);
       }
+      
+      // Check for pending requests if no active status
+      const pendingResponse = await fetch('/api/special-status/requests', {
+        credentials: 'include'
+      });
+      
+      if (pendingResponse.ok) {
+        const { requests } = await pendingResponse.json();
+        const myPendingRequest = requests?.find((r: any) => r.status === 'pending');
+        setPendingSpecialStatusRequest(myPendingRequest);
+        
+        if (myPendingRequest) {
+          if (myPendingRequest.request_type === 'krankenstand') {
+            setIsWaitingForSickConfirmation(true);
+            setIsWaitingForEmergencyConfirmation(false);
+          } else if (myPendingRequest.request_type === 'notfall') {
+            setIsWaitingForSickConfirmation(false);
+            setIsWaitingForEmergencyConfirmation(true);
+          }
+        } else {
+          setIsWaitingForSickConfirmation(false);
+          setIsWaitingForEmergencyConfirmation(false);
+        }
+      } else {
+        setPendingSpecialStatusRequest(null);
+        setIsWaitingForSickConfirmation(false);
+        setIsWaitingForEmergencyConfirmation(false);
+      }
+      
     } catch (error) {
       console.warn('Special status feature not available:', error);
       setActiveSpecialStatus(null);
+      setPendingSpecialStatusRequest(null);
+      setIsWaitingForSickConfirmation(false);
+      setIsWaitingForEmergencyConfirmation(false);
     } finally {
       setCheckingSpecialStatus(false);
     }
@@ -909,28 +958,9 @@ const loadProcessState = async () => {
       });
       
       if (response.ok) {
-        // Don't set confirmed immediately - just show that request was sent
         console.log(`${requestType} request created successfully`);
-        // Keep checking for approval
-        const checkInterval = setInterval(async () => {
-          const response = await fetch('/api/special-status/active', {
-            credentials: 'include'
-          });
-          
-          if (response.ok) {
-            const { activeStatus } = await response.json();
-            if (activeStatus && activeStatus.is_active) {
-              setActiveSpecialStatus(activeStatus);
-              clearInterval(checkInterval);
-              // Reset waiting states
-              setIsWaitingForSickConfirmation(false);
-              setIsWaitingForEmergencyConfirmation(false);
-            }
-          }
-        }, 5000); // Check every 5 seconds
-        
-        // Clear interval after 5 minutes to prevent infinite checking
-        setTimeout(() => clearInterval(checkInterval), 300000);
+        // Re-check status to update UI
+        await checkActiveSpecialStatus();
       } else {
         const error = await response.json();
         console.error('Failed to create special status request:', error);

@@ -70,23 +70,42 @@ export async function GET(request: NextRequest) {
     // Use service client to bypass RLS for admin check
     const service = createSupabaseServiceClient();
     
-    // Check if user is admin
+    // Check user role
     const { data: profile } = await service
       .from('user_profiles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Fetch pending requests
-    const { data: requests, error } = await service
-      .from('special_status_requests')
-      .select('*')
-      .eq('status', 'pending')
-      .order('requested_at', { ascending: false });
+    let requests;
+    let error;
+
+    if (['admin_of_admins', 'admin_staff'].includes(profile.role)) {
+      // Admin: get all pending requests
+      const result = await service
+        .from('special_status_requests')
+        .select('*')
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false });
+      
+      requests = result.data;
+      error = result.error;
+    } else {
+      // Promotor: get only their own pending requests
+      const result = await service
+        .from('special_status_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('requested_at', { ascending: false });
+      
+      requests = result.data;
+      error = result.error;
+    }
 
     if (error) {
       // If table doesn't exist, return empty array
@@ -98,8 +117,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
     }
     
-    // If we have requests, fetch user profiles separately
-    if (requests && requests.length > 0) {
+    // If we have requests and user is admin, fetch user profiles
+    if (requests && requests.length > 0 && ['admin_of_admins', 'admin_staff'].includes(profile.role)) {
       const userIds = [...new Set(requests.map((r: any) => r.user_id))];
       const { data: profiles } = await service
         .from('user_profiles')
