@@ -2736,46 +2736,61 @@ const loadProcessState = async () => {
                   <h3 className="text-sm font-medium text-red-600 dark:text-red-400">Krankenstand-Center</h3>
                   </div>
                 
-                <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3 mb-3">
-                  <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
-                    <p className="mb-2 text-sm whitespace-nowrap">Bei Krankheit ruf bitte diese Nummer an:</p>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                      <div>Mo-Do 7:30-17:00</div>
-                      <div>Fr 7:30-14:00</div>
-                      <div>Sa 9:00-12:00</div>
-                        </div>
-                            </div>
-                  <a 
-                    href="tel:+43699141630" 
-                    className="flex items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-rose-100 dark:border-rose-800/50 mb-1.5 hover:bg-rose-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <span className="font-medium text-base text-red-600 dark:text-red-400">+43 699 141 630</span>
-                  </a>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Nachdem du angerufen hast, drücke den Button, um einen Krankenstand zu beantragen.
-                  </p>
-                            </div>
-                            
-                {activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'krankenstand' ? (
-                  <div className="space-y-3">
-                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                      <div className="flex items-center">
-                        <div className="relative mr-2">
-                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                          <CheckCircle2 className="h-4 w-4 relative" />
-                        </div>
-                        <span>Aktiver Krankenstand</span>
+                {!(activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'krankenstand') && (
+                  <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3 mb-3">
+                    <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
+                      <p className="mb-2 text-sm whitespace-nowrap">Bei Krankheit ruf bitte diese Nummer an:</p>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <div>Mo-Do 7:30-17:00</div>
+                        <div>Fr 7:30-14:00</div>
+                        <div>Sa 9:00-12:00</div>
                       </div>
                     </div>
-                    
-                    <button 
-                      onClick={endActiveSpecialStatus}
-                      className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
+                    <a 
+                      href="tel:+43699141630" 
+                      className="flex items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-lg border border-rose-100 dark:border-rose-800/50 mb-1.5 hover:bg-rose-50 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <Thermometer className="h-4 w-4 mr-1.5" />
-                      Krankenstand beenden
-                    </button>
+                      <span className="font-medium text-base text-red-600 dark:text-red-400">+43 699 141 630</span>
+                    </a>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      Nachdem du angerufen hast, drücke den Button, um einen Krankenstand zu beantragen.
+                    </p>
                   </div>
+                )}
+                
+                {activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'krankenstand' && (
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-3">
+                    <div className="text-center">
+                      <p className="text-lg font-medium text-green-700 dark:text-green-400 mb-1">Aktiver Krankenstand</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-300">
+                        {(() => {
+                          if (!activeSpecialStatus.started_at) return '0';
+                          const startDate = new Date(activeSpecialStatus.started_at);
+                          const today = new Date();
+                          const diffTime = today.getTime() - startDate.getTime();
+                          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                          return diffDays;
+                        })()} Tag{(() => {
+                          if (!activeSpecialStatus.started_at) return 'e';
+                          const startDate = new Date(activeSpecialStatus.started_at);
+                          const today = new Date();
+                          const diffTime = today.getTime() - startDate.getTime();
+                          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                          return diffDays === 1 ? '' : 'e';
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                            
+                {activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'krankenstand' ? (
+                  <button 
+                    onClick={endActiveSpecialStatus}
+                    className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
+                  >
+                    <Thermometer className="h-4 w-4 mr-1.5" />
+                    Krankenstand beenden
+                  </button>
                 ) : !isWaitingForSickConfirmation ? (
         <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
