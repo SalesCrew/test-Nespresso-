@@ -18,8 +18,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request type' }, { status: 400 });
     }
 
+    // Use service client for database operations to bypass RLS
+    const service = createSupabaseServiceClient();
+
     // Check if user already has a pending request
-    const { data: existingRequest } = await supabase
+    const { data: existingRequest } = await service
       .from('special_status_requests')
       .select('*')
       .eq('user_id', user.id)
@@ -31,12 +34,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the request
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('special_status_requests')
       .insert({
         user_id: user.id,
         request_type,
-        reason,
+        reason: reason || null,
         status: 'pending'
       })
       .select()
