@@ -171,19 +171,25 @@ export async function PATCH(request: Request) {
     }
     
     // Handle early start reasoning
+    console.log('🔵 [API] Received early start data:', { early_start_reason, minutes_early_start });
     if (early_start_reason) {
       updateData.early_start_reason = early_start_reason;
+      console.log('✅ [API] Adding early_start_reason to update');
     }
     if (minutes_early_start !== undefined) {
       updateData.minutes_early_start = minutes_early_start;
+      console.log('✅ [API] Adding minutes_early_start to update');
     }
     
     // Handle early end reasoning
+    console.log('🔵 [API] Received early end data:', { early_end_reason, minutes_early_end });
     if (early_end_reason) {
       updateData.early_end_reason = early_end_reason;
+      console.log('✅ [API] Adding early_end_reason to update');
     }
     if (minutes_early_end !== undefined) {
       updateData.minutes_early_end = minutes_early_end;
+      console.log('✅ [API] Adding minutes_early_end to update');
     }
 
     // Handle action-based updates (legacy admin interface)
@@ -222,6 +228,8 @@ export async function PATCH(request: Request) {
       }
     }
 
+    console.log('🔴 [API] Final updateData before database save:', updateData);
+    
     // Update or create tracking record
     const { data: existing } = await service
       .from('assignment_tracking')

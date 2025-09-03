@@ -1088,9 +1088,13 @@ const loadProcessState = async () => {
         };
         
         // Add early start reason if this was an early start
+        console.log('🔵 [START] Checking early start reason:', earlyStartReason, 'Minutes early:', minutesEarly);
         if (earlyStartReason.trim()) {
           updateData.early_start_reason = earlyStartReason.trim();
           updateData.minutes_early_start = minutesEarly;
+          console.log('✅ [START] Added early start reasoning to API call');
+        } else {
+          console.log('ℹ️ [START] No early start reasoning to add');
         }
         
         const response = await fetch('/api/assignments/today', {
@@ -1153,7 +1157,7 @@ const loadProcessState = async () => {
   const handleEarlyStartSubmit = () => {
     if (earlyStartReason.trim()) {
       setShowEarlyStartModal(false);
-      setEarlyStartReason("");
+      // Don't clear earlyStartReason here - let handleStartEinsatz use it and clear it after API success
       handleStartEinsatz();
     }
   };
@@ -1177,7 +1181,7 @@ const loadProcessState = async () => {
   const handleEarlyEndSubmit = async () => {
     if (earlyEndReason.trim()) {
       setShowEarlyEndModal(false);
-      setEarlyEndReason("");
+      // Don't clear earlyEndReason here - let handleCompleteEinsatz use it and clear it after API success
       await handleCompleteEinsatz();
     }
   };
@@ -1207,9 +1211,13 @@ const loadProcessState = async () => {
         };
         
         // Add early end reason if this was an early end
+        console.log('🔵 [END] Checking early end reason:', earlyEndReason, 'Minutes early end:', minutesEarlyEnd);
         if (earlyEndReason.trim()) {
           updateData.early_end_reason = earlyEndReason.trim();
           updateData.minutes_early_end = minutesEarlyEnd;
+          console.log('✅ [END] Added early end reasoning to API call');
+        } else {
+          console.log('ℹ️ [END] No early end reasoning to add');
         }
         
         const response = await fetch('/api/assignments/today', {
