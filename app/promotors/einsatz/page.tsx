@@ -1112,9 +1112,16 @@ const loadProcessState = async () => {
     if (!isSwiped) {
       // Check if this is an early start (15+ minutes before actual assignment start time)
       const now = new Date();
-      const assignmentStartTime = displayedAssignment?.start_ts ? new Date(displayedAssignment.start_ts) : null;
       
-      if (assignmentStartTime) {
+      if (displayedAssignment?.start_ts) {
+        // Extract time from ISO string and create today's date with Austrian timezone
+        const startTimeString = displayedAssignment.start_ts.substring(11, 16); // e.g. "09:00"
+        const [hours, minutes] = startTimeString.split(':').map(Number);
+        
+        // Create assignment start time for today in Austrian timezone
+        const today = new Date();
+        const assignmentStartTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes, 0);
+        
         const timeDiffMinutes = (assignmentStartTime.getTime() - now.getTime()) / (1000 * 60);
         
         if (timeDiffMinutes >= 15) {
