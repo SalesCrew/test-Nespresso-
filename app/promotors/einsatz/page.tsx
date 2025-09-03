@@ -433,6 +433,7 @@ const loadProcessState = async () => {
             // Both start and end times exist - completed
             setEinsatzStatus("completed");
             setIsSwiped(true);
+            setLastCompletedAssignmentDate(new Date()); // Set completion date for UI logic
             console.log('[loadAssignmentTracking] Status set to completed (both timestamps)');
           } else if (tracking.actual_start_time && !tracking.actual_end_time) {
             // Only start time exists - active/started
@@ -1795,8 +1796,10 @@ const loadProcessState = async () => {
           </Card>
         )}
         
-        {/* Einsatz abgeschlossen Card - conditional on lastCompletedAssignmentDate being today */}
-        {einsatzStatus === "completed" && lastCompletedAssignmentDate && isDateToday(lastCompletedAssignmentDate) && (
+        {/* Einsatz abgeschlossen Card - show when completed OR when both timestamps exist from tracking data */}
+        {(einsatzStatus === "completed" && 
+          ((lastCompletedAssignmentDate && isDateToday(lastCompletedAssignmentDate)) || 
+           (trackingData?.actual_start_time && trackingData?.actual_end_time))) && (
           <Card className="mb-6 border-sky-300 dark:border-sky-700 shadow-lg bg-gradient-to-br from-sky-50 dark:from-sky-900/40 to-transparent">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center text-sky-600 dark:text-sky-400">
