@@ -1079,22 +1079,33 @@ const loadProcessState = async () => {
         hour12: false
       }).replace(' ', 'T') + '.000Z';  // Add T and fake Z to make it look like ISO but with Austrian time
       
-      // Update assignment tracking with actual start time
+      // Update assignment tracking with actual start time and early start reason if applicable
       if (displayedAssignment?.id) {
+        const updateData: any = {
+          assignment_id: displayedAssignment.id,
+          actual_start_time: austrianTimeString,
+          status: 'gestartet'
+        };
+        
+        // Add early start reason if this was an early start
+        if (earlyStartReason.trim()) {
+          updateData.early_start_reason = earlyStartReason.trim();
+          updateData.minutes_early_start = minutesEarly;
+        }
+        
         const response = await fetch('/api/assignments/today', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            assignment_id: displayedAssignment.id,
-            actual_start_time: austrianTimeString,
-            status: 'gestartet'
-          })
+          body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
           console.error('Failed to update start time');
         } else {
           console.log('✅ Successfully updated start time for assignment:', displayedAssignment.id);
+          // Clear early start reason after successful submission
+          setEarlyStartReason("");
+          setMinutesEarly(0);
         }
       }
       
@@ -1187,22 +1198,33 @@ const loadProcessState = async () => {
         hour12: false
       }).replace(' ', 'T') + '.000Z';  // Add T and fake Z to make it look like ISO but with Austrian time
       
-      // Update assignment tracking with actual end time
+      // Update assignment tracking with actual end time and early end reason if applicable
       if (displayedAssignment?.id) {
+        const updateData: any = {
+          assignment_id: displayedAssignment.id,
+          actual_end_time: austrianTimeString,
+          status: 'beendet'
+        };
+        
+        // Add early end reason if this was an early end
+        if (earlyEndReason.trim()) {
+          updateData.early_end_reason = earlyEndReason.trim();
+          updateData.minutes_early_end = minutesEarlyEnd;
+        }
+        
         const response = await fetch('/api/assignments/today', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            assignment_id: displayedAssignment.id,
-            actual_end_time: austrianTimeString,
-            status: 'beendet'
-          })
+          body: JSON.stringify(updateData)
         });
         
         if (!response.ok) {
           console.error('Failed to update end time');
         } else {
           console.log('✅ Successfully updated end time for assignment:', displayedAssignment.id);
+          // Clear early end reason after successful submission
+          setEarlyEndReason("");
+          setMinutesEarlyEnd(0);
         }
       }
       

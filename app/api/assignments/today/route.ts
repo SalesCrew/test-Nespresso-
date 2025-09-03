@@ -73,7 +73,11 @@ export async function GET() {
         tracking_status,
         display_status,
         special_status,
-        notes
+        notes,
+        early_start_reason,
+        minutes_early_start,
+        early_end_reason,
+        minutes_early_end
       `)
       .order('planned_start', { ascending: true });
 
@@ -119,7 +123,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { assignment_id, user_id, action, status, actual_start_time, actual_end_time } = body;
+    const { assignment_id, user_id, action, status, actual_start_time, actual_end_time, early_start_reason, minutes_early_start, early_end_reason, minutes_early_end } = body;
 
     if (!assignment_id) {
       return NextResponse.json({ error: 'Missing assignment_id' }, { status: 400 });
@@ -164,6 +168,22 @@ export async function PATCH(request: Request) {
     }
     if (status) {
       updateData.status = status;
+    }
+    
+    // Handle early start reasoning
+    if (early_start_reason) {
+      updateData.early_start_reason = early_start_reason;
+    }
+    if (minutes_early_start !== undefined) {
+      updateData.minutes_early_start = minutes_early_start;
+    }
+    
+    // Handle early end reasoning
+    if (early_end_reason) {
+      updateData.early_end_reason = early_end_reason;
+    }
+    if (minutes_early_end !== undefined) {
+      updateData.minutes_early_end = minutes_early_end;
     }
 
     // Handle action-based updates (legacy admin interface)

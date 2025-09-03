@@ -79,6 +79,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [todaysEinsaetze, setTodaysEinsaetze] = useState<any[]>([]);
   const [todaysEinsaetzeLoading, setTodaysEinsaetzeLoading] = useState(true);
   
+  // State for detailed assignment view
+  const [showAssignmentDetailModal, setShowAssignmentDetailModal] = useState(false);
+  const [selectedAssignmentDetail, setSelectedAssignmentDetail] = useState<any | null>(null);
+  
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
   const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
@@ -968,7 +972,12 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           tracking_status: a.tracking_status,
           participant_status: a.participant_status,
           user_id: a.user_id,
-          tracking_id: a.tracking_id
+          tracking_id: a.tracking_id,
+          notes: a.notes,
+          early_start_reason: a.early_start_reason,
+          minutes_early_start: a.minutes_early_start,
+          early_end_reason: a.early_end_reason,
+          minutes_early_end: a.minutes_early_end
         }));
         setTodaysEinsaetze(transformedData);
       } else {
@@ -1318,7 +1327,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm ${
+                            className={`p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm cursor-pointer ${
                               statusColor === 'green' 
                                 ? 'bg-gradient-to-r from-white to-green-50/35' 
                                 : statusColor === 'orange'
@@ -1327,6 +1336,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 ? 'bg-gradient-to-r from-white to-red-50/35'
                                 : 'bg-white'
                             }`}
+                            onClick={() => {
+                              setSelectedAssignmentDetail(einsatz);
+                              setShowAssignmentDetailModal(true);
+                            }}
                           >
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
@@ -1335,7 +1348,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                     {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
                                   </h4>
                                   <button
-                                    onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openInGoogleMaps(einsatz.address, einsatz.city);
+                                    }}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
                                   >
                                     {einsatz.address}
@@ -1391,7 +1407,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm ${
+                            className={`p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm cursor-pointer ${
                               statusColor === 'green' 
                                 ? 'bg-gradient-to-br from-white to-green-50/35' 
                                 : statusColor === 'orange'
@@ -1400,6 +1416,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 ? 'bg-gradient-to-br from-white to-red-50/35'
                                 : 'bg-white'
                             }`}
+                            onClick={() => {
+                              setSelectedAssignmentDetail(einsatz);
+                              setShowAssignmentDetailModal(true);
+                            }}
                           >
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
@@ -2090,7 +2110,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                     {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
                                   </h4>
                                   <button
-                                    onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openInGoogleMaps(einsatz.address, einsatz.city);
+                                    }}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
                                   >
                                     {einsatz.address}
@@ -2383,9 +2406,9 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                         <p className="text-xs text-gray-600 truncate">{promotor.email}</p>
                         <p className="text-xs text-gray-600">{promotor.location}</p>
                       </div>
-                    </div>
+                        </div>
                     <div className="absolute bottom-4 left-4">
-                      <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
+                        <span className="text-xs text-gray-500">{promotor.totalEinsaetze} Einsätze</span>
                     </div>
                   </div>
                 ))}
@@ -3389,6 +3412,167 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
+      {/* Assignment Detail Modal */}
+      {showAssignmentDetailModal && selectedAssignmentDetail && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
+            <CardHeader className="pb-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-semibold text-gray-900">Einsatz Details</CardTitle>
+                  <CardDescription className="text-sm text-gray-500">
+                    {selectedAssignmentDetail.market} • {selectedAssignmentDetail.promotor}
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowAssignmentDetailModal(false)}
+                  className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 overflow-auto max-h-[70vh]">
+              <div className="space-y-6">
+                
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Location</h4>
+                    <p className="text-sm text-gray-600">{selectedAssignmentDetail.address}</p>
+                    <p className="text-sm text-gray-600">{selectedAssignmentDetail.plz} {selectedAssignmentDetail.city}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Geplante Zeiten</h4>
+                    <p className="text-sm text-gray-600">{selectedAssignmentDetail.planStart} - {selectedAssignmentDetail.planEnd}</p>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-900">Status</h4>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      getStatusColor(selectedAssignmentDetail) === 'green' ? 'bg-green-400' :
+                      getStatusColor(selectedAssignmentDetail) === 'orange' ? 'bg-orange-400' :
+                      getStatusColor(selectedAssignmentDetail) === 'red' ? 'bg-red-400' :
+                      'bg-gray-300'
+                    }`}></div>
+                    <span className="text-sm text-gray-600">
+                      {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(selectedAssignmentDetail.status) 
+                        ? selectedAssignmentDetail.status 
+                        : getStatusColor(selectedAssignmentDetail) === 'green' 
+                        ? 'gestartet' 
+                        : getStatusColor(selectedAssignmentDetail) === 'orange' 
+                        ? 'verspätet' 
+                        : 'pending'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actual Times */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-900">Tatsächliche Zeiten</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Start:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {selectedAssignmentDetail.actualStart || '--:--'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Ende:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {selectedAssignmentDetail.actualEnd || '--:--'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Early Start Reasoning */}
+                {selectedAssignmentDetail.early_start_reason && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Früher Start</h4>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Minuten zu früh:</span>
+                        <span className="text-sm font-medium text-orange-700">
+                          {selectedAssignmentDetail.minutes_early_start} Min
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
+                        <p className="text-sm text-gray-900 bg-white rounded p-2 border">
+                          {selectedAssignmentDetail.early_start_reason}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Early End Reasoning */}
+                {selectedAssignmentDetail.early_end_reason && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Früher Schluss</h4>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Minuten zu früh beendet:</span>
+                        <span className="text-sm font-medium text-blue-700">
+                          {selectedAssignmentDetail.minutes_early_end} Min
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
+                        <p className="text-sm text-gray-900 bg-white rounded p-2 border">
+                          {selectedAssignmentDetail.early_end_reason}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Buddy Information */}
+                {selectedAssignmentDetail.buddyName && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Buddy Tag</h4>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <p className="text-sm text-gray-900">{selectedAssignmentDetail.buddyName}</p>
+                      <p className="text-xs text-gray-500">Buddy für diesen Einsatz</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Photos Section (Placeholder) */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <div className="space-y-2">
+                      <div className="text-gray-400 mx-auto w-12 h-12 flex items-center justify-center">
+                        📸
+                      </div>
+                      <p className="text-sm text-gray-500">Foto-Upload wird in der nächsten Version verfügbar sein</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {selectedAssignmentDetail.notes && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Notizen</h4>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-900">{selectedAssignmentDetail.notes}</p>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
     </div>
   );
 } 

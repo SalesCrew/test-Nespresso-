@@ -29,7 +29,11 @@ export async function GET() {
         actual_end_time,
         tracking_status,
         display_status,
-        notes
+        notes,
+        early_start_reason,
+        minutes_early_start,
+        early_end_reason,
+        minutes_early_end
       `)
       .eq('user_id', user.id)
       .order('planned_start', { ascending: true });

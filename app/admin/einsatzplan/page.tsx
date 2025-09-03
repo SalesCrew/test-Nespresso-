@@ -1494,9 +1494,9 @@ export default function EinsatzplanPage() {
                    r.special_status) :
                   // Otherwise use regular status logic
                   ((r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
-                   (r.status === 'assigned' ? 'Verplant' : 
-                    r.status === 'buddy_tag' ? 'Buddy Tag' : 
-                    r.status === 'open' ? 'Offen' :
+                  (r.status === 'assigned' ? 'Verplant' : 
+                   r.status === 'buddy_tag' ? 'Buddy Tag' : 
+                   r.status === 'open' ? 'Offen' :
                     (r.status || 'Offen'))),
           // Include buddy information
           promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
