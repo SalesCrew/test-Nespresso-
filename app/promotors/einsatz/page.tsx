@@ -1932,6 +1932,33 @@ const loadProcessState = async () => {
             </div>
             </>
             )}
+            {/* Special Status - Show when user is in krankenstand or notfall */}
+            {isAssignmentForToday && activeSpecialStatus?.is_active && (
+              <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 flex items-center">
+                {activeSpecialStatus.status_type === 'krankenstand' ? (
+                  <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0" />
+                )}
+                <div>
+                  <p className={`font-medium ${
+                    activeSpecialStatus.status_type === 'krankenstand' 
+                      ? 'text-red-700 dark:text-red-400' 
+                      : 'text-orange-700 dark:text-orange-400'
+                  }`}>
+                    Du kannst diesen Einsatz nicht wahrnehmen
+                  </p>
+                  <p className={`text-xs mt-0.5 ${
+                    activeSpecialStatus.status_type === 'krankenstand'
+                      ? 'text-red-600/80 dark:text-red-300/80'
+                      : 'text-orange-600/80 dark:text-orange-300/80'
+                  }`}>
+                    Du bist im {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
                           {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !activeSpecialStatus?.is_active && (
               <div className="mt-4">
