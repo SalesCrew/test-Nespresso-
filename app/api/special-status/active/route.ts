@@ -19,7 +19,11 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    if (error) {
+      // If table doesn't exist or no rows found, return null
+      if (error.code === '42P01' || error.code === 'PGRST116') {
+        return NextResponse.json({ activeStatus: null });
+      }
       console.error('Error fetching active status:', error);
       return NextResponse.json({ error: 'Failed to fetch status' }, { status: 500 });
     }

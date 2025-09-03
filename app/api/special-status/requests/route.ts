@@ -78,21 +78,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // Fetch pending requests with user profiles
+    // Fetch pending requests
     const { data: requests, error } = await service
       .from('special_status_requests')
-      .select(`
-        *,
-        user_profiles!special_status_requests_user_id_fkey (
-          display_name
-        )
-      `)
+      .select('*')
       .eq('status', 'pending')
       .order('requested_at', { ascending: false });
 
     if (error) {
+      // If table doesn't exist, return empty array
+      if (error.code === '42P01') {
+        console.warn('Special status requests table not found');
+        return NextResponse.json({ requests: [] });
+      }
       console.error('Error fetching special status requests:', error);
       return NextResponse.json({ error: 'Failed to fetch requests' }, { status: 500 });
+    }
+    
+    // If we have requests, fetch user profiles separately
+    if (requests && requests.length > 0) {
+      const userIds = [...new Set(requests.map((r: any) => r.user_id))];
+      const { data: profiles } = await service
+        .from('user_profiles')
+        .select('user_id, display_name')
+        .in('user_id', userIds);
+      
+      // Map profiles to requests
+      if (profiles) {
+        const profileMap = Object.fromEntries(profiles.map(p => [p.user_id, p]));
+        requests.forEach((r: any) => {
+          r.user_profiles = profileMap[r.user_id] || null;
+        });
+      }
     }
 
     return NextResponse.json({ requests: requests || [] });

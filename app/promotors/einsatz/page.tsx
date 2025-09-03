@@ -888,9 +888,13 @@ const loadProcessState = async () => {
       if (response.ok) {
         const { activeStatus } = await response.json();
         setActiveSpecialStatus(activeStatus);
+      } else {
+        // Silently fail if the feature is not available
+        setActiveSpecialStatus(null);
       }
     } catch (error) {
-      console.error('Error checking active special status:', error);
+      console.warn('Special status feature not available:', error);
+      setActiveSpecialStatus(null);
     } finally {
       setCheckingSpecialStatus(false);
     }

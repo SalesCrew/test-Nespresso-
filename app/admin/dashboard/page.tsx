@@ -1100,11 +1100,12 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
         const data = await response.json();
         setSpecialStatusRequests(data.requests || []);
       } else {
-        console.error('Failed to load special status requests');
+        // Silently fail if the table doesn't exist yet
+        console.warn('Special status requests feature not available yet');
         setSpecialStatusRequests([]);
       }
     } catch (error) {
-      console.error('Error loading special status requests:', error);
+      console.warn('Special status requests feature not available:', error);
       setSpecialStatusRequests([]);
     } finally {
       setSpecialStatusRequestsLoading(false);

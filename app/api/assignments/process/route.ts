@@ -6,9 +6,9 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service'
 export async function GET() {
   try {
     const server = createSupabaseServerClient()
-    const { data: auth } = await server.auth.getUser()
+    const { data: auth, error: authError } = await server.auth.getUser()
     
-    if (!auth?.user) {
+    if (authError || !auth?.user) {
       return NextResponse.json({ process: null })
     }
     
@@ -22,15 +22,19 @@ export async function GET() {
       .is('completed_at', null)
       .single()
     
-    if (error && error.code !== 'PGRST116') { // Ignore no rows error
+    if (error) {
+      // If table doesn't exist or no rows found, return null
+      if (error.code === '42P01' || error.code === 'PGRST116') {
+        return NextResponse.json({ process: null })
+      }
       console.error('Error fetching process:', error)
-      return NextResponse.json({ process: null })
+      return NextResponse.json({ error: 'Failed to fetch process' }, { status: 500 })
     }
     
     return NextResponse.json({ process: process || null })
   } catch (e: any) {
     console.error('Server error:', e)
-    return NextResponse.json({ process: null })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -38,9 +42,9 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const server = createSupabaseServerClient()
-    const { data: auth } = await server.auth.getUser()
+    const { data: auth, error: authError } = await server.auth.getUser()
     
-    if (!auth?.user) {
+    if (authError || !auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
@@ -65,6 +69,10 @@ export async function POST(req: Request) {
       .single()
     
     if (error) {
+      // If table doesn't exist, ignore
+      if (error.code === '42P01') {
+        return NextResponse.json({ process: null })
+      }
       console.error('Error saving process:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
@@ -80,9 +88,9 @@ export async function POST(req: Request) {
 export async function DELETE() {
   try {
     const server = createSupabaseServerClient()
-    const { data: auth } = await server.auth.getUser()
+    const { data: auth, error: authError } = await server.auth.getUser()
     
-    if (!auth?.user) {
+    if (authError || !auth?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
@@ -99,6 +107,10 @@ export async function DELETE() {
       .is('completed_at', null)
     
     if (error) {
+      // If table doesn't exist, ignore
+      if (error.code === '42P01') {
+        return NextResponse.json({ ok: true })
+      }
       console.error('Error completing process:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
