@@ -1936,38 +1936,38 @@ const loadProcessState = async () => {
             </>
             )}
             {/* Special Status - Show when user is in krankenstand or notfall */}
-            {isAssignmentForToday && activeSpecialStatus?.is_active && (
+            {isAssignmentForToday && (activeSpecialStatus?.is_active || displayedAssignment?.special_status) && (
               <div className={`mt-4 p-3 rounded-lg border flex items-center ${
-                activeSpecialStatus.status_type === 'krankenstand'
+                (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
                   ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-700'
                   : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700'
               }`}>
-                {activeSpecialStatus.status_type === 'krankenstand' ? (
+                {(activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand') ? (
                   <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
                 ) : (
                   <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0" />
                 )}
                 <div>
                   <p className={`font-medium ${
-                    activeSpecialStatus.status_type === 'krankenstand' 
+                    (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
                       ? 'text-red-700 dark:text-red-400' 
                       : 'text-orange-700 dark:text-orange-400'
                   }`}>
                     Du kannst diesen Einsatz nicht wahrnehmen
                   </p>
                   <p className={`text-xs mt-0.5 ${
-                    activeSpecialStatus.status_type === 'krankenstand'
+                    (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
                       ? 'text-red-600/80 dark:text-red-300/80'
                       : 'text-orange-600/80 dark:text-orange-300/80'
                   }`}>
-                    Du bist im {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
+                    Du bist im {(activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand') ? 'Krankenstand' : 'Notfall'}
                   </p>
                 </div>
               </div>
             )}
 
             {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
-                          {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !activeSpecialStatus?.is_active && (
+                          {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !activeSpecialStatus?.is_active && !displayedAssignment?.special_status && (
               <div className="mt-4">
                 <div 
                   className="relative w-full h-14 bg-gray-100 dark:bg-gray-800 rounded-full p-1 cursor-pointer select-none flex items-center justify-center shadow-inner"

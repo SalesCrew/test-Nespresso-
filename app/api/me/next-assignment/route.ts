@@ -53,7 +53,7 @@ export async function GET() {
     // First, let's check if there's an assignment happening right now (already started but not ended)
     const { data: currentAssignments, error: currErr } = await svc
       .from('assignments')
-      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status')
+      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status, special_status')
       .in('id', assignmentIds)
       .in('status', ['assigned', 'buddy_tag'])
       .lte('start_ts', nowIso) // Started before or at current time
@@ -84,7 +84,7 @@ export async function GET() {
     // Otherwise, fetch upcoming assignments
     const { data: assignments, error: asgErr } = await svc
       .from('assignments')
-      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status')
+      .select('id, title, location_text, postal_code, city, region, start_ts, end_ts, status, special_status')
       .in('id', assignmentIds)
       .in('status', ['assigned', 'buddy_tag'])
       .gt('start_ts', nowIso) // Starts after current time
