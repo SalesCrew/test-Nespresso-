@@ -867,11 +867,9 @@ const loadProcessState = async () => {
   // For sickness and emergency reporting
   const [activeTab, setActiveTab] = useState<"krankheit" | "notfall">("krankheit");
   const [isWaitingForSickConfirmation, setIsWaitingForSickConfirmation] = useState(false);
-  const [isSickConfirmed, setIsSickConfirmed] = useState(false);
   const [showDoctorNoteUpload, setShowDoctorNoteUpload] = useState(false);
   const [doctorNoteUploaded, setDoctorNoteUploaded] = useState(false);
   const [isWaitingForEmergencyConfirmation, setIsWaitingForEmergencyConfirmation] = useState(false);
-  const [isEmergencyConfirmed, setIsEmergencyConfirmed] = useState(false);
   
   // Active special status
   const [activeSpecialStatus, setActiveSpecialStatus] = useState<any>(null);
@@ -911,19 +909,46 @@ const loadProcessState = async () => {
       });
       
       if (response.ok) {
-        if (requestType === 'krankenstand') {
-          setIsSickConfirmed(true);
-        } else {
-          setIsEmergencyConfirmed(true);
-        }
-        // Check for status changes
-        setTimeout(checkActiveSpecialStatus, 2000);
+        // Don't set confirmed immediately - just show that request was sent
+        console.log(`${requestType} request created successfully`);
+        // Keep checking for approval
+        const checkInterval = setInterval(async () => {
+          const response = await fetch('/api/special-status/active', {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const { activeStatus } = await response.json();
+            if (activeStatus && activeStatus.is_active) {
+              setActiveSpecialStatus(activeStatus);
+              clearInterval(checkInterval);
+              // Reset waiting states
+              setIsWaitingForSickConfirmation(false);
+              setIsWaitingForEmergencyConfirmation(false);
+            }
+          }
+        }, 5000); // Check every 5 seconds
+        
+        // Clear interval after 5 minutes to prevent infinite checking
+        setTimeout(() => clearInterval(checkInterval), 300000);
       } else {
         const error = await response.json();
         console.error('Failed to create special status request:', error);
+        // Reset the waiting state on error
+        if (requestType === 'krankenstand') {
+          setIsWaitingForSickConfirmation(false);
+        } else {
+          setIsWaitingForEmergencyConfirmation(false);
+        }
       }
     } catch (error) {
       console.error('Error creating special status request:', error);
+      // Reset the waiting state on error
+      if (requestType === 'krankenstand') {
+        setIsWaitingForSickConfirmation(false);
+      } else {
+        setIsWaitingForEmergencyConfirmation(false);
+      }
     }
   };
   
@@ -1920,7 +1945,7 @@ const loadProcessState = async () => {
             </>
             )}
             {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
-                          {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !isSickConfirmed && !isEmergencyConfirmed && (
+                          {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !activeSpecialStatus?.is_active && (
               <div className="mt-4">
                 <div 
                   className="relative w-full h-14 bg-gray-100 dark:bg-gray-800 rounded-full p-1 cursor-pointer select-none flex items-center justify-center shadow-inner"
@@ -1954,30 +1979,7 @@ const loadProcessState = async () => {
                 </div>
             )}
             
-            {/* Sick status - Show instead of swipe if user is sick */}
-              {isAssignmentForToday && isSickConfirmed && (
-              <div className="mt-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-700 flex items-center">
-                <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-red-700 dark:text-red-400">Im Krankenstand</p>
-                  <p className="text-xs text-red-600/80 dark:text-red-300/80 mt-0.5">
-                    Du kannst diesen Einsatz nicht wahrnehmen.
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Emergency status - Show instead of swipe if user has confirmed emergency */}
-            {isAssignmentForToday && isEmergencyConfirmed && (
-              <div className="mt-4 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 flex items-center">
-                <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-orange-700 dark:text-orange-400">Notfall gemeldet</p>
-                  <p className="text-xs text-orange-600/80 dark:text-orange-300/80 mt-0.5">
-                    Du kannst diesen Einsatz aufgrund eines Notfalls nicht wahrnehmen.
-                  </p>
-                </div>
-              </div>
-            )}
+
             {/* Confirmation message after swipe, if assignment was for today */}
              {isAssignmentForToday && isSwiped && einsatzStatus === "started" && (
                 <div className="mt-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 flex items-center justify-center">
@@ -2714,9 +2716,7 @@ const loadProcessState = async () => {
               <div className="flex items-center justify-center">
                 <Thermometer className="h-4 w-4 mr-2 ml-0.5" />
                 Krankheit
-                {isSickConfirmed && (
-                  <span className="ml-1.5 w-2 h-2 bg-red-600 rounded-full"></span>
-                )}
+
               </div>
               {activeTab === "krankheit" && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-red-500 via-red-600 to-rose-600"></div>
@@ -2768,29 +2768,7 @@ const loadProcessState = async () => {
                   </p>
                             </div>
                             
-                {isSickConfirmed ? (
-                  <div className="space-y-3">
-                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                      <div className="flex items-center">
-                        <div className="relative mr-2">
-                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                          <CheckCircle2 className="h-4 w-4 relative" />
-                            </div>
-                        <span>Krankenstand bestätigt</span>
-                          </div>
-                        </div>
-                    
-                        <Button 
-                      onClick={() => setShowDoctorNoteUpload(true)}
-                      className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
-                        >
-                      <FileText className="h-4 w-4 mr-1.5" />
-                      Krankenbestätigung hinzufügen
-                        </Button>
-                    
-
-        </div>
-                ) : !isWaitingForSickConfirmation ? (
+                {!isWaitingForSickConfirmation ? (
         <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
                     onClick={() => {
@@ -2847,17 +2825,7 @@ const loadProcessState = async () => {
                   </p>
                 </div>
                 
-                {isEmergencyConfirmed ? (
-                  <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                    <div className="flex items-center">
-                      <div className="relative mr-2">
-                        <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                        <CheckCircle2 className="h-4 w-4 relative" />
-                      </div>
-                      <span>Notfall bestätigt</span>
-                    </div>
-                  </div>
-                ) : !isWaitingForEmergencyConfirmation ? (
+                {!isWaitingForEmergencyConfirmation ? (
                   <button 
                     className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
                     onClick={() => {
