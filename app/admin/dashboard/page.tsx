@@ -87,33 +87,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
   
-  // State for promotor switcher in detailed view
-  const [selectedPromotorView, setSelectedPromotorView] = useState<'promotor' | 'buddy'>('promotor');
-  
-  // Helper function to get current promotor's tracking data
-  const getCurrentPromotorData = () => {
-    if (!selectedAssignmentDetail) return null;
-    
-    if (selectedPromotorView === 'buddy' && selectedAssignmentDetail.buddy_tracking) {
-      return selectedAssignmentDetail.buddy_tracking;
-    } else if (selectedAssignmentDetail.promotor_tracking) {
-      return selectedAssignmentDetail.promotor_tracking;
-    }
-    
-    // Fallback to legacy data structure
-    return {
-      actual_start_time: selectedAssignmentDetail.actualStart ? `2025-01-01T${selectedAssignmentDetail.actualStart}:00.000Z` : null,
-      actual_end_time: selectedAssignmentDetail.actualEnd ? `2025-01-01T${selectedAssignmentDetail.actualEnd}:00.000Z` : null,
-      notes: selectedAssignmentDetail.notes,
-      early_start_reason: selectedAssignmentDetail.early_start_reason,
-      minutes_early_start: selectedAssignmentDetail.minutes_early_start,
-      early_end_reason: selectedAssignmentDetail.early_end_reason,
-      minutes_early_end: selectedAssignmentDetail.minutes_early_end,
-      foto_maschine_url: selectedAssignmentDetail.foto_maschine_url,
-      foto_kapsellade_url: selectedAssignmentDetail.foto_kapsellade_url,
-      foto_pos_gesamt_url: selectedAssignmentDetail.foto_pos_gesamt_url
-    };
-  };
+
   
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
@@ -998,27 +972,21 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           buddyName: a.buddy_name,
           planStart: a.planned_start ? a.planned_start.substring(11, 16) : '09:30',
           planEnd: a.planned_end ? a.planned_end.substring(11, 16) : '18:30',
-          // Use promotor_tracking data for main times (backward compatibility)
-          actualStart: a.promotor_tracking?.actual_start_time ? a.promotor_tracking.actual_start_time.substring(11, 16) : null,
-          actualEnd: a.promotor_tracking?.actual_end_time ? a.promotor_tracking.actual_end_time.substring(11, 16) : null,
+          actualStart: a.actual_start_time ? a.actual_start_time.substring(11, 16) : null,
+          actualEnd: a.actual_end_time ? a.actual_end_time.substring(11, 16) : null,
           status: a.display_status,
-          tracking_status: a.promotor_tracking?.tracking_status || a.tracking_status,
+          tracking_status: a.tracking_status,
           participant_status: a.participant_status,
           user_id: a.user_id,
           tracking_id: a.tracking_id,
-          // Store promotor tracking data
-          promotor_tracking: a.promotor_tracking,
-          // Store buddy tracking data  
-          buddy_tracking: a.buddy_tracking,
-          // Legacy fields for backward compatibility (using promotor data)
-          notes: a.promotor_tracking?.notes || a.notes,
-          early_start_reason: a.promotor_tracking?.early_start_reason || a.early_start_reason,
-          minutes_early_start: a.promotor_tracking?.minutes_early_start || a.minutes_early_start,
-          early_end_reason: a.promotor_tracking?.early_end_reason || a.early_end_reason,
-          minutes_early_end: a.promotor_tracking?.minutes_early_end || a.minutes_early_end,
-          foto_maschine_url: a.promotor_tracking?.foto_maschine_url || a.foto_maschine_url,
-          foto_kapsellade_url: a.promotor_tracking?.foto_kapsellade_url || a.foto_kapsellade_url,
-          foto_pos_gesamt_url: a.promotor_tracking?.foto_pos_gesamt_url || a.foto_pos_gesamt_url
+          notes: a.notes,
+          early_start_reason: a.early_start_reason,
+          minutes_early_start: a.minutes_early_start,
+          early_end_reason: a.early_end_reason,
+          minutes_early_end: a.minutes_early_end,
+          foto_maschine_url: a.foto_maschine_url,
+          foto_kapsellade_url: a.foto_kapsellade_url,
+          foto_pos_gesamt_url: a.foto_pos_gesamt_url
         }));
         setTodaysEinsaetze(transformedData);
       } else {
@@ -1379,7 +1347,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             }`}
                             onClick={() => {
                               setSelectedAssignmentDetail(einsatz);
-                              setSelectedPromotorView('promotor'); // Reset to promotor view
                               setShowAssignmentDetailModal(true);
                             }}
                           >
@@ -1409,7 +1376,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   {einsatz.buddyName ? (
                                     <div className="space-y-1">
                                       <div>{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
-                                      <div>{einsatz.buddyName}: {einsatz.buddy_tracking?.actual_start_time ? einsatz.buddy_tracking.actual_start_time.substring(11, 16) : '--:--'} - {einsatz.buddy_tracking?.actual_end_time ? einsatz.buddy_tracking.actual_end_time.substring(11, 16) : '--:--'}</div>
+                                      <div>{einsatz.buddyName}: --:-- - --:--</div>
                                     </div>
                                   ) : (
                                   <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
@@ -1460,7 +1427,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                             }`}
                             onClick={() => {
                               setSelectedAssignmentDetail(einsatz);
-                              setSelectedPromotorView('promotor'); // Reset to promotor view
                               setShowAssignmentDetailModal(true);
                             }}
                           >
@@ -2172,7 +2138,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                   {einsatz.buddyName ? (
                                     <div className="space-y-1">
                                       <div>{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
-                                      <div>{einsatz.buddyName}: {einsatz.buddy_tracking?.actual_start_time ? einsatz.buddy_tracking.actual_start_time.substring(11, 16) : '--:--'} - {einsatz.buddy_tracking?.actual_end_time ? einsatz.buddy_tracking.actual_end_time.substring(11, 16) : '--:--'}</div>
+                                      <div>{einsatz.buddyName}: --:-- - --:--</div>
                                     </div>
                                   ) : (
                                   <span>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</span>
@@ -3478,33 +3444,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               </div>
             </CardHeader>
             
-            {/* Promotor Switcher - Only show if it's a buddy assignment */}
-            {selectedAssignmentDetail.buddyName && (
-              <div className="border-b border-gray-200 px-6 py-3">
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setSelectedPromotorView('promotor')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      selectedPromotorView === 'promotor'
-                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    👤 {selectedAssignmentDetail.promotor}
-                  </button>
-                  <button
-                    onClick={() => setSelectedPromotorView('buddy')}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      selectedPromotorView === 'buddy'
-                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    🤝 {selectedAssignmentDetail.buddyName}
-                  </button>
-                </div>
-              </div>
-            )}
+
             
             <CardContent className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="space-y-6">
@@ -3551,33 +3491,33 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Start:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        {getCurrentPromotorData()?.actual_start_time ? getCurrentPromotorData()?.actual_start_time.substring(11, 16) : '--:--'}
+                        {selectedAssignmentDetail.actualStart || '--:--'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Ende:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        {getCurrentPromotorData()?.actual_end_time ? getCurrentPromotorData()?.actual_end_time.substring(11, 16) : '--:--'}
+                        {selectedAssignmentDetail.actualEnd || '--:--'}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Early Start Reasoning */}
-                {getCurrentPromotorData()?.early_start_reason && (
+                {selectedAssignmentDetail.early_start_reason && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-900">Früher Start</h4>
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Minuten zu früh:</span>
                         <span className="text-sm font-medium text-orange-700">
-                          {getCurrentPromotorData()?.minutes_early_start} Min
+                          {selectedAssignmentDetail.minutes_early_start} Min
                         </span>
                       </div>
                       <div>
                         <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
                         <p className="text-sm text-gray-900 bg-white rounded p-2 border">
-                          {getCurrentPromotorData()?.early_start_reason}
+                          {selectedAssignmentDetail.early_start_reason}
                         </p>
                       </div>
                     </div>
@@ -3585,20 +3525,20 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 )}
 
                 {/* Early End Reasoning */}
-                {getCurrentPromotorData()?.early_end_reason && (
+                {selectedAssignmentDetail.early_end_reason && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-900">Früher Schluss</h4>
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Minuten zu früh beendet:</span>
                         <span className="text-sm font-medium text-blue-700">
-                          {getCurrentPromotorData()?.minutes_early_end} Min
+                          {selectedAssignmentDetail.minutes_early_end} Min
                         </span>
                       </div>
                       <div>
                         <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
                         <p className="text-sm text-gray-900 bg-white rounded p-2 border">
-                          {getCurrentPromotorData()?.early_end_reason}
+                          {selectedAssignmentDetail.early_end_reason}
                         </p>
                       </div>
                     </div>
@@ -3619,25 +3559,25 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 {/* Photos Section */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
-                  {(getCurrentPromotorData()?.foto_maschine_url || getCurrentPromotorData()?.foto_kapsellade_url || getCurrentPromotorData()?.foto_pos_gesamt_url) ? (
+                  {(selectedAssignmentDetail.foto_maschine_url || selectedAssignmentDetail.foto_kapsellade_url || selectedAssignmentDetail.foto_pos_gesamt_url) ? (
                     <div className="grid grid-cols-1 gap-4">
                       {/* Foto Maschine */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-700">Foto Maschine</span>
-                          {getCurrentPromotorData()?.foto_maschine_url ? (
+                          {selectedAssignmentDetail.foto_maschine_url ? (
                             <span className="text-xs text-green-600">✓</span>
                           ) : (
                             <span className="text-xs text-gray-400">Nicht verfügbar</span>
                           )}
                         </div>
-                        {getCurrentPromotorData()?.foto_maschine_url ? (
+                        {selectedAssignmentDetail.foto_maschine_url ? (
                           <img 
-                            src={getCurrentPromotorData()?.foto_maschine_url} 
+                            src={selectedAssignmentDetail.foto_maschine_url} 
                             alt="Foto Maschine" 
                             className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => {
-                              setSelectedPhoto({ url: getCurrentPromotorData()?.foto_maschine_url, title: "Foto Maschine" });
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_maschine_url, title: "Foto Maschine" });
                               setShowPhotoLightbox(true);
                             }}
                           />
@@ -3652,19 +3592,19 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-700">Foto Kapsellade</span>
-                          {getCurrentPromotorData()?.foto_kapsellade_url ? (
+                          {selectedAssignmentDetail.foto_kapsellade_url ? (
                             <span className="text-xs text-green-600">✓</span>
                           ) : (
                             <span className="text-xs text-gray-400">Nicht verfügbar</span>
                           )}
                         </div>
-                        {getCurrentPromotorData()?.foto_kapsellade_url ? (
+                        {selectedAssignmentDetail.foto_kapsellade_url ? (
                           <img 
-                            src={getCurrentPromotorData()?.foto_kapsellade_url} 
+                            src={selectedAssignmentDetail.foto_kapsellade_url} 
                             alt="Foto Kapsellade" 
                             className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => {
-                              setSelectedPhoto({ url: getCurrentPromotorData()?.foto_kapsellade_url, title: "Foto Kapsellade" });
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_kapsellade_url, title: "Foto Kapsellade" });
                               setShowPhotoLightbox(true);
                             }}
                           />
@@ -3679,19 +3619,19 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-700">Foto POS gesamt</span>
-                          {getCurrentPromotorData()?.foto_pos_gesamt_url ? (
+                          {selectedAssignmentDetail.foto_pos_gesamt_url ? (
                             <span className="text-xs text-green-600">✓</span>
                           ) : (
                             <span className="text-xs text-gray-400">Nicht verfügbar</span>
                           )}
                         </div>
-                        {getCurrentPromotorData()?.foto_pos_gesamt_url ? (
+                        {selectedAssignmentDetail.foto_pos_gesamt_url ? (
                           <img 
-                            src={getCurrentPromotorData()?.foto_pos_gesamt_url} 
+                            src={selectedAssignmentDetail.foto_pos_gesamt_url} 
                             alt="Foto POS gesamt" 
                             className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => {
-                              setSelectedPhoto({ url: getCurrentPromotorData()?.foto_pos_gesamt_url, title: "Foto POS gesamt" });
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_pos_gesamt_url, title: "Foto POS gesamt" });
                               setShowPhotoLightbox(true);
                             }}
                           />
