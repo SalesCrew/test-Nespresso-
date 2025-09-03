@@ -3403,8 +3403,6 @@ const loadProcessState = async () => {
           </div>
         </div>
       )}
-          </>
-        )}
     </>
   );
 } 
