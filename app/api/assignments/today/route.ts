@@ -40,8 +40,14 @@ export async function GET() {
       }, { status: 404 });
     }
 
+    console.log('User profile role:', profile.role);
     if (!['admin', 'admin_of_admins', 'admin_staff'].includes(profile.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      console.error('Role not allowed:', profile.role);
+      return NextResponse.json({ 
+        error: 'Forbidden', 
+        role: profile.role,
+        allowed: ['admin', 'admin_of_admins', 'admin_staff']
+      }, { status: 403 });
     }
 
     // First, ensure tracking records exist for today's assignments
