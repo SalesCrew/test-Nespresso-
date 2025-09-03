@@ -984,6 +984,9 @@ const loadProcessState = async () => {
   
   // End active special status
   const endActiveSpecialStatus = async () => {
+    const confirmed = window.confirm('Bist du dir sicher dass du ab heute wieder arbeiten kannst?');
+    if (!confirmed) return;
+    
     try {
       const response = await fetch('/api/special-status/active', {
         method: 'DELETE',
