@@ -36,18 +36,33 @@ export async function PATCH(
 
     if (action === 'approve') {
       // Call the approve function
-      const { error: approveError } = await service.rpc('approve_special_status_request', {
+      console.log('Calling approve_special_status_request with:', {
+        request_id: params.id,
+        admin_user_id: user.id
+      });
+      
+      const { data, error: approveError } = await service.rpc('approve_special_status_request', {
         request_id: params.id,
         admin_user_id: user.id
       });
 
       if (approveError) {
         console.error('Error approving request:', approveError);
+        console.error('Error details:', {
+          code: approveError.code,
+          message: approveError.message,
+          details: approveError.details,
+          hint: approveError.hint
+        });
         return NextResponse.json({ 
           error: 'Failed to approve request',
-          details: approveError.message 
+          details: approveError.message,
+          code: approveError.code,
+          hint: approveError.hint
         }, { status: 500 });
       }
+      
+      console.log('Approve function completed successfully');
     } else {
       // Decline the request
       const { error: declineError } = await service
