@@ -1110,19 +1110,24 @@ const loadProcessState = async () => {
 
   const handleSwipeStart = () => {
     if (!isSwiped) {
-      // Check if this is an early start (15+ minutes before 10:00)
+      // Check if this is an early start (15+ minutes before actual assignment start time)
       const now = new Date();
-      const today = new Date();
-      const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 0, 0); // 15:00 (3:00 PM)
-      const timeDiffMinutes = (startTime.getTime() - now.getTime()) / (1000 * 60);
+      const assignmentStartTime = displayedAssignment?.start_ts ? new Date(displayedAssignment.start_ts) : null;
       
-      if (timeDiffMinutes >= 15) {
-        // Early start - show modal for reason
-        setMinutesEarly(Math.round(timeDiffMinutes));
-        setShowEarlyStartModal(true);
+      if (assignmentStartTime) {
+        const timeDiffMinutes = (assignmentStartTime.getTime() - now.getTime()) / (1000 * 60);
+        
+        if (timeDiffMinutes >= 15) {
+          // Early start - show modal for reason
+          setMinutesEarly(Math.round(timeDiffMinutes));
+          setShowEarlyStartModal(true);
+        } else {
+          // Normal start
+          handleStartEinsatz();
+        }
       } else {
-        // Normal start
-      handleStartEinsatz();
+        // No assignment start time - just start normally
+        handleStartEinsatz();
       }
     }
   };
