@@ -83,6 +83,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [showAssignmentDetailModal, setShowAssignmentDetailModal] = useState(false);
   const [selectedAssignmentDetail, setSelectedAssignmentDetail] = useState<any | null>(null);
   
+  // State for photo lightbox
+  const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
+  
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
   const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
@@ -3566,7 +3570,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           <img 
                             src={selectedAssignmentDetail.foto_maschine_url} 
                             alt="Foto Maschine" 
-                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_maschine_url, title: "Foto Maschine" });
+                              setShowPhotoLightbox(true);
+                            }}
                           />
                         ) : (
                           <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -3589,7 +3597,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           <img 
                             src={selectedAssignmentDetail.foto_kapsellade_url} 
                             alt="Foto Kapsellade" 
-                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_kapsellade_url, title: "Foto Kapsellade" });
+                              setShowPhotoLightbox(true);
+                            }}
                           />
                         ) : (
                           <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -3612,7 +3624,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                           <img 
                             src={selectedAssignmentDetail.foto_pos_gesamt_url} 
                             alt="Foto POS gesamt" 
-                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_pos_gesamt_url, title: "Foto POS gesamt" });
+                              setShowPhotoLightbox(true);
+                            }}
                           />
                         ) : (
                           <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -3646,6 +3662,32 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Photo Lightbox Modal */}
+      {showPhotoLightbox && selectedPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPhotoLightbox(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <button
+              onClick={() => setShowPhotoLightbox(false)}
+              className="absolute top-4 right-4 z-60 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img 
+              src={selectedPhoto.url} 
+              alt={selectedPhoto.title}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg">
+              <p className="text-sm font-medium">{selectedPhoto.title}</p>
+            </div>
+          </div>
         </div>
       )}
 
