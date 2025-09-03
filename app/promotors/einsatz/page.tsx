@@ -1934,7 +1934,11 @@ const loadProcessState = async () => {
             )}
             {/* Special Status - Show when user is in krankenstand or notfall */}
             {isAssignmentForToday && activeSpecialStatus?.is_active && (
-              <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 flex items-center">
+              <div className={`mt-4 p-3 rounded-lg border flex items-center ${
+                activeSpecialStatus.status_type === 'krankenstand'
+                  ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-700'
+                  : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700'
+              }`}>
                 {activeSpecialStatus.status_type === 'krankenstand' ? (
                   <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
                 ) : (
