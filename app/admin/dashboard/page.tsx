@@ -953,7 +953,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
   useEffect(() => {
     loadTodaysAssignments();
     loadSpecialStatusRequests();
-    loadActivePromotorsData();
   }, []);
 
   // Use real promotor data instead of mock data
