@@ -50,45 +50,39 @@ export async function GET() {
       console.error('Error updating tracking status:', updateError);
     }
 
-    // Fetch today's assignment participants with tracking data  
-    // We need to query assignment_participants joined with tracking data for each participant
+    // Fetch today's assignments with tracking data
     const { data: assignments, error: assignmentsError } = await service
-      .from('assignment_participants')
+      .from('todays_assignments')
       .select(`
         assignment_id,
+        title,
+        location_text,
+        postal_code,
+        city,
+        planned_start,
+        planned_end,
         user_id,
         role,
-        status,
-        assignments!inner (
-          id,
-          title,
-          location_text,
-          postal_code,
-          city,
-          planned_start,
-          planned_end,
-          special_status,
-          display_status:status
-        ),
-        user_profiles!inner (
-          display_name
-        ),
-        assignment_tracking (
-          actual_start_time,
-          actual_end_time,
-          tracking_status,
-          notes,
-          early_start_reason,
-          minutes_early_start,
-          early_end_reason,
-          minutes_early_end,
-          foto_maschine_url,
-          foto_kapsellade_url,
-          foto_pos_gesamt_url
-        )
+        participant_status,
+        promotor_name,
+        tracking_id,
+        buddy_user_id,
+        buddy_name,
+        actual_start_time,
+        actual_end_time,
+        tracking_status,
+        display_status,
+        special_status,
+        notes,
+        early_start_reason,
+        minutes_early_start,
+        early_end_reason,
+        minutes_early_end,
+        foto_maschine_url,
+        foto_kapsellade_url,
+        foto_pos_gesamt_url
       `)
-      .eq('assignments.date', new Date().toISOString().split('T')[0])
-      .order('assignments.planned_start', { ascending: true });
+      .order('planned_start', { ascending: true });
 
     if (assignmentsError) {
       console.error('Error fetching today\'s assignments:', assignmentsError);
@@ -103,82 +97,77 @@ export async function GET() {
     // Group assignments by assignment_id to handle buddy assignments
     const groupedAssignments = assignments?.reduce((acc: any[], curr) => {
       const existingAssignment = acc.find(a => a.assignment_id === curr.assignment_id);
-      const assignment = curr.assignments;
-      const tracking = curr.assignment_tracking?.[0]; // Get first tracking record
       
-      const trackingData = tracking ? {
+      const trackingData = {
         user_id: curr.user_id,
-        actual_start_time: tracking.actual_start_time,
-        actual_end_time: tracking.actual_end_time,
-        tracking_status: tracking.tracking_status,
-        notes: tracking.notes,
-        early_start_reason: tracking.early_start_reason,
-        minutes_early_start: tracking.minutes_early_start,
-        early_end_reason: tracking.early_end_reason,
-        minutes_early_end: tracking.minutes_early_end,
-        foto_maschine_url: tracking.foto_maschine_url,
-        foto_kapsellade_url: tracking.foto_kapsellade_url,
-        foto_pos_gesamt_url: tracking.foto_pos_gesamt_url
-      } : {
-        user_id: curr.user_id,
-        actual_start_time: null,
-        actual_end_time: null,
-        tracking_status: null,
-        notes: null,
-        early_start_reason: null,
-        minutes_early_start: null,
-        early_end_reason: null,
-        minutes_early_end: null,
-        foto_maschine_url: null,
-        foto_kapsellade_url: null,
-        foto_pos_gesamt_url: null
+        actual_start_time: curr.actual_start_time,
+        actual_end_time: curr.actual_end_time,
+        tracking_status: curr.tracking_status,
+        notes: curr.notes,
+        early_start_reason: curr.early_start_reason,
+        minutes_early_start: curr.minutes_early_start,
+        early_end_reason: curr.early_end_reason,
+        minutes_early_end: curr.minutes_early_end,
+        foto_maschine_url: curr.foto_maschine_url,
+        foto_kapsellade_url: curr.foto_kapsellade_url,
+        foto_pos_gesamt_url: curr.foto_pos_gesamt_url
       };
       
       if (!existingAssignment) {
         // First participant for this assignment
         const assignmentData = {
           assignment_id: curr.assignment_id,
-          title: assignment.title,
-          location_text: assignment.location_text,
-          postal_code: assignment.postal_code,
-          city: assignment.city,
-          planned_start: assignment.planned_start,
-          planned_end: assignment.planned_end,
-          display_status: assignment.display_status || curr.status,
-          special_status: assignment.special_status,
+          title: curr.title,
+          location_text: curr.location_text,
+          postal_code: curr.postal_code,
+          city: curr.city,
+          planned_start: curr.planned_start,
+          planned_end: curr.planned_end,
+          display_status: curr.display_status,
+          special_status: curr.special_status,
           user_id: curr.user_id,
           role: curr.role,
-          participant_status: curr.status,
-          promotor_name: curr.user_profiles.display_name,
-          buddy_name: null,
-          buddy_user_id: null,
+          participant_status: curr.participant_status,
+          promotor_name: curr.promotor_name,
+          buddy_name: curr.buddy_name,
+          buddy_user_id: curr.buddy_user_id,
+          tracking_id: curr.tracking_id,
           // Store tracking data for the first participant (could be promotor or buddy)
           promotor_tracking: curr.role === 'lead' ? trackingData : null,
           buddy_tracking: curr.role === 'buddy' ? trackingData : null,
-          // Legacy fields for backward compatibility
-          tracking_status: tracking?.tracking_status,
-          actual_start_time: tracking?.actual_start_time,
-          actual_end_time: tracking?.actual_end_time,
-          notes: tracking?.notes,
-          early_start_reason: tracking?.early_start_reason,
-          minutes_early_start: tracking?.minutes_early_start,
-          early_end_reason: tracking?.early_end_reason,
-          minutes_early_end: tracking?.minutes_early_end,
-          foto_maschine_url: tracking?.foto_maschine_url,
-          foto_kapsellade_url: tracking?.foto_kapsellade_url,
-          foto_pos_gesamt_url: tracking?.foto_pos_gesamt_url
+          // Legacy fields for backward compatibility (use first participant's data)
+          tracking_status: curr.tracking_status,
+          actual_start_time: curr.actual_start_time,
+          actual_end_time: curr.actual_end_time,
+          notes: curr.notes,
+          early_start_reason: curr.early_start_reason,
+          minutes_early_start: curr.minutes_early_start,
+          early_end_reason: curr.early_end_reason,
+          minutes_early_end: curr.minutes_early_end,
+          foto_maschine_url: curr.foto_maschine_url,
+          foto_kapsellade_url: curr.foto_kapsellade_url,
+          foto_pos_gesamt_url: curr.foto_pos_gesamt_url
         };
         acc.push(assignmentData);
       } else {
         // Second participant for existing assignment
         if (curr.role === 'lead') {
           existingAssignment.promotor_tracking = trackingData;
-          existingAssignment.promotor_name = curr.user_profiles.display_name;
           existingAssignment.user_id = curr.user_id; // Update to lead user
+          // Update legacy fields to promotor's data if this is the lead
+          existingAssignment.tracking_status = curr.tracking_status;
+          existingAssignment.actual_start_time = curr.actual_start_time;
+          existingAssignment.actual_end_time = curr.actual_end_time;
+          existingAssignment.notes = curr.notes;
+          existingAssignment.early_start_reason = curr.early_start_reason;
+          existingAssignment.minutes_early_start = curr.minutes_early_start;
+          existingAssignment.early_end_reason = curr.early_end_reason;
+          existingAssignment.minutes_early_end = curr.minutes_early_end;
+          existingAssignment.foto_maschine_url = curr.foto_maschine_url;
+          existingAssignment.foto_kapsellade_url = curr.foto_kapsellade_url;
+          existingAssignment.foto_pos_gesamt_url = curr.foto_pos_gesamt_url;
         } else {
           existingAssignment.buddy_tracking = trackingData;
-          existingAssignment.buddy_name = curr.user_profiles.display_name;
-          existingAssignment.buddy_user_id = curr.user_id;
         }
       }
       return acc;
