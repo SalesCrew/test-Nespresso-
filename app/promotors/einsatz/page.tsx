@@ -889,22 +889,28 @@ const loadProcessState = async () => {
       setCheckingSpecialStatus(true);
       
       // Check for active status
+      console.log('🔍 Checking for active special status...');
       const activeResponse = await fetch('/api/special-status/active', {
         credentials: 'include'
       });
       
+      console.log('✅ Active status response:', activeResponse.status, activeResponse.ok);
+      
       if (activeResponse.ok) {
         const { activeStatus } = await activeResponse.json();
+        console.log('📊 Active status data:', activeStatus);
         setActiveSpecialStatus(activeStatus);
         
         // If we have active status, no need to check pending
         if (activeStatus?.is_active) {
+          console.log('🚨 Setting active krankenstand UI');
           setPendingSpecialStatusRequest(null);
           setIsWaitingForSickConfirmation(false);
           setIsWaitingForEmergencyConfirmation(false);
           return;
         }
       } else {
+        console.error('❌ Failed to fetch active status:', await activeResponse.text());
         setActiveSpecialStatus(null);
       }
       
@@ -1879,6 +1885,10 @@ const loadProcessState = async () => {
       daysIndicatorUnit = "Tage";
     }
   }
+
+  // Debug logging for render
+  console.log('🎯 RENDER: activeSpecialStatus:', activeSpecialStatus);
+  console.log('🎯 RENDER: is_active check:', activeSpecialStatus?.is_active);
 
   return (
     <>

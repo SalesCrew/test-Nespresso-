@@ -12,12 +12,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: activeStatus, error } = await supabase
+    const service = createSupabaseServiceClient();
+    
+    console.log('Checking active special status for user:', user.id);
+    
+    const { data: activeStatus, error } = await service
       .from('active_special_status')
       .select('*')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .single();
+    
+    console.log('Active status query result:', { activeStatus, error });
 
     if (error) {
       // If table doesn't exist or no rows found, return null
