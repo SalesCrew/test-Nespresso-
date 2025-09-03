@@ -1016,16 +1016,17 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     try {
       setSpecialStatusRequestsLoading(true);
       const response = await fetch('/api/special-status/requests');
-      const data = await response.json();
       
-      if (response.ok && data.requests) {
-        setSpecialStatusRequests(data.requests);
+      if (response.ok) {
+        const data = await response.json();
+        setSpecialStatusRequests(data.requests || []);
       } else {
-        console.error('Failed to load special status requests:', data.error);
+        // Handle error gracefully - don't break the app if the feature isn't set up yet
+        console.warn('Special status requests not available yet:', response.status);
         setSpecialStatusRequests([]);
       }
     } catch (error) {
-      console.error('Error loading special status requests:', error);
+      console.warn('Special status requests feature not available:', error);
       setSpecialStatusRequests([]);
     } finally {
       setSpecialStatusRequestsLoading(false);

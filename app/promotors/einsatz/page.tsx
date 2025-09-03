@@ -489,8 +489,8 @@ const loadProcessState = async () => {
           }
         } else {
           // Check for pending requests
-          const pendingKrankenstand = data.pending_requests.find((r: any) => r.request_type === 'krankenstand');
-          const pendingNotfall = data.pending_requests.find((r: any) => r.request_type === 'notfall');
+          const pendingKrankenstand = data.pending_requests?.find((r: any) => r.request_type === 'krankenstand');
+          const pendingNotfall = data.pending_requests?.find((r: any) => r.request_type === 'notfall');
           
           if (pendingKrankenstand) {
             setIsWaitingForSickConfirmation(true);
@@ -502,10 +502,11 @@ const loadProcessState = async () => {
           }
         }
       } else {
-        console.error('Failed to load special status:', res.status);
+        // Handle gracefully if special status feature isn't set up yet
+        console.warn('Special status feature not available yet:', res.status);
       }
     } catch (e) {
-      console.error('Error loading special status:', e);
+      console.warn('Special status feature not available:', e);
     }
   };
 
@@ -529,12 +530,12 @@ const loadProcessState = async () => {
         // Reload status to update pending requests
         loadSpecialStatus();
       } else {
-        console.error('Failed to submit request:', res.status);
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Request error details:', errorData);
+        console.warn('Special status request not available yet:', res.status);
+        // Don't update UI states if the feature isn't available
       }
     } catch (e) {
-      console.error('Error submitting special status request:', e);
+      console.warn('Special status request feature not available:', e);
+      // Don't break the UI if the feature isn't set up yet
     }
   };
 
@@ -558,10 +559,10 @@ const loadProcessState = async () => {
           loadAssignmentTracking(displayedAssignment.assignment_id);
         }
       } else {
-        console.error('Failed to end special status:', res.status);
+        console.warn('End special status not available yet:', res.status);
       }
     } catch (e) {
-      console.error('Error ending special status:', e);
+      console.warn('End special status feature not available:', e);
     }
   };
 

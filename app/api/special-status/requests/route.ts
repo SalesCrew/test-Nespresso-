@@ -12,14 +12,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin role
-    const { data: profile } = await supabase
+    // Check admin role  
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
+    if (profileError || !profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
+      console.error('Profile check failed:', profileError);
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
