@@ -889,28 +889,22 @@ const loadProcessState = async () => {
       setCheckingSpecialStatus(true);
       
       // Check for active status
-      console.log('🔍 Checking for active special status...');
       const activeResponse = await fetch('/api/special-status/active', {
         credentials: 'include'
       });
       
-      console.log('✅ Active status response:', activeResponse.status, activeResponse.ok);
-      
       if (activeResponse.ok) {
         const { activeStatus } = await activeResponse.json();
-        console.log('📊 Active status data:', activeStatus);
         setActiveSpecialStatus(activeStatus);
         
         // If we have active status, no need to check pending
         if (activeStatus?.is_active) {
-          console.log('🚨 Setting active krankenstand UI');
           setPendingSpecialStatusRequest(null);
           setIsWaitingForSickConfirmation(false);
           setIsWaitingForEmergencyConfirmation(false);
           return;
         }
       } else {
-        console.error('❌ Failed to fetch active status:', await activeResponse.text());
         setActiveSpecialStatus(null);
       }
       
@@ -1886,54 +1880,8 @@ const loadProcessState = async () => {
     }
   }
 
-  // Debug logging for render
-  console.log('🎯 RENDER: activeSpecialStatus:', activeSpecialStatus);
-  console.log('🎯 RENDER: is_active check:', activeSpecialStatus?.is_active);
-
   return (
     <>
-        {/* Active Special Status UI */}
-        {activeSpecialStatus && activeSpecialStatus.is_active ? (
-          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
-            <Card className="w-full max-w-md shadow-xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-4">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    activeSpecialStatus.status_type === 'krankenstand' 
-                      ? 'bg-red-100 dark:bg-red-900/20' 
-                      : 'bg-orange-100 dark:bg-orange-900/20'
-                  }`}>
-                    {activeSpecialStatus.status_type === 'krankenstand' ? (
-                      <Thermometer className="h-8 w-8 text-red-600 dark:text-red-400" />
-                    ) : (
-                      <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-                    )}
-                  </div>
-                </div>
-                
-                <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">
-                  Du bist im {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
-                </h2>
-                
-                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                  Alle heutigen Einsätze sind mit dem Status "{activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}" markiert.
-                </p>
-                
-                <Button
-                  onClick={endActiveSpecialStatus}
-                  className={`w-full ${
-                    activeSpecialStatus.status_type === 'krankenstand'
-                      ? 'bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700'
-                      : 'bg-orange-600 hover:bg-orange-700'
-                  } text-white`}
-                >
-                  {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'} beenden
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <>
         {/* Welcome section specific to Einsatz Page - can use a general greeting or a specific one */}
         <section className="mb-6">
           {/* Example of a page-specific greeting if needed, otherwise SiteLayout provides one */}
@@ -2808,7 +2756,27 @@ const loadProcessState = async () => {
                   </p>
                             </div>
                             
-                {!isWaitingForSickConfirmation ? (
+                {activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'krankenstand' ? (
+                  <div className="space-y-3">
+                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                      <div className="flex items-center">
+                        <div className="relative mr-2">
+                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
+                          <CheckCircle2 className="h-4 w-4 relative" />
+                        </div>
+                        <span>Aktiver Krankenstand</span>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={endActiveSpecialStatus}
+                      className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
+                    >
+                      <Thermometer className="h-4 w-4 mr-1.5" />
+                      Krankenstand beenden
+                    </button>
+                  </div>
+                ) : !isWaitingForSickConfirmation ? (
         <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
                     onClick={() => {
@@ -2865,7 +2833,27 @@ const loadProcessState = async () => {
                   </p>
                 </div>
                 
-                {!isWaitingForEmergencyConfirmation ? (
+                {activeSpecialStatus?.is_active && activeSpecialStatus?.status_type === 'notfall' ? (
+                  <div className="space-y-3">
+                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                      <div className="flex items-center">
+                        <div className="relative mr-2">
+                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
+                          <CheckCircle2 className="h-4 w-4 relative" />
+                        </div>
+                        <span>Aktiver Notfall</span>
+                      </div>
+                    </div>
+                    
+                    <button 
+                      onClick={endActiveSpecialStatus}
+                      className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-1.5" />
+                      Notfall beenden
+                    </button>
+                  </div>
+                ) : !isWaitingForEmergencyConfirmation ? (
                   <button 
                     className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
                     onClick={() => {
