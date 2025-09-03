@@ -96,9 +96,46 @@ export async function GET() {
 
     // Group assignments by assignment_id to handle buddy assignments
     const groupedAssignments = assignments?.reduce((acc: any[], curr) => {
-      const existing = acc.find(a => a.assignment_id === curr.assignment_id && a.user_id === curr.user_id);
-      if (!existing) {
-        acc.push(curr);
+      const existingAssignment = acc.find(a => a.assignment_id === curr.assignment_id);
+      
+      if (!existingAssignment) {
+        // First participant for this assignment
+        const assignmentData = {
+          ...curr,
+          // Store tracking data for the main promotor
+          promotor_tracking: {
+            user_id: curr.user_id,
+            actual_start_time: curr.actual_start_time,
+            actual_end_time: curr.actual_end_time,
+            tracking_status: curr.tracking_status,
+            notes: curr.notes,
+            early_start_reason: curr.early_start_reason,
+            minutes_early_start: curr.minutes_early_start,
+            early_end_reason: curr.early_end_reason,
+            minutes_early_end: curr.minutes_early_end,
+            foto_maschine_url: curr.foto_maschine_url,
+            foto_kapsellade_url: curr.foto_kapsellade_url,
+            foto_pos_gesamt_url: curr.foto_pos_gesamt_url
+          },
+          buddy_tracking: null
+        };
+        acc.push(assignmentData);
+      } else {
+        // Second participant (buddy) for existing assignment
+        existingAssignment.buddy_tracking = {
+          user_id: curr.user_id,
+          actual_start_time: curr.actual_start_time,
+          actual_end_time: curr.actual_end_time,
+          tracking_status: curr.tracking_status,
+          notes: curr.notes,
+          early_start_reason: curr.early_start_reason,
+          minutes_early_start: curr.minutes_early_start,
+          early_end_reason: curr.early_end_reason,
+          minutes_early_end: curr.minutes_early_end,
+          foto_maschine_url: curr.foto_maschine_url,
+          foto_kapsellade_url: curr.foto_kapsellade_url,
+          foto_pos_gesamt_url: curr.foto_pos_gesamt_url
+        };
       }
       return acc;
     }, []) || [];
