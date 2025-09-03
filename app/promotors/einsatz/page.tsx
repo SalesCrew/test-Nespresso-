@@ -1703,17 +1703,10 @@ const loadProcessState = async () => {
             
             {/* Completed Status - Show when einsatz is completed */}
             {isAssignmentForToday && einsatzStatus === "completed" && (
-              <div className="mt-4">
-                <div className="relative w-full h-14 bg-sky-100 dark:bg-sky-800 rounded-full p-1 flex items-center justify-center shadow-inner">
-                  <div className="flex items-center justify-center w-12 h-12 bg-sky-500 rounded-full shadow-md">
-                    <CheckCircle2 className="h-6 w-6 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-sky-700 dark:text-sky-300 ml-3">
-                    Einsatz abgeschlossen
-                  </span>
+                <div className="mt-4 p-3 rounded-lg bg-sky-50 dark:bg-sky-900/30 border border-sky-300 dark:border-sky-700 flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-sky-500 mr-2" />
+                    <p className="text-sm font-medium text-sky-600 dark:text-sky-400">Einsatz abgeschlossen</p>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Dein Einsatz für heute ist beendet.</p>
-              </div>
             )}
             
             {/* Sick status - Show instead of swipe if user is sick */}
