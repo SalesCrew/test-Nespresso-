@@ -470,102 +470,6 @@ const loadProcessState = async () => {
     }
   };
 
-  // Load special status (krankenstand/notfall)
-  const loadSpecialStatus = async () => {
-    try {
-      const res = await fetch('/api/me/special-status', { cache: 'no-store', credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setSpecialStatus(data);
-        
-        // Update UI states based on special status
-        if (data.active_status) {
-          if (data.active_status.status_type === 'krankenstand') {
-            setIsSickConfirmed(true);
-            setIsWaitingForSickConfirmation(false);
-          } else if (data.active_status.status_type === 'notfall') {
-            setIsEmergencyConfirmed(true);
-            setIsWaitingForEmergencyConfirmation(false);
-          }
-        } else {
-          // Check for pending requests
-          const pendingKrankenstand = data.pending_requests?.find((r: any) => r.request_type === 'krankenstand');
-          const pendingNotfall = data.pending_requests?.find((r: any) => r.request_type === 'notfall');
-          
-          if (pendingKrankenstand) {
-            setIsWaitingForSickConfirmation(true);
-            setIsSickConfirmed(false);
-          }
-          if (pendingNotfall) {
-            setIsWaitingForEmergencyConfirmation(true);
-            setIsEmergencyConfirmed(false);
-          }
-        }
-      } else {
-        // Handle gracefully if special status feature isn't set up yet
-        console.warn('Special status feature not available yet:', res.status);
-      }
-    } catch (e) {
-      console.warn('Special status feature not available:', e);
-    }
-  };
-
-  // Submit special status request
-  const submitSpecialStatusRequest = async (type: 'krankenstand' | 'notfall', reason?: string) => {
-    try {
-      const res = await fetch('/api/special-status/requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request_type: type, reason })
-      });
-
-      if (res.ok) {
-        // Update UI states
-        if (type === 'krankenstand') {
-          setIsWaitingForSickConfirmation(true);
-        } else {
-          setIsWaitingForEmergencyConfirmation(true);
-        }
-        
-        // Reload status to update pending requests
-        loadSpecialStatus();
-      } else {
-        console.warn('Special status request not available yet:', res.status);
-        // Don't update UI states if the feature isn't available
-      }
-    } catch (e) {
-      console.warn('Special status request feature not available:', e);
-      // Don't break the UI if the feature isn't set up yet
-    }
-  };
-
-  // End special status (krankenstand beenden)
-  const endSpecialStatus = async () => {
-    try {
-      const res = await fetch('/api/me/special-status', {
-        method: 'DELETE'
-      });
-
-      if (res.ok) {
-        // Reset all status states
-        setIsSickConfirmed(false);
-        setIsEmergencyConfirmed(false);
-        setIsWaitingForSickConfirmation(false);
-        setIsWaitingForEmergencyConfirmation(false);
-        setSpecialStatus(null);
-        
-        // Reload assignments to update status
-        if (displayedAssignment) {
-          loadAssignmentTracking(displayedAssignment.assignment_id);
-        }
-      } else {
-        console.warn('End special status not available yet:', res.status);
-      }
-    } catch (e) {
-      console.warn('End special status feature not available:', e);
-    }
-  };
-
   // Load next upcoming assignment (status assigned or buddy_tag) for this promotor
   const loadNextAssignment = async () => {
     try {
@@ -608,7 +512,7 @@ const loadProcessState = async () => {
     loadProcessState();
     loadBuddyTags();
     loadNextAssignment();
-    loadSpecialStatus();
+    checkActiveSpecialStatus();
     
     // Refresh next assignment every 60s to reflect instant changes
     const iv = setInterval(loadNextAssignment, 60000);
@@ -968,12 +872,74 @@ const loadProcessState = async () => {
   const [doctorNoteUploaded, setDoctorNoteUploaded] = useState(false);
   const [isWaitingForEmergencyConfirmation, setIsWaitingForEmergencyConfirmation] = useState(false);
   const [isEmergencyConfirmed, setIsEmergencyConfirmed] = useState(false);
-
-  // Special status tracking
-  const [specialStatus, setSpecialStatus] = useState<{
-    active_status: any | null;
-    pending_requests: any[];
-  } | null>(null);
+  
+  // Active special status
+  const [activeSpecialStatus, setActiveSpecialStatus] = useState<any>(null);
+  const [checkingSpecialStatus, setCheckingSpecialStatus] = useState(true);
+  
+  // Check for active special status
+  const checkActiveSpecialStatus = async () => {
+    try {
+      setCheckingSpecialStatus(true);
+      const response = await fetch('/api/special-status/active', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const { activeStatus } = await response.json();
+        setActiveSpecialStatus(activeStatus);
+      }
+    } catch (error) {
+      console.error('Error checking active special status:', error);
+    } finally {
+      setCheckingSpecialStatus(false);
+    }
+  };
+  
+  // Create special status request
+  const createSpecialStatusRequest = async (requestType: 'krankenstand' | 'notfall') => {
+    try {
+      const response = await fetch('/api/special-status/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ request_type: requestType })
+      });
+      
+      if (response.ok) {
+        if (requestType === 'krankenstand') {
+          setIsSickConfirmed(true);
+        } else {
+          setIsEmergencyConfirmed(true);
+        }
+        // Check for status changes
+        setTimeout(checkActiveSpecialStatus, 2000);
+      } else {
+        const error = await response.json();
+        console.error('Failed to create special status request:', error);
+      }
+    } catch (error) {
+      console.error('Error creating special status request:', error);
+    }
+  };
+  
+  // End active special status
+  const endActiveSpecialStatus = async () => {
+    try {
+      const response = await fetch('/api/special-status/active', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        setActiveSpecialStatus(null);
+        // Reload to refresh assignment status
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error ending special status:', error);
+    }
+  };
 
   // For equipment ordering
   const [showEquipmentCard, setShowEquipmentCard] = useState(false);
@@ -1857,6 +1823,48 @@ const loadProcessState = async () => {
 
   return (
     <>
+        {/* Active Special Status UI */}
+        {activeSpecialStatus && activeSpecialStatus.is_active ? (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
+            <Card className="w-full max-w-md shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                    activeSpecialStatus.status_type === 'krankenstand' 
+                      ? 'bg-red-100 dark:bg-red-900/20' 
+                      : 'bg-orange-100 dark:bg-orange-900/20'
+                  }`}>
+                    {activeSpecialStatus.status_type === 'krankenstand' ? (
+                      <Thermometer className="h-8 w-8 text-red-600 dark:text-red-400" />
+                    ) : (
+                      <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                    )}
+                  </div>
+                </div>
+                
+                <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">
+                  Du bist im {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
+                </h2>
+                
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                  Alle heutigen Einsätze sind mit dem Status "{activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}" markiert.
+                </p>
+                
+                <Button
+                  onClick={endActiveSpecialStatus}
+                  className={`w-full ${
+                    activeSpecialStatus.status_type === 'krankenstand'
+                      ? 'bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700'
+                      : 'bg-orange-600 hover:bg-orange-700'
+                  } text-white`}
+                >
+                  {activeSpecialStatus.status_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'} beenden
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <>
         {/* Welcome section specific to Einsatz Page - can use a general greeting or a specific one */}
         <section className="mb-6">
           {/* Example of a page-specific greeting if needed, otherwise SiteLayout provides one */}
@@ -2774,21 +2782,17 @@ const loadProcessState = async () => {
                         >
                       <FileText className="h-4 w-4 mr-1.5" />
                       Krankenbestätigung hinzufügen
-                    </Button>
+                        </Button>
                     
-                    <button 
-                      className="w-full py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm mt-3"
-                      onClick={endSpecialStatus}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                      Krankenstand beenden
-                    </button>
 
         </div>
                 ) : !isWaitingForSickConfirmation ? (
         <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
-                    onClick={() => submitSpecialStatusRequest('krankenstand')}
+                    onClick={() => {
+                      setIsWaitingForSickConfirmation(true);
+                      createSpecialStatusRequest('krankenstand');
+                    }}
         >
                     <Thermometer className="h-4 w-4 mr-1.5" />
                     Krankenstand anfordern
@@ -2840,28 +2844,22 @@ const loadProcessState = async () => {
                 </div>
                 
                 {isEmergencyConfirmed ? (
-                  <div className="space-y-3">
-                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                      <div className="flex items-center">
-                        <div className="relative mr-2">
-                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                          <CheckCircle2 className="h-4 w-4 relative" />
-                        </div>
-                        <span>Notfall bestätigt</span>
+                  <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                    <div className="flex items-center">
+                      <div className="relative mr-2">
+                        <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
+                        <CheckCircle2 className="h-4 w-4 relative" />
                       </div>
+                      <span>Notfall bestätigt</span>
                     </div>
-                    <button 
-                      className="w-full py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
-                      onClick={endSpecialStatus}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                      Notfall beenden
-                    </button>
                   </div>
                 ) : !isWaitingForEmergencyConfirmation ? (
                   <button 
                     className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
-                    onClick={() => submitSpecialStatusRequest('notfall')}
+                    onClick={() => {
+                      setIsWaitingForEmergencyConfirmation(true);
+                      createSpecialStatusRequest('notfall');
+                    }}
                   >
                     <AlertTriangle className="h-4 w-4 mr-1.5" />
                     Notfall anfordern
@@ -3405,6 +3403,8 @@ const loadProcessState = async () => {
           </div>
         </div>
       )}
+          </>
+        )}
     </>
   );
 } 

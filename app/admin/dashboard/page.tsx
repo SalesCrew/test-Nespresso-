@@ -32,11 +32,10 @@ import {
   Sparkles,
   Edit3,
   ChevronDown,
-  ChevronUp,
+    ChevronUp,
   Trash2,
   Thermometer,
   AlertTriangle,
-
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,17 +87,6 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   // State for photo lightbox
   const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
-  
-  // State for special status requests
-  const [specialStatusRequests, setSpecialStatusRequests] = useState<any[]>([]);
-  const [specialStatusRequestsLoading, setSpecialStatusRequestsLoading] = useState(true);
-
-  // Load data on mount
-  useEffect(() => {
-    loadTodaysAssignments();
-    loadSpecialStatusRequests();
-    loadActivePromotors();
-  }, []);
   
 
   
@@ -957,8 +945,16 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     { id: 4, location: "Spar Innsbruck", promotor: "Lisa König", time: "11:00 - 19:00", status: "wartend", product: "Original" }
   ];
 
-  // Use real special status requests instead of mock data
-  const pendingRequests = specialStatusRequests;
+  // State for special status requests
+  const [specialStatusRequests, setSpecialStatusRequests] = useState<any[]>([]);
+  const [specialStatusRequestsLoading, setSpecialStatusRequestsLoading] = useState(true);
+
+  // Load data on mount
+  useEffect(() => {
+    loadTodaysAssignments();
+    loadSpecialStatusRequests();
+    loadActivePromotorsData();
+  }, []);
 
   // Use real promotor data instead of mock data
   const activePromotors = activePromotorsData;
@@ -1008,50 +1004,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
       setTodaysEinsaetze([]);
     } finally {
       setTodaysEinsaetzeLoading(false);
-    }
-  };
-
-  // Load special status requests for admin approval
-  const loadSpecialStatusRequests = async () => {
-    try {
-      setSpecialStatusRequestsLoading(true);
-      const response = await fetch('/api/special-status/requests');
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSpecialStatusRequests(data.requests || []);
-      } else {
-        // Handle error gracefully - don't break the app if the feature isn't set up yet
-        console.warn('Special status requests not available yet:', response.status);
-        setSpecialStatusRequests([]);
-      }
-    } catch (error) {
-      console.warn('Special status requests feature not available:', error);
-      setSpecialStatusRequests([]);
-    } finally {
-      setSpecialStatusRequestsLoading(false);
-    }
-  };
-
-  // Handle special status request approval/decline
-  const handleSpecialStatusRequest = async (requestId: string, action: 'approve' | 'decline') => {
-    try {
-      const response = await fetch(`/api/special-status/requests/${requestId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
-      });
-
-      if (response.ok) {
-        // Reload requests and assignments
-        loadSpecialStatusRequests();
-        loadTodaysAssignments();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to process request:', errorData);
-      }
-    } catch (error) {
-      console.error('Error handling special status request:', error);
     }
   };
 
@@ -1138,14 +1090,64 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
-  const handleApproveRequest = (requestId: number) => {
-    console.log("Approved request:", requestId);
-    // Here you would typically call an API to approve the request
+  // Load special status requests
+  const loadSpecialStatusRequests = async () => {
+    try {
+      setSpecialStatusRequestsLoading(true);
+      const response = await fetch('/api/special-status/requests');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSpecialStatusRequests(data.requests || []);
+      } else {
+        console.error('Failed to load special status requests');
+        setSpecialStatusRequests([]);
+      }
+    } catch (error) {
+      console.error('Error loading special status requests:', error);
+      setSpecialStatusRequests([]);
+    } finally {
+      setSpecialStatusRequestsLoading(false);
+    }
   };
 
-  const handleDeclineRequest = (requestId: number) => {
-    setSelectedRequestId(requestId);
-    setShowDeclineModal(true);
+  const handleApproveRequest = async (requestId: string) => {
+    try {
+      const response = await fetch(`/api/special-status/requests/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' })
+      });
+
+      if (response.ok) {
+        // Reload requests and assignments
+        loadSpecialStatusRequests();
+        loadTodaysAssignments();
+      } else {
+        console.error('Failed to approve request');
+      }
+    } catch (error) {
+      console.error('Error approving request:', error);
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    try {
+      const response = await fetch(`/api/special-status/requests/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'decline' })
+      });
+
+      if (response.ok) {
+        // Reload requests
+        loadSpecialStatusRequests();
+      } else {
+        console.error('Failed to decline request');
+      }
+    } catch (error) {
+      console.error('Error declining request:', error);
+    }
   };
 
   const submitDeclineReason = () => {
@@ -1512,7 +1514,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {einsatz.buddyName ? (
                                   <div className="space-y-1">
                                     <div className="truncate">{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
-                                    <div className="truncate">{einsatz.buddyName}: --:-- - --:--</div>
+                                    <div className="truncate">{einsatz.buddyName}: {einsatz.buddy_tracking?.actual_start_time ? einsatz.buddy_tracking.actual_start_time.substring(11, 16) : '--:--'} - {einsatz.buddy_tracking?.actual_end_time ? einsatz.buddy_tracking.actual_end_time.substring(11, 16) : '--:--'}</div>
                                   </div>
                                 ) : (
                                   <div>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
@@ -1581,7 +1583,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     <AlertCircle className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-gray-900">{pendingRequests.length}</p>
+                    <p className="text-2xl font-semibold text-gray-900">{specialStatusRequests.length}</p>
                     <p className="text-xs text-gray-500">Offene Anfragen</p>
                   </div>
                 </div>
@@ -2270,7 +2272,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 {einsatz.buddyName ? (
                                   <div className="space-y-1">
                                     <div className="truncate">{einsatz.promotor}: {formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
-                                    <div className="truncate">{einsatz.buddyName}: --:-- - --:--</div>
+                                    <div className="truncate">{einsatz.buddyName}: {einsatz.buddy_tracking?.actual_start_time ? einsatz.buddy_tracking.actual_start_time.substring(11, 16) : '--:--'} - {einsatz.buddy_tracking?.actual_end_time ? einsatz.buddy_tracking.actual_end_time.substring(11, 16) : '--:--'}</div>
                                   </div>
                                 ) : (
                                   <div>{formatTime(einsatz.actualStart)} - {formatTime(einsatz.actualEnd)}</div>
@@ -2317,7 +2319,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   <div>
                     <CardTitle className="text-lg font-semibold text-gray-900">Offene Anfragen</CardTitle>
                     <CardDescription className="text-sm text-gray-500">
-                      {pendingRequests.length} wartende Anfragen
+                      {specialStatusRequests.length} wartende Anfragen
                     </CardDescription>
                   </div>
                 </div>
@@ -2340,37 +2342,42 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 msOverflowStyle: 'none'
               }}
             >
-              {pendingRequests.length === 0 ? (
+              {specialStatusRequestsLoading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                  <p className="mt-2">Lade Anfragen...</p>
+                </div>
+              ) : specialStatusRequests.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
                   <p>Keine offenen Anfragen</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {pendingRequests.map((request) => (
+                <div className="space-y-2">
+                  {specialStatusRequests.map((request) => (
                     <div 
                       key={request.id} 
                       className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-sm ${
                         request.request_type === 'krankenstand' 
-                          ? 'border-red-200 bg-gradient-to-r from-white to-red-50/30'
-                          : 'border-orange-200 bg-gradient-to-r from-white to-orange-50/30'
+                          ? 'border-red-200 bg-gradient-to-r from-white to-red-50'
+                          : 'border-orange-200 bg-gradient-to-r from-white to-orange-50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                             request.request_type === 'krankenstand' 
                               ? 'bg-red-100' 
                               : 'bg-orange-100'
                           }`}>
                             {request.request_type === 'krankenstand' ? (
-                              <Thermometer className="h-4 w-4 text-red-600" />
+                              <Thermometer className="h-5 w-5 text-red-600" />
                             ) : (
-                              <AlertTriangle className="h-4 w-4 text-orange-600" />
+                              <AlertTriangle className="h-5 w-5 text-orange-600" />
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
+                            <div className="flex items-center space-x-2">
                               <h4 className="text-sm font-medium text-gray-900">
                                 {request.user_profiles?.display_name || 'Unknown User'}
                               </h4>
@@ -2378,41 +2385,41 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                                 variant={request.request_type === 'krankenstand' ? 'destructive' : 'default'}
                                 className={`text-xs ${
                                   request.request_type === 'krankenstand' 
-                                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                    ? 'bg-red-100 text-red-700' 
+                                    : 'bg-orange-100 text-orange-700'
                                 }`}
                               >
                                 {request.request_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
                               </Badge>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 mt-1">
                               Angefragt am {new Date(request.requested_at).toLocaleDateString('de-DE', { 
                                 day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
                               })}
                             </p>
                             {request.reason && (
                               <p className="text-xs text-gray-600 mt-1">
-                                <span className="font-medium">Begründung:</span> {request.reason}
+                                <span className="font-medium">Grund:</span> {request.reason}
                               </p>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2 ml-4">
                           <button
-                            onClick={() => handleSpecialStatusRequest(request.id, 'approve')}
-                            className="w-6 h-6 flex items-center justify-center transition-colors hover:bg-green-50 rounded"
+                            onClick={() => handleApproveRequest(request.id)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-green-50 rounded transition-colors"
                             title="Genehmigen"
                           >
-                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </button>
                           <button
-                            onClick={() => handleSpecialStatusRequest(request.id, 'decline')}
-                            className="w-6 h-6 flex items-center justify-center transition-colors hover:bg-red-50 rounded"
+                            onClick={() => handleDeclineRequest(request.id)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-red-50 rounded transition-colors"
                             title="Ablehnen"
                           >
-                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
