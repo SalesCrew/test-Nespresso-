@@ -1824,18 +1824,7 @@ const loadProcessState = async () => {
                   Bitte vergiss nicht, deine genauen Arbeits- und Pausenzeiten im <strong>Demotool</strong> einzutragen.
                 </div>
               </div>
-               <Button 
-                size="lg" 
-                variant="outline"
-                className="w-full py-3 mt-3 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => {
-                  setEinsatzStatus("idle");
-                  setIsSwiped(false);
-                  setLastCompletedAssignmentDate(null); // Clear this so the card doesn't reappear until next completion
-                }}
-              >
-                Zurück zur Übersicht
-              </Button>
+
             </CardContent>
           </Card>
         )}
