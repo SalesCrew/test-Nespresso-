@@ -14,6 +14,16 @@ ADD COLUMN IF NOT EXISTS early_end_reason text;
 ALTER TABLE public.assignment_tracking 
 ADD COLUMN IF NOT EXISTS minutes_early_end integer;
 
+-- Add fields for photo URLs
+ALTER TABLE public.assignment_tracking 
+ADD COLUMN IF NOT EXISTS foto_maschine_url text;
+
+ALTER TABLE public.assignment_tracking 
+ADD COLUMN IF NOT EXISTS foto_kapsellade_url text;
+
+ALTER TABLE public.assignment_tracking 
+ADD COLUMN IF NOT EXISTS foto_pos_gesamt_url text;
+
 -- Update the todays_assignments view to include these fields
 DROP VIEW IF EXISTS public.todays_assignments;
 
@@ -42,6 +52,9 @@ SELECT
   at.minutes_early_start,
   at.early_end_reason,
   at.minutes_early_end,
+  at.foto_maschine_url,
+  at.foto_kapsellade_url,
+  at.foto_pos_gesamt_url,
   CASE 
     WHEN a.special_status IS NOT NULL THEN a.special_status
     WHEN at.status IN ('krankenstand', 'urlaub', 'zeitausgleich', 'notfall') THEN at.status::text

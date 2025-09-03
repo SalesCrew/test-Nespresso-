@@ -100,6 +100,20 @@ export default function EinsatzPage() {
   const [selectedBuddyTagId, setSelectedBuddyTagId] = useState<string | null>(null);
   const [showBuddyTagConfirmation, setShowBuddyTagConfirmation] = useState(false);
 
+  // Photo upload states
+  const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
+  const [photoUploadStep, setPhotoUploadStep] = useState<1 | 2 | 3>(1);
+  const [uploadedPhotos, setUploadedPhotos] = useState<{
+    foto_maschine: string | null;
+    foto_kapsellade: string | null;
+    foto_pos_gesamt: string | null;
+  }>({
+    foto_maschine: null,
+    foto_kapsellade: null,
+    foto_pos_gesamt: null
+  });
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   // NEW: Simplified process state management
   const [processState, setProcessState] = useState<{
     stage: 'loading' | 'idle' | 'select_assignment' | 'waiting' | 'declined' | 'accepted' | 'partially_accepted';
@@ -1186,7 +1200,70 @@ const loadProcessState = async () => {
     }
   };
 
-  const handleCompleteEinsatz = async () => {
+  const getPhotoTypeTitle = (step: 1 | 2 | 3) => {
+    switch (step) {
+      case 1: return "Foto Maschine";
+      case 2: return "Foto Kapsellade";
+      case 3: return "Foto POS gesamt";
+      default: return "";
+    }
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!displayedAssignment?.id) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const photoType = photoUploadStep === 1 ? 'foto_maschine' : 
+                       photoUploadStep === 2 ? 'foto_kapsellade' : 'foto_pos_gesamt';
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('photo_type', photoType);
+      formData.append('assignment_id', displayedAssignment.id);
+      
+      const response = await fetch('/api/me/einsatz-photos/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUploadedPhotos(prev => ({
+          ...prev,
+          [photoType]: data.photo_url
+        }));
+        
+        if (photoUploadStep < 3) {
+          setPhotoUploadStep(prev => (prev + 1) as 1 | 2 | 3);
+        } else {
+          // All photos uploaded, complete the einsatz
+          setShowPhotoUploadModal(false);
+          await handleCompleteEinsatz(true); // Skip photo upload check
+        }
+      } else {
+        console.error('Failed to upload photo');
+        alert('Fehler beim Hochladen des Fotos. Bitte versuchen Sie es erneut.');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Fehler beim Hochladen des Fotos. Bitte versuchen Sie es erneut.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleCompleteEinsatz = async (skipPhotoUpload = false) => {
+    // Check if all photos are uploaded (unless skipping photo upload)
+    const allPhotosUploaded = uploadedPhotos.foto_maschine && uploadedPhotos.foto_kapsellade && uploadedPhotos.foto_pos_gesamt;
+    
+    if (!skipPhotoUpload && !allPhotosUploaded) {
+      // Show photo upload modal first
+      setPhotoUploadStep(1);
+      setShowPhotoUploadModal(true);
+      return;
+    }
+    
     try {
       // Get Austrian local time as ISO string WITHOUT timezone conversion
       const now = new Date();
@@ -1218,6 +1295,17 @@ const loadProcessState = async () => {
           console.log('✅ [END] Added early end reasoning to API call');
         } else {
           console.log('ℹ️ [END] No early end reasoning to add');
+        }
+        
+        // Add photo URLs if available
+        if (uploadedPhotos.foto_maschine) {
+          updateData.foto_maschine_url = uploadedPhotos.foto_maschine;
+        }
+        if (uploadedPhotos.foto_kapsellade) {
+          updateData.foto_kapsellade_url = uploadedPhotos.foto_kapsellade;
+        }
+        if (uploadedPhotos.foto_pos_gesamt) {
+          updateData.foto_pos_gesamt_url = uploadedPhotos.foto_pos_gesamt;
         }
         
         const response = await fetch('/api/assignments/today', {
@@ -3108,6 +3196,95 @@ const loadProcessState = async () => {
             </button>
           </div>
         </>
+      )}
+
+      {/* Photo Upload Modal */}
+      {showPhotoUploadModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[90vw] max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white p-6">
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                  📸
+                </div>
+                <h2 className="text-xl font-bold mb-1">{getPhotoTypeTitle(photoUploadStep)}</h2>
+                <p className="text-blue-100 text-sm">Schritt {photoUploadStep}/3</p>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    Bitte machen Sie ein Foto von {getPhotoTypeTitle(photoUploadStep).toLowerCase()}
+                  </p>
+                </div>
+                
+                {/* Photo Upload Area */}
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handlePhotoUpload(file);
+                      }
+                    }}
+                    className="hidden"
+                    id="photo-upload"
+                    disabled={isUploadingPhoto}
+                  />
+                  <label 
+                    htmlFor="photo-upload" 
+                    className={`cursor-pointer ${isUploadingPhoto ? 'opacity-50' : ''}`}
+                  >
+                    {isUploadingPhoto ? (
+                      <div className="space-y-2">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="text-sm text-gray-600">Uploading...</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="text-4xl">📸</div>
+                        <p className="text-sm text-gray-600">Tippen zum Foto machen</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+                
+                {/* Progress Indicator */}
+                <div className="flex justify-center space-x-2">
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className={`w-3 h-3 rounded-full ${
+                        step < photoUploadStep 
+                          ? 'bg-green-500'  // Completed steps
+                          : step === photoUploadStep 
+                          ? 'bg-blue-500'   // Current step
+                          : 'bg-gray-300'   // Future steps
+                      }`}
+                    />
+                  ))}
+                </div>
+                
+                {photoUploadStep > 1 && (
+                  <button
+                    onClick={() => setPhotoUploadStep(prev => (prev - 1) as 1 | 2 | 3)}
+                    className="w-full mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-gray-700 dark:text-gray-200"
+                    disabled={isUploadingPhoto}
+                  >
+                    Zurück zum vorherigen Foto
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

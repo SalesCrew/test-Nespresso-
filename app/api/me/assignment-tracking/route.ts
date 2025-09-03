@@ -33,7 +33,10 @@ export async function GET() {
         early_start_reason,
         minutes_early_start,
         early_end_reason,
-        minutes_early_end
+        minutes_early_end,
+        foto_maschine_url,
+        foto_kapsellade_url,
+        foto_pos_gesamt_url
       `)
       .eq('user_id', user.id)
       .order('planned_start', { ascending: true });

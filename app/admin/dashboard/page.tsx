@@ -977,7 +977,10 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           early_start_reason: a.early_start_reason,
           minutes_early_start: a.minutes_early_start,
           early_end_reason: a.early_end_reason,
-          minutes_early_end: a.minutes_early_end
+          minutes_early_end: a.minutes_early_end,
+          foto_maschine_url: a.foto_maschine_url,
+          foto_kapsellade_url: a.foto_kapsellade_url,
+          foto_pos_gesamt_url: a.foto_pos_gesamt_url
         }));
         setTodaysEinsaetze(transformedData);
       } else {
@@ -3434,7 +3437,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-6 overflow-auto max-h-[70vh]">
+            <CardContent className="p-6 overflow-auto max-h-[70vh] [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="space-y-6">
                 
                 {/* Basic Info */}
@@ -3544,17 +3547,90 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   </div>
                 )}
 
-                {/* Photos Section (Placeholder) */}
+                {/* Photos Section */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                    <div className="space-y-2">
-                      <div className="text-gray-400 mx-auto w-12 h-12 flex items-center justify-center">
-                        📸
+                  {(selectedAssignmentDetail.foto_maschine_url || selectedAssignmentDetail.foto_kapsellade_url || selectedAssignmentDetail.foto_pos_gesamt_url) ? (
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Foto Maschine */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-700">Foto Maschine</span>
+                          {selectedAssignmentDetail.foto_maschine_url ? (
+                            <span className="text-xs text-green-600">✓</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                          )}
+                        </div>
+                        {selectedAssignmentDetail.foto_maschine_url ? (
+                          <img 
+                            src={selectedAssignmentDetail.foto_maschine_url} 
+                            alt="Foto Maschine" 
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-500">Foto-Upload wird in der nächsten Version verfügbar sein</p>
+
+                      {/* Foto Kapsellade */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-700">Foto Kapsellade</span>
+                          {selectedAssignmentDetail.foto_kapsellade_url ? (
+                            <span className="text-xs text-green-600">✓</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                          )}
+                        </div>
+                        {selectedAssignmentDetail.foto_kapsellade_url ? (
+                          <img 
+                            src={selectedAssignmentDetail.foto_kapsellade_url} 
+                            alt="Foto Kapsellade" 
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Foto POS gesamt */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-700">Foto POS gesamt</span>
+                          {selectedAssignmentDetail.foto_pos_gesamt_url ? (
+                            <span className="text-xs text-green-600">✓</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                          )}
+                        </div>
+                        {selectedAssignmentDetail.foto_pos_gesamt_url ? (
+                          <img 
+                            src={selectedAssignmentDetail.foto_pos_gesamt_url} 
+                            alt="Foto POS gesamt" 
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                      <div className="space-y-2">
+                        <div className="text-gray-400 mx-auto w-12 h-12 flex items-center justify-center">
+                          📸
+                        </div>
+                        <p className="text-sm text-gray-500">Keine Fotos verfügbar</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes */}
