@@ -41,12 +41,12 @@ export async function GET() {
     }
 
     console.log('User profile role:', profile.role);
-    if (!['admin', 'admin_of_admins', 'admin_staff'].includes(profile.role)) {
+    if (!['admin_of_admins', 'admin_staff'].includes(profile.role)) {
       console.error('Role not allowed:', profile.role);
       return NextResponse.json({ 
         error: 'Forbidden', 
         role: profile.role,
-        allowed: ['admin', 'admin_of_admins', 'admin_staff']
+        allowed: ['admin_of_admins', 'admin_staff']
       }, { status: 403 });
     }
 
@@ -140,7 +140,7 @@ export async function PATCH(request: Request) {
         .eq('user_id', user.id)
         .single();
 
-      if (!profile || !['admin', 'admin_of_admins', 'admin_staff'].includes(profile.role)) {
+      if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
     } else {

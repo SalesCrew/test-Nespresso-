@@ -24,7 +24,7 @@ export async function PATCH(
       .eq('user_id', user.id)
       .single();
 
-    if (!profile || !['admin', 'admin_of_admins', 'admin_staff'].includes(profile.role)) {
+    if (!profile || !['admin_of_admins', 'admin_staff'].includes(profile.role)) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
