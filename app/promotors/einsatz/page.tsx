@@ -470,6 +470,101 @@ const loadProcessState = async () => {
     }
   };
 
+  // Load special status (krankenstand/notfall)
+  const loadSpecialStatus = async () => {
+    try {
+      const res = await fetch('/api/me/special-status', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setSpecialStatus(data);
+        
+        // Update UI states based on special status
+        if (data.active_status) {
+          if (data.active_status.status_type === 'krankenstand') {
+            setIsSickConfirmed(true);
+            setIsWaitingForSickConfirmation(false);
+          } else if (data.active_status.status_type === 'notfall') {
+            setIsEmergencyConfirmed(true);
+            setIsWaitingForEmergencyConfirmation(false);
+          }
+        } else {
+          // Check for pending requests
+          const pendingKrankenstand = data.pending_requests.find((r: any) => r.request_type === 'krankenstand');
+          const pendingNotfall = data.pending_requests.find((r: any) => r.request_type === 'notfall');
+          
+          if (pendingKrankenstand) {
+            setIsWaitingForSickConfirmation(true);
+            setIsSickConfirmed(false);
+          }
+          if (pendingNotfall) {
+            setIsWaitingForEmergencyConfirmation(true);
+            setIsEmergencyConfirmed(false);
+          }
+        }
+      } else {
+        console.error('Failed to load special status:', res.status);
+      }
+    } catch (e) {
+      console.error('Error loading special status:', e);
+    }
+  };
+
+  // Submit special status request
+  const submitSpecialStatusRequest = async (type: 'krankenstand' | 'notfall', reason?: string) => {
+    try {
+      const res = await fetch('/api/special-status/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_type: type, reason })
+      });
+
+      if (res.ok) {
+        // Update UI states
+        if (type === 'krankenstand') {
+          setIsWaitingForSickConfirmation(true);
+        } else {
+          setIsWaitingForEmergencyConfirmation(true);
+        }
+        
+        // Reload status to update pending requests
+        loadSpecialStatus();
+      } else {
+        console.error('Failed to submit request:', res.status);
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Request error details:', errorData);
+      }
+    } catch (e) {
+      console.error('Error submitting special status request:', e);
+    }
+  };
+
+  // End special status (krankenstand beenden)
+  const endSpecialStatus = async () => {
+    try {
+      const res = await fetch('/api/me/special-status', {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        // Reset all status states
+        setIsSickConfirmed(false);
+        setIsEmergencyConfirmed(false);
+        setIsWaitingForSickConfirmation(false);
+        setIsWaitingForEmergencyConfirmation(false);
+        setSpecialStatus(null);
+        
+        // Reload assignments to update status
+        if (displayedAssignment) {
+          loadAssignmentTracking(displayedAssignment.assignment_id);
+        }
+      } else {
+        console.error('Failed to end special status:', res.status);
+      }
+    } catch (e) {
+      console.error('Error ending special status:', e);
+    }
+  };
+
   // Load next upcoming assignment (status assigned or buddy_tag) for this promotor
   const loadNextAssignment = async () => {
     try {
@@ -512,6 +607,7 @@ const loadProcessState = async () => {
     loadProcessState();
     loadBuddyTags();
     loadNextAssignment();
+    loadSpecialStatus();
     
     // Refresh next assignment every 60s to reflect instant changes
     const iv = setInterval(loadNextAssignment, 60000);
@@ -871,6 +967,12 @@ const loadProcessState = async () => {
   const [doctorNoteUploaded, setDoctorNoteUploaded] = useState(false);
   const [isWaitingForEmergencyConfirmation, setIsWaitingForEmergencyConfirmation] = useState(false);
   const [isEmergencyConfirmed, setIsEmergencyConfirmed] = useState(false);
+
+  // Special status tracking
+  const [specialStatus, setSpecialStatus] = useState<{
+    active_status: any | null;
+    pending_requests: any[];
+  } | null>(null);
 
   // For equipment ordering
   const [showEquipmentCard, setShowEquipmentCard] = useState(false);
@@ -2671,14 +2773,21 @@ const loadProcessState = async () => {
                         >
                       <FileText className="h-4 w-4 mr-1.5" />
                       Krankenbestätigung hinzufügen
-                        </Button>
+                    </Button>
                     
+                    <button 
+                      className="w-full py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm mt-3"
+                      onClick={endSpecialStatus}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                      Krankenstand beenden
+                    </button>
 
         </div>
                 ) : !isWaitingForSickConfirmation ? (
         <button 
                     className="w-full py-2 px-3 bg-gradient-to-r from-red-500 via-red-600 to-rose-600 hover:from-red-600 hover:via-red-700 hover:to-rose-700 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center text-sm"
-                    onClick={() => setIsWaitingForSickConfirmation(true)}
+                    onClick={() => submitSpecialStatusRequest('krankenstand')}
         >
                     <Thermometer className="h-4 w-4 mr-1.5" />
                     Krankenstand anfordern
@@ -2730,19 +2839,28 @@ const loadProcessState = async () => {
                 </div>
                 
                 {isEmergencyConfirmed ? (
-                  <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
-                    <div className="flex items-center">
-                      <div className="relative mr-2">
-                        <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
-                        <CheckCircle2 className="h-4 w-4 relative" />
+                  <div className="space-y-3">
+                    <div className="w-full py-2 px-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
+                      <div className="flex items-center">
+                        <div className="relative mr-2">
+                          <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
+                          <CheckCircle2 className="h-4 w-4 relative" />
+                        </div>
+                        <span>Notfall bestätigt</span>
                       </div>
-                      <span>Notfall bestätigt</span>
                     </div>
+                    <button 
+                      className="w-full py-2 px-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
+                      onClick={endSpecialStatus}
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                      Notfall beenden
+                    </button>
                   </div>
                 ) : !isWaitingForEmergencyConfirmation ? (
                   <button 
                     className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
-                    onClick={() => setIsWaitingForEmergencyConfirmation(true)}
+                    onClick={() => submitSpecialStatusRequest('notfall')}
                   >
                     <AlertTriangle className="h-4 w-4 mr-1.5" />
                     Notfall anfordern
