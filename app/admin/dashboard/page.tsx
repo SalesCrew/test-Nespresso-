@@ -110,8 +110,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       early_end_reason: selectedAssignmentDetail.early_end_reason,
       minutes_early_end: selectedAssignmentDetail.minutes_early_end,
       foto_maschine_url: selectedAssignmentDetail.foto_maschine_url,
-      foto_kapsellade_url: getCurrentPromotorData()?.foto_kapsellade_url,
-      foto_pos_gesamt_url: getCurrentPromotorData()?.foto_pos_gesamt_url
+      foto_kapsellade_url: selectedAssignmentDetail.foto_kapsellade_url,
+      foto_pos_gesamt_url: selectedAssignmentDetail.foto_pos_gesamt_url
     };
   };
   
