@@ -34,7 +34,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 
 // TypeScript interfaces for todo items
@@ -167,9 +166,6 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState("");
   const [displayName, setDisplayName] = useState<string>("");
 
-  // Add state for progress bar animations
-  const [progressBarsVisible, setProgressBarsVisible] = useState(false);
-  const progressBarsRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
@@ -380,7 +376,6 @@ export default function DashboardPage() {
 
   const completedTodos = sortedTodos.filter(todo => todo.completed).length;
   const totalTodos = sortedTodos.length;
-  const completionPercentage = totalTodos > 0 ? (completedTodos / totalTodos) * 100 : 0;
 
   const toggleTodo = (id: number) => {
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
@@ -534,6 +529,10 @@ export default function DashboardPage() {
     setSelectedAssignmentType(getHighestPriorityAssignmentType(selectedCalendarDate));
   }, [assignments]);
 
+  // Add state for progress bar animations (for Wochenstatus card)
+  const [progressBarsVisible, setProgressBarsVisible] = useState(false);
+  const progressBarsRef = useRef<HTMLDivElement>(null);
+
   // Add Intersection Observer for progress bars
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -572,19 +571,18 @@ export default function DashboardPage() {
           <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 relative h-[80px] z-[25]">
             {/* Single row with all content properly spaced */}
             <div className="flex items-center justify-between h-full">
-              {/* Left side: Title and progress */}
-              <div className="flex flex-col justify-center h-full">
-                <div className="flex items-center mb-2">
-                <CheckCircle2 className="mr-2 h-5 w-5" />
+              {/* Left side: Title and count */}
+              <div className="flex items-center justify-center h-full">
+                <div className="flex items-center">
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
                   <span className="text-lg font-semibold">To-Dos</span>
-            </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-white/90 text-xs font-medium">Erledigt {completedTodos}/{totalTodos}</span>
-                  <div className="w-24 bg-white/20 rounded-full h-1.5">
-                    <div className="bg-white h-1.5 rounded-full transition-all duration-300" style={{ width: `${completionPercentage}%` }}></div>
+                  {totalTodos > 0 && (
+                    <span className="ml-3 text-white/90 text-sm font-medium">
+                      {totalTodos - completedTodos} offen
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
           
               {/* Right side: Filter dropdown */}
               <div className="relative">
@@ -618,16 +616,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className={`p-0 transition-all duration-300 ${expandedTodos ? "max-h-80" : "max-h-[180px]"} overflow-hidden`}>
             {sortedTodos.length === 0 ? (
-              // Empty state
-              <div className="flex flex-col items-center justify-center py-12 px-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-purple-400 dark:text-purple-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                  Alle Aufgaben erledigt!
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  Du hast aktuell keine offenen To-Dos. Neue Aufgaben werden hier automatisch angezeigt.
+              // Empty state - minimal
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Keine To-Dos vorhanden
                 </p>
               </div>
             ) : expandedTodos ? (
