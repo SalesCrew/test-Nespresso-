@@ -66,7 +66,7 @@ export default function PromotorenPage() {
     }
     @keyframes skeleton-fade {
       0% {
-        background-color: #e5e7eb;
+        background-color: #f9fafb;
       }
       100% {
         background-color: #f3f4f6;
@@ -1600,7 +1600,11 @@ export default function PromotorenPage() {
               // Simple Loading Skeletons - plain grey cards
               [...Array(6)].map((_, index) => (
                 <div key={`skeleton-${index}`} className="relative">
-                  <Card className="h-96 shadow-md border-0 animate-skeleton-fade rounded-lg">
+                  <Card className="border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden animate-skeleton-fade">
+                    <CardContent className="relative p-6 space-y-5">
+                      {/* Empty content to match real card height */}
+                      <div className="h-64"></div>
+                    </CardContent>
                   </Card>
                 </div>
               ))
