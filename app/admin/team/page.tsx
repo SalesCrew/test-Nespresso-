@@ -59,17 +59,17 @@ export default function PromotorenPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Vercel-style subtle pulse animation CSS
+  // Simple skeleton fade animation CSS
   const skeletonStyles = `
-    .animate-pulse-subtle {
-      animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    .animate-skeleton-fade {
+      animation: skeleton-fade 0.7s ease-in-out infinite alternate;
     }
-    @keyframes pulse-subtle {
-      0%, 100% {
-        opacity: 1;
+    @keyframes skeleton-fade {
+      0% {
+        background-color: #e5e7eb;
       }
-      50% {
-        opacity: 0.7;
+      100% {
+        background-color: #f3f4f6;
       }
     }
   `;
@@ -1597,90 +1597,10 @@ export default function PromotorenPage() {
           {/* Promotor Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {promotorsLoading ? (
-              // Loading Skeletons - exact size/shape of real cards
+              // Simple Loading Skeletons - plain grey cards
               [...Array(6)].map((_, index) => (
                 <div key={`skeleton-${index}`} className="relative">
-                  <Card className="shadow-md border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-200/20 via-transparent to-gray-200/20 rounded-lg"></div>
-                    <div className="absolute inset-[1px] bg-white rounded-lg"></div>
-                    
-                    <CardContent className="relative p-6 space-y-5">
-                      {/* Header Skeleton */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className="h-11 w-11 bg-gray-200 rounded-full animate-pulse-subtle"></div>
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-gray-300 rounded-full animate-pulse-subtle"></div>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="h-4 bg-gray-200 rounded animate-pulse-subtle mb-1 w-24"></div>
-                            <div className="h-3 bg-gray-100 rounded animate-pulse-subtle w-16"></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Region Badge Skeleton */}
-                      <div>
-                        <div className="h-6 bg-gray-200 rounded-full animate-pulse-subtle w-20"></div>
-                      </div>
-
-                      {/* Working Days Skeleton */}
-                      <div>
-                        <div className="h-3 bg-gray-200 rounded animate-pulse-subtle mb-3 w-16"></div>
-                        <div className="flex space-x-1.5">
-                          {[...Array(7)].map((_, i) => (
-                            <div key={i} className="w-7 h-7 bg-gray-200 rounded-full animate-pulse-subtle"></div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Performance Metrics Skeleton */}
-                      <div>
-                        <div className="h-3 bg-gray-200 rounded animate-pulse-subtle mb-2 w-20"></div>
-                        <div className="bg-gray-100 rounded-lg p-2.5">
-                          <div className="grid grid-cols-3 gap-3">
-                            {[...Array(3)].map((_, i) => (
-                              <div key={i} className="text-center">
-                                <div className="h-4 bg-gray-200 rounded animate-pulse-subtle mb-1"></div>
-                                <div className="h-3 bg-gray-100 rounded animate-pulse-subtle"></div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick Stats Skeleton */}
-                      <div className="flex justify-between">
-                        <div className="h-6 bg-gray-200 rounded-full animate-pulse-subtle w-16"></div>
-                        <div className="h-6 bg-gray-200 rounded-full animate-pulse-subtle w-20"></div>
-                      </div>
-
-                      {/* Onboarding Progress Skeleton */}
-                      <div className="pt-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="h-3 bg-gray-200 rounded animate-pulse-subtle w-16"></div>
-                          <div className="h-3 bg-gray-100 rounded animate-pulse-subtle w-8"></div>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div className="h-full bg-gray-200 rounded-full animate-pulse-subtle w-3/4"></div>
-                        </div>
-                      </div>
-
-                      {/* Contact & Last Activity Skeleton */}
-                      <div className="space-y-3 pt-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse-subtle"></div>
-                          <div className="h-3 bg-gray-200 rounded animate-pulse-subtle flex-1"></div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 bg-gray-200 rounded-full animate-pulse-subtle"></div>
-                          <div className="h-3 bg-gray-200 rounded animate-pulse-subtle w-32"></div>
-                        </div>
-                      </div>
-
-                      {/* Notes Button Skeleton */}
-                      <div className="absolute bottom-4 right-4 w-8 h-8 bg-gray-200 rounded-lg animate-pulse-subtle"></div>
-                    </CardContent>
+                  <Card className="h-96 shadow-md border-0 animate-skeleton-fade rounded-lg">
                   </Card>
                 </div>
               ))
