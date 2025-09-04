@@ -357,6 +357,7 @@ export default function DashboardPage() {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [documents, setDocuments] = useState<any[]>([]);
 
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
@@ -405,9 +406,50 @@ export default function DashboardPage() {
     return currentTodos;
   };
 
-  // Merge assignment todos with regular todos
+  // Load documents
+  const loadDocuments = async () => {
+    try {
+      const res = await fetch('/api/me/documents', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data.documents || []);
+      } else {
+        console.error('Failed to load documents:', res.status);
+        setDocuments([]);
+      }
+    } catch (e) {
+      console.error('Error loading documents:', e);
+      setDocuments([]);
+    }
+  };
+
+  // Convert documents to todos
+  const getDocumentTodos = (): TodoItem[] => {
+    const documentTodos: TodoItem[] = [];
+
+    documents.forEach((doc) => {
+      // Only create todos for required documents that are missing
+      if (doc.required && doc.status === 'missing') {
+        const todo: TodoItem = {
+          id: 200000 + documentTodos.length, // Unique ID range for documents (200000+)
+          title: `${doc.name} hochladen`,
+          priority: "medium", // Document todos have medium priority
+          due: "Erforderlich",
+          completed: false, // Always false since we only show missing documents
+          timeframe: "heute" // Document todos always appear in "heute" to be visible
+        };
+        
+        documentTodos.push(todo);
+      }
+    });
+
+    return documentTodos;
+  };
+
+  // Merge assignment todos, document todos, and regular todos
   const assignmentTodos = getAssignmentTodos();
-  const allTodos = [...assignmentTodos, ...todos];
+  const documentTodos = getDocumentTodos();
+  const allTodos = [...assignmentTodos, ...documentTodos, ...todos];
 
   const filteredTodos = allTodos.filter(todo => {
     if (todoFilter === "heute") {
@@ -428,12 +470,20 @@ export default function DashboardPage() {
       return a.completed ? 1 : -1;
     }
     
-    // Then by priority - assignments (high priority with id > 100000) come first
-    const aIsAssignment = a.id > 100000;
-    const bIsAssignment = b.id > 100000;
+    // Then by type priority: assignments (100000+) -> documents (200000+) -> regular todos
+    const aIsAssignment = a.id >= 100000 && a.id < 200000;
+    const bIsAssignment = b.id >= 100000 && b.id < 200000;
+    const aIsDocument = a.id >= 200000;
+    const bIsDocument = b.id >= 200000;
     
+    // Assignments come first
     if (aIsAssignment !== bIsAssignment) {
       return aIsAssignment ? -1 : 1;
+    }
+    
+    // Then documents come second
+    if (aIsDocument !== bIsDocument) {
+      return aIsDocument ? -1 : 1;
     }
     
     return 0;
@@ -443,8 +493,9 @@ export default function DashboardPage() {
   const totalTodos = sortedTodos.length;
 
   const toggleTodo = (id: number) => {
-    // Don't allow toggling assignment todos (id > 100000) - they're managed by tracking system
-    if (id > 100000) return;
+    // Don't allow toggling assignment todos (100000+) or document todos (200000+)
+    // Assignment todos are managed by tracking system, document todos by document upload system
+    if (id >= 100000) return;
     
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
@@ -581,10 +632,12 @@ export default function DashboardPage() {
   useEffect(() => {
     loadCalendarAssignments();
     loadMessages();
+    loadDocuments();
     // Refresh every 2 minutes to reflect changes
     const iv = setInterval(() => {
       loadCalendarAssignments();
       loadMessages();
+      loadDocuments();
     }, 120000);
     return () => clearInterval(iv);
   }, []);
@@ -693,7 +746,7 @@ export default function DashboardPage() {
                   {sortedTodos.map((todo) => (
                     <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 <div className="flex items-center gap-3">
-                        {todo.id > 100000 ? (
+                        {todo.id >= 100000 && todo.id < 200000 ? (
                           // Assignment todo - show assignment icon instead of checkbox
                           <div className="w-5 h-5 flex items-center justify-center">
                             {todo.completed ? (
@@ -701,6 +754,11 @@ export default function DashboardPage() {
                             ) : (
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
+                          </div>
+                        ) : todo.id >= 200000 ? (
+                          // Document todo - show document icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-orange-500" />
                           </div>
                         ) : (
                           // Regular todo - clickable checkbox
@@ -722,7 +780,7 @@ export default function DashboardPage() {
                 {sortedTodos.slice(0, 3).map((todo) => (
                   <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                     <div className="flex items-center gap-3">
-                        {todo.id > 100000 ? (
+                        {todo.id >= 100000 && todo.id < 200000 ? (
                           // Assignment todo - show assignment icon instead of checkbox
                           <div className="w-5 h-5 flex items-center justify-center">
                             {todo.completed ? (
@@ -730,6 +788,11 @@ export default function DashboardPage() {
                             ) : (
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
+                          </div>
+                        ) : todo.id >= 200000 ? (
+                          // Document todo - show document icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-orange-500" />
                           </div>
                         ) : (
                           // Regular todo - clickable checkbox
