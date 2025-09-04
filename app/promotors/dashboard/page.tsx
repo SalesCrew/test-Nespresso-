@@ -797,13 +797,8 @@ export default function DashboardPage() {
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
                           </div>
-                        ) : todo.id >= 300000 ? (
-                          // Message todo - show message icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-yellow-500" />
-                          </div>
                         ) : (
-                          // Regular todo and Document todo - clickable checkbox
+                          // Regular todo, Document todo, and Message todo - clickable checkbox
                           <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
                             {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
                           </button>
@@ -839,13 +834,8 @@ export default function DashboardPage() {
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
                           </div>
-                        ) : todo.id >= 300000 ? (
-                          // Message todo - show message icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-yellow-500" />
-                          </div>
                         ) : (
-                          // Regular todo and Document todo - clickable checkbox
+                          // Regular todo, Document todo, and Message todo - clickable checkbox
                           <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
                             {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
                           </button>
