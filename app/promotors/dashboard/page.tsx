@@ -403,15 +403,16 @@ export default function DashboardPage() {
       else if (daysDiff <= 7) dueText = `In ${daysDiff} Tagen`;
       else dueText = assignmentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 
-      // Check if assignment todo was completed from history or actual_end_time
-      const isCompleted = !!assignment.actual_end_time || isTodoCompleted('assignment', assignment.id.toString());
+      // Check if assignment todo was completed today from history or actual_end_time
+      const hasActualEndTime = !!assignment.actual_end_time;
+      const isCompletedToday = hasActualEndTime || isTodoCompletedToday('assignment', assignment.id.toString());
       
       const todo: TodoItem = {
         id: assignment.id + 100000, // Ensure unique ID by adding offset
         title: todoTitle,
         priority: "high", // Assignments always have highest priority
         due: dueText,
-        completed: isCompleted, // Check both actual_end_time and history
+        completed: isCompletedToday, // Only show as completed if completed today
         timeframe: timeframe
       };
 
@@ -467,6 +468,22 @@ export default function DashboardPage() {
     );
   };
 
+  // Check if a todo was completed today
+  const isTodoCompletedToday = (todoType: string, referenceId: string): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return todoHistoryData.some(h => {
+      if (h.todo_type === todoType && h.reference_id === referenceId) {
+        const completedAt = new Date(h.completed_at);
+        return completedAt >= today && completedAt < tomorrow;
+      }
+      return false;
+    });
+  };
+
   // Save todo completion to history
   const saveTodoCompletion = async (todoType: string, referenceId: string, title: string) => {
     try {
@@ -496,15 +513,17 @@ export default function DashboardPage() {
     const documentTodos: TodoItem[] = [];
 
     documents.forEach((doc) => {
-      // Only create todos for required documents that are missing or completed in history
-      if (doc.required && (doc.status === 'missing' || isTodoCompleted('document', doc.type))) {
-        const isCompleted = doc.status !== 'missing' || isTodoCompleted('document', doc.type);
+      // Only create todos for required documents that are missing or completed today
+      const isCompletedToday = (doc.status !== 'missing') || isTodoCompletedToday('document', doc.type);
+      const shouldShow = doc.required && (doc.status === 'missing' || isCompletedToday);
+      
+      if (shouldShow) {
         const todo: TodoItem = {
           id: 200000 + documentTodos.length, // Unique ID range for documents (200000+)
           title: `${doc.name} hochladen`,
           priority: "medium", // Document todos have medium priority
           due: "Erforderlich",
-          completed: isCompleted, // Check completion from actual status or history
+          completed: isCompletedToday, // Only show as completed if completed today
           timeframe: "heute" // Document todos always appear in "heute" to be visible
         };
         
@@ -519,34 +538,34 @@ export default function DashboardPage() {
   const getMessageTodos = (): TodoItem[] => {
     const messageTodos: TodoItem[] = [];
 
-    // Add todos for normal messages (show if unread or completed in history)
+    // Add todos for normal messages (show if unread or completed today)
     messages.filter(msg => msg.message_type === 'normal').forEach((message, index) => {
-      const isCompleted = !!message.read_at || isTodoCompleted('message', message.id);
-      // Only show if unread or completed in history
-      if (!message.read_at || isCompleted) {
+      const isCompletedToday = !!message.read_at || isTodoCompletedToday('message', message.id);
+      // Only show if unread or completed today
+      if (!message.read_at || isCompletedToday) {
         const todo: TodoItem = {
           id: 300000 + index, // Unique ID range for messages (300000+)
           title: message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen',
           priority: "high", // Message todos have high priority
           due: "Erforderlich",
-          completed: isCompleted, // Check completion from read status or history
+          completed: isCompletedToday, // Only show as completed if completed today
           timeframe: "heute" // Message todos always appear in "heute" to be visible
         };
         messageTodos.push(todo);
       }
     });
 
-    // Add todos for confirmation_required messages (show if unacknowledged or completed in history)
+    // Add todos for confirmation_required messages (show if unacknowledged or completed today)
     messages.filter(msg => msg.message_type === 'confirmation_required').forEach((message, index) => {
-      const isCompleted = !!message.acknowledged_at || isTodoCompleted('message', message.id);
-      // Only show if unacknowledged or completed in history
-      if (!message.acknowledged_at || isCompleted) {
+      const isCompletedToday = !!message.acknowledged_at || isTodoCompletedToday('message', message.id);
+      // Only show if unacknowledged or completed today
+      if (!message.acknowledged_at || isCompletedToday) {
         const todo: TodoItem = {
           id: 300100 + index, // Unique ID range for confirmation messages (300100+)
           title: message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen',
           priority: "high", // Message todos have high priority
           due: "Bestätigung erforderlich",
-          completed: isCompleted, // Check completion from acknowledged status or history
+          completed: isCompletedToday, // Only show as completed if completed today
           timeframe: "heute" // Message todos always appear in "heute" to be visible
         };
         messageTodos.push(todo);
