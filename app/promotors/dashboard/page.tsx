@@ -383,7 +383,8 @@ export default function DashboardPage() {
       assignmentDate.setHours(0, 0, 0, 0);
       const daysDiff = Math.ceil((assignmentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
-      // Skip past assignments for now
+      // ASSIGNMENTS: Only show on their exact day, disappear at midnight
+      // Skip past assignments and assignments that aren't for today/future
       if (daysDiff < 0) return;
       
       // Determine timeframe for filtering
@@ -403,16 +404,16 @@ export default function DashboardPage() {
       else if (daysDiff <= 7) dueText = `In ${daysDiff} Tagen`;
       else dueText = assignmentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 
-      // Check if assignment todo was completed today from history or actual_end_time
+      // For assignments: only show as completed if completed today AND it's today's assignment
       const hasActualEndTime = !!assignment.actual_end_time;
-      const isCompletedToday = hasActualEndTime || isTodoCompletedToday('assignment', assignment.id.toString());
+      const isCompletedToday = hasActualEndTime && daysDiff === 0;
       
       const todo: TodoItem = {
         id: assignment.id + 100000, // Ensure unique ID by adding offset
         title: todoTitle,
         priority: "high", // Assignments always have highest priority
         due: dueText,
-        completed: isCompletedToday, // Only show as completed if completed today
+        completed: isCompletedToday, // Only show completed if completed today
         timeframe: timeframe
       };
 
@@ -513,21 +514,25 @@ export default function DashboardPage() {
     const documentTodos: TodoItem[] = [];
 
     documents.forEach((doc) => {
-      // Only create todos for required documents that are missing or completed today
-      const isCompletedToday = (doc.status !== 'missing') || isTodoCompletedToday('document', doc.type);
-      const shouldShow = doc.required && (doc.status === 'missing' || isCompletedToday);
-      
-      if (shouldShow) {
-        const todo: TodoItem = {
-          id: 200000 + documentTodos.length, // Unique ID range for documents (200000+)
-          title: `${doc.name} hochladen`,
-          priority: "medium", // Document todos have medium priority
-          due: "Erforderlich",
-          completed: isCompletedToday, // Only show as completed if completed today
-          timeframe: "heute" // Document todos always appear in "heute" to be visible
-        };
+      // DOCUMENTS: Show if incomplete (missing) OR completed today only
+      // Completed on previous days should only be in history, not main UI
+      if (doc.required) {
+        const isCompletedToday = isTodoCompletedToday('document', doc.type);
+        const isIncomplete = doc.status === 'missing';
         
-        documentTodos.push(todo);
+        // Show if incomplete OR completed today
+        if (isIncomplete || isCompletedToday) {
+          const todo: TodoItem = {
+            id: 200000 + documentTodos.length, // Unique ID range for documents (200000+)
+            title: `${doc.name} hochladen`,
+            priority: "medium", // Document todos have medium priority
+            due: "Erforderlich",
+            completed: isCompletedToday, // Only show as completed if completed today
+            timeframe: "heute" // Document todos always appear in "heute" to be visible
+          };
+          
+          documentTodos.push(todo);
+        }
       }
     });
 
@@ -538,11 +543,15 @@ export default function DashboardPage() {
   const getMessageTodos = (): TodoItem[] => {
     const messageTodos: TodoItem[] = [];
 
-    // Add todos for normal messages (show if unread or completed today)
+    // Add todos for normal messages
+    // MESSAGES: Show if unread (incomplete) OR completed today only
+    // Completed on previous days should only be in history, not main UI
     messages.filter(msg => msg.message_type === 'normal').forEach((message, index) => {
-      const isCompletedToday = !!message.read_at || isTodoCompletedToday('message', message.id);
-      // Only show if unread or completed today
-      if (!message.read_at || isCompletedToday) {
+      const isCompletedToday = isTodoCompletedToday('message', message.id);
+      const isIncomplete = !message.read_at;
+      
+      // Show if incomplete OR completed today only
+      if (isIncomplete || isCompletedToday) {
         const todo: TodoItem = {
           id: 300000 + index, // Unique ID range for messages (300000+)
           title: message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen',
@@ -555,11 +564,14 @@ export default function DashboardPage() {
       }
     });
 
-    // Add todos for confirmation_required messages (show if unacknowledged or completed today)
+    // Add todos for confirmation_required messages
+    // MESSAGES: Show if unacknowledged (incomplete) OR completed today only
     messages.filter(msg => msg.message_type === 'confirmation_required').forEach((message, index) => {
-      const isCompletedToday = !!message.acknowledged_at || isTodoCompletedToday('message', message.id);
-      // Only show if unacknowledged or completed today
-      if (!message.acknowledged_at || isCompletedToday) {
+      const isCompletedToday = isTodoCompletedToday('message', message.id);
+      const isIncomplete = !message.acknowledged_at;
+      
+      // Show if incomplete OR completed today only
+      if (isIncomplete || isCompletedToday) {
         const todo: TodoItem = {
           id: 300100 + index, // Unique ID range for confirmation messages (300100+)
           title: message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen',
@@ -575,11 +587,29 @@ export default function DashboardPage() {
     return messageTodos;
   };
 
+  // Convert regular todos to include history completion check
+  const getRegularTodos = (): TodoItem[] => {
+    return todos.map(todo => {
+      // REGULAR TODOS: Show if incomplete OR completed today only
+      const isCompletedToday = todo.completed || isTodoCompletedToday('regular', todo.id.toString());
+      const wasCompletedBefore = isTodoCompleted('regular', todo.id.toString()) && !isCompletedToday;
+      
+      // Don't show if completed on previous days (only in history)
+      if (wasCompletedBefore) return null;
+      
+      return {
+        ...todo,
+        completed: isCompletedToday
+      };
+    }).filter(Boolean) as TodoItem[];
+  };
+
   // Merge assignment todos, document todos, message todos, and regular todos
   const assignmentTodos = getAssignmentTodos();
   const documentTodos = getDocumentTodos();
   const messageTodos = getMessageTodos();
-  const allTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...todos];
+  const regularTodos = getRegularTodos();
+  const allTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...regularTodos];
 
   const filteredTodos = allTodos.filter(todo => {
     if (todoFilter === "heute") {
@@ -597,7 +627,7 @@ export default function DashboardPage() {
   const sortedTodos = [...filteredTodos].sort((a, b) => {
     // First sort by completion status
     if (a.completed !== b.completed) {
-      return a.completed ? 1 : -1;
+    return a.completed ? 1 : -1;
     }
     
     // Then by type priority: assignments (100000-199999) -> messages (300000+) -> documents (200000-299999) -> regular todos
@@ -637,7 +667,7 @@ export default function DashboardPage() {
     if (id >= 300000) return;
     
     // Find the todo to get its details
-    const allCurrentTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...todos];
+    const allCurrentTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...regularTodos];
     const todoToToggle = allCurrentTodos.find(t => t.id === id);
     
     if (todoToToggle) {
@@ -652,17 +682,20 @@ export default function DashboardPage() {
           // Document todo
           todoType = 'document';
           const docIndex = id - 200000;
-          const doc = documents.filter(d => d.required && d.status === 'missing')[docIndex];
+          const doc = documents.filter(d => d.required && (d.status === 'missing' || isTodoCompletedToday('document', d.type)))[docIndex];
           referenceId = doc?.type || id.toString();
         }
         
         await saveTodoCompletion(todoType, referenceId, todoToToggle.title);
       }
       
-      // Update local state for regular todos
+      // Update local state for regular todos only
       if (id < 100000) {
         setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: newCompleted } : todo)));
       }
+      
+      // For document todos, we don't update local state since they're computed from documents array
+      // The completion is tracked in history and will be reflected on next data refresh
     }
   };
 
@@ -860,15 +893,15 @@ export default function DashboardPage() {
               {/* Left side: Title and count */}
               <div className="flex flex-col justify-center h-full">
                 <div className="flex items-center mb-1">
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                <CheckCircle2 className="mr-2 h-5 w-5" />
                   <span className="text-lg font-semibold">To-Dos</span>
-                </div>
+            </div>
                 {totalTodos > 0 && (
                   <span className="text-white/90 text-sm font-medium">
                     {totalTodos - completedTodos} offen
                   </span>
                 )}
-              </div>
+          </div>
           
               {/* Right side: Filter dropdown */}
               <div className="relative">
@@ -925,13 +958,13 @@ export default function DashboardPage() {
                           </div>
                         ) : (
                           // Regular todo, Document todo, and Message todo - clickable checkbox
-                          <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                            {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                          </button>
+                        <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
+                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
+                        </button>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center">
-                            <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
+                          <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
                             {todo.id >= 200000 && todo.id < 300000 && (
                               <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
                             )}
@@ -962,9 +995,9 @@ export default function DashboardPage() {
                           </div>
                         ) : (
                           // Regular todo, Document todo, and Message todo - clickable checkbox
-                          <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                            {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                          </button>
+                       <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
+                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
+                        </button>
                         )}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
@@ -977,25 +1010,25 @@ export default function DashboardPage() {
             )}
                 </CardContent>
           {sortedTodos.length > 0 && (
-            <CardFooter className="p-3 border-t bg-gray-50 dark:bg-gray-800/50">
-              <div className="flex items-center justify-between w-full">
-                {/* Empty space on the left for balance */}
-                <div className="w-8 h-8"></div>
-                
-                {/* Centered "Alle anzeigen" button */}
-                <Button variant="ghost" size="sm" className="flex items-center justify-center font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity" onClick={() => setExpandedTodos(!expandedTodos)}>
-                  {expandedTodos ? (<><ChevronUp className="h-4 w-4 mr-1 text-purple-500" /> Weniger anzeigen</>) : (<><ChevronDown className="h-4 w-4 mr-1 text-purple-500" /> Alle anzeigen</>)}
-                </Button>
-                
-                {/* History icon on the right */}
-                <button
-                  onClick={() => setShowTodoHistory(true)}
-                  className="flex items-center justify-center w-8 h-8 rounded-full opacity-30 hover:opacity-60 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <History className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-            </CardFooter>
+          <CardFooter className="p-3 border-t bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between w-full">
+              {/* Empty space on the left for balance */}
+              <div className="w-8 h-8"></div>
+              
+              {/* Centered "Alle anzeigen" button */}
+              <Button variant="ghost" size="sm" className="flex items-center justify-center font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity" onClick={() => setExpandedTodos(!expandedTodos)}>
+                {expandedTodos ? (<><ChevronUp className="h-4 w-4 mr-1 text-purple-500" /> Weniger anzeigen</>) : (<><ChevronDown className="h-4 w-4 mr-1 text-purple-500" /> Alle anzeigen</>)}
+              </Button>
+              
+              {/* History icon on the right */}
+              <button
+                onClick={() => setShowTodoHistory(true)}
+                className="flex items-center justify-center w-8 h-8 rounded-full opacity-30 hover:opacity-60 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <History className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+          </CardFooter>
           )}
         </Card>
 
