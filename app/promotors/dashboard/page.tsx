@@ -690,16 +690,16 @@ export default function DashboardPage() {
             {/* Single row with all content properly spaced */}
             <div className="flex items-center justify-between h-full">
               {/* Left side: Title and count */}
-              <div className="flex items-center justify-center h-full">
-                <div className="flex items-center">
+              <div className="flex flex-col justify-center h-full">
+                <div className="flex items-center mb-1">
                   <CheckCircle2 className="mr-2 h-5 w-5" />
                   <span className="text-lg font-semibold">To-Dos</span>
-                  {totalTodos > 0 && (
-                    <span className="ml-3 text-white/90 text-sm font-medium">
-                      {totalTodos - completedTodos} offen
-                    </span>
-                  )}
                 </div>
+                {totalTodos > 0 && (
+                  <span className="text-white/90 text-sm font-medium">
+                    {totalTodos - completedTodos} offen
+                  </span>
+                )}
               </div>
           
               {/* Right side: Filter dropdown */}
