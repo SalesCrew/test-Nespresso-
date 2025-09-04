@@ -72,7 +72,7 @@ const TypingText = ({ text, isTyping }: { text: string; isTyping: boolean }) => 
 };
 
 export default function EinsatzplanPage() {
-  // Custom scrollbar styles
+  // Custom scrollbar and skeleton styles
   const customScrollbarStyle = `
     .custom-scrollbar::-webkit-scrollbar {
       width: 3px;
@@ -117,6 +117,17 @@ export default function EinsatzplanPage() {
       75% { transform: rotate(-4deg); }
       90% { transform: rotate(4deg); }
       100% { transform: rotate(0deg); }
+    }
+    .animate-skeleton-fade {
+      animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+    }
+    @keyframes skeleton-fade {
+      0% {
+        background-color: #f9fafb;
+      }
+      100% {
+        background-color: #f3f4f6;
+      }
     }
 
   `;
@@ -168,6 +179,9 @@ export default function EinsatzplanPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
+  
+  // Assignments loading state  
+  const [assignmentsLoading, setAssignmentsLoading] = useState(true); // Start loading immediately
   
   // Create assignment modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1441,6 +1455,7 @@ export default function EinsatzplanPage() {
   const loadAssignments = async (skipFilters = false) => {
     console.log('🟢 loadAssignments called, skipFilters:', skipFilters);
     try {
+      setAssignmentsLoading(true);
       const params = new URLSearchParams();
       // Only apply filters if not skipping (e.g., after import we want to see all)
       if (!skipFilters) {
@@ -1520,6 +1535,8 @@ export default function EinsatzplanPage() {
     } catch (e: any) {
       console.error('🔴 loadAssignments error:', e);
       alert(e?.message || 'Fehler beim Laden der Einsätze');
+    } finally {
+      setAssignmentsLoading(false);
     }
   };
 
@@ -1946,7 +1963,43 @@ Import EP
                     {viewMode === 'days' ? (
                       /* Days View */
                       <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
-                        {generateDayCards().map((dayData) => {
+                        {assignmentsLoading ? (
+                          // Loading Skeletons - 8 day cards matching exact day card structure
+                          [...Array(8)].map((_, index) => (
+                            <div 
+                              key={`skeleton-day-${index}`}
+                              className="p-4 rounded-lg shadow-sm bg-white animate-skeleton-fade"
+                            >
+                              <div className="space-y-3">
+                                {/* Date Header Skeleton */}
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="h-4 bg-gray-200 rounded mb-1 w-20 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-16 animate-skeleton-fade"></div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="h-6 bg-gray-200 rounded w-8 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-12 mt-1 animate-skeleton-fade"></div>
+                                  </div>
+                                </div>
+                                
+                                {/* Status List Skeleton */}
+                                <div className="space-y-2">
+                                  {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                                      </div>
+                                      <div className="h-3 bg-gray-100 rounded w-8 animate-skeleton-fade"></div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          generateDayCards().map((dayData) => {
                           // Green background when there are 0 "Offen" assignments and at least one assignment total
                           const noOpenAssignments = dayData.total > 0 && dayData.offen === 0;
                           
@@ -2029,12 +2082,44 @@ Import EP
                             </div>
                           </div>
                           );
-                        })}
+                          })
+                        )}
                       </div>
                     ) : (
                       /* List View */
                       <div key={`list-view-${hideVerplant ? 'filtered' : 'all'}`} className="space-y-2">
-                        {filteredEinsatzplan.map((einsatz) => {
+                        {assignmentsLoading ? (
+                          // Loading Skeletons - 10 rows matching exact assignment row structure
+                          [...Array(10)].map((_, index) => (
+                            <div 
+                              key={`skeleton-row-${index}`}
+                              className="p-4 rounded-lg border border-gray-100 animate-skeleton-fade"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="grid grid-cols-5 gap-4 flex-1 items-center">
+                                  <div className="min-w-0">
+                                    <div className="h-4 bg-gray-200 rounded mb-1 w-32 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-24 animate-skeleton-fade"></div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-20 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-24 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  <div className="text-center flex items-center justify-end space-x-2">
+                                    <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                                    <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
                         return (
@@ -2127,7 +2212,8 @@ Import EP
                             </div>
                           </div>
                         );
-                      })}
+                          })
+                        )}
                       </div>
                     )}
                   </div>
