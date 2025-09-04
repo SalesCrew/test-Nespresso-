@@ -446,7 +446,7 @@ export default function PromotorenPage() {
 
   // Promotors state (real data only; no mock fallback)
   const [promotors, setPromotors] = useState<any[]>([]);
-  const [promotorsLoading, setPromotorsLoading] = useState(false);
+  const [promotorsLoading, setPromotorsLoading] = useState(true); // Start loading immediately
   const [promotorsError, setPromotorsError] = useState(false);
 
   // Load promotors from backend
@@ -1604,8 +1604,8 @@ export default function PromotorenPage() {
                   </Card>
                 </div>
               ))
-            ) : filteredPromotors.length === 0 ? (
-              // Empty/Error State
+            ) : !promotorsLoading && filteredPromotors.length === 0 ? (
+              // Empty/Error State - only show after loading is complete
               <div className="col-span-full text-center py-12">
                 <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
