@@ -1935,36 +1935,72 @@ const loadProcessState = async () => {
             </div>
             </>
             )}
-            {/* Special Status - Show when user is in krankenstand or notfall */}
-            {isAssignmentForToday && (activeSpecialStatus?.is_active || displayedAssignment?.special_status) && (
-              <div className={`mt-4 p-3 rounded-lg border flex items-center ${
-                (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
-                  ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-700'
-                  : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700'
-              }`}>
-                {(activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand') ? (
-                  <Thermometer className="h-5 w-5 text-red-600 mr-3 ml-0.5 flex-shrink-0" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0" />
-                )}
-                <div>
-                  <p className={`font-medium ${
-                    (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
-                      ? 'text-red-700 dark:text-red-400' 
-                      : 'text-orange-700 dark:text-orange-400'
-                  }`}>
-                    Du kannst diesen Einsatz nicht wahrnehmen
-                  </p>
-                  <p className={`text-xs mt-0.5 ${
-                    (activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand')
-                      ? 'text-red-600/80 dark:text-red-300/80'
-                      : 'text-orange-600/80 dark:text-orange-300/80'
-                  }`}>
-                    Du bist im {(activeSpecialStatus?.status_type === 'krankenstand' || displayedAssignment?.special_status === 'krankenstand') ? 'Krankenstand' : 'Notfall'}
-                  </p>
+            {/* Special Status - Show when user is in any special status */}
+            {(() => {
+              const specialStatusType = activeSpecialStatus?.status_type || displayedAssignment?.special_status;
+              
+              // Helper function to get styling for each special status
+              const getSpecialStatusStyling = (status: string) => {
+                switch (status) {
+                  case 'krankenstand':
+                    return {
+                      bg: 'bg-gradient-to-br from-rose-50 via-red-50/50 to-rose-100/80 dark:from-rose-950/40 dark:via-red-900/20 dark:to-rose-900/30',
+                      border: 'border-rose-200/60 dark:border-rose-700/50',
+                      icon: <Thermometer className="h-5 w-5 text-red-500 mr-3 ml-0.5 flex-shrink-0 drop-shadow-sm" />,
+                      titleColor: 'text-red-700 dark:text-red-300',
+                      subtitleColor: 'text-red-600/75 dark:text-red-400/80',
+                      label: 'Krankenstand'
+                    };
+                  case 'notfall':
+                    return {
+                      bg: 'bg-gradient-to-br from-orange-50 via-amber-50/50 to-orange-100/80 dark:from-orange-950/40 dark:via-amber-900/20 dark:to-orange-900/30',
+                      border: 'border-orange-200/60 dark:border-orange-700/50',
+                      icon: <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0 drop-shadow-sm" />,
+                      titleColor: 'text-orange-700 dark:text-orange-300',
+                      subtitleColor: 'text-orange-600/75 dark:text-orange-400/80',
+                      label: 'Notfall'
+                    };
+                  case 'urlaub':
+                    return {
+                      bg: 'bg-gradient-to-br from-blue-50 via-sky-50/50 to-blue-100/80 dark:from-blue-950/40 dark:via-sky-900/20 dark:to-blue-900/30',
+                      border: 'border-blue-200/60 dark:border-blue-700/50',
+                      icon: <Calendar className="h-5 w-5 text-blue-500 mr-3 ml-0.5 flex-shrink-0 drop-shadow-sm" />,
+                      titleColor: 'text-blue-700 dark:text-blue-300',
+                      subtitleColor: 'text-blue-600/75 dark:text-blue-400/80',
+                      label: 'Urlaub'
+                    };
+                  case 'zeitausgleich':
+                    return {
+                      bg: 'bg-gradient-to-br from-yellow-50 via-amber-50/50 to-yellow-100/80 dark:from-yellow-950/40 dark:via-amber-900/20 dark:to-yellow-900/30',
+                      border: 'border-yellow-200/60 dark:border-yellow-700/50',
+                      icon: <Clock className="h-5 w-5 text-yellow-600 mr-3 ml-0.5 flex-shrink-0 drop-shadow-sm" />,
+                      titleColor: 'text-yellow-700 dark:text-yellow-300',
+                      subtitleColor: 'text-yellow-600/75 dark:text-yellow-400/80',
+                      label: 'Zeitausgleich'
+                    };
+                  default:
+                    return null;
+                }
+              };
+
+              const styling = getSpecialStatusStyling(specialStatusType);
+              
+              return isAssignmentForToday && (activeSpecialStatus?.is_active || displayedAssignment?.special_status) && styling && (
+                <div className={`mt-4 p-4 rounded-xl border shadow-lg backdrop-blur-sm ${styling.bg} ${styling.border}`}>
+                  <div className="flex items-center">
+                    {styling.icon}
+                    <div className="flex-1">
+                      <p className={`font-semibold text-sm ${styling.titleColor} mb-0.5`}>
+                        Du kannst diesen Einsatz nicht wahrnehmen
+                      </p>
+                      <p className={`text-xs ${styling.subtitleColor}`}>
+                        Du bist im {styling.label}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Swipe to Start Einsatz - available from beginning of assignment day, status is idle, and not sick or in emergency */}
                           {isAssignmentForToday && einsatzStatus === "idle" && !isSwiped && !activeSpecialStatus?.is_active && !displayedAssignment?.special_status && (
