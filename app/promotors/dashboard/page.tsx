@@ -493,9 +493,9 @@ export default function DashboardPage() {
   const totalTodos = sortedTodos.length;
 
   const toggleTodo = (id: number) => {
-    // Don't allow toggling assignment todos (100000+) or document todos (200000+)
-    // Assignment todos are managed by tracking system, document todos by document upload system
-    if (id >= 100000) return;
+    // Don't allow toggling assignment todos (100000-199999) - managed by tracking system
+    // Allow document todos (200000+) to be toggled
+    if (id >= 100000 && id < 200000) return;
     
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
@@ -755,19 +755,19 @@ export default function DashboardPage() {
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
                           </div>
-                        ) : todo.id >= 200000 ? (
-                          // Document todo - show document icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-orange-500" />
-                          </div>
                         ) : (
-                          // Regular todo - clickable checkbox
+                          // Regular todo and Document todo - clickable checkbox
                           <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
                             {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
                           </button>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
+                          <div className="flex items-center">
+                            <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
+                            {todo.id >= 200000 && (
+                              <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
+                            )}
+                          </div>
                           <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
                   </div>
                 </div>
@@ -789,13 +789,8 @@ export default function DashboardPage() {
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
                           </div>
-                        ) : todo.id >= 200000 ? (
-                          // Document todo - show document icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-orange-500" />
-                          </div>
                         ) : (
-                          // Regular todo - clickable checkbox
+                          // Regular todo and Document todo - clickable checkbox
                           <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
                             {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
                           </button>
