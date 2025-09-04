@@ -361,16 +361,23 @@ export default function DashboardPage() {
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
     const today = new Date();
+    // Reset time to compare only dates
+    today.setHours(0, 0, 0, 0);
     const currentTodos: TodoItem[] = [];
 
     assignments.forEach((assignment) => {
       const assignmentDate = new Date(assignment.date);
+      assignmentDate.setHours(0, 0, 0, 0);
       const daysDiff = Math.ceil((assignmentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Skip past assignments for now
+      if (daysDiff < 0) return;
       
       // Determine timeframe for filtering
       let timeframe: "heute" | "7tage" | "30tage" = "30tage";
-      if (daysDiff <= 0) timeframe = "heute";
-      else if (daysDiff <= 7) timeframe = "7tage";
+      if (daysDiff === 0) timeframe = "heute"; // Today only
+      else if (daysDiff <= 7) timeframe = "7tage"; // Future within 7 days
+      else timeframe = "30tage"; // Future beyond 7 days
 
       // Create todo title
       const buddyText = assignment.buddyName ? ` (mit ${assignment.buddyName})` : '';
@@ -378,7 +385,7 @@ export default function DashboardPage() {
 
       // Determine due text
       let dueText: string;
-      if (daysDiff <= 0) dueText = "Heute";
+      if (daysDiff === 0) dueText = "Heute";
       else if (daysDiff === 1) dueText = "Morgen";
       else if (daysDiff <= 7) dueText = `In ${daysDiff} Tagen`;
       else dueText = assignmentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
