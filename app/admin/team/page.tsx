@@ -1597,14 +1597,10 @@ export default function PromotorenPage() {
           {/* Promotor Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {promotorsLoading ? (
-              // Simple Loading Skeletons - plain grey cards
+              // Simple Loading Skeletons - plain grey cards matching real card dimensions
               [...Array(6)].map((_, index) => (
                 <div key={`skeleton-${index}`} className="relative">
-                  <Card className="border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden animate-skeleton-fade">
-                    <CardContent className="relative p-6 space-y-5">
-                      {/* Empty content to match real card height */}
-                      <div className="h-64"></div>
-                    </CardContent>
+                  <Card className="h-[28rem] border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden animate-skeleton-fade">
                   </Card>
                 </div>
               ))
