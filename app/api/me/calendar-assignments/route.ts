@@ -33,6 +33,18 @@ export async function GET() {
 
     if (asgErr) return NextResponse.json({ error: asgErr.message }, { status: 500 })
 
+    // Get tracking data for these assignments
+    const { data: trackingData, error: trackingErr } = await svc
+      .from('assignment_tracking')
+      .select('assignment_id, actual_end_time')
+      .in('assignment_id', assignmentIds)
+      .eq('user_id', user.id)
+
+    if (trackingErr) {
+      console.error('Error fetching tracking data:', trackingErr)
+      // Continue without tracking data rather than failing
+    }
+
     // Process assignments to determine type (promotion vs buddy)
     const processedAssignments = (assignments || []).map((assignment: any) => {
       const startDate = new Date(assignment.start_ts)
@@ -58,6 +70,9 @@ export async function GET() {
           buddyDisplayName = assignment.lead_name
         }
       }
+
+      // Get tracking data for this assignment
+      const tracking = (trackingData || []).find(t => t.assignment_id === assignment.id)
       
       return {
         id: assignment.id,
@@ -68,7 +83,8 @@ export async function GET() {
         time: `${String(startDate.getUTCHours()).padStart(2,'0')}:${String(startDate.getUTCMinutes()).padStart(2,'0')}-${String(endDate.getUTCHours()).padStart(2,'0')}:${String(endDate.getUTCMinutes()).padStart(2,'0')}`,
         date: startDate,
         type: type,
-        buddyName: buddyDisplayName
+        buddyName: buddyDisplayName,
+        actual_end_time: tracking?.actual_end_time || null
       }
     })
 

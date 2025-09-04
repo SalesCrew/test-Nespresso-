@@ -356,7 +356,51 @@ export default function DashboardPage() {
 
   const [todos, setTodos] = useState<TodoItem[]>([]);
 
-  const filteredTodos = todos.filter(todo => {
+  // Convert assignments to todos
+  const getAssignmentTodos = (): TodoItem[] => {
+    const today = new Date();
+    const currentTodos: TodoItem[] = [];
+
+    assignments.forEach((assignment) => {
+      const assignmentDate = new Date(assignment.date);
+      const daysDiff = Math.ceil((assignmentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Determine timeframe for filtering
+      let timeframe: "heute" | "7tage" | "30tage" = "30tage";
+      if (daysDiff <= 0) timeframe = "heute";
+      else if (daysDiff <= 7) timeframe = "7tage";
+
+      // Create todo title
+      const buddyText = assignment.buddyName ? ` (mit ${assignment.buddyName})` : '';
+      const todoTitle = `${assignment.title}${buddyText} - ${assignment.time}`;
+
+      // Determine due text
+      let dueText: string;
+      if (daysDiff <= 0) dueText = "Heute";
+      else if (daysDiff === 1) dueText = "Morgen";
+      else if (daysDiff <= 7) dueText = `In ${daysDiff} Tagen`;
+      else dueText = assignmentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+
+      const todo: TodoItem = {
+        id: assignment.id + 100000, // Ensure unique ID by adding offset
+        title: todoTitle,
+        priority: "high", // Assignments always have highest priority
+        due: dueText,
+        completed: !!assignment.actual_end_time, // Completed if has actual_end_time
+        timeframe: timeframe
+      };
+
+      currentTodos.push(todo);
+    });
+
+    return currentTodos;
+  };
+
+  // Merge assignment todos with regular todos
+  const assignmentTodos = getAssignmentTodos();
+  const allTodos = [...assignmentTodos, ...todos];
+
+  const filteredTodos = allTodos.filter(todo => {
     if (todoFilter === "heute") {
       return todo.timeframe === "heute";
     }
@@ -370,14 +414,29 @@ export default function DashboardPage() {
   });
 
   const sortedTodos = [...filteredTodos].sort((a, b) => {
-    if (a.completed === b.completed) return 0;
-    return a.completed ? 1 : -1;
+    // First sort by completion status
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1;
+    }
+    
+    // Then by priority - assignments (high priority with id > 100000) come first
+    const aIsAssignment = a.id > 100000;
+    const bIsAssignment = b.id > 100000;
+    
+    if (aIsAssignment !== bIsAssignment) {
+      return aIsAssignment ? -1 : 1;
+    }
+    
+    return 0;
   });
 
   const completedTodos = sortedTodos.filter(todo => todo.completed).length;
   const totalTodos = sortedTodos.length;
 
   const toggleTodo = (id: number) => {
+    // Don't allow toggling assignment todos (id > 100000) - they're managed by tracking system
+    if (id > 100000) return;
+    
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
 
@@ -628,9 +687,21 @@ export default function DashboardPage() {
                   {sortedTodos.map((todo) => (
                     <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                 <div className="flex items-center gap-3">
-                        <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                        </button>
+                        {todo.id > 100000 ? (
+                          // Assignment todo - show assignment icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            {todo.completed ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <Briefcase className="w-5 h-5 text-blue-500" />
+                            )}
+                          </div>
+                        ) : (
+                          // Regular todo - clickable checkbox
+                          <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
+                            {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
+                          </button>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
                           <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
@@ -645,9 +716,21 @@ export default function DashboardPage() {
                 {sortedTodos.slice(0, 3).map((todo) => (
                   <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                     <div className="flex items-center gap-3">
-                       <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                        </button>
+                        {todo.id > 100000 ? (
+                          // Assignment todo - show assignment icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            {todo.completed ? (
+                              <CheckCircle2 className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <Briefcase className="w-5 h-5 text-blue-500" />
+                            )}
+                          </div>
+                        ) : (
+                          // Regular todo - clickable checkbox
+                          <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
+                            {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
+                          </button>
+                        )}
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
                         <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
