@@ -131,6 +131,13 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'read' })
       });
+      
+      // Save todo completion to history
+      const message = messages.find(m => m.id === messageId);
+      if (message) {
+        const title = message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen';
+        await saveTodoCompletion('message', messageId, title);
+      }
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
@@ -144,6 +151,13 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'acknowledge' })
       });
+      
+      // Save todo completion to history
+      const message = messages.find(m => m.id === messageId);
+      if (message) {
+        const title = message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen';
+        await saveTodoCompletion('message', messageId, title);
+      }
     } catch (error) {
       console.error('Error acknowledging message:', error);
     }
@@ -168,9 +182,6 @@ export default function DashboardPage() {
 
 
   const router = useRouter();
-
-  // History data for completed To-Dos (initially empty)
-  const [todoHistory] = useState<TodoHistoryItem[]>([]);
 
   // Get available months for dropdown (last 6 months first, then older)
   const getAvailableMonths = () => {
@@ -358,6 +369,7 @@ export default function DashboardPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
+  const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
 
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
@@ -391,14 +403,22 @@ export default function DashboardPage() {
       else if (daysDiff <= 7) dueText = `In ${daysDiff} Tagen`;
       else dueText = assignmentDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
 
+      // Check if assignment todo was completed from history or actual_end_time
+      const isCompleted = !!assignment.actual_end_time || isTodoCompleted('assignment', assignment.id.toString());
+      
       const todo: TodoItem = {
         id: assignment.id + 100000, // Ensure unique ID by adding offset
         title: todoTitle,
         priority: "high", // Assignments always have highest priority
         due: dueText,
-        completed: !!assignment.actual_end_time, // Completed if has actual_end_time
+        completed: isCompleted, // Check both actual_end_time and history
         timeframe: timeframe
       };
+
+      // Save to history if assignment has actual_end_time but not in history yet
+      if (assignment.actual_end_time && !isTodoCompleted('assignment', assignment.id.toString())) {
+        saveTodoCompletion('assignment', assignment.id.toString(), todoTitle);
+      }
 
       currentTodos.push(todo);
     });
@@ -423,19 +443,68 @@ export default function DashboardPage() {
     }
   };
 
+  // Load todo history
+  const loadTodoHistory = async () => {
+    try {
+      const res = await fetch('/api/me/todos/history', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setTodoHistoryData(data.history || []);
+      } else {
+        console.error('Failed to load todo history:', res.status);
+        setTodoHistoryData([]);
+      }
+    } catch (e) {
+      console.error('Error loading todo history:', e);
+      setTodoHistoryData([]);
+    }
+  };
+
+  // Check if a todo is completed based on history
+  const isTodoCompleted = (todoType: string, referenceId: string): boolean => {
+    return todoHistoryData.some(h => 
+      h.todo_type === todoType && h.reference_id === referenceId
+    );
+  };
+
+  // Save todo completion to history
+  const saveTodoCompletion = async (todoType: string, referenceId: string, title: string) => {
+    try {
+      await fetch('/api/me/todos/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ todoType, referenceId, title })
+      });
+      // Reload history to update state
+      await loadTodoHistory();
+    } catch (e) {
+      console.error('Error saving todo completion:', e);
+    }
+  };
+
+  // History data for completed To-Dos - use real data from todoHistoryData
+  const todoHistory = todoHistoryData.map((item, index) => ({
+    id: item.id || (1000 + index),
+    title: item.title,
+    priority: item.todo_type === 'assignment' ? 'high' : item.todo_type === 'message' ? 'high' : 'medium',
+    completedDate: new Date(item.completed_at),
+    completed: true
+  }));
+
   // Convert documents to todos
   const getDocumentTodos = (): TodoItem[] => {
     const documentTodos: TodoItem[] = [];
 
     documents.forEach((doc) => {
-      // Only create todos for required documents that are missing
-      if (doc.required && doc.status === 'missing') {
+      // Only create todos for required documents that are missing or completed in history
+      if (doc.required && (doc.status === 'missing' || isTodoCompleted('document', doc.type))) {
+        const isCompleted = doc.status !== 'missing' || isTodoCompleted('document', doc.type);
         const todo: TodoItem = {
           id: 200000 + documentTodos.length, // Unique ID range for documents (200000+)
           title: `${doc.name} hochladen`,
           priority: "medium", // Document todos have medium priority
           due: "Erforderlich",
-          completed: false, // Always false since we only show missing documents
+          completed: isCompleted, // Check completion from actual status or history
           timeframe: "heute" // Document todos always appear in "heute" to be visible
         };
         
@@ -450,30 +519,38 @@ export default function DashboardPage() {
   const getMessageTodos = (): TodoItem[] => {
     const messageTodos: TodoItem[] = [];
 
-    // Add todos for normal unread messages
-    messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).forEach((message, index) => {
-      const todo: TodoItem = {
-        id: 300000 + index, // Unique ID range for messages (300000+)
-        title: message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen',
-        priority: "high", // Message todos have high priority
-        due: "Erforderlich",
-        completed: false, // Always false since we only show unread messages
-        timeframe: "heute" // Message todos always appear in "heute" to be visible
-      };
-      messageTodos.push(todo);
+    // Add todos for normal messages (show if unread or completed in history)
+    messages.filter(msg => msg.message_type === 'normal').forEach((message, index) => {
+      const isCompleted = !!message.read_at || isTodoCompleted('message', message.id);
+      // Only show if unread or completed in history
+      if (!message.read_at || isCompleted) {
+        const todo: TodoItem = {
+          id: 300000 + index, // Unique ID range for messages (300000+)
+          title: message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen',
+          priority: "high", // Message todos have high priority
+          due: "Erforderlich",
+          completed: isCompleted, // Check completion from read status or history
+          timeframe: "heute" // Message todos always appear in "heute" to be visible
+        };
+        messageTodos.push(todo);
+      }
     });
 
-    // Add todos for confirmation_required unread messages
-    messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).forEach((message, index) => {
-      const todo: TodoItem = {
-        id: 300100 + index, // Unique ID range for confirmation messages (300100+)
-        title: message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen',
-        priority: "high", // Message todos have high priority
-        due: "Bestätigung erforderlich",
-        completed: false, // Always false since we only show unacknowledged messages
-        timeframe: "heute" // Message todos always appear in "heute" to be visible
-      };
-      messageTodos.push(todo);
+    // Add todos for confirmation_required messages (show if unacknowledged or completed in history)
+    messages.filter(msg => msg.message_type === 'confirmation_required').forEach((message, index) => {
+      const isCompleted = !!message.acknowledged_at || isTodoCompleted('message', message.id);
+      // Only show if unacknowledged or completed in history
+      if (!message.acknowledged_at || isCompleted) {
+        const todo: TodoItem = {
+          id: 300100 + index, // Unique ID range for confirmation messages (300100+)
+          title: message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen',
+          priority: "high", // Message todos have high priority
+          due: "Bestätigung erforderlich",
+          completed: isCompleted, // Check completion from acknowledged status or history
+          timeframe: "heute" // Message todos always appear in "heute" to be visible
+        };
+        messageTodos.push(todo);
+      }
     });
 
     return messageTodos;
@@ -533,13 +610,41 @@ export default function DashboardPage() {
   const completedTodos = sortedTodos.filter(todo => todo.completed).length;
   const totalTodos = sortedTodos.length;
 
-  const toggleTodo = (id: number) => {
+  const toggleTodo = async (id: number) => {
     // Don't allow toggling assignment todos (100000-199999) - managed by tracking system
     // Don't allow toggling message todos (300000+) - managed by message system
-    // Allow document todos (200000-299999) to be toggled
-    if ((id >= 100000 && id < 200000) || id >= 300000) return;
+    // Allow document todos (200000-299999) and regular todos to be toggled
+    if (id >= 100000 && id < 200000) return;
+    if (id >= 300000) return;
     
-    setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
+    // Find the todo to get its details
+    const allCurrentTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...todos];
+    const todoToToggle = allCurrentTodos.find(t => t.id === id);
+    
+    if (todoToToggle) {
+      const newCompleted = !todoToToggle.completed;
+      
+      // Save completion to history if marking as complete
+      if (newCompleted) {
+        let todoType = 'regular';
+        let referenceId = id.toString();
+        
+        if (id >= 200000 && id < 300000) {
+          // Document todo
+          todoType = 'document';
+          const docIndex = id - 200000;
+          const doc = documents.filter(d => d.required && d.status === 'missing')[docIndex];
+          referenceId = doc?.type || id.toString();
+        }
+        
+        await saveTodoCompletion(todoType, referenceId, todoToToggle.title);
+      }
+      
+      // Update local state for regular todos
+      if (id < 100000) {
+        setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: newCompleted } : todo)));
+      }
+    }
   };
 
   // Load calendar assignments
@@ -675,11 +780,13 @@ export default function DashboardPage() {
     loadCalendarAssignments();
     loadMessages();
     loadDocuments();
+    loadTodoHistory();
     // Refresh every 2 minutes to reflect changes
     const iv = setInterval(() => {
       loadCalendarAssignments();
       loadMessages();
       loadDocuments();
+      loadTodoHistory();
     }, 120000);
     return () => clearInterval(iv);
   }, []);

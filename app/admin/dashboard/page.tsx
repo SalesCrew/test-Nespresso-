@@ -32,7 +32,7 @@ import {
   Sparkles,
   Edit3,
   ChevronDown,
-    ChevronUp,
+  ChevronUp,
   Trash2,
   Thermometer,
   AlertTriangle,
@@ -2391,7 +2391,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                               >
                                 {request.request_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
                               </Badge>
-                            </div>
+                          </div>
                             <p className="text-xs text-gray-500 mt-1">
                               Angefragt am {new Date(request.requested_at).toLocaleDateString('de-DE', { 
                                 day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
