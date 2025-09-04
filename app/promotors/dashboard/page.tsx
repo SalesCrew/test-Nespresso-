@@ -446,10 +446,44 @@ export default function DashboardPage() {
     return documentTodos;
   };
 
-  // Merge assignment todos, document todos, and regular todos
+  // Convert messages to todos
+  const getMessageTodos = (): TodoItem[] => {
+    const messageTodos: TodoItem[] = [];
+
+    // Add todos for normal unread messages
+    messages.filter(msg => msg.message_type === 'normal' && !msg.read_at).forEach((message, index) => {
+      const todo: TodoItem = {
+        id: 300000 + index, // Unique ID range for messages (300000+)
+        title: message.sender_name ? `Nachricht von ${message.sender_name} lesen` : 'Wichtige Nachricht lesen',
+        priority: "high", // Message todos have high priority
+        due: "Erforderlich",
+        completed: false, // Always false since we only show unread messages
+        timeframe: "heute" // Message todos always appear in "heute" to be visible
+      };
+      messageTodos.push(todo);
+    });
+
+    // Add todos for confirmation_required unread messages
+    messages.filter(msg => msg.message_type === 'confirmation_required' && !msg.acknowledged_at).forEach((message, index) => {
+      const todo: TodoItem = {
+        id: 300100 + index, // Unique ID range for confirmation messages (300100+)
+        title: message.sender_name ? `Nachricht von ${message.sender_name} bestätigen` : 'Nachricht bestätigen',
+        priority: "high", // Message todos have high priority
+        due: "Bestätigung erforderlich",
+        completed: false, // Always false since we only show unacknowledged messages
+        timeframe: "heute" // Message todos always appear in "heute" to be visible
+      };
+      messageTodos.push(todo);
+    });
+
+    return messageTodos;
+  };
+
+  // Merge assignment todos, document todos, message todos, and regular todos
   const assignmentTodos = getAssignmentTodos();
   const documentTodos = getDocumentTodos();
-  const allTodos = [...assignmentTodos, ...documentTodos, ...todos];
+  const messageTodos = getMessageTodos();
+  const allTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...todos];
 
   const filteredTodos = allTodos.filter(todo => {
     if (todoFilter === "heute") {
@@ -470,18 +504,25 @@ export default function DashboardPage() {
       return a.completed ? 1 : -1;
     }
     
-    // Then by type priority: assignments (100000+) -> documents (200000+) -> regular todos
+    // Then by type priority: assignments (100000-199999) -> messages (300000+) -> documents (200000-299999) -> regular todos
     const aIsAssignment = a.id >= 100000 && a.id < 200000;
     const bIsAssignment = b.id >= 100000 && b.id < 200000;
-    const aIsDocument = a.id >= 200000;
-    const bIsDocument = b.id >= 200000;
+    const aIsMessage = a.id >= 300000;
+    const bIsMessage = b.id >= 300000;
+    const aIsDocument = a.id >= 200000 && a.id < 300000;
+    const bIsDocument = b.id >= 200000 && b.id < 300000;
     
     // Assignments come first
     if (aIsAssignment !== bIsAssignment) {
       return aIsAssignment ? -1 : 1;
     }
     
-    // Then documents come second
+    // Then messages come second
+    if (aIsMessage !== bIsMessage) {
+      return aIsMessage ? -1 : 1;
+    }
+    
+    // Then documents come third
     if (aIsDocument !== bIsDocument) {
       return aIsDocument ? -1 : 1;
     }
@@ -494,8 +535,9 @@ export default function DashboardPage() {
 
   const toggleTodo = (id: number) => {
     // Don't allow toggling assignment todos (100000-199999) - managed by tracking system
-    // Allow document todos (200000+) to be toggled
-    if (id >= 100000 && id < 200000) return;
+    // Don't allow toggling message todos (300000+) - managed by message system
+    // Allow document todos (200000-299999) to be toggled
+    if ((id >= 100000 && id < 200000) || id >= 300000) return;
     
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
@@ -755,6 +797,11 @@ export default function DashboardPage() {
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
                           </div>
+                        ) : todo.id >= 300000 ? (
+                          // Message todo - show message icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <AlertCircle className="w-5 h-5 text-yellow-500" />
+                          </div>
                         ) : (
                           // Regular todo and Document todo - clickable checkbox
                           <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
@@ -764,8 +811,11 @@ export default function DashboardPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center">
                             <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
-                            {todo.id >= 200000 && (
+                            {todo.id >= 200000 && todo.id < 300000 && (
                               <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
+                            )}
+                            {todo.id >= 300000 && (
+                              <AlertCircle className="w-4 h-4 text-yellow-500 ml-2 flex-shrink-0" />
                             )}
                           </div>
                           <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
@@ -788,6 +838,11 @@ export default function DashboardPage() {
                             ) : (
                               <Briefcase className="w-5 h-5 text-blue-500" />
                             )}
+                          </div>
+                        ) : todo.id >= 300000 ? (
+                          // Message todo - show message icon instead of checkbox
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <AlertCircle className="w-5 h-5 text-yellow-500" />
                           </div>
                         ) : (
                           // Regular todo and Document todo - clickable checkbox
