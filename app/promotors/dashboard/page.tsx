@@ -37,6 +37,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 
+// TypeScript interfaces for todo items
+interface TodoItem {
+  id: number;
+  title: string;
+  priority: "high" | "medium" | "low";
+  due: string;
+  completed: boolean;
+  timeframe: "heute" | "7tage" | "30tage";
+}
+
+interface TodoHistoryItem {
+  id: number;
+  title: string;
+  priority: "high" | "medium" | "low";
+  completedDate: Date;
+  completed: boolean;
+}
+
 export default function DashboardPage() {
   const [expandedTodos, setExpandedTodos] = useState(false);
   const [todoFilter, setTodoFilter] = useState("heute");
@@ -155,50 +173,8 @@ export default function DashboardPage() {
 
   const router = useRouter();
 
-  // Mock history data for To-Dos
-  const [todoHistory] = useState(() => {
-    const history = [];
-    const today = new Date();
-    
-    // Generate completed todos from the past 6 months
-    const historyTodos = [
-      // This month
-      { title: "VTC für Promotion #4582 ausfüllen", completedDate: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000), priority: "high" },
-      { title: "Monatsabschluss Meeting vorbereiten", completedDate: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000), priority: "medium" },
-      { title: "Schulungsunterlagen durchlesen", completedDate: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000), priority: "low" },
-      
-      // Last month
-      { title: "VTC für Promotion #4580 ausfüllen", completedDate: new Date(today.getFullYear(), today.getMonth() - 1, 28), priority: "high" },
-      { title: "Equipment für Woche 22 anfordern", completedDate: new Date(today.getFullYear(), today.getMonth() - 1, 25), priority: "medium" },
-      { title: "Wochenbericht schreiben", completedDate: new Date(today.getFullYear(), today.getMonth() - 1, 20), priority: "high" },
-      { title: "Teammeeting teilnehmen", completedDate: new Date(today.getFullYear(), today.getMonth() - 1, 15), priority: "medium" },
-      
-      // 2 months ago
-      { title: "VTC für Promotion #4575 ausfüllen", completedDate: new Date(today.getFullYear(), today.getMonth() - 2, 28), priority: "high" },
-      { title: "Neue Produktschulung abschließen", completedDate: new Date(today.getFullYear(), today.getMonth() - 2, 22), priority: "low" },
-      { title: "Reisekostenabrechnung einreichen", completedDate: new Date(today.getFullYear(), today.getMonth() - 2, 18), priority: "medium" },
-      { title: "Feedback Gespräch führen", completedDate: new Date(today.getFullYear(), today.getMonth() - 2, 10), priority: "medium" },
-      
-      // 3 months ago
-      { title: "VTC für Promotion #4570 ausfüllen", completedDate: new Date(today.getFullYear(), today.getMonth() - 3, 25), priority: "high" },
-      { title: "Quartalsbericht erstellen", completedDate: new Date(today.getFullYear(), today.getMonth() - 3, 20), priority: "high" },
-      { title: "Schulung Produktkenntnisse", completedDate: new Date(today.getFullYear(), today.getMonth() - 3, 12), priority: "medium" },
-      
-      // 4 months ago
-      { title: "VTC für Promotion #4565 ausfüllen", completedDate: new Date(today.getFullYear(), today.getMonth() - 4, 28), priority: "high" },
-      { title: "Equipment Check durchführen", completedDate: new Date(today.getFullYear(), today.getMonth() - 4, 15), priority: "low" },
-      
-      // 5 months ago
-      { title: "VTC für Promotion #4560 ausfüllen", completedDate: new Date(today.getFullYear(), today.getMonth() - 5, 25), priority: "high" },
-      { title: "Kundenfeedback auswerten", completedDate: new Date(today.getFullYear(), today.getMonth() - 5, 18), priority: "medium" },
-    ];
-    
-    return historyTodos.map((todo, index) => ({
-      id: 1000 + index,
-      ...todo,
-      completed: true
-    }));
-  });
+  // History data for completed To-Dos (initially empty)
+  const [todoHistory] = useState<TodoHistoryItem[]>([]);
 
   // Get available months for dropdown (last 6 months first, then older)
   const getAvailableMonths = () => {
@@ -382,22 +358,7 @@ export default function DashboardPage() {
     };
   }, [showFilterDropdown]);
 
-  const [todos, setTodos] = useState([
-    { id: 1, title: "Buddy-Partner auswählen", priority: "high", due: "Heute, 09:00", completed: false, timeframe: "heute" },
-    { id: 2, title: "Wichtige Mitteilung lesen", priority: "high", due: "Heute, 10:00", completed: false, timeframe: "heute" },
-    { id: 3, title: "Online Schulung 'Produktkenntnisse' absolvieren", priority: "medium", due: "Heute, 14:00", completed: false, timeframe: "heute" },
-    { id: 4, title: "CA KPI Feedback durchlesen", priority: "medium", due: "Heute, 18:00", completed: true, timeframe: "heute" },
-    { id: 5, title: "Promotion Mediamarkt Seiersberg vorbereiten", priority: "high", due: "Morgen", completed: false, timeframe: "7tage" },
-    { id: 6, title: "Mystery Shopping Feedback auswerten", priority: "medium", due: "Übermorgen", completed: false, timeframe: "7tage" },
-    { id: 7, title: "Krankenbestätigung an HR schicken", priority: "high", due: "In 3 Tagen", completed: false, timeframe: "7tage" },
-    { id: 8, title: "Schulung 'Kundenberatung' vor Ort Wien", priority: "medium", due: "In 5 Tagen", completed: false, timeframe: "7tage" },
-    { id: 9, title: "Fehlende Dokumente für Profil einreichen", priority: "medium", due: "In 6 Tagen", completed: false, timeframe: "7tage" },
-    { id: 10, title: "Promotion Saturn City Park abschließen", priority: "high", due: "In 12 Tagen", completed: false, timeframe: "30tage" },
-    { id: 11, title: "Neues CA KPI Feedback vom Team Lead lesen", priority: "medium", due: "In 15 Tagen", completed: false, timeframe: "30tage" },
-    { id: 12, title: "Online Schulung 'Verkaufstechniken' beginnen", priority: "low", due: "In 20 Tagen", completed: false, timeframe: "30tage" },
-    { id: 13, title: "Mystery Shopping Bericht Q2 durchgehen", priority: "medium", due: "In 25 Tagen", completed: false, timeframe: "30tage" },
-    { id: 14, title: "Buddy-Feedback für neuen Mitarbeiter geben", priority: "low", due: "In 28 Tagen", completed: false, timeframe: "30tage" },
-  ]);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
 
   const filteredTodos = todos.filter(todo => {
     if (todoFilter === "heute") {
@@ -656,7 +617,20 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className={`p-0 transition-all duration-300 ${expandedTodos ? "max-h-80" : "max-h-[180px]"} overflow-hidden`}>
-            {expandedTodos ? (
+            {sortedTodos.length === 0 ? (
+              // Empty state
+              <div className="flex flex-col items-center justify-center py-12 px-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl flex items-center justify-center mb-4">
+                  <CheckCircle2 className="h-8 w-8 text-purple-400 dark:text-purple-300" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  Alle Aufgaben erledigt!
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Du hast aktuell keine offenen To-Dos. Neue Aufgaben werden hier automatisch angezeigt.
+                </p>
+              </div>
+            ) : expandedTodos ? (
               <ScrollArea className="h-full max-h-80 overflow-y-auto">
                 <ul className="divide-y divide-gray-100 dark:divide-gray-800">
                   {sortedTodos.map((todo) => (
@@ -692,25 +666,27 @@ export default function DashboardPage() {
               </ul>
             )}
                 </CardContent>
-          <CardFooter className="p-3 border-t bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex items-center justify-between w-full">
-              {/* Empty space on the left for balance */}
-              <div className="w-8 h-8"></div>
-              
-              {/* Centered "Alle anzeigen" button */}
-              <Button variant="ghost" size="sm" className="flex items-center justify-center font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity" onClick={() => setExpandedTodos(!expandedTodos)}>
-                {expandedTodos ? (<><ChevronUp className="h-4 w-4 mr-1 text-purple-500" /> Weniger anzeigen</>) : (<><ChevronDown className="h-4 w-4 mr-1 text-purple-500" /> Alle anzeigen</>)}
-              </Button>
-              
-              {/* History icon on the right */}
-              <button
-                onClick={() => setShowTodoHistory(true)}
-                className="flex items-center justify-center w-8 h-8 rounded-full opacity-30 hover:opacity-60 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <History className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-          </CardFooter>
+          {sortedTodos.length > 0 && (
+            <CardFooter className="p-3 border-t bg-gray-50 dark:bg-gray-800/50">
+              <div className="flex items-center justify-between w-full">
+                {/* Empty space on the left for balance */}
+                <div className="w-8 h-8"></div>
+                
+                {/* Centered "Alle anzeigen" button */}
+                <Button variant="ghost" size="sm" className="flex items-center justify-center font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity" onClick={() => setExpandedTodos(!expandedTodos)}>
+                  {expandedTodos ? (<><ChevronUp className="h-4 w-4 mr-1 text-purple-500" /> Weniger anzeigen</>) : (<><ChevronDown className="h-4 w-4 mr-1 text-purple-500" /> Alle anzeigen</>)}
+                </Button>
+                
+                {/* History icon on the right */}
+                <button
+                  onClick={() => setShowTodoHistory(true)}
+                  className="flex items-center justify-center w-8 h-8 rounded-full opacity-30 hover:opacity-60 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <History className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
+            </CardFooter>
+          )}
         </Card>
 
       {/* To-Do History Popup */}
