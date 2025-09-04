@@ -355,6 +355,8 @@ export default function DashboardPage() {
   }, [showFilterDropdown]);
 
   const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
 
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
@@ -440,9 +442,6 @@ export default function DashboardPage() {
     setTodos(todos.map(todo => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)));
   };
 
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
-  
   // Load calendar assignments
   const loadCalendarAssignments = async () => {
     try {
