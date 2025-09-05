@@ -370,6 +370,7 @@ export default function DashboardPage() {
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
+  const [todosLoading, setTodosLoading] = useState(true); // Start with loading state
 
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
@@ -829,10 +830,28 @@ export default function DashboardPage() {
 
   // Load calendar assignments on mount
   useEffect(() => {
-    loadCalendarAssignments();
-    loadMessages();
-    loadDocuments();
-    loadTodoHistory();
+    const loadAllData = async () => {
+      const startTime = Date.now();
+      
+      await Promise.all([
+        loadCalendarAssignments(),
+        loadMessages(),
+        loadDocuments(),
+        loadTodoHistory()
+      ]);
+      
+      // Ensure minimum loading time to show beautiful skeletons
+      const elapsedTime = Date.now() - startTime;
+      const minLoadingTime = 600; // 0.6 seconds
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        setTodosLoading(false);
+      }, remainingTime);
+    };
+    
+    loadAllData();
+    
     // Refresh every 2 minutes to reflect changes
     const iv = setInterval(() => {
       loadCalendarAssignments();
@@ -934,7 +953,24 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className={`p-0 transition-all duration-300 ${expandedTodos ? "max-h-80" : "max-h-[180px]"} overflow-hidden`}>
-            {sortedTodos.length === 0 ? (
+            {todosLoading ? (
+              // Loading Skeletons
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {[...Array(3)].map((_, index) => (
+                  <div key={`skeleton-${index}`} className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                      <div className="flex-1 min-w-0">
+                        <div className="h-4 bg-gray-200 rounded mb-2 w-3/4 animate-skeleton-fade"></div>
+                        <div className="flex items-center">
+                          <div className="h-3 bg-gray-100 rounded w-1/3 animate-skeleton-fade"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : sortedTodos.length === 0 ? (
               // Empty state - minimal
               <div className="flex items-center justify-center py-8">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -2214,6 +2250,13 @@ export default function DashboardPage() {
           25% { transform: translateX(-1px) rotate(-0.5deg); }
           50% { transform: translateX(1px) rotate(0.5deg); }
           75% { transform: translateX(-0.5px) rotate(-0.25deg); }
+        }
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
         }
       `}</style>
     </>
