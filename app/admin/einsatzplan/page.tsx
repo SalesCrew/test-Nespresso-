@@ -1964,7 +1964,7 @@ Import EP
                       /* Days View */
                       <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
                         {assignmentsLoading ? (
-                          // Loading Skeletons - 8 day cards matching exact day card structure
+                          // Loading Skeletons - 8 day cards with improved structure and heights
                           [...Array(8)].map((_, index) => (
                             <div 
                               key={`skeleton-day-${index}`}
@@ -1974,26 +1974,40 @@ Import EP
                                 {/* Date Header Skeleton */}
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <div className="h-4 bg-gray-200 rounded mb-1 w-20 animate-skeleton-fade"></div>
-                                    <div className="h-3 bg-gray-100 rounded w-16 animate-skeleton-fade"></div>
+                                    <div className="h-4 bg-gray-200 rounded mb-1 w-16 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-12 animate-skeleton-fade"></div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="h-6 bg-gray-200 rounded w-8 animate-skeleton-fade"></div>
-                                    <div className="h-3 bg-gray-100 rounded w-12 mt-1 animate-skeleton-fade"></div>
+                                    <div className="h-6 bg-gray-200 rounded w-6 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-10 mt-1 animate-skeleton-fade"></div>
                                   </div>
                                 </div>
                                 
-                                {/* Status List Skeleton */}
+                                {/* Status List Skeleton - More realistic distribution */}
                                 <div className="space-y-2">
                                   {[...Array(6)].map((_, i) => (
                                     <div key={i} className="flex items-center justify-between">
                                       <div className="flex items-center space-x-2">
                                         <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                                        <div className="h-3 bg-gray-200 rounded animate-skeleton-fade" style={{width: `${[14, 18, 16, 20, 15, 17][i]}px`}}></div>
                                       </div>
-                                      <div className="h-3 bg-gray-100 rounded w-8 animate-skeleton-fade"></div>
+                                      <div className="h-3 bg-gray-100 rounded w-6 animate-skeleton-fade"></div>
                                     </div>
                                   ))}
+                                </div>
+                                
+                                {/* Additional metrics skeleton */}
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="space-y-1">
+                                      <div className="h-3 bg-gray-100 rounded w-12 animate-skeleton-fade"></div>
+                                      <div className="h-3 bg-gray-200 rounded w-8 animate-skeleton-fade"></div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <div className="h-3 bg-gray-100 rounded w-14 animate-skeleton-fade"></div>
+                                      <div className="h-3 bg-gray-200 rounded w-10 animate-skeleton-fade"></div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -2089,7 +2103,7 @@ Import EP
                       /* List View */
                       <div key={`list-view-${hideVerplant ? 'filtered' : 'all'}`} className="space-y-2">
                         {assignmentsLoading ? (
-                          // Loading Skeletons - 10 rows matching exact assignment row structure
+                          // Loading Skeletons - 10 rows with accurate column heights and structure
                           [...Array(10)].map((_, index) => (
                             <div 
                               key={`skeleton-row-${index}`}
@@ -2097,21 +2111,26 @@ Import EP
                             >
                               <div className="flex items-center justify-between">
                                 <div className="grid grid-cols-5 gap-4 flex-1 items-center">
+                                  {/* Name & Address Column */}
                                   <div className="min-w-0">
-                                    <div className="h-4 bg-gray-200 rounded mb-1 w-32 animate-skeleton-fade"></div>
-                                    <div className="h-3 bg-gray-100 rounded w-24 animate-skeleton-fade"></div>
+                                    <div className="h-4 bg-gray-200 rounded mb-1 w-36 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-28 animate-skeleton-fade"></div>
                                   </div>
-                                  <div className="text-center">
-                                    <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
-                                  </div>
+                                  {/* City Column */}
                                   <div className="text-center">
                                     <div className="h-3 bg-gray-200 rounded w-20 mx-auto animate-skeleton-fade"></div>
                                   </div>
+                                  {/* Date Column */}
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  {/* Time Column */}
                                   <div className="text-center">
                                     <div className="h-3 bg-gray-200 rounded w-24 mx-auto animate-skeleton-fade"></div>
                                   </div>
+                                  {/* Status Column */}
                                   <div className="text-center flex items-center justify-end space-x-2">
-                                    <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-200 rounded w-18 animate-skeleton-fade"></div>
                                     <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
                                   </div>
                                 </div>
