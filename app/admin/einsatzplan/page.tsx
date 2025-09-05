@@ -1968,10 +1968,10 @@ Import EP
                       msOverflowStyle: 'none'
                     }}
                   >
-                    {viewMode === 'days' ? (
-                      /* Days View */
-                      <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
-                        {assignmentsLoading ? (
+                    {assignmentsLoading ? (
+                      viewMode === 'days' ? (
+                        /* Days View Loading */
+                        <div className="grid grid-cols-4 gap-4">{
                           // Loading Skeletons - 8 day cards with improved structure and heights
                           [...Array(8)].map((_, index) => (
                             <div 
@@ -2020,8 +2020,49 @@ Import EP
                               </div>
                             </div>
                           ))
-                        ) : (
-                          generateDayCards().map((dayData) => {
+                        }</div>
+                      ) : (
+                        /* List View Loading */
+                        <div className="space-y-2">
+                          {[...Array(10)].map((_, index) => (
+                            <div 
+                              key={`skeleton-row-${index}`}
+                              className="p-4 rounded-lg border border-gray-100 animate-skeleton-fade"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="grid grid-cols-5 gap-4 flex-1 items-center">
+                                  {/* Name & Address Column */}
+                                  <div className="min-w-0">
+                                    <div className="h-4 bg-gray-200 rounded mb-1 w-36 animate-skeleton-fade"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-28 animate-skeleton-fade"></div>
+                                  </div>
+                                  {/* City Column */}
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-20 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  {/* Date Column */}
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  {/* Time Column */}
+                                  <div className="text-center">
+                                    <div className="h-3 bg-gray-200 rounded w-24 mx-auto animate-skeleton-fade"></div>
+                                  </div>
+                                  {/* Status Column */}
+                                  <div className="text-center flex items-center justify-end space-x-2">
+                                    <div className="h-3 bg-gray-200 rounded w-18 animate-skeleton-fade"></div>
+                                    <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    ) : viewMode === 'days' ? (
+                      /* Days View */
+                      <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
+                        {generateDayCards().map((dayData) => {
                           // Green background when there are 0 "Offen" assignments and at least one assignment total
                           const noOpenAssignments = dayData.total > 0 && dayData.offen === 0;
                           
@@ -2105,48 +2146,12 @@ Import EP
                           </div>
                           );
                           })
-                        )}
+                        }
                       </div>
                     ) : (
                       /* List View */
                       <div key={`list-view-${hideVerplant ? 'filtered' : 'all'}`} className="space-y-2">
-                        {assignmentsLoading ? (
-                          // Loading Skeletons - 10 rows with accurate column heights and structure
-                          [...Array(10)].map((_, index) => (
-                            <div 
-                              key={`skeleton-row-${index}`}
-                              className="p-4 rounded-lg border border-gray-100 animate-skeleton-fade"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="grid grid-cols-5 gap-4 flex-1 items-center">
-                                  {/* Name & Address Column */}
-                                  <div className="min-w-0">
-                                    <div className="h-4 bg-gray-200 rounded mb-1 w-36 animate-skeleton-fade"></div>
-                                    <div className="h-3 bg-gray-100 rounded w-28 animate-skeleton-fade"></div>
-                                  </div>
-                                  {/* City Column */}
-                                  <div className="text-center">
-                                    <div className="h-3 bg-gray-200 rounded w-20 mx-auto animate-skeleton-fade"></div>
-                                  </div>
-                                  {/* Date Column */}
-                                  <div className="text-center">
-                                    <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
-                                  </div>
-                                  {/* Time Column */}
-                                  <div className="text-center">
-                                    <div className="h-3 bg-gray-200 rounded w-24 mx-auto animate-skeleton-fade"></div>
-                                  </div>
-                                  {/* Status Column */}
-                                  <div className="text-center flex items-center justify-end space-x-2">
-                                    <div className="h-3 bg-gray-200 rounded w-18 animate-skeleton-fade"></div>
-                                    <div className="w-2 h-2 bg-gray-300 rounded-full animate-skeleton-fade"></div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          filteredEinsatzplan.map((einsatz) => {
+                        {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
                         return (
@@ -2240,7 +2245,7 @@ Import EP
                           </div>
                         );
                           })
-                        )}
+                        }
                       </div>
                     )}
                   </div>
