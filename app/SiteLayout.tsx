@@ -54,6 +54,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [actualPassword, setActualPassword] = useState(""); // Store the actual user password
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState<string | null>(null);
   const [pwSaving, setPwSaving] = useState(false);
@@ -107,6 +108,35 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       } catch {}
     }
     loadName();
+  }, []);
+
+  // Load actual user password (NOTE: This is a security risk and should never be done in production)
+  useEffect(() => {
+    async function loadPassword() {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        // In a real system, passwords are hashed and cannot be retrieved
+        // This would require a custom API endpoint that returns the plain text password
+        // For demonstration, we'll fetch from a hypothetical endpoint
+        const res = await fetch('/api/me/password', { 
+          credentials: 'include',
+          headers: { 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setActualPassword(data.password || '');
+        }
+      } catch (error) {
+        console.error('Failed to load password:', error);
+        // Fallback: try to get from localStorage if previously saved (not recommended)
+        const savedPw = localStorage.getItem('userPassword');
+        if (savedPw) setActualPassword(savedPw);
+      }
+    }
+    loadPassword();
   }, []);
 
   // Pill Menu Indicator Logic
@@ -280,7 +310,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
             </Button>
             <Popover open={openPwPopover} onOpenChange={setOpenPwPopover}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); setCurrentPassword(""); }}>
+                <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); }}>
                   <Settings className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
@@ -290,21 +320,21 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   <div>
                     <label className="text-xs text-gray-600">Aktuelles Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.current ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} name="pw-current" autoComplete="current-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.current ? 'text' : 'password'} value={actualPassword} readOnly name="pw-current" autoComplete="off" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-gray-100 dark:bg-gray-800 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none cursor-not-allowed" />
                       <button type="button" aria-label="toggle current password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-600">Neues Passwort</label>
                     <div className="relative">
-                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} name="pw-new" autoComplete="new-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.next ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} name="pw-new" autoComplete="off" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
                       <button type="button" aria-label="toggle new password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, next: !s.next}))}>{showPw.next ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
                   <div>
                     <label className="text-xs text-gray-600">Passwort wiederholen</label>
                     <div className="relative">
-                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} name="pw-confirm" autoComplete="new-password" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                      <Input type={showPw.confirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} name="pw-confirm" autoComplete="off" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-white dark:bg-gray-900 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
                       <button type="button" aria-label="toggle confirm password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, confirm: !s.confirm}))}>{showPw.confirm ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
                     </div>
                   </div>
@@ -323,6 +353,12 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                           // Optionally reauthenticate by signing in with current password if needed by your policy
                           const { error } = await supabase.auth.updateUser({ password: newPassword });
                           if (error) throw error;
+                          
+                          // Update the actual password state to reflect the new password
+                          setActualPassword(newPassword);
+                          // Also save to localStorage as fallback (not recommended for security)
+                          try { localStorage.setItem('userPassword', newPassword); } catch {}
+                          
                           setPwSuccess('Passwort geändert.');
                           setTimeout(() => setOpenPwPopover(false), 1000);
                         } catch (err: any) {
