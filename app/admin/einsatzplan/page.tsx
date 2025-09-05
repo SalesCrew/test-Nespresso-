@@ -2442,34 +2442,14 @@ Import EP
                         )}
                       </div>
                     ) : (
-                      /* Normal Mode - Placeholder Content */
-                      <div className="space-y-2">
-                        {[1, 2, 3, 4, 5, 6].map((index) => (
-                          <div 
-                            key={index}
-                            className="p-3 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm bg-white"
-                          >
-                            <div className="grid grid-cols-5 gap-3 flex-1 items-center">
-                              <div className="min-w-0">
-                                <div className="h-3 bg-gray-100 rounded mb-1"></div>
-                                <div className="h-2 bg-gray-50 rounded w-3/4"></div>
-                              </div>
-                              <div className="text-center">
-                                <div className="h-2 bg-gray-100 rounded mx-auto w-2/3"></div>
-                              </div>
-                              <div className="text-center">
-                                <div className="h-2 bg-gray-100 rounded mx-auto w-1/2"></div>
-                              </div>
-                              <div className="text-center">
-                                <div className="h-2 bg-gray-100 rounded mx-auto w-3/4"></div>
-                              </div>
-                              <div className="text-center flex items-center justify-end space-x-2">
-                                <div className="h-2 bg-gray-100 rounded w-1/3"></div>
-                                <div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
-                              </div>
-                            </div>
+                      /* Normal Mode - No Content */
+                      <div className="flex items-center justify-center py-16">
+                        <div className="text-center">
+                          <div className="text-gray-400 text-sm">
+                            <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>Klicken Sie auf eine Promotion für AI-Empfehlungen</p>
                           </div>
-                        ))}
+                        </div>
                       </div>
                     )}
                   </div>
