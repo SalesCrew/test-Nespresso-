@@ -1759,7 +1759,40 @@ export default function DashboardPage() {
           <div className="relative mb-0 py-2">
               <div className="w-full max-w-md mx-auto relative h-24">
                 <div className="w-full h-full relative">
-                  {getCalendarDays().map((day, i) => {
+                  {assignmentsLoading ? (
+                    // Loading Skeletons for calendar days
+                    [...Array(9)].map((_, i) => {
+                      const visibleIndex = i - 1;
+                      const distanceFromCenter = Math.abs(visibleIndex - 3);
+                      const isOffscreen = visibleIndex < 0 || visibleIndex > 6;
+                      
+                      const scale = isOffscreen ? 0 : 1 - (distanceFromCenter * 0.15);
+                      const translateX = (visibleIndex - 3) * 72;
+                      const opacity = isOffscreen ? 0 : 1 - (distanceFromCenter * 0.2);
+                      
+                      return (
+                        <div
+                          key={`skeleton-day-${i}`}
+                          className="absolute flex flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out"
+                          style={{
+                            width: '64px',
+                            height: '80px',
+                            top: '50%',
+                            left: '50%',
+                            transform: `translateX(calc(-50% + ${translateX}px)) translateY(-50%) scale(${scale})`,
+                            opacity,
+                            zIndex: 10 - distanceFromCenter,
+                          }}
+                        >
+                          <div className="w-full h-full bg-gray-100 rounded-lg animate-skeleton-fade p-2 flex flex-col items-center justify-center">
+                            <div className="h-3 bg-gray-200 rounded w-8 mb-2 animate-skeleton-fade"></div>
+                            <div className="h-6 bg-gray-200 rounded w-10 animate-skeleton-fade"></div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    getCalendarDays().map((day, i) => {
                   const visibleIndex = i - 1;
                   const isCenter = visibleIndex === 3;
                     const distanceFromCenter = Math.abs(visibleIndex - 3);
@@ -1913,17 +1946,29 @@ export default function DashboardPage() {
                       </button>
                   </div>
                     );
-                  })}
+                  })
+                  )}
                 </div>
               </div>
             </div>
 
           {/* Assignment Type Tabs */}
           <div className="mb-3 -mt-1">
-            <div className={`flex justify-between bg-gray-100 dark:bg-gray-800 rounded-lg p-1 relative ${
-              assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) 
-                ? 'opacity-40' : ''
-            }`}>
+            {assignmentsLoading ? (
+              // Loading skeleton for tabs
+              <div className="flex justify-between bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                {[...Array(3)].map((_, i) => (
+                  <div key={`tab-skeleton-${i}`} className="px-3 py-1.5 rounded-md flex items-center">
+                    <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 mr-2 animate-skeleton-fade"></div>
+                    <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`flex justify-between bg-gray-100 dark:bg-gray-800 rounded-lg p-1 relative ${
+                assignments.some(a => a.date.toDateString() === selectedCalendarDate.toDateString() && (a.type === "krankenstand" || a.type === "urlaub")) 
+                  ? 'opacity-40' : ''
+              }`}>
               {/* Sliding indicator */}
               <div 
                 className="absolute top-1 bottom-1 bg-white dark:bg-gray-700 rounded-md shadow-sm transition-all duration-300 ease-in-out"
@@ -2020,11 +2065,28 @@ export default function DashboardPage() {
                 )}
               </button>
                       </div>
+            )}
                   </div>
 
           {/* Assignment display for selected day */}
           <div className="h-[90px] min-h-[90px]">
-            {assignments
+            {assignmentsLoading ? (
+              // Loading Skeleton for assignment display
+              <div className="h-full p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20 animate-skeleton-fade">
+                <div className="flex items-center justify-between h-full">
+                  <div className="flex-1 min-w-0">
+                    <div className="relative pl-3">
+                      <span className="absolute left-0 top-0 bottom-0 w-1.5 rounded-sm bg-gray-200 animate-skeleton-fade"></span>
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-skeleton-fade"></div>
+                      <div className="h-3 bg-gray-100 rounded w-1/2 animate-skeleton-fade"></div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end justify-center space-y-1">
+                    <div className="h-6 bg-gray-200 rounded-full w-20 animate-skeleton-fade"></div>
+                  </div>
+                </div>
+              </div>
+            ) : assignments
               .filter(a => a.date.toDateString() === selectedCalendarDate.toDateString())
               .filter(a => a.type === selectedAssignmentType)
               .slice(0, 1)
@@ -2175,7 +2237,7 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
-            {assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString()).filter(a => a.type === selectedAssignmentType).length === 0 && (
+            {!assignmentsLoading && assignments.filter(a => a.date.toDateString() === selectedCalendarDate.toDateString()).filter(a => a.type === selectedAssignmentType).length === 0 && (
               <div className="h-full p-3 rounded-md border dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-center">
                 <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
                   <Calendar className="h-4 w-4 mr-2 opacity-70" />
