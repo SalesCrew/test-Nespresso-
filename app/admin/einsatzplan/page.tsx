@@ -1454,6 +1454,7 @@ export default function EinsatzplanPage() {
 
   const loadAssignments = async (skipFilters = false) => {
     console.log('🟢 loadAssignments called, skipFilters:', skipFilters);
+    const startTime = Date.now(); // Track loading start time
     try {
       setAssignmentsLoading(true);
       const params = new URLSearchParams();
@@ -1536,7 +1537,14 @@ export default function EinsatzplanPage() {
       console.error('🔴 loadAssignments error:', e);
       alert(e?.message || 'Fehler beim Laden der Einsätze');
     } finally {
-      setAssignmentsLoading(false);
+      // Ensure minimum loading time to show beautiful skeletons
+      const elapsedTime = Date.now() - startTime;
+      const minLoadingTime = 600; // 0.6 seconds - enough to see skeletons without being annoying
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        setAssignmentsLoading(false);
+      }, remainingTime);
     }
   };
 
