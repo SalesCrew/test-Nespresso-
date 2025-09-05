@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  Bell,
   Settings,
   User,
   BarChart2,
@@ -20,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SiteLayoutProps {
@@ -33,7 +31,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const [activeTab, setActiveTab] = useState("home");
   const [indicatorStyle, setIndicatorStyle] = useState({});
   const footerButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [showBreakingNews, setShowBreakingNews] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(true);
   const [isInChat, setIsInChat] = useState(false);
   const lastScrollY = useRef(0);
@@ -53,12 +50,10 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const [openPwPopover, setOpenPwPopover] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [actualPassword, setActualPassword] = useState(""); // Store the actual user password
   const [pwError, setPwError] = useState<string | null>(null);
   const [pwSuccess, setPwSuccess] = useState<string | null>(null);
   const [pwSaving, setPwSaving] = useState(false);
-  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
+  const [showPw, setShowPw] = useState({ next: false, confirm: false });
 
   // Determine activeTab based on pathname and handle footer visibility for chat
   useEffect(() => {
@@ -110,34 +105,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     loadName();
   }, []);
 
-  // Load actual user password (NOTE: This is a security risk and should never be done in production)
-  useEffect(() => {
-    async function loadPassword() {
-      try {
-        const supabase = createSupabaseBrowserClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        
-        // In a real system, passwords are hashed and cannot be retrieved
-        // This would require a custom API endpoint that returns the plain text password
-        // For demonstration, we'll fetch from a hypothetical endpoint
-        const res = await fetch('/api/me/password', { 
-          credentials: 'include',
-          headers: { 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setActualPassword(data.password || '');
-        }
-      } catch (error) {
-        console.error('Failed to load password:', error);
-        // Fallback: try to get from localStorage if previously saved (not recommended)
-        const savedPw = localStorage.getItem('userPassword');
-        if (savedPw) setActualPassword(savedPw);
-      }
-    }
-    loadPassword();
-  }, []);
 
   // Pill Menu Indicator Logic
   useEffect(() => {
@@ -304,10 +271,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
             </div>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => setShowBreakingNews(true)}>
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500"></span>
-            </Button>
             <Popover open={openPwPopover} onOpenChange={setOpenPwPopover}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" onClick={() => { setPwError(null); setPwSuccess(null); setNewPassword(""); setConfirmPassword(""); }}>
@@ -317,13 +280,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               <PopoverContent align="end" sideOffset={10} className="w-80 p-4 bg-white dark:bg-gray-900 border border-gray-200/70 dark:border-gray-800 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">Passwort ändern</h3>
                 <div className="space-y-2.5">
-                  <div>
-                    <label className="text-xs text-gray-600">Aktuelles Passwort</label>
-                    <div className="relative">
-                      <Input type={showPw.current ? 'text' : 'password'} value={actualPassword} readOnly name="pw-current" autoComplete="off" autoCorrect="off" spellCheck={false} className="h-9 text-sm bg-gray-100 dark:bg-gray-800 pr-9 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none cursor-not-allowed" />
-                      <button type="button" aria-label="toggle current password" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700" onClick={() => setShowPw(s => ({...s, current: !s.current}))}>{showPw.current ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</button>
-                    </div>
-                  </div>
                   <div>
                     <label className="text-xs text-gray-600">Neues Passwort</label>
                     <div className="relative">
@@ -354,11 +310,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                           const { error } = await supabase.auth.updateUser({ password: newPassword });
                           if (error) throw error;
                           
-                          // Update the actual password state to reflect the new password
-                          setActualPassword(newPassword);
-                          // Also save to localStorage as fallback (not recommended for security)
-                          try { localStorage.setItem('userPassword', newPassword); } catch {}
-                          
                           setPwSuccess('Passwort geändert.');
                           setTimeout(() => setOpenPwPopover(false), 1000);
                         } catch (err: any) {
@@ -377,32 +328,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         </div>
       </header>
 
-      {/* Breaking News Card - Moved from page.tsx */}
-      <div
-          className={`fixed top-16 left-0 right-0 z-40 flex justify-center transition-all duration-500 ease-out ${
-            showBreakingNews ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
-          } breaking-news-card`}
-          style={{ transformOrigin: 'top center'}}
-        >
-          <div className="w-auto max-w-[90%] md:max-w-[460px] mt-3 transform-gpu">
-            <Card className="overflow-hidden border-none shadow-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <Bell className="h-5 w-5 animate-pulse" />
-                  <div className="flex-1">
-                    <p className="font-medium">Breaking News</p>
-                    <p className="text-sm text-white/90">Neue Schulungsmaterialien sind verfügbar!</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-full h-7 w-7 p-0" onClick={() => setShowBreakingNews(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      {/* Backdrop for Breaking News */}
-      <div className={`fixed inset-0 bg-black transition-opacity duration-500 z-[35] ${showBreakingNews ? 'opacity-40' : 'opacity-0 pointer-events-none'}`} onClick={() => setShowBreakingNews(false)}></div>
 
       {/* Darkening overlay for when KI assistant chat is shown */}
       <div 
