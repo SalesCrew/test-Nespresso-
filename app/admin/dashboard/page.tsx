@@ -1215,6 +1215,14 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
           0% { opacity: 0.4; }
           100% { opacity: 0.8; }
         }
+        @keyframes scanHorizontal {
+          0% { left: -1px; }
+          100% { left: calc(100% + 1px); }
+        }
+        @keyframes scanVertical {
+          0% { top: -1px; }
+          100% { top: calc(100% + 1px); }
+        }
       `}</style>
       
       {/* Admin Navigation */}
@@ -1927,16 +1935,6 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                               animation: 'scanVertical 2s linear infinite'
                             }}
                           />
-                      <style jsx>{`
-                            @keyframes scanHorizontal {
-                              0% { left: -1px; }
-                              100% { left: calc(100% + 1px); }
-                            }
-                            @keyframes scanVertical {
-                              0% { top: -1px; }
-                              100% { top: calc(100% + 1px); }
-                        }
-                      `}</style>
                         </div>
                       )}
 
