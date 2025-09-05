@@ -1395,12 +1395,63 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                   }}
                 >
                   {todaysEinsaetzeLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                        <p className="text-sm text-gray-500">Lade heutige Einsätze...</p>
+                    viewMode === 'list' ? (
+                      // Loading Skeletons - rows matching exact assignment row structure
+                      <div className="space-y-2">
+                        {[...Array(8)].map((_, index) => (
+                          <div 
+                            key={`skeleton-row-${index}`}
+                            className="p-4 rounded-lg border border-gray-100 animate-skeleton-fade"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="grid grid-cols-5 gap-4 flex-1 items-center">
+                                <div className="min-w-0">
+                                  <div className="h-4 bg-gray-200 rounded mb-1 w-32 animate-skeleton-fade"></div>
+                                  <div className="h-3 bg-gray-100 rounded w-24 animate-skeleton-fade"></div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="h-3 bg-gray-200 rounded w-16 mx-auto animate-skeleton-fade"></div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="h-3 bg-gray-200 rounded w-20 mx-auto animate-skeleton-fade"></div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="h-3 bg-gray-200 rounded w-18 mx-auto animate-skeleton-fade"></div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="h-3 bg-gray-200 rounded w-12 mx-auto animate-skeleton-fade"></div>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="h-4 w-4 bg-gray-200 rounded animate-skeleton-fade"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </div>
+                    ) : (
+                      // Loading Skeletons - cards matching exact assignment card structure  
+                      <div className="grid grid-cols-2 gap-4">
+                        {[...Array(8)].map((_, index) => (
+                          <div 
+                            key={`skeleton-card-${index}`}
+                            className="p-4 rounded-lg border border-gray-100 bg-white animate-skeleton-fade"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="h-3 bg-gray-200 rounded w-24 animate-skeleton-fade"></div>
+                                <div className="w-2 h-2 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                              </div>
+                              <div className="h-3 bg-gray-100 rounded w-32 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-100 rounded w-20 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-100 rounded w-28 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-100 rounded w-24 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-100 rounded w-16 animate-skeleton-fade"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
                   ) : filteredEinsaetze.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center">
