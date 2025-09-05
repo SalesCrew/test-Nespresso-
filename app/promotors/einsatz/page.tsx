@@ -472,6 +472,7 @@ const loadProcessState = async () => {
 
   // Load next upcoming assignment (status assigned or buddy_tag) for this promotor
   const loadNextAssignment = async () => {
+    const startTime = Date.now();
     try {
       setNextAssignmentLoading(true);
       console.log('[loadNextAssignment] Fetching next assignment...');
@@ -500,7 +501,14 @@ const loadProcessState = async () => {
       console.error('[loadNextAssignment] Exception:', e);
       setNextAssignment(null);
     } finally {
-      setNextAssignmentLoading(false);
+      // Ensure minimum loading time to show beautiful skeletons
+      const elapsedTime = Date.now() - startTime;
+      const minLoadingTime = 600; // 0.6 seconds
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      
+      setTimeout(() => {
+        setNextAssignmentLoading(false);
+      }, remainingTime);
     }
   };
   
@@ -1885,6 +1893,17 @@ const loadProcessState = async () => {
 
   return (
     <>
+        {/* CSS for loading skeleton animation */}
+        <style jsx>{`
+          .animate-skeleton-fade {
+            animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+          }
+          @keyframes skeleton-fade {
+            0% { opacity: 0.4; }
+            100% { opacity: 0.8; }
+          }
+        `}</style>
+        
         {/* Welcome section specific to Einsatz Page - can use a general greeting or a specific one */}
         <section className="mb-6">
           {/* Example of a page-specific greeting if needed, otherwise SiteLayout provides one */}
@@ -1915,7 +1934,18 @@ const loadProcessState = async () => {
             )}
           </CardHeader>
           <CardContent className="pt-4">
-            {!displayedAssignment ? (
+            {nextAssignmentLoading ? (
+              // Loading Skeleton
+              <div className="space-y-3">
+                <div className="h-5 bg-gray-200 rounded w-3/4 animate-skeleton-fade"></div>
+                <div className="h-6 bg-gray-200 rounded-full w-24 animate-skeleton-fade"></div>
+                <div className="flex items-center">
+                  <div className="h-4 w-4 bg-gray-200 rounded mr-1.5 animate-skeleton-fade"></div>
+                  <div className="h-4 bg-gray-100 rounded w-1/2 animate-skeleton-fade"></div>
+                </div>
+                <div className="mt-4 h-14 bg-gray-100 rounded-full animate-skeleton-fade"></div>
+              </div>
+            ) : !displayedAssignment ? (
               <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Kein Einsatz für heute geplant.</h3>
             ) : (
             <>
