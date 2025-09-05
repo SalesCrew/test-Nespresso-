@@ -109,11 +109,13 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   // Real promotors data
   const [allPromotors, setAllPromotors] = useState<any[]>([]);
   const [activePromotorsData, setActivePromotorsData] = useState<any[]>([]);
+  const [promotorsLoading, setPromotorsLoading] = useState(true);
   
   // Load promotors on component mount (same as einsatzplan)
   useEffect(() => {
     const loadPromotors = async () => {
       try {
+        setPromotorsLoading(true);
         const res = await fetch('/api/promotors', { cache: 'no-store' });
         const data = await res.json().catch(() => ({}));
         const list = Array.isArray(data?.promotors) ? data.promotors.map((p: any) => ({ 
@@ -158,6 +160,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       } catch (error) {
         console.error('Error loading promotors:', error);
         setAllPromotors([]);
+      } finally {
+        setPromotorsLoading(false);
       }
     };
     
@@ -1202,6 +1206,17 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
   return (
     <div className="min-h-screen bg-gray-50/30">
+      {/* Skeleton Animation Styles */}
+      <style jsx>{`
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
+        }
+      `}</style>
+      
       {/* Admin Navigation */}
       <AdminNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
@@ -1583,7 +1598,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     <AlertCircle className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-gray-900">{specialStatusRequests.length}</p>
+                    {specialStatusRequestsLoading ? (
+                      <div className="h-8 w-12 bg-gray-200 rounded animate-skeleton-fade mb-1"></div>
+                    ) : (
+                      <p className="text-2xl font-semibold text-gray-900">{specialStatusRequests.length}</p>
+                    )}
                     <p className="text-xs text-gray-500">Offene Anfragen</p>
                   </div>
                 </div>
@@ -1604,7 +1623,11 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
                     <Users className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-semibold text-gray-900">{activePromotors.length}</p>
+                    {promotorsLoading ? (
+                      <div className="h-8 w-12 bg-gray-200 rounded animate-skeleton-fade mb-1"></div>
+                    ) : (
+                      <p className="text-2xl font-semibold text-gray-900">{activePromotors.length}</p>
+                    )}
                     <p className="text-xs text-gray-500">Aktive Promotoren</p>
                   </div>
                 </div>
