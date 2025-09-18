@@ -6,13 +6,14 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, ArrowLeft, Coffee, Shield } from "lucide-react";
+import { Settings, ArrowLeft, Coffee, Shield, Eye, EyeOff } from "lucide-react";
 
 export default function SalesCrewLoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+  const [showPw, setShowPw] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +32,7 @@ export default function SalesCrewLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 dark:from-gray-950 dark:via-gray-900 dark:to-emerald-950">
       <div className="container mx-auto px-4 py-12 max-w-md">
         {/* Back Button */}
         <div className="mb-8">
@@ -49,7 +50,7 @@ export default function SalesCrewLoginPage() {
         <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
           <CardHeader className="text-center pb-4">
             <div className="mx-auto mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <Settings className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -73,9 +74,7 @@ export default function SalesCrewLoginPage() {
                     placeholder="admin@salescrew.com"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-purple-500 bg-gray-50 text-sm"
-                    // TEMP: removed required for testing - add back later
-                    // required
+                    className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-green-500 bg-gray-50 text-sm"
                   />
                 </div>
                 
@@ -83,21 +82,29 @@ export default function SalesCrewLoginPage() {
                   <label className="text-sm font-medium text-gray-700 block mb-2">
                     Passwort
                   </label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-purple-500 bg-gray-50 text-sm"
-                    // TEMP: removed required for testing - add back later
-                    // required
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPw ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-green-500 bg-gray-50 text-sm pr-9"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Passwort anzeigen/ausblenden"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      onClick={() => setShowPw(v => !v)}
+                    >
+                      {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <Button 
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg"
               >
                 Admin Anmeldung
               </Button>
