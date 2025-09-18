@@ -3045,7 +3045,7 @@ Import EP
                     </div>
                     
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Buddy (optional)</label>
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">New-Joiner (optional)</label>
                       <Select
                         value={editingEinsatz.buddy_user_id || 'none'}
                         onValueChange={(val) => {
