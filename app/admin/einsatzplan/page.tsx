@@ -888,7 +888,7 @@ export default function EinsatzplanPage() {
       return buddyName;
     }
     
-    return einsatz.product || 'Market';
+    return einsatz.product || 'Noch kein Promotor';
   };
 
   // Helper functions for promotor selection (copied from admin dashboard)
