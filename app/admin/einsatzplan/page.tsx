@@ -3183,7 +3183,7 @@ Import EP
                       </div>
                     </div>
                     
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Notizen</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">SC interne Notizen</h4>
                     <textarea
                       value={editingEinsatz.notes || ''}
                       onChange={(e) => setEditingEinsatz({...editingEinsatz, notes: e.target.value})}
@@ -3757,7 +3757,7 @@ Import EP
 
                 {/* Notes */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Notizen</label>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">SC interne Notizen</label>
                   <textarea
                     value={newAssignment.notes}
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, notes: e.target.value }))}
