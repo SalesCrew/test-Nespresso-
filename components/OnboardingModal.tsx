@@ -86,19 +86,42 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const COUNTRIES: string[] = [
     // DACH & neighbors
     "Österreich","Deutschland","Schweiz","Italien","Frankreich","Spanien","Portugal","Niederlande","Belgien","Luxemburg","Dänemark","Schweden","Norwegen","Finnland","Island",
-    // CEE / SEE
+    // Central & Eastern Europe / Balkans
     "Polen","Tschechien","Slowakei","Ungarn","Slowenien","Kroatien","Bosnien und Herzegowina","Serbien","Montenegro","Kosovo","Nordmazedonien","Albanien","Griechenland","Bulgarien","Rumänien","Moldau","Ukraine","Belarus","Litauen","Lettland","Estland","Malta","Zypern","Türkei",
-    // Western Europe & Isles
-    "Vereinigtes Königreich","Irland",
-    // Frequent origins in AT labor market
-    "Russland","Georgien","Armenien","Aserbaidschan",
-    "Syrien","Afghanistan","Irak","Iran","Libanon","Jordanien",
-    "Ägypten","Marokko","Algerien","Tunesien",
-    "Äthiopien","Eritrea","Somalia","Nigeria","Ghana","Kamerun",
-    // Asia
-    "Indien","Pakistan","Bangladesch","Sri Lanka","Nepal","China","Philippinen","Vietnam","Thailand",
-    // Americas & Oceania
-    "Brasilien","Argentinien","Kolumbien","Venezuela","Mexiko","USA","Kanada","Australien","Neuseeland"
+    // Western Europe & microstates
+    "Vereinigtes Königreich","Irland","Andorra","Monaco","San Marino","Liechtenstein","Vatikanstadt",
+    // Caucasus
+    "Georgien","Armenien","Aserbaidschan",
+    // Middle East
+    "Israel","Palästina","Jordanien","Libanon","Syrien","Irak","Iran","Saudi-Arabien","Vereinigte Arabische Emirate","Katar","Bahrain","Kuwait","Oman","Jemen",
+    // North Africa
+    "Ägypten","Libyen","Tunesien","Algerien","Marokko",
+    // West Africa
+    "Mauretanien","Senegal","Gambia","Guinea","Guinea-Bissau","Sierra Leone","Liberia","Elfenbeinküste","Ghana","Togo","Benin","Burkina Faso","Kap Verde","Nigeria",
+    // Central Africa
+    "Kamerun","Äquatorialguinea","Gabun","Sao Tomé und Príncipe","Tschad","Zentralafrikanische Republik","Kongo (Republik)","Demokratische Republik Kongo","Angola",
+    // East Africa & Horn
+    "Sudan","Südsudan","Äthiopien","Eritrea","Dschibuti","Somalia","Kenia","Uganda","Ruanda","Burundi","Tansania","Madagaskar","Mauritius","Seychellen","Komoren",
+    // Southern Africa
+    "Südafrika","Namibia","Botswana","Simbabwe","Sambia","Malawi","Mosambik","Lesotho","Eswatini",
+    // Central Asia
+    "Kasachstan","Usbekistan","Kirgistan","Tadschikistan","Turkmenistan",
+    // South Asia
+    "Indien","Pakistan","Bangladesch","Sri Lanka","Nepal","Bhutan","Malediven","Afghanistan",
+    // East Asia
+    "China","Hongkong","Macau","Taiwan","Japan","Südkorea","Nordkorea","Mongolei",
+    // Southeast Asia
+    "Myanmar","Thailand","Laos","Kambodscha","Vietnam","Malaysia","Singapur","Indonesien","Brunei","Philippinen","Timor-Leste",
+    // Oceania
+    "Australien","Neuseeland","Papua-Neuguinea","Fidschi","Samoa","Tonga","Vanuatu","Salomonen","Kiribati","Tuvalu","Nauru","Mikronesien","Marshallinseln","Palau",
+    // North America
+    "Kanada","USA","Mexiko",
+    // Central America
+    "Guatemala","Belize","Honduras","El Salvador","Nicaragua","Costa Rica","Panama",
+    // Caribbean
+    "Bahamas","Kuba","Jamaika","Haiti","Dominikanische Republik","Barbados","Trinidad und Tobago","Grenada","Antigua und Barbuda","St. Kitts und Nevis","St. Lucia","St. Vincent und die Grenadinen",
+    // South America
+    "Kolumbien","Venezuela","Ecuador","Peru","Bolivien","Chile","Argentinien","Uruguay","Paraguay","Brasilien","Guyana","Suriname"
   ]
 
   // Citizenship input supports free typing but requires selection from list to validate
@@ -151,6 +174,13 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const isValidEmail = (email: string): boolean => {
+    if (!email) return false
+    // Basic but robust email pattern
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return pattern.test(email.trim())
+  }
+
   const toggleWorkingDay = (day: string) => {
     setFormData(prev => ({
       ...prev,
@@ -172,7 +202,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       case 3:
         return formData.address && formData.postalCode && formData.city
       case 4:
-        return formData.phone && formData.email
+        return formData.phone && isValidEmail(formData.email)
       case 5:
         const basicData = formData.socialSecurityNumber && formData.birthDate && formData.citizenship && citizenshipConfirmed
         if (shouldShowWorkPermit()) {
@@ -336,13 +366,18 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 onChange={(e) => updateFormData("phone", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
-              <Input
-                placeholder="E-Mail (frei einzugeben)"
-                type="text"
-                value={formData.email}
-                onChange={(e) => updateFormData("email", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
+              <div>
+                <Input
+                  placeholder="E-Mail (gültiges Format erforderlich)"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => updateFormData("email", e.target.value)}
+                  className={`!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 ${formData.email && !isValidEmail(formData.email) ? 'focus-visible:!ring-red-500' : 'focus-visible:!ring-blue-500'} bg-gray-50 dark:bg-gray-800 text-sm`}
+                />
+                {formData.email && !isValidEmail(formData.email) && (
+                  <p className="mt-1 text-xs text-red-600">Bitte eine gültige E-Mail-Adresse eingeben (z.B. name@example.com).</p>
+                )}
+              </div>
             </div>
           </div>
         )
