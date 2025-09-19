@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import OnboardingModal from "@/components/OnboardingModal";
 import {
   Bell,
   Calendar,
@@ -164,7 +163,6 @@ export default function DashboardPage() {
   };
 
 
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedAssignmentType, setSelectedAssignmentType] = useState<string>("promotion");
 
   const [showLegendPopup, setShowLegendPopup] = useState(false);
@@ -809,18 +807,6 @@ export default function DashboardPage() {
     return "promotion"; // fallback
   };
 
-  const handleOnboardingComplete = async (data: any) => {
-    console.log("Onboarding completed with data:", data);
-    setShowOnboarding(false);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const onboardingKey = `onboarding_started:${user.id}`;
-        try { localStorage.setItem(onboardingKey, '1'); } catch {}
-      }
-    } catch {}
-  };
 
   // Load calendar assignments on mount
   useEffect(() => {
@@ -2292,12 +2278,7 @@ export default function DashboardPage() {
 
 
 
-      {/* Onboarding Modal */}
-      <OnboardingModal 
-        isOpen={showOnboarding}
-        onComplete={handleOnboardingComplete}
-        onClose={() => setShowOnboarding(false)}
-      />
+      {/* Onboarding Modal removed - only available from landing page */}
 
       {/* Custom CSS for animations */}
       <style jsx>{`
