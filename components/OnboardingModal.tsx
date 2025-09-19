@@ -82,6 +82,30 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
     hoursPerWeek: ""
   })
 
+  // Standardized list of countries (German names), prioritized for AT job market
+  const COUNTRIES: string[] = [
+    // DACH & neighbors
+    "Österreich","Deutschland","Schweiz","Italien","Frankreich","Spanien","Portugal","Niederlande","Belgien","Luxemburg","Dänemark","Schweden","Norwegen","Finnland","Island",
+    // CEE / SEE
+    "Polen","Tschechien","Slowakei","Ungarn","Slowenien","Kroatien","Bosnien und Herzegowina","Serbien","Montenegro","Kosovo","Nordmazedonien","Albanien","Griechenland","Bulgarien","Rumänien","Moldau","Ukraine","Belarus","Litauen","Lettland","Estland","Malta","Zypern","Türkei",
+    // Western Europe & Isles
+    "Vereinigtes Königreich","Irland",
+    // Frequent origins in AT labor market
+    "Russland","Georgien","Armenien","Aserbaidschan",
+    "Syrien","Afghanistan","Irak","Iran","Libanon","Jordanien",
+    "Ägypten","Marokko","Algerien","Tunesien",
+    "Äthiopien","Eritrea","Somalia","Nigeria","Ghana","Kamerun",
+    // Asia
+    "Indien","Pakistan","Bangladesch","Sri Lanka","Nepal","China","Philippinen","Vietnam","Thailand",
+    // Americas & Oceania
+    "Brasilien","Argentinien","Kolumbien","Venezuela","Mexiko","USA","Kanada","Australien","Neuseeland"
+  ]
+
+  // Citizenship input supports free typing but requires selection from list to validate
+  const [citizenshipInput, setCitizenshipInput] = useState("")
+  const [citizenshipConfirmed, setCitizenshipConfirmed] = useState(false)
+  const [countryOpen, setCountryOpen] = useState(false)
+
   const totalSteps = 12
   const progress = (currentStep / totalSteps) * 100
 
@@ -150,7 +174,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       case 4:
         return formData.phone && formData.email
       case 5:
-        const basicData = formData.socialSecurityNumber && formData.birthDate && formData.citizenship
+        const basicData = formData.socialSecurityNumber && formData.birthDate && formData.citizenship && citizenshipConfirmed
         if (shouldShowWorkPermit()) {
           return basicData && formData.workPermit !== null
         }
@@ -343,12 +367,50 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 onChange={(e) => updateFormData("birthDate", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
-              <Input
-                placeholder="Staatsbürgerschaft"
-                value={formData.citizenship}
-                onChange={(e) => updateFormData("citizenship", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
+              {/* Citizenship with typeahead + enforced selection */}
+              <div className="relative">
+                <Input
+                  placeholder="Staatsbürgerschaft (Land eingeben, dann aus Liste auswählen)"
+                  value={citizenshipInput}
+                  onChange={(e) => {
+                    setCitizenshipInput(e.target.value)
+                    setCitizenshipConfirmed(false)
+                    updateFormData("citizenship", e.target.value)
+                    setCountryOpen(Boolean(e.target.value.trim()))
+                  }}
+                  onFocus={() => setCountryOpen(Boolean(citizenshipInput.trim()))}
+                  className={`!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 ${citizenshipConfirmed ? '!ring-green-500' : '!ring-blue-500'} bg-gray-50 dark:bg-gray-800 text-sm pr-9`}
+                />
+                {/* Dropdown */}
+                {countryOpen && (
+                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-56 overflow-auto">
+                    {COUNTRIES.filter(c => c.toLowerCase().includes(citizenshipInput.toLowerCase())).slice(0, 100).map((c) => (
+                      <button
+                        type="button"
+                        key={c}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+                        onClick={() => {
+                          updateFormData("citizenship", c)
+                          setCitizenshipInput(c)
+                          setCitizenshipConfirmed(true)
+                          setCountryOpen(false)
+                        }}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                    {COUNTRIES.filter(c => c.toLowerCase().includes(citizenshipInput.toLowerCase())).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-500">Kein Treffer – bitte anders eingeben</div>
+                    )}
+                  </div>
+                )}
+                {/* Hint badge */}
+                {!citizenshipConfirmed && citizenshipInput.trim().length > 0 && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200">Aus Liste wählen</span>
+                  </div>
+                )}
+              </div>
               
               {shouldShowWorkPermit() && (
                 <div className="mt-6">
