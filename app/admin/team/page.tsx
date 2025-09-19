@@ -2298,42 +2298,17 @@ Dein Nespresso Team`;
                                   const activeContract = contracts.find((c: any) => c.is_active);
                                   const hasAnyContract = contracts.length > 0;
                                   
-                                  if (!hasAnyContract) {
-                                    return (
-                                      <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg p-3">
-                                        <div className="text-center text-gray-500 mb-3">
-                                          <div className="text-sm">Kein Vertrag vorhanden</div>
-                                        </div>
-                                        <button 
-                                          className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
-                                          onClick={() => {
-                                            setSelectedPromotorForContract(promotor.id);
-                                            setShowDienstvertragPopup(true);
-                                          }}
-                                        >
-                                          Vertrag erstellen
-                                        </button>
-                                      </div>
-                                    );
-                                  }
-                                  
                                   return (
                                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
                                       <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm font-semibold text-blue-700">
-                                          {activeContract ? 'Aktiver Vertrag' : 'Vertrag vorhanden'}
-                                        </span>
-                                        {activeContract && (
-                                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Aktiv</span>
-                                        )}
+                                        <span className="text-sm font-semibold text-blue-700">Aktiver Vertrag</span>
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Aktiv</span>
                                       </div>
-                                      {activeContract && (
-                                        <div className="text-xs text-gray-600 mb-2">
-                                          <div>Wochenstunden: {activeContract.hours_per_week || '-'}h</div>
-                                          <div>Laufzeit: {activeContract.start_date || '-'} - {activeContract.end_date || 'unbefristet'}</div>
-                                          <div>Status: {activeContract.employment_type || '-'}</div>
-                                        </div>
-                                      )}
+                                      <div className="text-xs text-gray-600 mb-2">
+                                        <div>Wochenstunden: {activeContract?.hours_per_week ? `${activeContract.hours_per_week}h` : '/'}</div>
+                                        <div>Laufzeit: {activeContract?.start_date || '/'} - {activeContract?.end_date || 'unbefristet'}</div>
+                                        <div>Status: {activeContract?.employment_type || '/'}</div>
+                                      </div>
                                       <button 
                                         className="w-full p-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
                                         onClick={() => {
@@ -2341,7 +2316,7 @@ Dein Nespresso Team`;
                                           setShowDienstvertragPopup(true);
                                         }}
                                       >
-                                        Alle Verträge anzeigen
+                                        {hasAnyContract ? 'Alle Verträge anzeigen' : 'Vertrag erstellen'}
                                       </button>
                                     </div>
                                   );
@@ -2597,7 +2572,7 @@ Dein Nespresso Team`;
                                 </div>
 
                                 {/* BIC and SV Nummer - Side by Side */}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-3" style={{marginTop: '-15px'}}>
                                   <div className="space-y-0.5">
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       BIC
