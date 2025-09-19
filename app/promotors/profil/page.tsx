@@ -1271,15 +1271,7 @@ export default function ProfilPage() {
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Meine Dienstverträge</h3>
-                <button 
-                  onClick={() => setShowDienstvertragPopup(false)}
-                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-center">Meine Dienstverträge</h3>
             </div>
             
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -1535,7 +1527,18 @@ export default function ProfilPage() {
               {/* Header */}
               <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      onClick={() => {
+                        setShowDienstvertragContent(false);
+                        setShowDienstvertragPopup(true);
+                      }}
+                      className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h3 className="text-xl font-bold">Dienstvertrag</h3>
+                  </div>
                   <div className="flex items-center space-x-2">
                     {/* Download PDF Button */}
                     <button 
@@ -1607,10 +1610,10 @@ export default function ProfilPage() {
           {/* Dark overlay with holes for highlighted elements */}
           <div className="absolute inset-0 bg-black/60"></div>
           
-          {/* Tooltip for button step */}
+          {/* Tooltip for button step - Above modal */}
           {onboardingStep === 'highlight-button' && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
-              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm">
+            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 pointer-events-auto">
+              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-400">
                 <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
                 <p className="text-sm text-gray-600 mb-3">
                   Klicken Sie auf "Ansehen & Unterschreiben" um Ihren ersten Dienstvertrag zu öffnen.
@@ -1627,10 +1630,10 @@ export default function ProfilPage() {
             </div>
           )}
           
-          {/* Tooltip for download step */}
+          {/* Tooltip for download step - Above modal */}
           {onboardingStep === 'highlight-download' && (
-            <div className="absolute top-1/4 right-1/4 pointer-events-auto">
-              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm">
+            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 pointer-events-auto">
+              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-400">
                 <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
                 <p className="text-sm text-gray-600 mb-3">
                   Klicken Sie auf das Download-Symbol um den Vertrag als PDF herunterzuladen.
