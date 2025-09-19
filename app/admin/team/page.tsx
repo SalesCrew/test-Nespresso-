@@ -166,6 +166,8 @@ export default function PromotorenPage() {
   const [approveForm, setApproveForm] = useState<{email: string; display_name: string; password: string; applicationId: string | null}>({ email: '', display_name: '', password: '', applicationId: null });
   const [approveError, setApproveError] = useState<string | null>(null);
   const [approveResultPw, setApproveResultPw] = useState<string | null>(null);
+  const [showEmailTemplate, setShowEmailTemplate] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const [promotorStammdaten, setPromotorStammdaten] = useState<Record<number, any>>({});
   const [openStammdatenPreviewFor, setOpenStammdatenPreviewFor] = useState<number | null>(null);
   
@@ -294,6 +296,29 @@ export default function PromotorenPage() {
     return out;
   }
 
+  const copyEmailToClipboard = async () => {
+    const emailText = `Hallo ${approveForm.display_name},
+
+Willkommen in der Zukunft der Nespresso Promotions!
+
+Deine Login-Daten sind:
+E-Mail: ${approveForm.email}
+Passwort: ${approveResultPw}
+
+Wir freuen uns, dich im Team zu haben!
+
+Beste Grüße,
+Das SalesCrew Team`;
+
+    try {
+      await navigator.clipboard.writeText(emailText);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  }
+
   // (Dialog JSX is rendered once at root to avoid remounts that cause input selection/focus jumps)
 
   // Approve (Annehmen) → create promotor account from submission
@@ -315,6 +340,7 @@ export default function PromotorenPage() {
       setApproveResultPw(data?.password ?? null);
       setApproveError(null);
       setToastMsg(`Promotor angelegt`);
+      setShowEmailTemplate(true);
       // Create a promotor card locally from the matching Stammdaten submission
       const applicationId = approveForm.applicationId ?? entry.id;
       const matchedSubmission = submittedOnboardingData.find((s: any) => String(s.id) === String(applicationId));
@@ -1057,34 +1083,78 @@ export default function PromotorenPage() {
       
       <div className="min-h-screen bg-gray-50/30">
       {/* Approval Dialog (mounted once at root) */}
-      <Dialog open={approveOpen} onOpenChange={setApproveOpen}>
+      <Dialog open={approveOpen} onOpenChange={(open) => { 
+        setApproveOpen(open); 
+        if (!open) { 
+          setShowEmailTemplate(false); 
+          setCopiedEmail(false); 
+          setApproveError(null); 
+          setApproveResultPw(null); 
+        } 
+      }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Promotor anlegen</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            <div>
-              <label className="text-sm text-gray-600">Name</label>
-              <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+          {!showEmailTemplate ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Promotor anlegen</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 pt-2">
+                <div>
+                  <label className="text-sm text-gray-600">Name</label>
+                  <Input value={approveForm.display_name} onChange={(e) => setApproveForm(f => ({...f, display_name: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600">E-Mail</label>
+                  <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                </div>
+                <div>
+                  <label className="text-sm text-gray-600">Passwort</label>
+                  <Input value={approveForm.password} onChange={(e) => setApproveForm(f => ({...f, password: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                  <div className="mt-1 text-xs text-gray-500">Dieses Passwort wird für den neuen Account verwendet.</div>
+                </div>
+                {approveError && <p className="text-sm text-red-600">{approveError}</p>}
+                {approveResultPw && <p className="text-sm text-green-600">Erstellt. Initiales Passwort: <strong>{approveResultPw}</strong></p>}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" className="focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" onClick={() => setApproveOpen(false)}>Schließen</Button>
+                <Button className="text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}} onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
+                  {submitting ? 'Erstelle...' : 'Erstellen'}
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <div className="relative min-h-[400px] bg-white rounded-lg cursor-pointer" onClick={copyEmailToClipboard}>
+              <div className="p-8 text-center">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">E-Mail Template</h2>
+                <div className="bg-gray-50 p-6 rounded-lg text-left space-y-4 text-sm text-gray-700 leading-relaxed">
+                  <p>Hallo {approveForm.display_name},</p>
+                  <p>Willkommen in der Zukunft der Nespresso Promotions!</p>
+                  <div className="bg-white p-4 rounded border">
+                    <p className="font-medium">Deine Login-Daten sind:</p>
+                    <p>E-Mail: <span className="font-mono text-blue-600">{approveForm.email}</span></p>
+                    <p>Passwort: <span className="font-mono text-blue-600">{approveResultPw}</span></p>
+                  </div>
+                  <p>Wir freuen uns, dich im Team zu haben!</p>
+                  <p>Beste Grüße,<br />Das SalesCrew Team</p>
+                </div>
+                <p className="mt-4 text-xs text-gray-500">Klicken um E-Mail-Text zu kopieren</p>
+              </div>
+              
+              {/* Copy confirmation icon */}
+              {copiedEmail && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg">
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-green-600">Kopiert!</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div>
-              <label className="text-sm text-gray-600">E-Mail</label>
-              <Input value={approveForm.email} onChange={(e) => setApproveForm(f => ({...f, email: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600">Passwort</label>
-              <Input value={approveForm.password} onChange={(e) => setApproveForm(f => ({...f, password: e.target.value}))} className="bg-white focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
-              <div className="mt-1 text-xs text-gray-500">Dieses Passwort wird für den neuen Account verwendet.</div>
-            </div>
-            {approveError && <p className="text-sm text-red-600">{approveError}</p>}
-            {approveResultPw && <p className="text-sm text-green-600">Erstellt. Initiales Passwort: <strong>{approveResultPw}</strong></p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" className="focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" onClick={() => setApproveOpen(false)}>Schließen</Button>
-            <Button className="text-white focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}} onClick={() => approveSubmission({ id: approveForm.applicationId })} disabled={submitting}>
-              {submitting ? 'Erstelle...' : 'Erstellen'}
-            </Button>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
       {/* Admin Navigation */}
