@@ -1265,10 +1265,10 @@ export default function ProfilPage() {
       {showDienstvertragPopup && (
         <>
           <div 
-            className="fixed inset-0 bg-black/30 z-[60] backdrop-blur-sm"
+            className={`fixed inset-0 bg-black/30 backdrop-blur-sm ${showContractOnboarding ? 'z-[201]' : 'z-[60]'}`}
             onClick={() => setShowDienstvertragPopup(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
+          <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl p-0 w-96 max-h-[80vh] overflow-hidden ${showContractOnboarding ? 'z-[202]' : 'z-[70]'}`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
               <div className="flex items-center justify-between">
@@ -1308,7 +1308,7 @@ export default function ProfilPage() {
                 </div>
                     <div className="flex items-center gap-2">
                 <button 
-                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[250]' : ''}`}
+                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[210] shadow-2xl' : ''}`}
                         onClick={() => {
                           handleDienstvertragSelect(contract.id);
                           if (showContractOnboarding && onboardingStep === 'highlight-button') {
@@ -1530,10 +1530,10 @@ export default function ProfilPage() {
         {showDienstvertragContent && (
           <>
             <div 
-              className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+              className={`fixed inset-0 bg-black/40 backdrop-blur-sm ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'z-[201]' : 'z-[60]'}`}
               onClick={() => setShowDienstvertragContent(false)}
             ></div>
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl z-[70] p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'z-[202]' : 'z-[70]'}`}>
               {/* Header */}
               <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
                 <div className="flex items-center justify-between">
@@ -1559,7 +1559,7 @@ export default function ProfilPage() {
                         }
                       }}
                       disabled={isDownloading}
-                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[250]' : ''}`}
+                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[210] shadow-2xl' : ''}`}
                       title="Als PDF herunterladen"
                     >
                       {downloadSuccess ? (
@@ -1622,7 +1622,7 @@ export default function ProfilPage() {
           
           {/* Tooltip for button step - Above modal */}
           {onboardingStep === 'highlight-button' && (
-            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 pointer-events-auto">
+            <div className="absolute top-[10%] left-1/2 transform -translate-x-1/2 pointer-events-auto z-[10]">
               <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-400">
                 <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
                 <p className="text-sm text-gray-600 mb-3">
@@ -1642,7 +1642,7 @@ export default function ProfilPage() {
           
           {/* Tooltip for download step - Middle of screen */}
           {onboardingStep === 'highlight-download' && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto z-[10]">
               <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-400">
                 <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
                 <p className="text-sm text-gray-600 mb-3">
