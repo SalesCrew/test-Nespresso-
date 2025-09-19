@@ -51,6 +51,8 @@ export default function ProfilPage() {
   const [isEditingBank, setIsEditingBank] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isEditingAccess, setIsEditingAccess] = useState(false)
+  const [showHuebenerPassword, setShowHuebenerPassword] = useState(false)
+  const [showDemotoolPassword, setShowDemotoolPassword] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false)
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
@@ -230,6 +232,16 @@ export default function ProfilPage() {
   const maskIban = (iban: string) => {
     if (iban.length <= 5) return iban
     return "x".repeat(iban.length - 5) + iban.slice(-5)
+  }
+
+  const togglePasswordVisibility = (type: 'huebener' | 'demotool') => {
+    if (type === 'huebener') {
+      setShowHuebenerPassword(true)
+      setTimeout(() => setShowHuebenerPassword(false), 7000)
+    } else {
+      setShowDemotoolPassword(true)
+      setTimeout(() => setShowDemotoolPassword(false), 7000)
+    }
   }
 
   const handleDienstvertragSelect = (contractId?: string) => {
@@ -1227,6 +1239,134 @@ export default function ProfilPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Access Credentials Card */}
+            <Card className={`border-none bg-white dark:bg-gray-900 h-full shadow-lg shadow-yellow-500/20 ${
+              isEditingAccess ? "ring-2 ring-yellow-500/30" : ""
+            }`}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Key className="h-5 w-5 mr-2 text-yellow-500" />
+                    Zugänge
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                    onClick={handleAccessEditToggle}
+                  >
+                    {isEditingAccess ? (
+                      <Check className="h-1.5 w-1.5 text-green-500" />
+                    ) : (
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Hübener Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübener</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.huebener_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.huebener_email || 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.huebener_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        <p 
+                          className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                          onClick={() => accessData?.huebener_password && togglePasswordVisibility('huebener')}
+                        >
+                          {accessData?.huebener_password ? 
+                            (showHuebenerPassword ? accessData.huebener_password : '••••••••') : 
+                            'Nicht angegeben'
+                          }
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider Line */}
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                {/* Demotool Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Demotool</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.demotool_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.demotool_email || 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.demotool_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        <p 
+                          className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                          onClick={() => accessData?.demotool_password && togglePasswordVisibility('demotool')}
+                        >
+                          {accessData?.demotool_password ? 
+                            (showDemotoolPassword ? accessData.demotool_password : '••••••••') : 
+                            'Nicht angegeben'
+                          }
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
           
           {/* Empty space for shadow visibility */}
@@ -1343,119 +1483,6 @@ export default function ProfilPage() {
                       {stats.completedSchulungen + stats.completedQuizzes}
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">Lernaktivitäten</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Access Credentials Card */}
-            <Card className={`border-none bg-white dark:bg-gray-900 h-full ${
-              isEditingAccess ? "shadow-lg shadow-yellow-500/20" : "shadow-lg shadow-yellow-500/20"
-            }`}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Key className="h-5 w-5 mr-2 text-yellow-500" />
-                    Zugänge
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
-                    onClick={handleAccessEditToggle}
-                  >
-                    {isEditingAccess ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
-                    ) : (
-                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
-                    )}
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Hübener Section */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübener</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="space-y-0.5">
-                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                        Email
-                      </label>
-                      {isEditingAccess ? (
-                        <Input
-                          type="email"
-                          value={editableAccessData.huebener_email}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_email: e.target.value})}
-                          className="text-sm"
-                          placeholder="email@example.com"
-                        />
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.huebener_email || 'Nicht angegeben'}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-0.5">
-                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                        Passwort
-                      </label>
-                      {isEditingAccess ? (
-                        <Input
-                          type="password"
-                          value={editableAccessData.huebener_password}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_password: e.target.value})}
-                          className="text-sm"
-                          placeholder="••••••••"
-                        />
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.huebener_password ? '••••••••' : 'Nicht angegeben'}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Demotool Section */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Demotool</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="space-y-0.5">
-                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                        Email
-                      </label>
-                      {isEditingAccess ? (
-                        <Input
-                          type="email"
-                          value={editableAccessData.demotool_email}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_email: e.target.value})}
-                          className="text-sm"
-                          placeholder="email@example.com"
-                        />
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.demotool_email || 'Nicht angegeben'}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-0.5">
-                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                        Passwort
-                      </label>
-                      {isEditingAccess ? (
-                        <Input
-                          type="password"
-                          value={editableAccessData.demotool_password}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_password: e.target.value})}
-                          className="text-sm"
-                          placeholder="••••••••"
-                        />
-                      ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.demotool_password ? '••••••••' : 'Nicht angegeben'}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 </div>
               </CardContent>
