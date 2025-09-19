@@ -1271,7 +1271,17 @@ export default function ProfilPage() {
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
-              <h3 className="text-lg font-semibold text-center">Meine Dienstverträge</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Meine Dienstverträge</h3>
+                {/* TEMP: Onboarding test button (to be removed later) */}
+                <button
+                  onClick={() => { setShowContractOnboarding(true); setOnboardingStep('highlight-button'); }}
+                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                  title="Onboarding testen"
+                >
+                  Onboarding testen
+                </button>
+              </div>
             </div>
             
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
