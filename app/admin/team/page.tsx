@@ -2572,7 +2572,7 @@ Dein Nespresso Team`;
                                 </div>
 
                                 {/* BIC and SV Nummer - Side by Side */}
-                                <div className="grid grid-cols-2 gap-3" style={{marginTop: '-15px'}}>
+                                <div className="grid grid-cols-2 gap-3" style={{marginTop: '-5px'}}>
                                   <div className="space-y-0.5">
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       BIC
