@@ -36,7 +36,8 @@ import {
   IdCard,
   Download,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  Key
 } from "lucide-react"
 
 // @ts-ignore
@@ -49,6 +50,7 @@ export default function ProfilPage() {
   const [isEditingClothing, setIsEditingClothing] = useState(false)
   const [isEditingBank, setIsEditingBank] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
+  const [isEditingAccess, setIsEditingAccess] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false)
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
@@ -73,6 +75,12 @@ export default function ProfilPage() {
     iban: "",
     bic: ""
   })
+  const [editableAccessData, setEditableAccessData] = useState({
+    huebener_email: "",
+    huebener_password: "",
+    demotool_email: "",
+    demotool_password: ""
+  })
   const [editablePersonalData, setEditablePersonalData] = useState({
     birthday: "",
     socialSecurityNumber: "",
@@ -83,6 +91,9 @@ export default function ProfilPage() {
   const [headerName, setHeaderName] = useState<string>("")
   const [headerLocation, setHeaderLocation] = useState<string>("")
   const [headerJoinDate, setHeaderJoinDate] = useState<string>("")
+  
+  // Access credentials data
+  const [accessData, setAccessData] = useState<any>(null)
 
   // Mock user data
   const userProfile = {
@@ -138,6 +149,82 @@ export default function ProfilPage() {
       console.log("Saving personal data:", editablePersonalData)
     }
     setIsEditingPersonal(!isEditingPersonal)
+  }
+
+  const handleAccessEditToggle = async () => {
+    if (isEditingAccess) {
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          if (accessData) {
+            // Update existing record
+            const { error } = await supabase
+              .from('access_credentials')
+              .update({
+                huebener_email: editableAccessData.huebener_email,
+                huebener_password: editableAccessData.huebener_password,
+                demotool_email: editableAccessData.demotool_email,
+                demotool_password: editableAccessData.demotool_password,
+              })
+              .eq('user_id', user.id)
+            
+            if (error) throw error
+          } else {
+            // Insert new record
+            const { error } = await supabase
+              .from('access_credentials')
+              .insert({
+                user_id: user.id,
+                huebener_email: editableAccessData.huebener_email,
+                huebener_password: editableAccessData.huebener_password,
+                demotool_email: editableAccessData.demotool_email,
+                demotool_password: editableAccessData.demotool_password,
+              })
+            
+            if (error) throw error
+          }
+          
+          // Refresh the data
+          await loadAccessCredentials()
+        }
+      } catch (e) {
+        console.error('Failed to save access credentials', e)
+      }
+    }
+    setIsEditingAccess(!isEditingAccess)
+  }
+
+  const loadAccessCredentials = async () => {
+    try {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('access_credentials')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          throw error
+        }
+        
+        if (data) {
+          setAccessData(data)
+          setEditableAccessData({
+            huebener_email: data.huebener_email || "",
+            huebener_password: data.huebener_password || "",
+            demotool_email: data.demotool_email || "",
+            demotool_password: data.demotool_password || ""
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load access credentials', e)
+    }
   }
 
   const maskIban = (iban: string) => {
@@ -340,6 +427,9 @@ export default function ProfilPage() {
               setHeaderJoinDate(jd)
             }
           } catch {}
+          // load access credentials
+          await loadAccessCredentials()
+          
           // load display name from user_profiles with auth metadata fallback
           try {
             const { data: up } = await supabase
@@ -1253,6 +1343,119 @@ export default function ProfilPage() {
                       {stats.completedSchulungen + stats.completedQuizzes}
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">Lernaktivitäten</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Access Credentials Card */}
+            <Card className={`border-none bg-white dark:bg-gray-900 h-full ${
+              isEditingAccess ? "shadow-lg shadow-yellow-500/20" : "shadow-lg shadow-yellow-500/20"
+            }`}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Key className="h-5 w-5 mr-2 text-yellow-500" />
+                    Zugänge
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                    onClick={handleAccessEditToggle}
+                  >
+                    {isEditingAccess ? (
+                      <Check className="h-1.5 w-1.5 text-green-500" />
+                    ) : (
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Hübener Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübener</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.huebener_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.huebener_email || 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.huebener_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.huebener_password ? '••••••••' : 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Demotool Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Demotool</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.demotool_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.demotool_email || 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.demotool_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, demotool_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {accessData?.demotool_password ? '••••••••' : 'Nicht angegeben'}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
