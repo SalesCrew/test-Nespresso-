@@ -41,9 +41,7 @@ import {
   Download,
   CreditCard,
   Ruler,
-  Edit2,
-  IdCard,
-  Globe
+  Edit2
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -178,10 +176,8 @@ export default function PromotorenPage() {
   
   // Edit states for promotor details
   const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
-  const [editingPersonalData, setEditingPersonalData] = useState<Record<string, boolean>>({});
   const [editingClothingData, setEditingClothingData] = useState<Record<string, boolean>>({});
   const [editBankForm, setEditBankForm] = useState<Record<string, any>>({});
-  const [editPersonalForm, setEditPersonalForm] = useState<Record<string, any>>({});
   const [editClothingForm, setEditClothingForm] = useState<Record<string, any>>({});
   
   // Stammdatenblatt (submitted onboarding data)
@@ -399,6 +395,7 @@ Dein Nespresso Team`;
       // Save changes
       try {
         const formData = editBankForm[promotorId];
+        console.log('Updating bank data for promotor:', promotorId, formData);
         const response = await fetch(`/api/promotors/${promotorId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -409,6 +406,13 @@ Dein Nespresso Team`;
             bank_bic: formData.bic
           })
         });
+        
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
         
         if (response.ok) {
           // Update local state
@@ -438,57 +442,6 @@ Dein Nespresso Team`;
     setEditingBankData(prev => ({ ...prev, [promotorId]: !isEditing }));
   };
 
-  const handleEditPersonalData = async (promotorId: string) => {
-    const isEditing = editingPersonalData[promotorId];
-    
-    if (isEditing) {
-      // Save changes to applications table
-      try {
-        const formData = editPersonalForm[promotorId];
-        const promotor = promotors.find(p => p.id === promotorId);
-        const stammdaten = promotorStammdaten[promotorId as any];
-        
-        if (stammdaten?.id) {
-          // Update applications table directly
-          const supabase = createSupabaseServiceClient();
-          const { error } = await supabase
-            .from('applications')
-            .update({
-              birthDate: formData.birthDate,
-              socialSecurityNumber: formData.socialSecurityNumber,
-              citizenship: formData.citizenship
-            })
-            .eq('id', stammdaten.id);
-            
-          if (error) throw error;
-          
-          // Update local state
-          setPromotorStammdaten(prev => ({
-            ...prev,
-            [promotorId]: { ...stammdaten, ...formData }
-          }));
-          setToastMsg('Persönliche Daten erfolgreich aktualisiert');
-        }
-      } catch (e) {
-        setToastMsg('Fehler beim Speichern der persönlichen Daten');
-      }
-    } else {
-      // Enter edit mode
-      const stammdaten = promotorStammdaten[promotorId as any];
-      if (stammdaten) {
-        setEditPersonalForm(prev => ({
-          ...prev,
-          [promotorId]: {
-            birthDate: stammdaten.birthDate || '',
-            socialSecurityNumber: stammdaten.socialSecurityNumber || '',
-            citizenship: stammdaten.citizenship || ''
-          }
-        }));
-      }
-    }
-    
-    setEditingPersonalData(prev => ({ ...prev, [promotorId]: !isEditing }));
-  };
 
   const handleEditClothingData = async (promotorId: string) => {
     const isEditing = editingClothingData[promotorId];
@@ -497,6 +450,7 @@ Dein Nespresso Team`;
       // Save changes
       try {
         const formData = editClothingForm[promotorId];
+        console.log('Updating clothing data for promotor:', promotorId, formData);
         const response = await fetch(`/api/promotors/${promotorId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -505,6 +459,13 @@ Dein Nespresso Team`;
             clothing_size: formData.size
           })
         });
+        
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
         
         if (response.ok) {
           // Update local state
@@ -2292,23 +2253,9 @@ Dein Nespresso Team`;
                           {/* Personal Information */}
                           <Card className="shadow-sm border-gray-200/60">
                             <CardContent className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <User className="h-4 w-4 mr-2 text-blue-500" />
-                                  Persönliche Daten
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
-                                  onClick={() => handleEditPersonalData(promotor.id)}
-                                >
-                                  {editingPersonalData[promotor.id] ? (
-                                    <Check className="h-3 w-3 text-green-500" />
-                                  ) : (
-                                    <Edit2 className="h-3 w-3 text-gray-400" />
-                                  )}
-                                </Button>
+                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                <User className="h-4 w-4 mr-2 text-blue-500" />
+                                Persönliche Daten
                               </h3>
                                                              <div className="space-y-3 text-sm">
                                  <div 
@@ -2344,59 +2291,9 @@ Dein Nespresso Team`;
                                   <Calendar className="h-4 w-4 text-gray-400" />
                                   <span>Dabei seit März 2023</span>
                                 </div>
-                                {/* Personal Data Fields */}
-                                <div className="space-y-2 pt-2 border-t border-gray-100">
-                                  <div className="flex items-center space-x-2">
-                                    <Cake className="h-4 w-4 text-gray-400" />
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">Geburtsdatum</span>
-                                    {editingPersonalData[promotor.id] ? (
-                                      <Input
-                                        type="date"
-                                        value={editPersonalForm[promotor.id]?.birthDate || ''}
-                                        onChange={(e) => setEditPersonalForm(prev => ({
-                                          ...prev,
-                                          [promotor.id]: { ...prev[promotor.id], birthDate: e.target.value }
-                                        }))}
-                                        className="text-sm flex-1"
-                                      />
-                                    ) : (
-                                      <span>{promotorStammdaten[promotor.id]?.birthDate || 'Keine Daten'}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <IdCard className="h-4 w-4 text-gray-400" />
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">SV Nummer</span>
-                                    {editingPersonalData[promotor.id] ? (
-                                      <Input
-                                        type="text"
-                                        value={editPersonalForm[promotor.id]?.socialSecurityNumber || ''}
-                                        onChange={(e) => setEditPersonalForm(prev => ({
-                                          ...prev,
-                                          [promotor.id]: { ...prev[promotor.id], socialSecurityNumber: e.target.value }
-                                        }))}
-                                        className="text-sm flex-1"
-                                      />
-                                    ) : (
-                                      <span>{promotorStammdaten[promotor.id]?.socialSecurityNumber || 'Keine Daten'}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Globe className="h-4 w-4 text-gray-400" />
-                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">Staatsb.</span>
-                                    {editingPersonalData[promotor.id] ? (
-                                      <Input
-                                        type="text"
-                                        value={editPersonalForm[promotor.id]?.citizenship || ''}
-                                        onChange={(e) => setEditPersonalForm(prev => ({
-                                          ...prev,
-                                          [promotor.id]: { ...prev[promotor.id], citizenship: e.target.value }
-                                        }))}
-                                        className="text-sm flex-1"
-                                      />
-                                    ) : (
-                                      <span>{promotorStammdaten[promotor.id]?.citizenship || 'Keine Daten'}</span>
-                                    )}
-                                  </div>
+                                <div className="flex items-center space-x-2">
+                                  <Cake className="h-4 w-4 text-gray-400" />
+                                  <span>{promotor.birthDate}</span>
                                 </div>
                               </div>
                             </CardContent>
