@@ -105,6 +105,7 @@ export default function PromotorenPage() {
   // Dienstvertrag functionality
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false);
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false);
+  const [showContractPreview, setShowContractPreview] = useState(false);
   const [selectedPromotorForContract, setSelectedPromotorForContract] = useState<number | null>(null);
   const [contractForm, setContractForm] = useState({
     hoursPerWeek: '',
@@ -1890,7 +1891,7 @@ Dein Nespresso Team`;
           <div 
             className="fixed inset-0 bg-black/60 transition-opacity duration-300 z-[60]"
             onClick={() => {
-              if (!showDienstvertragPopup && !showDienstvertragContent) {
+              if (!showDienstvertragPopup && !showDienstvertragContent && !showContractPreview) {
                 setDetailedViewOpen(null);
               }
             }}
@@ -1900,7 +1901,7 @@ Dein Nespresso Team`;
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden relative">
               {/* Dark overlay when Dienstvertrag is open */}
-              {(showDienstvertragPopup || showDienstvertragContent) && (
+              {(showDienstvertragPopup || showDienstvertragContent || showContractPreview) && (
                 <div className="absolute inset-0 bg-black/40 z-[5] rounded-2xl"></div>
               )}
               {(() => {
@@ -1925,7 +1926,7 @@ Dein Nespresso Team`;
                         </button>
                       <button
                         onClick={() => {
-                          if (!showDienstvertragPopup && !showDienstvertragContent) {
+                          if (!showDienstvertragPopup && !showDienstvertragContent && !showContractPreview) {
                             setDetailedViewOpen(null);
                           }
                         }}
@@ -2888,35 +2889,10 @@ Dein Nespresso Team`;
                   </div>
                 </div>
 
-                {/* Send Button */}
+                {/* Send Button - Now shows preview first */}
                 <button
-                  onClick={async () => {
-                    const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
-                    if (!promotorId) return;
-                    try {
-                      const res = await fetch('/api/admin/contracts', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          user_id: promotorId,
-                          hours_per_week: contractForm.hoursPerWeek,
-                          monthly_gross: contractForm.monthlyGross,
-                          start_date: contractForm.startDate,
-                          end_date: contractForm.endDate || null,
-                          is_temporary: contractForm.isTemporary,
-                          employment_type: contractForm.employmentType,
-                          is_active: false,
-                        })
-                      });
-                      const j = await res.json().catch(() => ({}));
-                      if (!res.ok) throw new Error(j?.error || 'Fehler beim Erstellen des Vertrags');
-                      await refreshPromotorContracts(promotorId);
-                      setToastMsg('Vertrag erfolgreich erstellt und versendet!');
-                    } catch (e: any) {
-                      console.error(e);
-                      setToastMsg(e.message || 'Fehler beim Erstellen des Vertrags');
-                    }
-                    // Keep modal open so admin sees the new pending row
+                  onClick={() => {
+                    setShowContractPreview(true);
                   }}
                   disabled={!contractForm.hoursPerWeek || !contractForm.monthlyGross || !contractForm.startDate}
                   className={`w-full py-3 rounded-lg font-medium transition-all duration-200 text-white ${
@@ -3259,6 +3235,116 @@ Dein Nespresso Team`;
                     </div>
                     </div>
                     </div>
+        </>
+      )}
+
+      {/* Contract Preview Modal */}
+      {showContractPreview && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
+            onClick={() => setShowContractPreview(false)}
+          ></div>
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <button 
+                      onClick={() => setShowContractPreview(false)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h3 className="text-xl font-bold">Vertrag Vorschau</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowContractPreview(false)}
+                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-8 [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                <div className="max-w-3xl mx-auto">
+                  {/* Get promotor data for preview */}
+                  {(() => {
+                    const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+                    const promotorName = promotor?.name || "Vorname Nachname";
+                    const promotorBirthDate = promotor?.birthDate || "Tag.Monat.Jahr";
+                    const promotorAddress = promotor?.address || "Adresse";
+                    
+                    return (
+                      <DienstvertragTemplate
+                        promotorName={promotorName}
+                        promotorBirthDate={promotorBirthDate}
+                        promotorAddress={promotorAddress}
+                        hoursPerWeek={contractForm.hoursPerWeek}
+                        monthlyGross={contractForm.monthlyGross}
+                        startDate={contractForm.startDate ? new Date(contractForm.startDate).toLocaleDateString('de-DE') : ''}
+                        endDate={contractForm.endDate ? new Date(contractForm.endDate).toLocaleDateString('de-DE') : ''}
+                        isTemporary={contractForm.isTemporary}
+                      />
+                    );
+                  })()}
+                </div>
+              </div>
+              
+              {/* Footer with confirmation buttons */}
+              <div className="bg-gray-50 p-6 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    Bitte prüfen Sie den Vertrag und bestätigen Sie das Senden.
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setShowContractPreview(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Abbrechen
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
+                        if (!promotorId) return;
+                        try {
+                          const res = await fetch('/api/admin/contracts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              user_id: promotorId,
+                              hours_per_week: contractForm.hoursPerWeek,
+                              monthly_gross: contractForm.monthlyGross,
+                              start_date: contractForm.startDate,
+                              end_date: contractForm.endDate || null,
+                              is_temporary: contractForm.isTemporary,
+                              employment_type: contractForm.employmentType,
+                              is_active: false,
+                            })
+                          });
+                          const j = await res.json().catch(() => ({}));
+                          if (!res.ok) throw new Error(j?.error || 'Fehler beim Erstellen des Vertrags');
+                          await refreshPromotorContracts(promotorId);
+                          setToastMsg('Vertrag erfolgreich erstellt und versendet!');
+                          setShowContractPreview(false);
+                        } catch (e: any) {
+                          console.error(e);
+                          setToastMsg(e.message || 'Fehler beim Erstellen des Vertrags');
+                        }
+                      }}
+                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg font-medium transition-all duration-200"
+                    >
+                      Vertrag senden
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
 
