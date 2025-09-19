@@ -35,7 +35,8 @@ import {
   FileSignature,
   IdCard,
   Download,
-  Clock
+  Clock,
+  ArrowLeft
 } from "lucide-react"
 
 // @ts-ignore
@@ -56,6 +57,8 @@ export default function ProfilPage() {
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [promotorContracts, setPromotorContracts] = useState<any[]>([])
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null)
+  const [showContractOnboarding, setShowContractOnboarding] = useState(false)
+  const [onboardingStep, setOnboardingStep] = useState<'highlight-button' | 'highlight-download'>('highlight-button')
   const [editableProfile, setEditableProfile] = useState({
     email: "",
     phone: ""
@@ -395,7 +398,19 @@ export default function ProfilPage() {
     try {
       const res = await fetch(`/api/promotors/${uid}/contracts`, { cache: 'no-store' });
       const json = await res.json();
-      setPromotorContracts(json.contracts || []);
+      const contracts = json.contracts || [];
+      setPromotorContracts(contracts);
+      
+      // Check if this is first contract and trigger onboarding
+      const hasContracts = contracts.length > 0;
+      const onboardingKey = `contract_onboarding_seen:${uid}`;
+      const hasSeenOnboarding = typeof window !== 'undefined' ? localStorage.getItem(onboardingKey) : null;
+      
+      if (hasContracts && !hasSeenOnboarding) {
+        setShowContractOnboarding(true);
+        setOnboardingStep('highlight-button');
+        try { localStorage.setItem(onboardingKey, '1'); } catch {}
+      }
     } catch (e) {
       console.error('Failed to load promotor contracts:', e);
       setPromotorContracts([]);
@@ -1256,7 +1271,15 @@ export default function ProfilPage() {
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl shadow-xl z-[70] p-0 w-96 max-h-[80vh] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
-              <h3 className="text-lg font-semibold text-center">Meine Dienstverträge</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Meine Dienstverträge</h3>
+                <button 
+                  onClick={() => setShowDienstvertragPopup(false)}
+                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -1283,8 +1306,13 @@ export default function ProfilPage() {
                 </div>
                     <div className="flex items-center gap-2">
                 <button 
-                        className="flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
-                        onClick={() => handleDienstvertragSelect(contract.id)}
+                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[100] ring-4 ring-blue-400 ring-opacity-75' : ''}`}
+                        onClick={() => {
+                          handleDienstvertragSelect(contract.id);
+                          if (showContractOnboarding && onboardingStep === 'highlight-button') {
+                            setOnboardingStep('highlight-download');
+                          }
+                        }}
                 >
                   Ansehen & Unterschreiben
                 </button>
@@ -1511,9 +1539,14 @@ export default function ProfilPage() {
                   <div className="flex items-center space-x-2">
                     {/* Download PDF Button */}
                     <button 
-                      onClick={exportDienstvertragAsPDF}
+                      onClick={() => {
+                        exportDienstvertragAsPDF();
+                        if (showContractOnboarding && onboardingStep === 'highlight-download') {
+                          setShowContractOnboarding(false);
+                        }
+                      }}
                       disabled={isDownloading}
-                      className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50"
+                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[100] ring-4 ring-blue-400 ring-opacity-75' : ''}`}
                       title="Als PDF herunterladen"
                     >
                       {downloadSuccess ? (
@@ -1567,6 +1600,54 @@ export default function ProfilPage() {
             </div>
           </>
         )}
+
+      {/* Contract Onboarding Overlay */}
+      {showContractOnboarding && (
+        <div className="fixed inset-0 z-[200] pointer-events-none">
+          {/* Dark overlay with holes for highlighted elements */}
+          <div className="absolute inset-0 bg-black/60"></div>
+          
+          {/* Tooltip for button step */}
+          {onboardingStep === 'highlight-button' && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto">
+              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm">
+                <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Klicken Sie auf "Ansehen & Unterschreiben" um Ihren ersten Dienstvertrag zu öffnen.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowContractOnboarding(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Überspringen
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Tooltip for download step */}
+          {onboardingStep === 'highlight-download' && (
+            <div className="absolute top-1/4 right-1/4 pointer-events-auto">
+              <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm">
+                <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Klicken Sie auf das Download-Symbol um den Vertrag als PDF herunterzuladen.
+                </p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowContractOnboarding(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Verstanden
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       </div>
     )
 } 
