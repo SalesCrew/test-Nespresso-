@@ -308,7 +308,7 @@ Passwort: ${approveResultPw}
 Wir freuen uns, dich im Team zu haben!
 
 Beste Grüße,
-Das SalesCrew Team`;
+Dein Nespresso Team`;
 
     try {
       await navigator.clipboard.writeText(emailText);
@@ -1135,7 +1135,7 @@ Das SalesCrew Team`;
                     <p>Passwort: <span className="font-mono text-blue-600">{approveResultPw}</span></p>
                   </div>
                   <p>Wir freuen uns, dich im Team zu haben!</p>
-                  <p>Beste Grüße,<br />Das SalesCrew Team</p>
+                  <p>Beste Grüße,<br />Dein Nespresso Team</p>
                 </div>
                 <p className="mt-4 text-xs text-gray-500">Klicken um E-Mail-Text zu kopieren</p>
               </div>

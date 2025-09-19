@@ -269,13 +269,7 @@ export default function DashboardPage() {
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
 
-        // Auto-start onboarding for first login using a per-user local flag
-        const onboardingKey = `onboarding_started:${user.id}`;
-        const hasStarted = typeof window !== 'undefined' ? localStorage.getItem(onboardingKey) : '1';
-        if (!hasStarted) {
-          setShowOnboarding(true);
-          try { localStorage.setItem(onboardingKey, '1'); } catch {}
-        }
+        // Onboarding modal removed - only available from landing page
       } catch {}
     }
     initProfileAndOnboarding();
