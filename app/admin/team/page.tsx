@@ -2543,6 +2543,14 @@ Dein Nespresso Team`;
                                     <p className="text-sm font-medium text-gray-900">
                                       {promotor.bankDetails.bankName || 'Keine Daten'}
                                     </p>
+                                    <div className="mt-2">
+                                      <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                        SV Nummer
+                                      </label>
+                                      <p className="text-sm font-medium text-gray-900">
+                                        {promotor.socialSecurityNumber || 'Keine Daten'}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
 

@@ -1016,7 +1016,15 @@ export default function DashboardPage() {
                         </button>
                         )}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
+                        <div className="flex items-center">
+                          <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
+                            {todo.id >= 200000 && todo.id < 300000 && (
+                              <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
+                            )}
+                            {todo.id >= 300000 && (
+                              <AlertCircle className="w-4 h-4 text-yellow-500 ml-2 flex-shrink-0" />
+                            )}
+                        </div>
                         <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
           </div>
         </div>
