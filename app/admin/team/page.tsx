@@ -55,6 +55,7 @@ import { DienstvertragTemplate } from "@/components/DienstvertragTemplate";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 
 export default function PromotorenPage() {
@@ -451,6 +452,11 @@ Dein Nespresso Team`;
       try {
         const formData = editClothingForm[promotorId];
         console.log('Updating clothing data for promotor:', promotorId, formData);
+        
+        // Debug: Check current user session
+        const supabase = createSupabaseBrowserClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('Current browser session user:', user?.id);
         const response = await fetch(`/api/promotors/${promotorId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
