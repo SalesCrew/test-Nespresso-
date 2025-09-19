@@ -2543,14 +2543,6 @@ Dein Nespresso Team`;
                                     <p className="text-sm font-medium text-gray-900">
                                       {promotor.bankDetails.bankName || 'Keine Daten'}
                                     </p>
-                                    <div className="mt-2">
-                                      <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-                                        SV Nummer
-                                      </label>
-                                      <p className="text-sm font-medium text-gray-900">
-                                        {promotor.socialSecurityNumber || 'Keine Daten'}
-                                      </p>
-                                    </div>
                                   </div>
                                 </div>
 
@@ -2587,6 +2579,18 @@ Dein Nespresso Team`;
                                     {bicCopied[promotor.id] && (
                                       <Check className="h-3 w-3 text-green-500" />
                                     )}
+                                  </div>
+                                </div>
+
+                                {/* SV Nummer - Bottom Right */}
+                                <div className="mt-4 flex justify-end">
+                                  <div className="text-right">
+                                    <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                                      SV Nummer
+                                    </label>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {promotorStammdaten[promotor.id]?.socialSecurityNumber || 'Keine Daten'}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
