@@ -15,7 +15,7 @@ CREATE POLICY "Admins can view promotor profiles" ON promotor_profiles
     EXISTS (
       SELECT 1 FROM user_profiles up
       WHERE up.user_id = auth.uid()
-        AND up.role = 'admin_of_admins'::user_role
+        AND up.role IN ('admin_of_admins'::user_role, 'admin_staff'::user_role)
     )
   );
 
@@ -25,7 +25,7 @@ CREATE POLICY "Admins can update promotor profiles" ON promotor_profiles
     EXISTS (
       SELECT 1 FROM user_profiles up
       WHERE up.user_id = auth.uid()
-        AND up.role = 'admin_of_admins'::user_role
+        AND up.role IN ('admin_of_admins'::user_role, 'admin_staff'::user_role)
     )
   );
 
@@ -39,7 +39,7 @@ CREATE POLICY "Admins can view applications" ON applications
     EXISTS (
       SELECT 1 FROM user_profiles up
       WHERE up.user_id = auth.uid()
-        AND up.role = 'admin_of_admins'::user_role
+        AND up.role IN ('admin_of_admins'::user_role, 'admin_staff'::user_role)
     )
   );
 
@@ -49,7 +49,7 @@ CREATE POLICY "Admins can update applications" ON applications
     EXISTS (
       SELECT 1 FROM user_profiles up
       WHERE up.user_id = auth.uid()
-        AND up.role = 'admin_of_admins'::user_role
+        AND up.role IN ('admin_of_admins'::user_role, 'admin_staff'::user_role)
     )
   );
 

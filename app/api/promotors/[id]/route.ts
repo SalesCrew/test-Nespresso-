@@ -43,10 +43,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  const { ok: isAdmin } = await requireAdmin();
-  if (!isSelfOrAdmin(auth.user.id, params.id, isAdmin)) {
+  
+  console.log('PATCH /api/promotors/[id] - Debug info:');
+  console.log('- Current user ID:', auth.user.id);
+  console.log('- Target promotor ID:', params.id);
+  
+  const adminResult = await requireAdmin();
+  console.log('- requireAdmin result:', adminResult);
+  
+  if (!isSelfOrAdmin(auth.user.id, params.id, adminResult.ok)) {
+    console.log('- isSelfOrAdmin check failed');
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
+  
+  console.log('- Authorization passed, proceeding with update');
 
   const raw = await req.json().catch(() => ({} as any));
   const allowed = {
