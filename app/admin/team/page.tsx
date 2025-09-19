@@ -40,7 +40,10 @@ import {
   ArrowLeft,
   Download,
   CreditCard,
-  Ruler
+  Ruler,
+  Edit2,
+  IdCard,
+  Globe
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -53,6 +56,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DienstvertragTemplate } from "@/components/DienstvertragTemplate";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 
 export default function PromotorenPage() {
@@ -171,6 +175,14 @@ export default function PromotorenPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [promotorStammdaten, setPromotorStammdaten] = useState<Record<number, any>>({});
   const [openStammdatenPreviewFor, setOpenStammdatenPreviewFor] = useState<number | null>(null);
+  
+  // Edit states for promotor details
+  const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
+  const [editingPersonalData, setEditingPersonalData] = useState<Record<string, boolean>>({});
+  const [editingClothingData, setEditingClothingData] = useState<Record<string, boolean>>({});
+  const [editBankForm, setEditBankForm] = useState<Record<string, any>>({});
+  const [editPersonalForm, setEditPersonalForm] = useState<Record<string, any>>({});
+  const [editClothingForm, setEditClothingForm] = useState<Record<string, any>>({});
   
   // Stammdatenblatt (submitted onboarding data)
   const [submittedOnboardingData, setSubmittedOnboardingData] = useState<any[]>([
@@ -379,6 +391,149 @@ Dein Nespresso Team`;
   };
 
   // Load real applications from backend
+  // Edit handlers for promotor details
+  const handleEditBankData = async (promotorId: string) => {
+    const isEditing = editingBankData[promotorId];
+    
+    if (isEditing) {
+      // Save changes
+      try {
+        const formData = editBankForm[promotorId];
+        const response = await fetch(`/api/promotors/${promotorId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bank_holder: formData.accountHolder,
+            bank_name: formData.bankName,
+            bank_iban: formData.iban,
+            bank_bic: formData.bic
+          })
+        });
+        
+        if (response.ok) {
+          // Update local state
+          setPromotors(prev => prev.map(p => 
+            p.id === promotorId 
+              ? { ...p, bankDetails: formData }
+              : p
+          ));
+          setToastMsg('Bankdaten erfolgreich aktualisiert');
+        } else {
+          throw new Error('Fehler beim Speichern');
+        }
+      } catch (e) {
+        setToastMsg('Fehler beim Speichern der Bankdaten');
+      }
+    } else {
+      // Enter edit mode
+      const promotor = promotors.find(p => p.id === promotorId);
+      if (promotor) {
+        setEditBankForm(prev => ({
+          ...prev,
+          [promotorId]: { ...promotor.bankDetails }
+        }));
+      }
+    }
+    
+    setEditingBankData(prev => ({ ...prev, [promotorId]: !isEditing }));
+  };
+
+  const handleEditPersonalData = async (promotorId: string) => {
+    const isEditing = editingPersonalData[promotorId];
+    
+    if (isEditing) {
+      // Save changes to applications table
+      try {
+        const formData = editPersonalForm[promotorId];
+        const promotor = promotors.find(p => p.id === promotorId);
+        const stammdaten = promotorStammdaten[promotorId as any];
+        
+        if (stammdaten?.id) {
+          // Update applications table directly
+          const supabase = createSupabaseServiceClient();
+          const { error } = await supabase
+            .from('applications')
+            .update({
+              birthDate: formData.birthDate,
+              socialSecurityNumber: formData.socialSecurityNumber,
+              citizenship: formData.citizenship
+            })
+            .eq('id', stammdaten.id);
+            
+          if (error) throw error;
+          
+          // Update local state
+          setPromotorStammdaten(prev => ({
+            ...prev,
+            [promotorId]: { ...stammdaten, ...formData }
+          }));
+          setToastMsg('Persönliche Daten erfolgreich aktualisiert');
+        }
+      } catch (e) {
+        setToastMsg('Fehler beim Speichern der persönlichen Daten');
+      }
+    } else {
+      // Enter edit mode
+      const stammdaten = promotorStammdaten[promotorId as any];
+      if (stammdaten) {
+        setEditPersonalForm(prev => ({
+          ...prev,
+          [promotorId]: {
+            birthDate: stammdaten.birthDate || '',
+            socialSecurityNumber: stammdaten.socialSecurityNumber || '',
+            citizenship: stammdaten.citizenship || ''
+          }
+        }));
+      }
+    }
+    
+    setEditingPersonalData(prev => ({ ...prev, [promotorId]: !isEditing }));
+  };
+
+  const handleEditClothingData = async (promotorId: string) => {
+    const isEditing = editingClothingData[promotorId];
+    
+    if (isEditing) {
+      // Save changes
+      try {
+        const formData = editClothingForm[promotorId];
+        const response = await fetch(`/api/promotors/${promotorId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            height: formData.height,
+            clothing_size: formData.size
+          })
+        });
+        
+        if (response.ok) {
+          // Update local state
+          setPromotors(prev => prev.map(p => 
+            p.id === promotorId 
+              ? { ...p, clothingInfo: formData }
+              : p
+          ));
+          setToastMsg('Kleidergröße erfolgreich aktualisiert');
+        } else {
+          throw new Error('Fehler beim Speichern');
+        }
+      } catch (e) {
+        setToastMsg('Fehler beim Speichern der Kleidergröße');
+      }
+    } else {
+      // Enter edit mode
+      const promotor = promotors.find(p => p.id === promotorId);
+      if (promotor) {
+        setEditClothingForm(prev => ({
+          ...prev,
+          [promotorId]: { ...promotor.clothingInfo }
+        }));
+      }
+    }
+    
+    setEditingClothingData(prev => ({ ...prev, [promotorId]: !isEditing }));
+  };
+
   const loadSubmissions = async () => {
     try {
       const res = await fetch('/api/applications', { cache: 'no-store' });
@@ -2137,9 +2292,23 @@ Dein Nespresso Team`;
                           {/* Personal Information */}
                           <Card className="shadow-sm border-gray-200/60">
                             <CardContent className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                                <User className="h-4 w-4 mr-2 text-blue-500" />
-                                Persönliche Daten
+                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <User className="h-4 w-4 mr-2 text-blue-500" />
+                                  Persönliche Daten
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
+                                  onClick={() => handleEditPersonalData(promotor.id)}
+                                >
+                                  {editingPersonalData[promotor.id] ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Edit2 className="h-3 w-3 text-gray-400" />
+                                  )}
+                                </Button>
                               </h3>
                                                              <div className="space-y-3 text-sm">
                                  <div 
@@ -2175,9 +2344,59 @@ Dein Nespresso Team`;
                                   <Calendar className="h-4 w-4 text-gray-400" />
                                   <span>Dabei seit März 2023</span>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <Cake className="h-4 w-4 text-gray-400" />
-                                  <span>{promotor.birthDate}</span>
+                                {/* Personal Data Fields */}
+                                <div className="space-y-2 pt-2 border-t border-gray-100">
+                                  <div className="flex items-center space-x-2">
+                                    <Cake className="h-4 w-4 text-gray-400" />
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">Geburtsdatum</span>
+                                    {editingPersonalData[promotor.id] ? (
+                                      <Input
+                                        type="date"
+                                        value={editPersonalForm[promotor.id]?.birthDate || ''}
+                                        onChange={(e) => setEditPersonalForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], birthDate: e.target.value }
+                                        }))}
+                                        className="text-sm flex-1"
+                                      />
+                                    ) : (
+                                      <span>{promotorStammdaten[promotor.id]?.birthDate || 'Keine Daten'}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <IdCard className="h-4 w-4 text-gray-400" />
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">SV Nummer</span>
+                                    {editingPersonalData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editPersonalForm[promotor.id]?.socialSecurityNumber || ''}
+                                        onChange={(e) => setEditPersonalForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], socialSecurityNumber: e.target.value }
+                                        }))}
+                                        className="text-sm flex-1"
+                                      />
+                                    ) : (
+                                      <span>{promotorStammdaten[promotor.id]?.socialSecurityNumber || 'Keine Daten'}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Globe className="h-4 w-4 text-gray-400" />
+                                    <span className="text-xs text-gray-500 uppercase tracking-wide font-medium w-20">Staatsb.</span>
+                                    {editingPersonalData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editPersonalForm[promotor.id]?.citizenship || ''}
+                                        onChange={(e) => setEditPersonalForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], citizenship: e.target.value }
+                                        }))}
+                                        className="text-sm flex-1"
+                                      />
+                                    ) : (
+                                      <span>{promotorStammdaten[promotor.id]?.citizenship || 'Keine Daten'}</span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -2521,9 +2740,23 @@ Dein Nespresso Team`;
                           {/* Bank Details */}
                           <Card className="shadow-sm border-gray-200/60">
                             <CardContent className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                                <CreditCard className="h-4 w-4 mr-2 text-blue-500" />
-                                Bankdaten
+                              <h3 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <CreditCard className="h-4 w-4 mr-2 text-blue-500" />
+                                  Bankdaten
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
+                                  onClick={() => handleEditBankData(promotor.id)}
+                                >
+                                  {editingBankData[promotor.id] ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Edit2 className="h-3 w-3 text-gray-400" />
+                                  )}
+                                </Button>
                               </h3>
                               <div className="space-y-2">
                                 {/* Account Holder and Bank Name - Side by Side */}
@@ -2532,25 +2765,49 @@ Dein Nespresso Team`;
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       Kontoinhaber
                                     </label>
-                                    <div className="flex items-center space-x-2">
-                                      <p 
-                                        className="text-sm font-medium text-gray-900 cursor-pointer"
-                                        onClick={() => handleAccountHolderClick(promotor.id)}
-                                      >
-                                        {promotor.bankDetails.accountHolder || 'Keine Daten'}
-                                      </p>
-                                      {accountHolderCopied[promotor.id] && (
-                                        <Check className="h-3 w-3 text-green-500" />
-                                      )}
-                                    </div>
+                                    {editingBankData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editBankForm[promotor.id]?.accountHolder || ''}
+                                        onChange={(e) => setEditBankForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], accountHolder: e.target.value }
+                                        }))}
+                                        className="text-sm"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center space-x-2">
+                                        <p 
+                                          className="text-sm font-medium text-gray-900 cursor-pointer"
+                                          onClick={() => handleAccountHolderClick(promotor.id)}
+                                        >
+                                          {promotor.bankDetails.accountHolder || 'Keine Daten'}
+                                        </p>
+                                        {accountHolderCopied[promotor.id] && (
+                                          <Check className="h-3 w-3 text-green-500" />
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="space-y-0.5">
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       Bankname
                                     </label>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {promotor.bankDetails.bankName || 'Keine Daten'}
-                                    </p>
+                                    {editingBankData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editBankForm[promotor.id]?.bankName || ''}
+                                        onChange={(e) => setEditBankForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], bankName: e.target.value }
+                                        }))}
+                                        className="text-sm"
+                                      />
+                                    ) : (
+                                      <p className="text-sm font-medium text-gray-900">
+                                        {promotor.bankDetails.bankName || 'Keine Daten'}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
 
@@ -2559,17 +2816,29 @@ Dein Nespresso Team`;
                                   <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                     IBAN
                                   </label>
-                                  <div className="flex items-center space-x-2">
-                                    <p 
-                                      className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
-                                      onClick={() => handleIbanClick(promotor.id)}
-                                    >
-                                      {promotor.bankDetails.iban ? (ibanVisible[promotor.id] ? promotor.bankDetails.iban : maskIban(promotor.bankDetails.iban)) : 'Keine Daten'}
-                                    </p>
-                                    {ibanCopied[promotor.id] && (
-                                      <Check className="h-3 w-3 text-green-500" />
-                                    )}
-                                  </div>
+                                  {editingBankData[promotor.id] ? (
+                                    <Input
+                                      type="text"
+                                      value={editBankForm[promotor.id]?.iban || ''}
+                                      onChange={(e) => setEditBankForm(prev => ({
+                                        ...prev,
+                                        [promotor.id]: { ...prev[promotor.id], iban: e.target.value }
+                                      }))}
+                                      className="text-sm font-mono"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center space-x-2">
+                                      <p 
+                                        className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
+                                        onClick={() => handleIbanClick(promotor.id)}
+                                      >
+                                        {promotor.bankDetails.iban ? (ibanVisible[promotor.id] ? promotor.bankDetails.iban : maskIban(promotor.bankDetails.iban)) : 'Keine Daten'}
+                                      </p>
+                                      {ibanCopied[promotor.id] && (
+                                        <Check className="h-3 w-3 text-green-500" />
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* BIC and SV Nummer - Side by Side */}
@@ -2578,17 +2847,29 @@ Dein Nespresso Team`;
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       BIC
                                     </label>
-                                    <div className="flex items-center space-x-2">
-                                      <p 
-                                        className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
-                                        onClick={() => handleBicClick(promotor.id)}
-                                      >
-                                        {promotor.bankDetails.bic || 'Keine Daten'}
-                                      </p>
-                                      {bicCopied[promotor.id] && (
-                                        <Check className="h-3 w-3 text-green-500" />
-                                      )}
-                                    </div>
+                                    {editingBankData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editBankForm[promotor.id]?.bic || ''}
+                                        onChange={(e) => setEditBankForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], bic: e.target.value }
+                                        }))}
+                                        className="text-sm font-mono"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center space-x-2">
+                                        <p 
+                                          className="text-sm font-mono font-medium text-gray-900 tracking-wider cursor-pointer"
+                                          onClick={() => handleBicClick(promotor.id)}
+                                        >
+                                          {promotor.bankDetails.bic || 'Keine Daten'}
+                                        </p>
+                                        {bicCopied[promotor.id] && (
+                                          <Check className="h-3 w-3 text-green-500" />
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="space-y-0.5">
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
@@ -2676,9 +2957,23 @@ Dein Nespresso Team`;
                            {/* Clothing Size Information */}
                            <Card className="shadow-sm border-gray-200/60">
                              <CardContent className="p-4">
-                               <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                                 <Ruler className="h-4 w-4 mr-2 text-purple-500" />
-                                 Kleidergröße
+                               <h3 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                                 <div className="flex items-center">
+                                   <Ruler className="h-4 w-4 mr-2 text-purple-500" />
+                                   Kleidergröße
+                                 </div>
+                                 <Button
+                                   variant="ghost"
+                                   size="sm"
+                                   className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
+                                   onClick={() => handleEditClothingData(promotor.id)}
+                                 >
+                                   {editingClothingData[promotor.id] ? (
+                                     <Check className="h-3 w-3 text-green-500" />
+                                   ) : (
+                                     <Edit2 className="h-3 w-3 text-gray-400" />
+                                   )}
+                                 </Button>
                                </h3>
                                <div className="space-y-3">
                                  <div className="grid grid-cols-2 gap-3">
@@ -2686,22 +2981,48 @@ Dein Nespresso Team`;
                                      <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                        Körpergröße
                                      </label>
-                                     <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
-                                       <p className="text-lg font-bold text-gray-900">
-                                         {promotor.clothingInfo.height}
-                                       </p>
-                                       <span className="text-xs text-gray-500 ml-1 font-medium">cm</span>
-                                     </div>
+                                     {editingClothingData[promotor.id] ? (
+                                       <Input
+                                         type="text"
+                                         value={editClothingForm[promotor.id]?.height || ''}
+                                         onChange={(e) => setEditClothingForm(prev => ({
+                                           ...prev,
+                                           [promotor.id]: { ...prev[promotor.id], height: e.target.value }
+                                         }))}
+                                         className="text-sm text-center"
+                                         placeholder="180"
+                                       />
+                                     ) : (
+                                       <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
+                                         <p className="text-lg font-bold text-gray-900">
+                                           {promotor.clothingInfo.height}
+                                         </p>
+                                         <span className="text-xs text-gray-500 ml-1 font-medium">cm</span>
+                                       </div>
+                                     )}
                                    </div>
                                    <div className="space-y-1 text-center">
                                      <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                        Kleidergröße
                                      </label>
-                                     <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
-                                       <p className="text-lg font-bold text-gray-900">
-                                         {promotor.clothingInfo.size}
-                                       </p>
-                                     </div>
+                                     {editingClothingData[promotor.id] ? (
+                                       <Input
+                                         type="text"
+                                         value={editClothingForm[promotor.id]?.size || ''}
+                                         onChange={(e) => setEditClothingForm(prev => ({
+                                           ...prev,
+                                           [promotor.id]: { ...prev[promotor.id], size: e.target.value }
+                                         }))}
+                                         className="text-sm text-center"
+                                         placeholder="L"
+                                       />
+                                     ) : (
+                                       <div className="bg-gray-50 rounded-lg py-4 px-3 flex items-center justify-center">
+                                         <p className="text-lg font-bold text-gray-900">
+                                           {promotor.clothingInfo.size}
+                                         </p>
+                                       </div>
+                                     )}
                                    </div>
                                  </div>
                                </div>
