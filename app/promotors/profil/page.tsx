@@ -62,6 +62,7 @@ export default function ProfilPage() {
   const [isEditingBank, setIsEditingBank] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isEditingAccess, setIsEditingAccess] = useState(false)
+  const [isEditingEmployment, setIsEditingEmployment] = useState(false)
   const [showHuebenerPassword, setShowHuebenerPassword] = useState(false)
   const [showDemotoolPassword, setShowDemotoolPassword] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
@@ -99,6 +100,7 @@ export default function ProfilPage() {
     socialSecurityNumber: "",
     citizenship: ""
   })
+  const [editableWorkingDays, setEditableWorkingDays] = useState<string[]>([])
 
   // Header profile info (name, address, join date) sourced from DB/auth
   const [headerName, setHeaderName] = useState<string>("")
@@ -233,6 +235,32 @@ export default function ProfilPage() {
     setIsEditingAccess(!isEditingAccess)
   }
 
+  const handleEmploymentEditToggle = async () => {
+    if (isEditingEmployment) {
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { error } = await supabase
+            .from('promotor_profiles')
+            .update({
+              working_days: editableWorkingDays
+            })
+            .eq('user_id', user.id)
+          
+          if (error) throw error
+          
+          // Refresh the data
+          await loadUserProfile()
+        }
+      } catch (e) {
+        console.error('Failed to save working days', e)
+      }
+    }
+    setIsEditingEmployment(!isEditingEmployment)
+  }
+
   const loadAccessCredentials = async () => {
     try {
       const supabase = createSupabaseBrowserClient()
@@ -287,6 +315,7 @@ export default function ProfilPage() {
             socialSecurityNumber: data.social_security_number || "",
             citizenship: data.citizenship || ""
           })
+          setEditableWorkingDays(Array.isArray(data.working_days) ? data.working_days : [])
         }
       }
     } catch (e) {
@@ -1056,77 +1085,154 @@ export default function ProfilPage() {
           </Card>
 
           {/* Employment Information */}
-          <Card className="relative border-none shadow-lg shadow-orange-500/20 bg-white dark:bg-gray-900 overflow-hidden">
-            {/* Minimal countdown chip in the top-right corner with subtle label */}
-            {!payrollCountdown.isPayday && (
-              <div className="absolute top-2.5 right-3 flex flex-col items-end gap-1">
-                <span className="text-[10px] leading-none text-gray-500/70 dark:text-gray-400/70">Nächstes Gehalt in</span>
-                <div className="px-2 py-0.5 rounded-full border border-orange-200/60 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-900/20 backdrop-blur-sm shadow-sm flex items-center gap-1 text-[10px] font-mono tabular-nums text-orange-600 dark:text-orange-300">
-                  <Clock className="h-3 w-3 opacity-70" />
-                  <span>{payrollCountdown.days}d</span>
-                  <span>·</span>
-                  <span>{String(payrollCountdown.hours).padStart(2, '0')}h</span>
-                  <span>·</span>
-                  <span>{String(payrollCountdown.minutes).padStart(2, '0')}m</span>
+          <div className={`transition-all duration-300 rounded-lg ${
+            isEditingEmployment 
+              ? "bg-gradient-to-r from-orange-500 to-amber-600 p-[2px]" 
+              : "p-0"
+          }`}>
+            <Card className="relative border-none shadow-lg shadow-orange-500/20 bg-white dark:bg-gray-900 overflow-hidden h-full">
+              {/* Minimal countdown chip in the top-right corner with subtle label */}
+              {!payrollCountdown.isPayday && (
+                <div className="absolute top-2.5 right-3 flex flex-col items-end gap-1">
+                  <span className="text-[10px] leading-none text-gray-500/70 dark:text-gray-400/70">Nächstes Gehalt in</span>
+                  <div className="px-2 py-0.5 rounded-full border border-orange-200/60 dark:border-orange-900/50 bg-orange-50/70 dark:bg-orange-900/20 backdrop-blur-sm shadow-sm flex items-center gap-1 text-[10px] font-mono tabular-nums text-orange-600 dark:text-orange-300">
+                    <Clock className="h-3 w-3 opacity-70" />
+                    <span>{payrollCountdown.days}d</span>
+                    <span>·</span>
+                    <span>{String(payrollCountdown.hours).padStart(2, '0')}h</span>
+                    <span>·</span>
+                    <span>{String(payrollCountdown.minutes).padStart(2, '0')}m</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-            {payrollCountdown.isPayday && (
-              <div className="absolute top-3 right-3">
-                <div className="px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 backdrop-blur-sm shadow-sm text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Gehalt ist da 🎉</div>
-                </div>
-            )}
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Briefcase className="h-5 w-5 mr-2 text-orange-500" />
-                Anstellung
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Employment Type */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                  Anstellungs Art
-                </label>
-                <div>
-                  <Badge variant="secondary" className="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
-                    geringfügig
-                  </Badge>
-                </div>
-              </div>
+                    )}
+              {payrollCountdown.isPayday && (
+                <div className="absolute top-3 right-3">
+                  <div className="px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-900/20 backdrop-blur-sm shadow-sm text-[10px] font-medium text-emerald-700 dark:text-emerald-300">Gehalt ist da 🎉</div>
+                  </div>
+              )}
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Briefcase className="h-5 w-5 mr-2 text-orange-500" />
+                    Anstellung
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                    onClick={handleEmploymentEditToggle}
+                  >
+                    {isEditingEmployment ? (
+                      <Check className="h-1.5 w-1.5 text-green-500" />
+                    ) : (
+                      <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(() => {
+                  const activeContract = promotorContracts.find(c => c.is_active);
+                  const employmentType = activeContract?.employment_type || 'geringfügig';
+                  const hoursPerWeek = activeContract?.hours_per_week || '8';
+                  const isTemporary = activeContract?.is_temporary || false;
+                  const endDate = activeContract?.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : '';
+                  const statusText = isTemporary ? `befristet bis ${endDate}` : 'unbefristet';
+                  
+                  return (
+                    <>
+                      {/* Employment Type */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                          Anstellungs Art
+                        </label>
+                        <div>
+                          {isLoading ? (
+                            <div className="h-6 w-24 rounded-full animate-skeleton-fade" />
+                          ) : (
+                            <Badge variant="secondary" className="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
+                              {employmentType}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
 
-              {/* Weekly Hours */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                  Wochenstunden
-                </label>
-                <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                  8
-                </p>
-              </div>
+                      {/* Weekly Hours */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                          Wochenstunden
+                        </label>
+                        {isLoading ? (
+                          <div className="h-5 w-8 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                            {hoursPerWeek}
+                          </p>
+                        )}
+                      </div>
 
-              {/* Employment Status */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                  Status
-                </label>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  unbefristet
-                </p>
-              </div>
+                      {/* Employment Status */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                          Status
+                        </label>
+                        {isLoading ? (
+                          <div className="h-4 w-32 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {statusText}
+                          </p>
+                        )}
+                      </div>
 
-              {/* Working Days */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
-                  Arbeitstage
-                </label>
-                <div className="flex gap-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mo</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">Mi</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                      {/* Working Days */}
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                          Arbeitstage
+                        </label>
+                        {isEditingEmployment ? (
+                          <div className="space-y-2">
+                            {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => (
+                              <label key={day} className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={editableWorkingDays.includes(day)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setEditableWorkingDays(prev => [...prev, day])
+                                    } else {
+                                      setEditableWorkingDays(prev => prev.filter(d => d !== day))
+                                    }
+                                  }}
+                                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                />
+                                <span className="text-sm text-gray-700 dark:text-gray-300">{day}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          isLoading ? (
+                            <div className="flex gap-1.5">
+                              <div className="h-6 w-8 rounded-full animate-skeleton-fade" />
+                              <div className="h-6 w-8 rounded-full animate-skeleton-fade" />
+                            </div>
+                          ) : (
+                            <div className="flex gap-1.5 flex-wrap">
+                              {editableWorkingDays.map(day => (
+                                <span key={day} className="px-2.5 py-0.5 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 border border-gray-200 shadow-sm text-xs font-medium dark:from-gray-800/40 dark:to-gray-800/10 dark:text-gray-200 dark:border-gray-700">
+                                  {day}
+                                </span>
+                              ))}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Bank Data Information */}
           <div className={`transition-all duration-300 rounded-lg ${
