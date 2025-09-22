@@ -66,10 +66,10 @@ export async function GET() {
         height: profile?.height ?? app?.height ?? '', 
         size: profile?.clothing_size ?? app?.clothingSize ?? app?.clothing_size ?? app?.clothingsize ?? '' 
       },
-      personalData: {
-        birth_date: profile?.birth_date ?? app?.birthDate ?? app?.birth_date ?? '',
-        social_security_number: profile?.social_security_number ?? app?.socialSecurityNumber ?? '',
-        citizenship: profile?.citizenship ?? app?.citizenship ?? ''
+      personalData: { 
+        birth_date: profile?.birth_date ?? app?.birthDate ?? app?.birth_date ?? '', 
+        social_security_number: profile?.social_security_number ?? app?.socialSecurityNumber ?? '', 
+        citizenship: profile?.citizenship ?? app?.citizenship ?? '' 
       },
       applicationId: profile?.application_id || null,
     };
