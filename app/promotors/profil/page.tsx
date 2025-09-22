@@ -1790,7 +1790,7 @@ export default function ProfilPage() {
                 </div>
                     <div className="flex items-center gap-2">
                 <button 
-                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[405] shadow-2xl ring-4 ring-amber-200' : ''}`}
+                        className="flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
                         onClick={() => {
                           handleDienstvertragSelect(contract.id);
                           if (showContractOnboarding && onboardingStep === 'highlight-button') {
@@ -2012,10 +2012,10 @@ export default function ProfilPage() {
         {showDienstvertragContent && (
           <>
             <div 
-              className={`fixed inset-0 bg-black/40 backdrop-blur-sm ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'z-[301]' : 'z-[60]'}`}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
               onClick={() => setShowDienstvertragContent(false)}
             ></div>
-            <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'z-[302]' : 'z-[70]'}`}>
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-lg shadow-xl p-0 w-[90vw] max-w-4xl max-h-[90vh] overflow-hidden z-[70]">
               {/* Header */}
               <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-lg">
                 <div className="flex items-center justify-between">
@@ -2041,7 +2041,7 @@ export default function ProfilPage() {
                         }
                       }}
                       disabled={isDownloading}
-                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[405] shadow-2xl ring-4 ring-blue-200' : ''}`}
+                      className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50"
                       title="Als PDF herunterladen"
                     >
                       {downloadSuccess ? (
@@ -2096,51 +2096,42 @@ export default function ProfilPage() {
           </>
         )}
 
-      {/* Contract Onboarding Overlay */}
-      {showContractOnboarding && (
-        <div className="fixed inset-0 z-[400] pointer-events-none">
-          {/* Dark overlay that dims everything */}
-          <div className="absolute inset-0 bg-black/80"></div>
-          
-          {/* Tooltip for button step - Positioned to not cover the contract */}
-          {onboardingStep === 'highlight-button' && (
-            <div className="absolute top-[5%] right-[5%] pointer-events-auto z-[410]">
-              <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400 ring-4 ring-blue-100">
-                <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  Klicken Sie auf "Ansehen & Unterschreiben" um Ihren ersten Dienstvertrag zu öffnen.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowContractOnboarding(false)}
-                    className="text-xs text-gray-500 hover:text-gray-700"
-                  >
-                    Überspringen
-                  </button>
-                </div>
-              </div>
+      {/* Contract Onboarding Windows */}
+      {showContractOnboarding && onboardingStep === 'highlight-button' && (
+        <div className="fixed top-[10%] left-1/2 transform -translate-x-1/2 z-[300] pointer-events-auto">
+          <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400">
+            <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Klicken Sie auf "Ansehen & Unterschreiben" um Ihren ersten Dienstvertrag zu öffnen.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowContractOnboarding(false)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Überspringen
+              </button>
             </div>
-          )}
-          
-          {/* Tooltip for download step - Top right of screen */}
-          {onboardingStep === 'highlight-download' && (
-            <div className="absolute top-[5%] right-[5%] pointer-events-auto z-[410]">
-              <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400 ring-4 ring-blue-100">
-                <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
-                <p className="text-sm text-gray-600 mb-3">
-                  Klicken Sie auf das Download-Symbol um den Vertrag als PDF herunterzuladen.
-                </p>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setShowContractOnboarding(false)}
-                    className="text-xs text-gray-500 hover:text-gray-700"
-                  >
-                    Verstanden
-                  </button>
-                </div>
-              </div>
+          </div>
+        </div>
+      )}
+
+      {showContractOnboarding && onboardingStep === 'highlight-download' && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[300] pointer-events-auto">
+          <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400">
+            <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Klicken Sie auf das Download-Symbol um den Vertrag als PDF herunterzuladen.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowContractOnboarding(false)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Verstanden
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
       </div>
