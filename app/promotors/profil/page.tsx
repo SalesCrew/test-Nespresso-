@@ -1133,11 +1133,12 @@ export default function ProfilPage() {
               <CardContent className="space-y-3">
                 {(() => {
                   const activeContract = promotorContracts.find(c => c.is_active);
-                  const employmentType = activeContract?.employment_type || 'geringfügig';
-                  const hoursPerWeek = activeContract?.hours_per_week || '8';
-                  const isTemporary = activeContract?.is_temporary || false;
-                  const endDate = activeContract?.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : '';
-                  const statusText = isTemporary ? `befristet bis ${endDate}` : 'unbefristet';
+                  const hasActive = !!activeContract;
+                  const employmentType = hasActive ? activeContract?.employment_type : null;
+                  const hoursPerWeek = hasActive ? activeContract?.hours_per_week : null;
+                  const isTemporary = hasActive ? !!activeContract?.is_temporary : false;
+                  const endDate = hasActive && activeContract?.end_date ? new Date(activeContract.end_date).toLocaleDateString('de-DE') : '';
+                  const statusText = hasActive ? (isTemporary ? `befristet bis ${endDate}` : 'unbefristet') : null;
                   
                   return (
                     <>
@@ -1149,10 +1150,12 @@ export default function ProfilPage() {
                         <div>
                           {isLoading ? (
                             <div className="h-6 w-24 rounded-full animate-skeleton-fade" />
-                          ) : (
+                          ) : hasActive ? (
                             <Badge variant="secondary" className="px-2 py-0.5 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm dark:from-emerald-900/20 dark:to-green-900/20 dark:text-emerald-300 dark:border-emerald-900/40">
                               {employmentType}
                             </Badge>
+                          ) : (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Noch kein Vertrag eingespielt</p>
                           )}
                         </div>
                       </div>
@@ -1164,10 +1167,12 @@ export default function ProfilPage() {
                         </label>
                         {isLoading ? (
                           <div className="h-5 w-8 rounded-md animate-skeleton-fade" />
-                        ) : (
+                        ) : hasActive ? (
                           <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
                             {hoursPerWeek}
                           </p>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Noch kein Vertrag eingespielt</p>
                         )}
                       </div>
 
@@ -1178,10 +1183,12 @@ export default function ProfilPage() {
                         </label>
                         {isLoading ? (
                           <div className="h-4 w-32 rounded-md animate-skeleton-fade" />
-                        ) : (
+                        ) : hasActive ? (
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {statusText}
                           </p>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Noch kein Vertrag eingespielt</p>
                         )}
                       </div>
 
