@@ -404,7 +404,9 @@ Dein Nespresso Team`;
             bank_holder: formData.accountHolder,
             bank_name: formData.bankName,
             bank_iban: formData.iban,
-            bank_bic: formData.bic
+            bank_bic: formData.bic,
+            // Also allow updating SV number which lives in personal data
+            social_security_number: formData.social_security_number
           })
         });
         
@@ -417,11 +419,23 @@ Dein Nespresso Team`;
         
         if (response.ok) {
           // Update local state
-          setPromotors(prev => prev.map(p => 
-            p.id === promotorId 
-              ? { ...p, bankDetails: formData }
-              : p
-          ));
+          const { accountHolder, bankName, iban, bic, social_security_number } = formData || {};
+          setPromotors(prev => prev.map(p => {
+            if (p.id !== promotorId) return p;
+            return {
+              ...p,
+              bankDetails: {
+                accountHolder: accountHolder ?? p.bankDetails?.accountHolder ?? '',
+                bankName: bankName ?? p.bankDetails?.bankName ?? '',
+                iban: iban ?? p.bankDetails?.iban ?? '',
+                bic: bic ?? p.bankDetails?.bic ?? ''
+              },
+              personalData: {
+                ...(p.personalData || {}),
+                social_security_number: social_security_number ?? p.personalData?.social_security_number ?? ''
+              }
+            };
+          }));
           setToastMsg('Bankdaten erfolgreich aktualisiert');
         } else {
           throw new Error('Fehler beim Speichern');
@@ -435,7 +449,11 @@ Dein Nespresso Team`;
       if (promotor) {
         setEditBankForm(prev => ({
           ...prev,
-          [promotorId]: { ...promotor.bankDetails }
+          [promotorId]: { 
+            ...promotor.bankDetails,
+            // Prefill SV number from personal data for editing
+            social_security_number: promotor.personalData?.social_security_number || ''
+          }
         }));
       }
     }
@@ -2751,7 +2769,7 @@ Dein Nespresso Team`;
                                 </div>
 
                                 {/* BIC and SV Nummer - Side by Side */}
-                                <div className="grid grid-cols-2 gap-3" style={{marginTop: '-2px'}}>
+                                <div className="grid grid-cols-2 gap-3" style={{marginTop: '1px'}}>
                                   <div className="space-y-0.5">
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       BIC
@@ -2784,16 +2802,28 @@ Dein Nespresso Team`;
                                     <label className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                                       SV Nummer
                                     </label>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {(() => {
-                                        console.log('Debug SV Nummer for promotor:', promotor.id, {
-                                          personalData: promotor.personalData,
-                                          socialSecurityNumber: promotor.personalData?.social_security_number,
-                                          fullPromotor: promotor
-                                        });
-                                        return promotor.personalData?.social_security_number || 'Keine Daten';
-                                      })()}
-                                    </p>
+                                    {editingBankData[promotor.id] ? (
+                                      <Input
+                                        type="text"
+                                        value={editBankForm[promotor.id]?.social_security_number || ''}
+                                        onChange={(e) => setEditBankForm(prev => ({
+                                          ...prev,
+                                          [promotor.id]: { ...prev[promotor.id], social_security_number: e.target.value }
+                                        }))}
+                                        className="text-sm font-mono"
+                                      />
+                                    ) : (
+                                      <p className="text-sm font-medium text-gray-900">
+                                        {(() => {
+                                          console.log('Debug SV Nummer for promotor:', promotor.id, {
+                                            personalData: promotor.personalData,
+                                            socialSecurityNumber: promotor.personalData?.social_security_number,
+                                            fullPromotor: promotor
+                                          });
+                                          return promotor.personalData?.social_security_number || 'Keine Daten';
+                                        })()}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               </div>
