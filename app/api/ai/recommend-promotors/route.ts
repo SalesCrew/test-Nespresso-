@@ -186,7 +186,7 @@ export async function POST(req: Request) {
       .from('assignment_participants')
       .select(`
         user_id,
-        assignments!inner(id, start_ts, end_ts, status)
+        assignments!inner(id, start_ts, end_ts, status, special_status)
       `)
       .in('user_id', userIds)
       .gte('assignments.start_ts', assignmentDateOnly.toISOString())
@@ -197,9 +197,56 @@ export async function POST(req: Request) {
       console.log('⚠️ Same-day assignments fetch error:', sameDayError.message)
     }
     
-    // Create set of user IDs who are busy on the same day
-    const busyUserIds = new Set((sameDayAssignments || []).map((item: any) => item.user_id))
-    console.log(`🚫 Found ${busyUserIds.size} promotors with same-day assignments to exclude:`, Array.from(busyUserIds).slice(0, 3))
+    // Get promotors with special status assignments (krankenstand within 3 days, others on same day)
+    console.log('🏥 Fetching special status assignments to exclude promotors...')
+    const threeDaysFromAssignment = new Date(assignmentDateOnly.getTime() + 3 * 24 * 60 * 60 * 1000)
+    
+    const { data: specialStatusAssignments, error: specialStatusError } = await svc
+      .from('assignment_participants')
+      .select(`
+        user_id,
+        assignments!inner(id, start_ts, end_ts, special_status)
+      `)
+      .in('user_id', userIds)
+      .not('assignments.special_status', 'is', null)
+      .neq('assignments.id', assignmentId)
+
+    if (specialStatusError) {
+      console.log('⚠️ Special status assignments fetch error:', specialStatusError.message)
+    }
+
+    // Create set of user IDs who are busy on the same day or have special status conflicts
+    const busyUserIds = new Set<string>()
+    
+    // Add users with same-day assignments
+    if (sameDayAssignments) {
+      sameDayAssignments.forEach((item: any) => {
+        busyUserIds.add(item.user_id)
+      })
+    }
+    
+    // Add users with conflicting special statuses
+    if (specialStatusAssignments) {
+      specialStatusAssignments.forEach((item: any) => {
+      const assignmentStart = new Date(item.assignments.start_ts)
+      const assignmentDateOnlyStart = new Date(assignmentStart.getFullYear(), assignmentStart.getMonth(), assignmentStart.getDate())
+      const specialStatus = item.assignments.special_status
+      
+      if (specialStatus === 'krankenstand') {
+        // Krankenstand: exclude if within 3 days of selected assignment
+        if (assignmentDateOnlyStart >= assignmentDateOnly && assignmentDateOnlyStart <= threeDaysFromAssignment) {
+          busyUserIds.add(item.user_id)
+        }
+      } else if (['urlaub', 'zeitausgleich'].includes(specialStatus)) {
+        // Urlaub/Zeitausgleich: exclude only on same day
+        if (assignmentDateOnlyStart.getTime() === assignmentDateOnly.getTime()) {
+          busyUserIds.add(item.user_id)
+        }
+      }
+    })
+    }
+    
+    console.log(`🚫 Found ${busyUserIds.size} promotors with same-day assignments or special status conflicts to exclude:`, Array.from(busyUserIds).slice(0, 3))
     
     // Filter out busy promotors before building data
     const availableUsers = (users || []).filter((u: any) => !busyUserIds.has(u.user_id))
@@ -405,7 +452,13 @@ STRIKTE REGELN WICHTIG!!!!
 
 ⦁ Viele Promotoren haben einen Stammmarkt; DIESER HAT OBERSTE PRIORITÄT. Versuche IMMER an erster Stelle, Promotoren ihrem Stammmarkt zuzuordnen – ABER NUR, wenn sie am Tag des zu matchenden Termins tatsächlich frei sind.
 
-⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind. Gib IMMER explizit an: "geplante Wochenstunden: Xh" und "diese Woche bereits gearbeitet: Yh".
+⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind.
+
+⦁ STANDARDISIERTE REASONING-STRUKTUR: Jede Empfehlung MUSS diese exakte Reihenfolge einhalten:
+  1. CLUSTER-MATCH: "Cluster: [Einsatz-Cluster] ↔ [Promotor-Cluster] ✓/✗"
+  2. WOCHENSTUNDEN: "Stunden: [gearbeitet]h/[geplant]h (noch [verfügbar]h frei)"
+  3. STAMMMARKT: "Stammmarkt: [Name/keiner] - [Match-Status]" (nur wenn Stammmarkt vorhanden)
+  4. WEITERE EIGNUNG: Kurze zusätzliche Begründung
 
 ⦁ Wenn mehrere Promotoren gut geeignet sind und es KEINEN verfügbaren Promotor mit diesem Markt als Stammmarkt gibt, MUSST du anhand der Adresse und PLZ des Marktes sowie der Heimatadresse der Promotoren die Distanz berechnen und STRIKT den nächstgelegenen auswählen.
 
@@ -432,7 +485,7 @@ Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} 
     "phone": "string", 
     "confidence": number zwischen 0.0 und 1.0,
     "rank": number von 1 bis zur Anzahl der tatsächlichen Empfehlungen,
-    "reasoning": "Kurze Begründung der Eignung. Enthält immer: geplante Wochenstunden (contract_hours_per_week) und bereits gearbeitete Stunden in dieser KW (worked_hours_this_week)."
+    "reasoning": "Standardisierte Begründung in genau dieser Reihenfolge: 1) Cluster-Match (Einsatz-Cluster vs. Promotor-Cluster), 2) Wochenstunden (geplant vs. gearbeitet), 3) Stammmarkt-Match falls vorhanden (höchste Priorität!), 4) weitere Eignung."
   }
 ]
 
