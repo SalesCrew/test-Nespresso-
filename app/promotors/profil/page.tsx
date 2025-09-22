@@ -500,6 +500,7 @@ export default function ProfilPage() {
         const st = map.get(type)
         if (st === 'approved') status = 'approved'
         else if (st === 'uploaded') status = 'pending'
+        else if (st === 'rejected') status = 'missing' // Allow re-upload after rejection
         else status = 'missing'
         // Conditional requirements based on application data
         let required = d.required
