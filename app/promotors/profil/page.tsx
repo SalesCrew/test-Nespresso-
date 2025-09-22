@@ -463,16 +463,18 @@ export default function ProfilPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [needsWorkPermit, setNeedsWorkPermit] = useState<boolean>(false)
   const [documents, setDocuments] = useState<Array<{ id: number; name: string; status: 'missing'|'pending'|'approved'; required: boolean }>>([
-    { id: 1, name: 'Staatsbürgerschaftsnachweis', status: 'missing', required: true },
-    { id: 2, name: 'Pass', status: 'missing', required: true },
-    { id: 3, name: 'Strafregister Erscheinung', status: 'missing', required: false },
-    { id: 4, name: 'Arbeitserlaubnis', status: 'missing', required: false },
-    { id: 5, name: 'Zusätzliche Dokumente', status: 'missing', required: false },
+    { id: 1, name: 'Pass', status: 'missing', required: true },
+    { id: 2, name: 'Führerschein', status: 'missing', required: false },
+    { id: 3, name: 'Staatsbürgerschaftsnachweis', status: 'missing', required: false },
+    { id: 4, name: 'Strafregister Erscheinung', status: 'missing', required: false },
+    { id: 5, name: 'Arbeitserlaubnis', status: 'missing', required: false },
+    { id: 6, name: 'Zusätzliche Dokumente', status: 'missing', required: false },
   ])
 
   const mapDocNameToType = (name: string): string => {
-    if (name === 'Staatsbürgerschaftsnachweis') return 'citizenship'
     if (name === 'Pass') return 'passport'
+    if (name === 'Führerschein') return 'fuehrerschein'
+    if (name === 'Staatsbürgerschaftsnachweis') return 'citizenship'
     if (name.startsWith('Strafregister')) return 'strafregister'
     if (name === 'Arbeitserlaubnis') return 'arbeitserlaubnis'
     return 'additional'
@@ -480,10 +482,11 @@ export default function ProfilPage() {
 
   const refreshDocuments = async (uid: string) => {
     try {
-      // profile for needsWorkPermit
+      // profile for needsWorkPermit and drivingLicense
       const profRes = await fetch(`/api/promotors/${uid}`)
       const profJson = await profRes.json()
       const needsWP = !!profJson?.profile?.needs_work_permit
+      const hasDrivingLicense = !!profJson?.application?.drivingLicense
       setNeedsWorkPermit(needsWP)
 
       const res = await fetch(`/api/promotors/${uid}/documents`, { cache: 'no-store' })
@@ -498,8 +501,10 @@ export default function ProfilPage() {
         if (st === 'approved') status = 'approved'
         else if (st === 'uploaded') status = 'pending'
         else status = 'missing'
-        // Arbeitserlaubnis optional depending on profile
-        const required = d.name === 'Arbeitserlaubnis' ? needsWP : d.required
+        // Conditional requirements based on application data
+        let required = d.required
+        if (d.name === 'Arbeitserlaubnis') required = needsWP
+        if (d.name === 'Führerschein') required = hasDrivingLicense
         return { ...d, status, required }
       })
 

@@ -639,7 +639,7 @@ Dein Nespresso Team`;
       const res = await fetch(`/api/promotors/${uid}/documents`, { cache: 'no-store' })
       const json = await res.json()
       const rows: Array<{ doc_type: string; status: string; file_path?: string }> = Array.isArray(json.documents) ? json.documents : []
-      const nameFromType = (t: string) => t === 'citizenship' ? 'Staatsbürgerschaftsnachweis' : t === 'passport' ? 'Pass' : t === 'arbeitserlaubnis' ? 'Arbeitserlaubnis' : t === 'strafregister' ? 'Strafregister' : 'Zusätzliche Dokumente'
+      const nameFromType = (t: string) => t === 'passport' ? 'Pass' : t === 'fuehrerschein' ? 'Führerschein' : t === 'citizenship' ? 'Staatsbürgerschaftsnachweis' : t === 'arbeitserlaubnis' ? 'Arbeitserlaubnis' : t === 'strafregister' ? 'Strafregister' : 'Zusätzliche Dokumente'
       const statuses: Record<string, string> = {}
       const files: Record<string, boolean> = {}
       for (const r of rows) {
@@ -1069,7 +1069,7 @@ Dein Nespresso Team`;
 
   const handleViewDocument = async (documentName: string) => {
     try {
-      const type = documentName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : documentName === 'Pass' ? 'passport' : documentName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : documentName === 'Strafregister' ? 'strafregister' : 'additional'
+      const type = documentName === 'Pass' ? 'passport' : documentName === 'Führerschein' ? 'fuehrerschein' : documentName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : documentName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : documentName === 'Strafregister' ? 'strafregister' : 'additional'
       const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
       if (!uid) return
       const r = await fetch(`/api/promotors/${uid}/documents/signed-url?doc_type=${encodeURIComponent(type)}`)
@@ -2392,10 +2392,11 @@ Dein Nespresso Team`;
                               </h3>
                               <div className="space-y-3">
                                 {[
+                                  "Pass",
+                                  "Führerschein", 
                                   "Staatsbürgerschaftsnachweis",
-                                  "Pass", 
-                                  "Arbeitserlaubnis",
                                   "Strafregister",
+                                  "Arbeitserlaubnis",
                                   "Zusätzliche Dokumente"
                                 ].map((docName, index) => {
                                   const status = documentStatuses[docName];
@@ -2416,7 +2417,7 @@ Dein Nespresso Team`;
                                             <button
                                               onClick={async () => {
                                                 // Admin approve
-                                                const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : docName === 'Zusätzliche Dokumente' ? 'additional' : 'additional'
+                                                const type = docName === 'Pass' ? 'passport' : docName === 'Führerschein' ? 'fuehrerschein' : docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : docName === 'Zusätzliche Dokumente' ? 'additional' : 'additional'
                                                 const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
                                                 if (!uid) return
                                                 await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'approved' })})
@@ -2428,7 +2429,7 @@ Dein Nespresso Team`;
                                             </button>
                                             <button
                                               onClick={async () => {
-                                                const type = docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Pass' ? 'passport' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : docName === 'Zusätzliche Dokumente' ? 'additional' : 'additional'
+                                                const type = docName === 'Pass' ? 'passport' : docName === 'Führerschein' ? 'fuehrerschein' : docName === 'Staatsbürgerschaftsnachweis' ? 'citizenship' : docName === 'Arbeitserlaubnis' ? 'arbeitserlaubnis' : docName === 'Strafregister' ? 'strafregister' : docName === 'Zusätzliche Dokumente' ? 'additional' : 'additional'
                                                 const uid = String(promotors.find(p=>p.id===detailedViewOpen)?.id || detailedViewOpen || '')
                                                 if (!uid) return
                                                 await fetch('/api/admin/documents', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: uid, doc_type: type, status: 'rejected' })})
