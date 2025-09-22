@@ -708,15 +708,14 @@ Dein Nespresso Team`;
         
         try {
           const svc = createSupabaseServiceClient();
-          const { data: invitations } = await svc
-            .from('assignment_invitations')
+          const { data: participants } = await svc
+            .from('assignment_participants')
             .select('user_id')
-            .in('user_id', userIds)
-            .eq('status', 'applied');
+            .in('user_id', userIds);
           
-          // Create map of users who have assignment history
-          (invitations || []).forEach((inv: any) => {
-            assignmentHistory.set(inv.user_id, true);
+          // Create map of users who have assignment history (been assigned to any assignment)
+          (participants || []).forEach((participant: any) => {
+            assignmentHistory.set(participant.user_id, true);
           });
         } catch (e) {
           console.error('Failed to load assignment history:', e);
