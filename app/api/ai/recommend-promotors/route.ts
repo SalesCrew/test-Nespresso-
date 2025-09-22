@@ -405,7 +405,7 @@ STRIKTE REGELN WICHTIG!!!!
 
 ⦁ Viele Promotoren haben einen Stammmarkt; DIESER HAT OBERSTE PRIORITÄT. Versuche IMMER an erster Stelle, Promotoren ihrem Stammmarkt zuzuordnen – ABER NUR, wenn sie am Tag des zu matchenden Termins tatsächlich frei sind.
 
-⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind.
+⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind. Gib IMMER explizit an: "geplante Wochenstunden: Xh" und "diese Woche bereits gearbeitet: Yh".
 
 ⦁ Wenn mehrere Promotoren gut geeignet sind und es KEINEN verfügbaren Promotor mit diesem Markt als Stammmarkt gibt, MUSST du anhand der Adresse und PLZ des Marktes sowie der Heimatadresse der Promotoren die Distanz berechnen und STRIKT den nächstgelegenen auswählen.
 
@@ -432,7 +432,7 @@ Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} 
     "phone": "string", 
     "confidence": number zwischen 0.0 und 1.0,
     "rank": number von 1 bis zur Anzahl der tatsächlichen Empfehlungen,
-    "reasoning": "Kurze Begründung der Eignung"
+    "reasoning": "Kurze Begründung der Eignung. Enthält immer: geplante Wochenstunden (contract_hours_per_week) und bereits gearbeitete Stunden in dieser KW (worked_hours_this_week)."
   }
 ]
 
