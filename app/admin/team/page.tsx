@@ -658,6 +658,11 @@ Dein Nespresso Team`;
             height: inc.clothingInfo?.height ?? '',
             size: inc.clothingInfo?.size ?? ''
           },
+          personalData: {
+            birth_date: inc.personalData?.birth_date ?? '',
+            social_security_number: inc.personalData?.social_security_number ?? '',
+            citizenship: inc.personalData?.citizenship ?? ''
+          },
           applicationId: inc.applicationId ?? null,
         }));
         // Fetch onboarding status per promotor and compute progress
