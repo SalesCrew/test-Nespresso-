@@ -165,36 +165,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       }
     };
     
-    // Function to check and send due scheduled messages
-    const checkScheduledMessages = async () => {
-      try {
-        const response = await fetch('/api/messages/send-scheduled', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          if (result.sent_count > 0) {
-            console.log(`📤 Auto-sent ${result.sent_count} scheduled messages`);
-            // Refresh both scheduled and history when messages are sent
-            await loadScheduledMessages();
-            await loadMessageHistory();
-          }
-        }
-      } catch (error) {
-        console.error('Error checking scheduled messages:', error);
-      }
-    };
+    // No longer needed - messages are sent immediately but filtered by time on frontend
     
     loadPromotors();
     loadScheduledMessages();
     loadMessageHistory();
     loadTodaysAssignments(); // Load today's assignments
-    
-    // Check for scheduled messages immediately and then every minute
-    checkScheduledMessages();
-    const interval = setInterval(checkScheduledMessages, 60000); // Every 60 seconds
     
     // Refresh today's assignments when window regains focus (after editing in einsatzplan)
     const handleFocus = () => {
@@ -203,7 +179,6 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     window.addEventListener('focus', handleFocus);
     
     return () => {
-      clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
@@ -222,9 +197,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       const response = await fetch('/api/messages');
       if (response.ok) {
         const data = await response.json();
-        // Filter for scheduled messages only and format for UI
+        // Filter for messages with future scheduled_send_time (these appear as "scheduled")
+        const now = new Date();
         const scheduledOnly = (data.messages || [])
-          .filter((msg: any) => msg.status === 'scheduled')
+          .filter((msg: any) => msg.status === 'sent' && msg.scheduled_send_time && new Date(msg.scheduled_send_time) > now)
           .map((msg: any) => {
             const scheduleDate = new Date(msg.scheduled_send_time);
             const recipients = msg.recipients || [];
@@ -273,9 +249,13 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       const response = await fetch('/api/messages');
       if (response.ok) {
         const data = await response.json();
-        // Filter for sent messages and format for UI
+        // Filter for sent messages (instant or scheduled messages that have passed their time)
+        const now = new Date();
         const sentMessages = (data.messages || [])
-          .filter((msg: any) => msg.status === 'sent')
+          .filter((msg: any) => 
+            msg.status === 'sent' && 
+            (!msg.scheduled_send_time || new Date(msg.scheduled_send_time) <= now)
+          )
           .map((msg: any) => {
             const sentDate = new Date(msg.sent_at || msg.created_at);
             const recipients = msg.recipients || [];

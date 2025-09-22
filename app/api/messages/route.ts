@@ -28,10 +28,10 @@ export async function POST(req: Request) {
 
     const svc = createSupabaseServiceClient();
 
-    // Determine message status and send time
+    // Always send immediately but keep scheduled_send_time for filtering
     const now = new Date();
-    const status = send_immediately ? 'sent' : 'scheduled';
-    const sent_at = send_immediately ? now.toISOString() : null;
+    const status = 'sent'; // Always sent immediately
+    const sent_at = now.toISOString(); // Always set sent_at
 
     // Create the message
     console.log('📝 Creating message with:', {

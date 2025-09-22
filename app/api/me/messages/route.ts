@@ -37,7 +37,7 @@ export async function GET() {
     const messageIds = recipientRecords.map(r => r.message_id);
     console.log('Message IDs to fetch:', messageIds);
     
-    // Get the actual messages
+    // Get the actual messages (sent status, but filter by scheduled_send_time)
     const { data: messages, error: msgError } = await svc
       .from('messages')
       .select('*')
@@ -52,8 +52,19 @@ export async function GET() {
       return NextResponse.json({ error: msgError.message }, { status: 500 });
     }
     
+    // Filter out messages that are scheduled for the future
+    const now = new Date();
+    const visibleMessages = (messages || []).filter(msg => {
+      // If no scheduled_send_time, show immediately (instant messages)
+      if (!msg.scheduled_send_time) return true;
+      // If scheduled_send_time is in the past or now, show it
+      return new Date(msg.scheduled_send_time) <= now;
+    });
+    
+    console.log('Messages after time filtering:', visibleMessages?.length || 0);
+    
     // Combine message data with recipient data
-    const formattedMessages = (messages || []).map(msg => {
+    const formattedMessages = visibleMessages.map(msg => {
       const recipientData = recipientRecords.find(r => r.message_id === msg.id);
       return {
         id: msg.id,
