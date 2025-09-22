@@ -1796,7 +1796,7 @@ export default function ProfilPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={`h-8 w-8 p-0 ${showUploadJump ? 'animate-bounce' : ''}`}
+                        className="h-8 w-8 p-0 animate-bounce"
                         onClick={async () => {
                           if (!userId) return;
                           // Stop jumping and end onboarding if active
