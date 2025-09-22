@@ -511,18 +511,17 @@ export default function ProfilPage() {
         return { ...d, status, required }
       })
 
-      // Fallback: if a file exists in storage for a doc but DB row missing, keep it pending
+      // Fallback: if a file exists in storage for a doc but NO DB row exists, keep it pending
       try {
         const supabase = createSupabaseBrowserClient()
         const { data: items } = await supabase.storage.from('documents').list(`${uid}`)
         const names = (items || []).map((i: any) => i.name as string)
         nextDocs = nextDocs.map(d => {
-          // Only apply fallback if status is 'missing' and there's no DB row at all
+          // Only apply fallback if status is 'missing' AND there's no DB entry for this doc type
           if (d.status !== 'missing') return d
           const t = mapDocNameToType(d.name)
-          const dbStatus = map.get(t)
-          // Don't apply fallback if document was explicitly rejected
-          if (dbStatus === 'rejected') return d
+          const hasDbEntry = map.has(t) // Check if there's any DB entry (approved/rejected/uploaded)
+          if (hasDbEntry) return d // Don't override if DB has an entry (even if rejected)
           const hasFile = names.some((n: string) => n.startsWith(`${t}.`))
           return hasFile ? { ...d, status: 'pending' } : d
         })
