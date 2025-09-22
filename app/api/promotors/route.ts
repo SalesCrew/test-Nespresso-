@@ -17,10 +17,16 @@ export async function GET() {
 
   // Pull canonical promotor_profiles and join back to applications for fallback
   const userIds = (users || []).map((u: { user_id: string }) => u.user_id);
-  const { data: profiles } = await svc
+  console.log('Loading promotor_profiles for userIds:', userIds);
+  const { data: profiles, error: profilesError } = await svc
     .from('promotor_profiles')
     .select('*')
     .in('user_id', userIds);
+  console.log('Promotor profiles loaded:', profiles?.length || 0, 'profiles');
+  console.log('Profiles error:', profilesError);
+  if (profiles) {
+    console.log('Sample profile:', profiles[0]);
+  }
   const appIds = (profiles || []).map((p: any) => p.application_id).filter(Boolean) as string[];
   const { data: applications } = appIds.length
     ? await svc.from('applications').select('*').in('id', appIds)
