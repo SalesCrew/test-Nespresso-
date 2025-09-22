@@ -51,7 +51,7 @@ export async function GET() {
       email: app?.email || null,
       phone: profile?.phone ?? u.phone ?? app?.phone ?? null,
       address,
-      birthDate: profile?.birth_date ?? app?.birthDate ?? app?.birth_date ?? null,
+      birthDate: profile?.birth_date ?? profile?.birthDate ?? app?.birthDate ?? app?.birth_date ?? null,
       region: profile?.region ?? app?.preferredRegion ?? app?.preferred_region ?? 'wien-noe-bgl',
       workingDays: profile?.working_days ?? app?.workingDays ?? app?.working_days ?? [],
       status: 'active',
@@ -67,8 +67,8 @@ export async function GET() {
         size: profile?.clothing_size ?? app?.clothingSize ?? app?.clothing_size ?? app?.clothingsize ?? '' 
       },
       personalData: { 
-        birth_date: profile?.birth_date ?? app?.birthDate ?? app?.birth_date ?? '', 
-        social_security_number: profile?.social_security_number ?? app?.socialSecurityNumber ?? '', 
+        birth_date: profile?.birth_date ?? profile?.birthDate ?? app?.birthDate ?? app?.birth_date ?? '', 
+        social_security_number: profile?.social_security_number ?? profile?.socialSecurityNumber ?? app?.socialSecurityNumber ?? '', 
         citizenship: profile?.citizenship ?? app?.citizenship ?? '' 
       },
       applicationId: profile?.application_id || null,
