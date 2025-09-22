@@ -44,6 +44,17 @@ import {
 // Avoid importing browser-only libraries at module scope to prevent SSR/prerender errors
 // We'll dynamically import `html2pdf.js` inside the functions that need it
 
+// Simple skeleton fade animation CSS (reused from admin/team)
+const skeletonStyles = `
+  .animate-skeleton-fade {
+    animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+  }
+  @keyframes skeleton-fade {
+    0% { background-color: #f3f4f6; }
+    100% { background-color: #e5e7eb; }
+  }
+`;
+
 export default function ProfilPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "stats">("overview")
   const [isEditingContact, setIsEditingContact] = useState(false)
@@ -99,6 +110,7 @@ export default function ProfilPage() {
   
   // User profile data
   const [userProfileData, setUserProfileData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   // Mock user data
   const userProfile = {
@@ -480,6 +492,7 @@ export default function ProfilPage() {
 
   useEffect(() => {
     (async () => {
+      setIsLoading(true)
       try {
         const supabase = createSupabaseBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
@@ -544,6 +557,7 @@ export default function ProfilPage() {
           await loadPromotorContracts(user.id)
         }
       } catch {}
+      finally { setIsLoading(false) }
     })()
   }, [])
 
@@ -704,6 +718,8 @@ export default function ProfilPage() {
 
   return (
     <div className="space-y-6">
+      {/* Skeleton animation styles */}
+      <style dangerouslySetInnerHTML={{ __html: skeletonStyles }} />
       {/* Profile Header */}
       <Card className="border-none shadow-md bg-white dark:bg-gray-900">
         <CardContent className="p-6">
@@ -716,15 +732,25 @@ export default function ProfilPage() {
             </Avatar>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {headerName || 'Promotor'}
+                {isLoading ? (
+                  <div className="h-7 w-48 rounded-md animate-skeleton-fade" />
+                ) : (
+                  headerName || 'Promotor'
+                )}
               </h1>
               <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                 <MapPin className="h-4 w-4 mr-1" />
-                {headerLocation}
+                {isLoading ? (
+                  <div className="h-4 w-64 rounded-md animate-skeleton-fade" />
+                ) : headerLocation}
               </div>
               <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
                 <Calendar className="h-4 w-4 mr-1" />
-                Dabei seit {headerJoinDate}
+                {isLoading ? (
+                  <div className="h-4 w-32 rounded-md animate-skeleton-fade" />
+                ) : (
+                  <>Dabei seit {headerJoinDate}</>
+                )}
               </div>
             </div>
           </div>
@@ -816,7 +842,11 @@ export default function ProfilPage() {
                       placeholder="E-Mail eingeben..."
                     />
                   ) : (
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{editableProfile.email}</span>
+                    isLoading ? (
+                      <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
+                    ) : (
+                      <span className="text-sm text-gray-600 dark:text-gray-300">{editableProfile.email}</span>
+                    )
                   )}
                 </div>
                 <div className="flex items-center space-x-3">
@@ -830,7 +860,11 @@ export default function ProfilPage() {
                       placeholder="Telefonnummer eingeben..."
                     />
                   ) : (
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{editableProfile.phone}</span>
+                    isLoading ? (
+                      <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                    ) : (
+                      <span className="text-sm text-gray-600 dark:text-gray-300">{editableProfile.phone}</span>
+                    )
                   )}
                 </div>
               </CardContent>
@@ -882,9 +916,13 @@ export default function ProfilPage() {
                         <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 ml-1">cm</span>
                       </div>
                     ) : (
-                      <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                        {editableClothing.height} cm
-                      </p>
+                      isLoading ? (
+                        <div className="h-7 w-24 rounded-md mx-auto animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                          {editableClothing.height} cm
+                        </p>
+                      )
                     )}
                   </div>
                   <div className="space-y-1 text-center">
@@ -900,9 +938,13 @@ export default function ProfilPage() {
                         placeholder="L"
                       />
                     ) : (
-                      <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                        {editableClothing.size}
-                      </p>
+                      isLoading ? (
+                        <div className="h-7 w-16 rounded-md mx-auto animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                          {editableClothing.size}
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -1129,9 +1171,13 @@ export default function ProfilPage() {
                         placeholder="Vollständiger Name"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.accountHolder}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-48 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {editableBankData.accountHolder}
+                        </p>
+                      )
                     )}
                   </div>
 
@@ -1149,9 +1195,13 @@ export default function ProfilPage() {
                         placeholder="Name der Bank"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editableBankData.bankName}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {editableBankData.bankName}
+                        </p>
+                      )
                     )}
                   </div>
 
@@ -1169,9 +1219,13 @@ export default function ProfilPage() {
                         placeholder="AT00 0000 0000 0000 0000"
                       />
                     ) : (
-                      <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editableBankData.iban ? maskIban(editableBankData.iban) : ''}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-64 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
+                          {editableBankData.iban ? maskIban(editableBankData.iban) : ''}
+                        </p>
+                      )
                     )}
                   </div>
 
@@ -1189,9 +1243,13 @@ export default function ProfilPage() {
                         placeholder="BANKCODE"
                       />
                     ) : (
-                      <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editableBankData.bic}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-32 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
+                          {editableBankData.bic}
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -1242,9 +1300,13 @@ export default function ProfilPage() {
                         placeholder="TT.MM.JJJJ"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editablePersonalData.birthday}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-28 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {editablePersonalData.birthday}
+                        </p>
+                      )
                     )}
                   </div>
 
@@ -1262,9 +1324,13 @@ export default function ProfilPage() {
                         placeholder="1234 DDMMYY"
                       />
                     ) : (
-                      <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
-                        {editablePersonalData.socialSecurityNumber}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-mono font-medium text-gray-900 dark:text-gray-100 tracking-wider">
+                          {editablePersonalData.socialSecurityNumber}
+                        </p>
+                      )
                     )}
                   </div>
 
@@ -1282,9 +1348,13 @@ export default function ProfilPage() {
                         placeholder="Land der Staatsbürgerschaft"
                       />
                     ) : (
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {editablePersonalData.citizenship}
-                      </p>
+                      isLoading ? (
+                        <div className="h-4 w-48 rounded-md animate-skeleton-fade" />
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {editablePersonalData.citizenship}
+                        </p>
+                      )
                     )}
                   </div>
                 </div>
@@ -1335,9 +1405,13 @@ export default function ProfilPage() {
                           placeholder="email@example.com"
                         />
                       ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.huebener_email || 'Nicht angegeben'}
-                        </p>
+                        isLoading ? (
+                          <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {accessData?.huebener_email || 'Nicht angegeben'}
+                          </p>
+                        )
                       )}
                     </div>
                     <div className="space-y-0.5">
@@ -1353,15 +1427,19 @@ export default function ProfilPage() {
                           placeholder="••••••••"
                         />
                       ) : (
-                        <p 
-                          className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
-                          onClick={() => accessData?.huebener_password && togglePasswordVisibility('huebener')}
-                        >
-                          {accessData?.huebener_password ? 
-                            (showHuebenerPassword ? accessData.huebener_password : '••••••••') : 
-                            'Nicht angegeben'
-                          }
-                        </p>
+                        isLoading ? (
+                          <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p 
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                            onClick={() => accessData?.huebener_password && togglePasswordVisibility('huebener')}
+                          >
+                            {accessData?.huebener_password ? 
+                              (showHuebenerPassword ? accessData.huebener_password : '••••••••') : 
+                              'Nicht angegeben'
+                            }
+                          </p>
+                        )
                       )}
                     </div>
                   </div>
@@ -1387,9 +1465,13 @@ export default function ProfilPage() {
                           placeholder="email@example.com"
                         />
                       ) : (
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {accessData?.demotool_email || 'Nicht angegeben'}
-                        </p>
+                        isLoading ? (
+                          <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {accessData?.demotool_email || 'Nicht angegeben'}
+                          </p>
+                        )
                       )}
                     </div>
                     <div className="space-y-0.5">
@@ -1405,15 +1487,19 @@ export default function ProfilPage() {
                           placeholder="••••••••"
                         />
                       ) : (
-                        <p 
-                          className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
-                          onClick={() => accessData?.demotool_password && togglePasswordVisibility('demotool')}
-                        >
-                          {accessData?.demotool_password ? 
-                            (showDemotoolPassword ? accessData.demotool_password : '••••••••') : 
-                            'Nicht angegeben'
-                          }
-                        </p>
+                        isLoading ? (
+                          <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p 
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                            onClick={() => accessData?.demotool_password && togglePasswordVisibility('demotool')}
+                          >
+                            {accessData?.demotool_password ? 
+                              (showDemotoolPassword ? accessData.demotool_password : '••••••••') : 
+                              'Nicht angegeben'
+                            }
+                          </p>
+                        )
                       )}
                     </div>
                   </div>
