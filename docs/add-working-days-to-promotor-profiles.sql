@@ -13,13 +13,23 @@ DO $$ BEGIN
   ) THEN
     -- Convert existing type (e.g., text[]) to jsonb
     ALTER TABLE promotor_profiles
-      ALTER COLUMN working_days TYPE jsonb USING to_jsonb(working_days);
+      ALTER COLUMN working_days DROP DEFAULT,
+      ALTER COLUMN working_days TYPE jsonb USING to_jsonb(working_days),
+      ALTER COLUMN working_days SET DEFAULT '[]'::jsonb;
+    -- Normalize existing NULLs to empty jsonb array
+    UPDATE promotor_profiles SET working_days = '[]'::jsonb WHERE working_days IS NULL;
   END IF;
 END $$;
 
 -- 2) Migrate working_days data from applications to promotor_profiles
 UPDATE promotor_profiles p
-SET working_days = COALESCE((apps."workingDays")::jsonb, '[]'::jsonb)
+SET working_days = COALESCE(
+  CASE
+    WHEN apps."workingDays" IS NULL THEN NULL
+    ELSE to_jsonb(apps."workingDays")  -- handles text[] -> jsonb array safely
+  END,
+  '[]'::jsonb
+)
 FROM applications apps
 WHERE p.application_id = apps.id
   AND (p.working_days IS NULL OR p.working_days = '[]'::jsonb);
