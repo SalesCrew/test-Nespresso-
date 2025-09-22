@@ -707,23 +707,28 @@ Dein Nespresso Team`;
         let assignmentHistory: Map<string, boolean> = new Map();
         
         try {
-          const svc = createSupabaseServiceClient();
-          console.log('Checking assignment_participants for userIds:', userIds);
-          const { data: participants, error } = await svc
-            .from('assignment_participants')
-            .select('user_id')
-            .in('user_id', userIds);
-          
-          console.log('assignment_participants query result:', { participants, error });
-          console.log('Found participants count:', participants?.length || 0);
-          
-          // Create map of users who have assignment history (been assigned to any assignment)
-          (participants || []).forEach((participant: any) => {
-            console.log('Setting assignmentHistory for user:', participant.user_id);
-            assignmentHistory.set(participant.user_id, true);
+          console.log('Checking assignment history for userIds:', userIds);
+          const historyRes = await fetch('/api/promotors/assignment-history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_ids: userIds })
           });
           
-          console.log('Final assignmentHistory map:', Array.from(assignmentHistory.entries()));
+          if (historyRes.ok) {
+            const historyData = await historyRes.json();
+            const userIdsWithHistory = historyData.user_ids_with_history || [];
+            console.log('Users with assignment history:', userIdsWithHistory);
+            
+            // Create map of users who have assignment history
+            userIdsWithHistory.forEach((userId: string) => {
+              console.log('Setting assignmentHistory for user:', userId);
+              assignmentHistory.set(userId, true);
+            });
+            
+            console.log('Final assignmentHistory map:', Array.from(assignmentHistory.entries()));
+          } else {
+            console.error('Failed to fetch assignment history:', historyRes.status);
+          }
         } catch (e) {
           console.error('Failed to load assignment history:', e);
         }
