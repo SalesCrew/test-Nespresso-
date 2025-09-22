@@ -178,8 +178,10 @@ export default function PromotorenPage() {
   // Edit states for promotor details
   const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
   const [editingClothingData, setEditingClothingData] = useState<Record<string, boolean>>({});
+  const [editingWorkingDays, setEditingWorkingDays] = useState<Record<string, boolean>>({});
   const [editBankForm, setEditBankForm] = useState<Record<string, any>>({});
   const [editClothingForm, setEditClothingForm] = useState<Record<string, any>>({});
+  const [editWorkingDaysForm, setEditWorkingDaysForm] = useState<Record<string, string[]>>({});
   
   // Stammdatenblatt (submitted onboarding data)
   const [submittedOnboardingData, setSubmittedOnboardingData] = useState<any[]>([
@@ -517,6 +519,58 @@ Dein Nespresso Team`;
     }
     
     setEditingClothingData(prev => ({ ...prev, [promotorId]: !isEditing }));
+  };
+
+  const handleEditWorkingDays = async (promotorId: string) => {
+    const isEditing = editingWorkingDays[promotorId];
+    
+    if (isEditing) {
+      // Save changes
+      try {
+        const formData = editWorkingDaysForm[promotorId];
+        console.log('Updating working days for promotor:', promotorId, formData);
+        
+        const response = await fetch(`/api/promotors/${promotorId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            working_days: formData
+          })
+        });
+        
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error:', errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        if (response.ok) {
+          // Update local state
+          setPromotors(prev => prev.map(p => 
+            p.id === promotorId 
+              ? { ...p, workingDays: formData }
+              : p
+          ));
+          setToastMsg('Arbeitstage erfolgreich aktualisiert');
+        } else {
+          throw new Error('Fehler beim Speichern');
+        }
+      } catch (e) {
+        setToastMsg('Fehler beim Speichern der Arbeitstage');
+      }
+    } else {
+      // Enter edit mode
+      const promotor = promotors.find(p => p.id === promotorId);
+      if (promotor) {
+        setEditWorkingDaysForm(prev => ({
+          ...prev,
+          [promotorId]: [...(promotor.workingDays || [])]
+        }));
+      }
+    }
+    
+    setEditingWorkingDays(prev => ({ ...prev, [promotorId]: !isEditing }));
   };
 
   const loadSubmissions = async () => {
@@ -2414,20 +2468,52 @@ Dein Nespresso Team`;
                           {/* Working Days */}
                           <Card className="shadow-sm border-gray-200/60">
                             <CardContent className="p-4">
-                              <h3 className="font-semibold text-gray-900 mb-4">Arbeitstage</h3>
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-gray-900">Arbeitstage</h3>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
+                                  onClick={() => handleEditWorkingDays(promotor.id)}
+                                >
+                                  {editingWorkingDays[promotor.id] ? (
+                                    <Check className="h-3 w-3 text-green-500" />
+                                  ) : (
+                                    <Edit2 className="h-3 w-3 text-gray-400" />
+                                  )}
+                                </Button>
+                              </div>
                               <div className="flex justify-center space-x-2">
-                                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => (
-                                  <div
-                                    key={day}
-                                    className={`w-8 h-8 rounded-full text-xs font-medium flex items-center justify-center ${
-                                      promotor.workingDays.includes(day)
-                                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                                        : 'bg-gray-50 text-gray-400'
-                                    }`}
-                                  >
-                                    {day[0]}
-                                  </div>
-                                ))}
+                                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => {
+                                  const isSelected = editingWorkingDays[promotor.id] 
+                                    ? (editWorkingDaysForm[promotor.id] || []).includes(day)
+                                    : (promotor.personalData?.working_days || promotor.workingDays || []).includes(day);
+                                  
+                                  return (
+                                    <div
+                                      key={day}
+                                      className={`w-8 h-8 rounded-full text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
+                                        isSelected
+                                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                                      } ${editingWorkingDays[promotor.id] ? 'hover:scale-105' : ''}`}
+                                      onClick={() => {
+                                        if (editingWorkingDays[promotor.id]) {
+                                          const current = editWorkingDaysForm[promotor.id] || [];
+                                          const updated = current.includes(day)
+                                            ? current.filter(d => d !== day)
+                                            : [...current, day];
+                                          setEditWorkingDaysForm(prev => ({
+                                            ...prev,
+                                            [promotor.id]: updated
+                                          }));
+                                        }
+                                      }}
+                                    >
+                                      {day[0]}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </CardContent>
                           </Card>

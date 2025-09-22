@@ -69,7 +69,8 @@ export async function GET() {
       personalData: { 
         birth_date: profile?.birth_date ?? profile?.birthDate ?? app?.birthDate ?? app?.birth_date ?? '', 
         social_security_number: profile?.social_security_number ?? profile?.socialSecurityNumber ?? app?.socialSecurityNumber ?? '', 
-        citizenship: profile?.citizenship ?? app?.citizenship ?? '' 
+        citizenship: profile?.citizenship ?? app?.citizenship ?? '',
+        working_days: profile?.working_days ?? app?.workingDays ?? []
       },
       applicationId: profile?.application_id || null,
     };
