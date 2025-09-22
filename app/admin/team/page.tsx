@@ -2779,7 +2779,7 @@ Dein Nespresso Team`;
                                       SV Nummer
                                     </label>
                                     <p className="text-sm font-medium text-gray-900">
-                                      {promotorStammdaten[promotor.id]?.socialSecurityNumber || 'Keine Daten'}
+                                      {promotor.personalData?.social_security_number || 'Keine Daten'}
                                     </p>
                                   </div>
                                 </div>

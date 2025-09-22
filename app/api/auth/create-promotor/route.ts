@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
       height: appRow?.height ?? null,
       clothing_size: appRow?.clothingSize ?? null,
       birth_date: appRow?.birthDate ?? null,
+      social_security_number: appRow?.socialSecurityNumber ?? null,
+      citizenship: appRow?.citizenship ?? null,
     });
 
     // Seed onboarding steps for the new promotor (idempotent)

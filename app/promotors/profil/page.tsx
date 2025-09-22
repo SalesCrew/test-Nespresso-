@@ -96,6 +96,9 @@ export default function ProfilPage() {
   
   // Access credentials data
   const [accessData, setAccessData] = useState<any>(null)
+  
+  // User profile data
+  const [userProfileData, setUserProfileData] = useState<any>(null)
 
   // Mock user data
   const userProfile = {
@@ -144,11 +147,31 @@ export default function ProfilPage() {
     setIsEditingBank(!isEditingBank)
   }
 
-  const handlePersonalEditToggle = () => {
+  const handlePersonalEditToggle = async () => {
     if (isEditingPersonal) {
       // Save the data when exiting edit mode
-      // In a real app, this would make an API call
-      console.log("Saving personal data:", editablePersonalData)
+      try {
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          const { error } = await supabase
+            .from('promotor_profiles')
+            .update({
+              birth_date: editablePersonalData.birthday,
+              social_security_number: editablePersonalData.socialSecurityNumber,
+              citizenship: editablePersonalData.citizenship,
+            })
+            .eq('user_id', user.id)
+          
+          if (error) throw error
+          
+          // Refresh the data
+          await loadUserProfile()
+        }
+      } catch (e) {
+        console.error('Failed to save personal data', e)
+      }
     }
     setIsEditingPersonal(!isEditingPersonal)
   }
@@ -226,6 +249,36 @@ export default function ProfilPage() {
       }
     } catch (e) {
       console.error('Failed to load access credentials', e)
+    }
+  }
+
+  const loadUserProfile = async () => {
+    try {
+      const supabase = createSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('promotor_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          throw error
+        }
+        
+        if (data) {
+          setUserProfileData(data)
+          setEditablePersonalData({
+            birthday: data.birth_date || "",
+            socialSecurityNumber: data.social_security_number || "",
+            citizenship: data.citizenship || ""
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load user profile', e)
     }
   }
 
@@ -441,6 +494,9 @@ export default function ProfilPage() {
           } catch {}
           // load access credentials
           await loadAccessCredentials()
+          
+          // load user profile data
+          await loadUserProfile()
           
           // load display name from user_profiles with auth metadata fallback
           try {
