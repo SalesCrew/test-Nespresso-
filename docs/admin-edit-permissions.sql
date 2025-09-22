@@ -1,5 +1,6 @@
 -- Admin policies for editing promotor data in admin/team page
 -- Uses enum value 'admin_of_admins' on user_profiles.role
+-- Note: this is a no-op comment added to trigger CI build
 
 -- Ensure RLS is enabled
 ALTER TABLE promotor_profiles ENABLE ROW LEVEL SECURITY;
