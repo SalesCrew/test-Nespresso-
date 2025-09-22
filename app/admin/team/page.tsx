@@ -702,6 +702,26 @@ Dein Nespresso Team`;
           applicationId: p.applicationId || null,
         }));
 
+        // Check assignment history for each promotor to determine New Joiner status
+        const userIds = normalized.map((p: any) => p.id);
+        let assignmentHistory: Map<string, boolean> = new Map();
+        
+        try {
+          const svc = createSupabaseServiceClient();
+          const { data: invitations } = await svc
+            .from('assignment_invitations')
+            .select('user_id')
+            .in('user_id', userIds)
+            .eq('status', 'applied');
+          
+          // Create map of users who have assignment history
+          (invitations || []).forEach((inv: any) => {
+            assignmentHistory.set(inv.user_id, true);
+          });
+        } catch (e) {
+          console.error('Failed to load assignment history:', e);
+        }
+
         // Use backend data only; map to UI shape with safe KPI defaults
         const cards = normalized.map((inc: any) => ({
           id: inc.id,
@@ -712,7 +732,7 @@ Dein Nespresso Team`;
           birthDate: inc.birthDate,
           region: inc.region,
           workingDays: inc.workingDays,
-          status: inc.status,
+          status: assignmentHistory.has(inc.id) ? 'active' : 'newjoiner', // Set status based on assignment history
           lastActivity: inc.lastActivity,
           performance: { mcet: 0, tma: 0, vlshare: 0 },
           assignments: 0,
@@ -939,11 +959,9 @@ Dein Nespresso Team`;
 
   // Status indicator
   const getStatusIcon = (status: string) => {
-    return status === "active" ? (
-      <CheckCircle className="h-4 w-4 text-green-500" />
-    ) : (
-      <AlertCircle className="h-4 w-4 text-gray-400" />
-    );
+    if (status === "active") return <CheckCircle className="h-4 w-4 text-green-500" />;
+    if (status === "newjoiner") return <UserCheck className="h-4 w-4 text-blue-500" />;
+    return <AlertCircle className="h-4 w-4 text-gray-400" />;
   };
 
   // Filter promotors
@@ -955,9 +973,11 @@ Dein Nespresso Team`;
     
     return matchesSearch && matchesRegion && matchesStatus;
   }).sort((a, b) => {
-    // Sort by status: active promotors first, inactive last
-    if (a.status === 'active' && b.status === 'inactive') return -1;
-    if (a.status === 'inactive' && b.status === 'active') return 1;
+    // Sort by status: active first, newjoiner second, inactive last
+    if (a.status === 'active' && b.status !== 'active') return -1;
+    if (b.status === 'active' && a.status !== 'active') return 1;
+    if (a.status === 'newjoiner' && b.status === 'inactive') return -1;
+    if (b.status === 'newjoiner' && a.status === 'inactive') return 1;
     return 0;
   });
 
@@ -1466,7 +1486,7 @@ Dein Nespresso Team`;
                       onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
                       className="flex items-center justify-between min-w-[120px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
                     >
-                      <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : "Inaktiv"}</span>
+                      <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : statusFilter === "newjoiner" ? "New Joiner" : "Inaktiv"}</span>
                       <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
@@ -1498,6 +1518,19 @@ Dein Nespresso Team`;
                             }`}
                           >
                             Aktiv
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("newjoiner");
+                              setStatusDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              statusFilter === "newjoiner" 
+                                ? "bg-gray-50 text-gray-900" 
+                                : "text-gray-600 hover:bg-blue-100/50"
+                            }`}
+                          >
+                            New Joiner
                           </button>
                           <button
                             onClick={() => {
@@ -1812,7 +1845,7 @@ Dein Nespresso Team`;
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
                   className="flex items-center justify-between min-w-[120px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
                 >
-                  <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : "Inaktiv"}</span>
+                  <span>{statusFilter === "all" ? "Alle Status" : statusFilter === "active" ? "Aktiv" : statusFilter === "newjoiner" ? "New Joiner" : "Inaktiv"}</span>
                   <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -1844,6 +1877,19 @@ Dein Nespresso Team`;
                         }`}
                       >
                         Aktiv
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("newjoiner");
+                          setStatusDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          statusFilter === "newjoiner" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-blue-100/50"
+                        }`}
+                      >
+                        New Joiner
                       </button>
                       <button
                         onClick={() => {
@@ -1914,6 +1960,8 @@ Dein Nespresso Team`;
                         <div className="absolute -bottom-0.5 -right-0.5">
                           {promotor.status === 'active' ? (
                             <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                          ) : promotor.status === 'newjoiner' ? (
+                            <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
                           ) : (
                             <div className="w-3 h-3 bg-gray-400 rounded-full border-2 border-white shadow-sm"></div>
                           )}
@@ -2317,11 +2365,11 @@ Dein Nespresso Team`;
                             </Badge>
                             <span 
                               className={`text-sm font-medium cursor-pointer hover:underline ${
-                              promotor.status === 'active' ? 'text-green-300' : 'text-gray-400'
+                              promotor.status === 'active' ? 'text-green-300' : promotor.status === 'newjoiner' ? 'text-blue-300' : 'text-gray-400'
                               }`}
                               onClick={() => handleStatusClick(promotor.id)}
                             >
-                              {promotor.status === 'active' ? 'Aktiv' : 'Inaktiv'}
+                              {promotor.status === 'active' ? 'Aktiv' : promotor.status === 'newjoiner' ? 'New Joiner' : 'Inaktiv'}
                             </span>
                           </div>
                         </div>
@@ -3146,7 +3194,7 @@ Dein Nespresso Team`;
                         </div>
                         <div>
                           <span className="text-gray-500">Status:</span>
-                          <p className="font-medium">{promotor.status === 'active' ? 'Aktiv' : 'Inaktiv'}</p>
+                          <p className="font-medium">{promotor.status === 'active' ? 'Aktiv' : promotor.status === 'newjoiner' ? 'New Joiner' : 'Inaktiv'}</p>
                         </div>
                       </div>
                     );
