@@ -672,25 +672,37 @@ export default function ProfilPage() {
       try {
         // Immediately reflect submitting state
         setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'pending' } : d))
+        console.log('Uploading document:', documentName, 'type:', doc_type, 'ext:', ext)
         // get canonical path
         const up = await fetch(`/api/promotors/${uid}/documents/upload-url`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doc_type, file_ext: ext })
         })
         const upj = await up.json()
+        console.log('Upload URL response:', upj)
         const path = upj?.path
         const token = upj?.token
-        if (!path || !token) return
+        if (!path || !token) {
+          console.error('No path or token received:', { path, token })
+          return
+        }
+        console.log('Uploading to storage with path:', path)
         const { error: upErr } = await supabase.storage.from('documents').uploadToSignedUrl(path, token, file)
-        if (upErr) throw upErr
-        await fetch(`/api/promotors/${uid}/documents/confirm`, {
+        if (upErr) {
+          console.error('Storage upload error:', upErr)
+          throw upErr
+        }
+        console.log('Confirming upload with doc_type:', doc_type, 'path:', path)
+        const confirmRes = await fetch(`/api/promotors/${uid}/documents/confirm`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ doc_type, path })
         })
+        const confirmJson = await confirmRes.json()
+        console.log('Confirm response:', confirmJson)
         // refresh from server to be safe (should return 'uploaded' -> pending in UI)
         await refreshDocuments(uid)
       } catch (e) {
-        console.error(e)
+        console.error('Document upload error:', e)
         // revert to missing on error
         setDocuments(prev => prev.map(d => d.name === documentName ? { ...d, status: 'missing' } : d))
       }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
-const ALLOWED_TYPES = new Set(['passport','citizenship','arbeitserlaubnis','strafregister','additional']);
+const ALLOWED_TYPES = new Set(['passport','fuehrerschein','citizenship','arbeitserlaubnis','strafregister','additional']);
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const server = createSupabaseServerClient();
