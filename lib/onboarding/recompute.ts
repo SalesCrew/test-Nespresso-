@@ -16,6 +16,17 @@ export async function recomputeOnboarding(svc: SupabaseClient, userId: string) {
     .eq('user_id', userId)
     .maybeSingle();
 
+  // Load application data for drivingLicense check
+  let application: any = null;
+  if (profile?.application_id) {
+    const { data: appData } = await svc
+      .from('applications')
+      .select('drivingLicense')
+      .eq('id', profile.application_id)
+      .maybeSingle();
+    application = appData;
+  }
+
   // Documents: tolerant if table missing
   let docs: Array<{ doc_type: string; status: string }> = [];
   try {
@@ -50,10 +61,12 @@ export async function recomputeOnboarding(svc: SupabaseClient, userId: string) {
   const profileAll = profileFields.every(Boolean);
   const profileStatus: OnboardingStatus = statusFromFlags(profileAny, profileAll);
 
-  // Step: documents (ignore strafregister, arbeitserlaubnis only if needs_work_permit)
-  const requiredDocs = ['passport', 'citizenship'];
+  // Step: documents (ignore strafregister, citizenship now optional, fuehrerschein only if has driving license)
+  const requiredDocs = ['passport'];
   const needsWP = !!profile?.needs_work_permit;
+  const hasDrivingLicense = !!application?.drivingLicense;
   if (needsWP) requiredDocs.push('arbeitserlaubnis');
+  if (hasDrivingLicense) requiredDocs.push('fuehrerschein');
   const docMap = new Map(docs.map(d => [String(d.doc_type), d.status]));
   const anyDoc = requiredDocs.some(k => docMap.has(k));
   const allApproved = requiredDocs.every(k => docMap.get(k) === 'approved');
