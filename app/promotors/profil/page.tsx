@@ -1790,7 +1790,7 @@ export default function ProfilPage() {
                 </div>
                     <div className="flex items-center gap-2">
                 <button 
-                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[305] shadow-2xl ring-4 ring-amber-200' : ''}`}
+                        className={`flex-1 px-3 py-2 text-xs rounded-lg text-white bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 ${showContractOnboarding && onboardingStep === 'highlight-button' ? 'relative z-[405] shadow-2xl ring-4 ring-amber-200' : ''}`}
                         onClick={() => {
                           handleDienstvertragSelect(contract.id);
                           if (showContractOnboarding && onboardingStep === 'highlight-button') {
@@ -2041,7 +2041,7 @@ export default function ProfilPage() {
                         }
                       }}
                       disabled={isDownloading}
-                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[305] shadow-2xl ring-4 ring-blue-200' : ''}`}
+                      className={`p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50 ${showContractOnboarding && onboardingStep === 'highlight-download' ? 'relative z-[405] shadow-2xl ring-4 ring-blue-200' : ''}`}
                       title="Als PDF herunterladen"
                     >
                       {downloadSuccess ? (
@@ -2098,13 +2098,13 @@ export default function ProfilPage() {
 
       {/* Contract Onboarding Overlay */}
       {showContractOnboarding && (
-        <div className="fixed inset-0 z-[300] pointer-events-none">
+        <div className="fixed inset-0 z-[400] pointer-events-none">
           {/* Dark overlay that dims everything */}
           <div className="absolute inset-0 bg-black/80"></div>
           
-          {/* Tooltip for button step - Above modal */}
+          {/* Tooltip for button step - Positioned to not cover the contract */}
           {onboardingStep === 'highlight-button' && (
-            <div className="absolute top-[15%] left-1/2 transform -translate-x-1/2 pointer-events-auto z-[310]">
+            <div className="absolute top-[5%] right-[5%] pointer-events-auto z-[410]">
               <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400 ring-4 ring-blue-100">
                 <h4 className="font-semibold text-gray-900 mb-2">Neuer Dienstvertrag!</h4>
                 <p className="text-sm text-gray-600 mb-3">
@@ -2122,9 +2122,9 @@ export default function ProfilPage() {
             </div>
           )}
           
-          {/* Tooltip for download step - Above the modal header */}
+          {/* Tooltip for download step - Top right of screen */}
           {onboardingStep === 'highlight-download' && (
-            <div className="absolute top-[20%] left-1/2 transform -translate-x-1/2 pointer-events-auto z-[310]">
+            <div className="absolute top-[5%] right-[5%] pointer-events-auto z-[410]">
               <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400 ring-4 ring-blue-100">
                 <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
                 <p className="text-sm text-gray-600 mb-3">
