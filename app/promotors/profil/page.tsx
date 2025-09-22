@@ -74,7 +74,8 @@ export default function ProfilPage() {
   const [promotorContracts, setPromotorContracts] = useState<any[]>([])
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null)
   const [showContractOnboarding, setShowContractOnboarding] = useState(false)
-  const [onboardingStep, setOnboardingStep] = useState<'highlight-button' | 'highlight-download'>('highlight-button')
+  const [onboardingStep, setOnboardingStep] = useState<'highlight-button' | 'highlight-download' | 'highlight-upload'>('highlight-button')
+  const [showUploadJump, setShowUploadJump] = useState(false)
   const [editableProfile, setEditableProfile] = useState({
     email: "",
     phone: ""
@@ -1803,9 +1804,14 @@ export default function ProfilPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 p-0"
+                        className={`h-8 w-8 p-0 ${showUploadJump ? 'animate-bounce' : ''}`}
                         onClick={async () => {
                           if (!userId) return;
+                          // Stop jumping and end onboarding if active
+                          setShowUploadJump(false);
+                          if (showContractOnboarding && onboardingStep === 'highlight-upload') {
+                            setShowContractOnboarding(false);
+                          }
                           const input = document.createElement('input');
                           input.type = 'file';
                           input.accept = 'application/pdf,image/*';
@@ -2037,8 +2043,14 @@ export default function ProfilPage() {
                       onClick={() => {
                         exportDienstvertragAsPDF();
                         if (showContractOnboarding && onboardingStep === 'highlight-download') {
-                          setShowContractOnboarding(false);
+                          // Move to upload step after download
+                          setOnboardingStep('highlight-upload');
+                          setShowDienstvertragContent(false);
+                          setShowDienstvertragPopup(true);
                         }
+                        // Always make upload icon jump after download
+                        setShowUploadJump(true);
+                        setTimeout(() => setShowUploadJump(false), 3000);
                       }}
                       disabled={isDownloading}
                       className="p-2 hover:bg-white/20 rounded-lg transition-all duration-200 disabled:opacity-50"
@@ -2122,6 +2134,25 @@ export default function ProfilPage() {
             <h4 className="font-semibold text-gray-900 mb-2">Download verfügbar!</h4>
             <p className="text-sm text-gray-600 mb-3">
               Klicken Sie auf das Download-Symbol um den Vertrag als PDF herunterzuladen.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowContractOnboarding(false)}
+                className="text-xs text-gray-500 hover:text-gray-700"
+              >
+                Verstanden
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showContractOnboarding && onboardingStep === 'highlight-upload' && (
+        <div className="fixed top-[10%] left-1/2 transform -translate-x-1/2 z-[300] pointer-events-auto">
+          <div className="bg-white rounded-lg shadow-2xl p-4 max-w-sm border-2 border-blue-400">
+            <h4 className="font-semibold text-gray-900 mb-2">Vertrag hochladen!</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Lade hier den unterschriebenen Vertrag als PDF wieder hoch.
             </p>
             <div className="flex justify-end">
               <button
