@@ -176,8 +176,37 @@ export async function POST(req: Request) {
     })
     console.log(`⏱️ Week assignments grouped for ${weekAssignmentsByUser.size} users`)
     
+    // Get assignment date for same-day filtering
+    const assignmentDateOnly = new Date(assignmentDate.getFullYear(), assignmentDate.getMonth(), assignmentDate.getDate())
+    console.log('📅 Assignment date for filtering:', assignmentDateOnly.toLocaleDateString('de-DE'))
+    
+    // Get promotors who already have assignments on the same day
+    console.log('🚫 Fetching same-day assignments to exclude busy promotors...')
+    const { data: sameDayAssignments, error: sameDayError } = await svc
+      .from('assignment_participants')
+      .select(`
+        user_id,
+        assignments!inner(id, start_ts, end_ts, status)
+      `)
+      .in('user_id', userIds)
+      .gte('assignments.start_ts', assignmentDateOnly.toISOString())
+      .lt('assignments.start_ts', new Date(assignmentDateOnly.getTime() + 24 * 60 * 60 * 1000).toISOString())
+      .neq('assignments.id', assignmentId) // Exclude the current assignment itself
+
+    if (sameDayError) {
+      console.log('⚠️ Same-day assignments fetch error:', sameDayError.message)
+    }
+    
+    // Create set of user IDs who are busy on the same day
+    const busyUserIds = new Set((sameDayAssignments || []).map((item: any) => item.user_id))
+    console.log(`🚫 Found ${busyUserIds.size} promotors with same-day assignments to exclude:`, Array.from(busyUserIds).slice(0, 3))
+    
+    // Filter out busy promotors before building data
+    const availableUsers = (users || []).filter((u: any) => !busyUserIds.has(u.user_id))
+    console.log(`✅ Filtered promotors: ${users?.length || 0} total → ${availableUsers.length} available on assignment day`)
+
     console.log('👥 Building comprehensive promotor data...')
-    const promotors = (users || []).map((u: any, index: number) => {
+    const promotors = availableUsers.map((u: any, index: number) => {
       const profile = profileByUser.get(u.user_id) as any
       const contract = contractByUser.get(u.user_id) as any
       const weekAssignments = weekAssignmentsByUser.get(u.user_id) || []
