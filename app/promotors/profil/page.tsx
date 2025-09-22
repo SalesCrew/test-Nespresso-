@@ -501,8 +501,7 @@ export default function ProfilPage() {
         console.log(`Document ${d.name} (type: ${type}) has DB status: ${st}`)
         if (st === 'approved') status = 'approved'
         else if (st === 'uploaded') status = 'pending'
-        else if (st === 'rejected') status = 'missing' // Allow re-upload after rejection
-        else status = 'missing'
+        else status = 'missing' // No DB entry or any other status = missing
         console.log(`Document ${d.name} mapped to UI status: ${status}`)
         // Conditional requirements based on application data
         let required = d.required

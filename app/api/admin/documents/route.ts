@@ -35,12 +35,45 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'invalid payload' }, { status: 400 });
   }
   const svc = createSupabaseServiceClient();
-  const { error } = await svc
-    .from('documents')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('user_id', user_id)
-    .eq('doc_type', doc_type);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  
+  if (status === 'rejected') {
+    // When rejecting, delete the document row and file from storage
+    // First get the file path before deleting
+    const { data: docRow } = await svc
+      .from('documents')
+      .select('file_path')
+      .eq('user_id', user_id)
+      .eq('doc_type', doc_type)
+      .maybeSingle();
+    
+    // Delete from database
+    const { error: deleteError } = await svc
+      .from('documents')
+      .delete()
+      .eq('user_id', user_id)
+      .eq('doc_type', doc_type);
+    
+    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    
+    // Delete from storage if file exists
+    if (docRow?.file_path) {
+      try {
+        await svc.storage.from('documents').remove([docRow.file_path]);
+      } catch (e) {
+        console.error('Failed to delete file from storage:', e);
+        // Continue anyway - DB deletion is more important
+      }
+    }
+  } else {
+    // For approved/uploaded, just update the status
+    const { error } = await svc
+      .from('documents')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('user_id', user_id)
+      .eq('doc_type', doc_type);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  
   try { await recomputeOnboarding(svc as any, user_id); } catch {}
   return NextResponse.json({ ok: true });
 }
