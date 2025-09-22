@@ -498,10 +498,12 @@ export default function ProfilPage() {
         const type = mapDocNameToType(d.name)
         let status: 'missing'|'pending'|'approved' = 'missing'
         const st = map.get(type)
+        console.log(`Document ${d.name} (type: ${type}) has DB status: ${st}`)
         if (st === 'approved') status = 'approved'
         else if (st === 'uploaded') status = 'pending'
         else if (st === 'rejected') status = 'missing' // Allow re-upload after rejection
         else status = 'missing'
+        console.log(`Document ${d.name} mapped to UI status: ${status}`)
         // Conditional requirements based on application data
         let required = d.required
         if (d.name === 'Arbeitserlaubnis') required = needsWP
