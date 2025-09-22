@@ -2780,7 +2780,14 @@ Dein Nespresso Team`;
                                       SV Nummer
                                     </label>
                                     <p className="text-sm font-medium text-gray-900">
-                                      {promotor.personalData?.social_security_number || 'Keine Daten'}
+                                      {(() => {
+                                        console.log('Debug SV Nummer for promotor:', promotor.id, {
+                                          personalData: promotor.personalData,
+                                          socialSecurityNumber: promotor.personalData?.social_security_number,
+                                          fullPromotor: promotor
+                                        });
+                                        return promotor.personalData?.social_security_number || 'Keine Daten';
+                                      })()}
                                     </p>
                                   </div>
                                 </div>
