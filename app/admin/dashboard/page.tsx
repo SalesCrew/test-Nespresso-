@@ -198,9 +198,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       if (response.ok) {
         const data = await response.json();
         // Filter for messages with future scheduled_send_time (these appear as "scheduled")
-        const now = new Date();
+        // Use UTC time for both comparisons to avoid timezone issues
+        const nowUTC = new Date().toISOString();
         const scheduledOnly = (data.messages || [])
-          .filter((msg: any) => msg.status === 'sent' && msg.scheduled_send_time && new Date(msg.scheduled_send_time) > now)
+          .filter((msg: any) => msg.status === 'sent' && msg.scheduled_send_time && msg.scheduled_send_time > nowUTC)
           .map((msg: any) => {
             const scheduleDate = new Date(msg.scheduled_send_time);
             const recipients = msg.recipients || [];
@@ -250,11 +251,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       if (response.ok) {
         const data = await response.json();
         // Filter for sent messages (instant or scheduled messages that have passed their time)
-        const now = new Date();
+        // Use UTC time for both comparisons to avoid timezone issues
+        const nowUTC = new Date().toISOString();
         const sentMessages = (data.messages || [])
           .filter((msg: any) => 
             msg.status === 'sent' && 
-            (!msg.scheduled_send_time || new Date(msg.scheduled_send_time) <= now)
+            (!msg.scheduled_send_time || msg.scheduled_send_time <= nowUTC)
           )
           .map((msg: any) => {
             const sentDate = new Date(msg.sent_at || msg.created_at);

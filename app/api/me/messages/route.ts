@@ -53,12 +53,13 @@ export async function GET() {
     }
     
     // Filter out messages that are scheduled for the future
-    const now = new Date();
+    // Use UTC time for both comparisons to avoid timezone issues
+    const nowUTC = new Date().toISOString();
     const visibleMessages = (messages || []).filter(msg => {
       // If no scheduled_send_time, show immediately (instant messages)
       if (!msg.scheduled_send_time) return true;
-      // If scheduled_send_time is in the past or now, show it
-      return new Date(msg.scheduled_send_time) <= now;
+      // If scheduled_send_time is in the past or now, show it (compare UTC strings)
+      return msg.scheduled_send_time <= nowUTC;
     });
     
     console.log('Messages after time filtering:', visibleMessages?.length || 0);
