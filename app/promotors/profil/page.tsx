@@ -1756,14 +1756,6 @@ export default function ProfilPage() {
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Meine Dienstverträge</h3>
-                {/* TEMP: Onboarding test button (to be removed later) */}
-                <button
-                  onClick={() => { setShowContractOnboarding(true); setOnboardingStep('highlight-button'); }}
-                  className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                  title="Onboarding testen"
-                >
-                  Onboarding testen
-                </button>
               </div>
             </div>
             
