@@ -116,7 +116,7 @@ export default function PromotorenPage() {
     startDate: '',
     endDate: '',
     isTemporary: false,
-    employmentType: 'geringfügig' as 'geringfügig' | 'teilzeit' | 'vollzeit' | 'freelancer'
+    employmentType: 'geringfügig' as 'geringfügig' | 'teilzeit' | 'vollzeit'
   });
   // Contracts for selected promotor
   const [promotorContracts, setPromotorContracts] = useState<any[] | null>(null);
@@ -3196,7 +3196,7 @@ Dein Nespresso Team`;
                           <SelectItem value="geringfügig" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">geringfügig</SelectItem>
                           <SelectItem value="teilzeit" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">teilzeit</SelectItem>
                           <SelectItem value="vollzeit" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">vollzeit</SelectItem>
-                          <SelectItem value="freelancer" className="text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50">freelancer</SelectItem>
+                          {/* freelancer option intentionally hidden in frontend */}
                         </SelectContent>
                       </Select>
                     </div>
