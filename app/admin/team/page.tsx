@@ -626,6 +626,7 @@ Dein Nespresso Team`;
           avatar: p.avatar || undefined,
           bankDetails: p.bankDetails && typeof p.bankDetails === 'object' ? p.bankDetails : undefined,
           clothingInfo: p.clothingInfo || undefined,
+          personalData: p.personalData && typeof p.personalData === 'object' ? p.personalData : undefined,
           applicationId: p.applicationId || null,
         }));
 

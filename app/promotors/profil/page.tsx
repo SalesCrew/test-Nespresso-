@@ -532,12 +532,7 @@ export default function ProfilPage() {
               height: p.height || app.height || '',
               size: p.clothing_size || app.clothingSize || app.clothing_size || app.clothingsize || ''
             })
-            // personal
-            setEditablePersonalData({
-              birthday: p.birth_date || app.birthDate || app.birth_date || '',
-              socialSecurityNumber: app.socialSecurityNumber || app.social_security_number || '',
-              citizenship: app.citizenship || ''
-            })
+            // personal data now loaded from loadUserProfile(), don't override here
             setEditableBankData(prev => ({
               accountHolder: p.bank_holder || '',
               bankName: p.bank_name || '',
