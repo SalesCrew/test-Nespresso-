@@ -426,14 +426,12 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                     }`}
                   >
                     {message.content === "TYPING_INDICATOR" ? (
-                      <div className="flex items-center space-x-1">
-                        <span className="text-white">Eddie tippt</span>
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}></div>
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }}></div>
-                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }}></div>
-                        </div>
-                      </div>
+                      <span className="text-white">
+                        Eddie tippt
+                        <span className="inline-block animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}>.</span>
+                        <span className="inline-block animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }}>.</span>
+                        <span className="inline-block animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }}>.</span>
+                      </span>
                     ) : (
                       message.content
                     )}
