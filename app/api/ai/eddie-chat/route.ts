@@ -68,19 +68,22 @@ export async function POST(req: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    // 3. Get bank data
-    const { data: bankData } = await svc
-      .from('bank_details')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    // 4. Get promotor profile and application data
+    // 3. Get promotor profile (includes bank data)
     const { data: promotorProfile } = await svc
       .from('promotor_profiles')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle()
+    
+    // Extract bank data from promotor profile
+    const bankData = promotorProfile ? {
+      bank_holder: promotorProfile.bank_holder,
+      bank_name: promotorProfile.bank_name,
+      bank_iban: promotorProfile.bank_iban,
+      bank_bic: promotorProfile.bank_bic
+    } : null
+
+    // 4. Get application data and user profile
     
     const { data: userProfile } = await svc
       .from('user_profiles')
@@ -176,19 +179,19 @@ Status: ${a.status || 'offen'}`
       }).join('\n')
     }
 
-    // Format bank data - ALL fields
+    // Format bank data from promotor_profiles
     let bankDaten = 'Keine Bankdaten angegeben. Bitte in der Profil-Seite eingeben.'
-    if (bankData) {
+    if (bankData && (bankData.bank_iban || bankData.bank_bic || bankData.bank_holder || bankData.bank_name)) {
       const fields = Object.entries(bankData)
-        .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at'].includes(key))
+        .filter(([key, value]) => value) // Only include fields with values
         .map(([key, value]) => {
-          const label = key === 'iban' ? 'IBAN' :
-                       key === 'bic' ? 'BIC' :
-                       key === 'account_holder' ? 'Kontoinhaber' :
+          const label = key === 'bank_iban' ? 'IBAN' :
+                       key === 'bank_bic' ? 'BIC' :
+                       key === 'bank_holder' ? 'Kontoinhaber' :
                        key === 'bank_name' ? 'Bank' : key
-          return `${label}: ${value || 'Nicht angegeben'}`
+          return `${label}: ${value}`
         })
-      bankDaten = fields.join('\n')
+      bankDaten = fields.length > 0 ? fields.join('\n') : 'Keine Bankdaten angegeben. Bitte in der Profil-Seite eingeben.'
     }
 
     // Format promotor general data - ALL fields from user_profiles, promotor_profiles, and applications
@@ -210,10 +213,10 @@ Status: ${a.status || 'offen'}`
         })
     }
     
-    // Promotor Profile data (ALL fields)
+    // Promotor Profile data (ALL fields except bank data which is shown separately)
     if (promotorProfile) {
       Object.entries(promotorProfile)
-        .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at'].includes(key))
+        .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'bank_holder', 'bank_name', 'bank_iban', 'bank_bic'].includes(key))
         .forEach(([key, value]) => {
           if (value) {
             const label = key === 'region' ? 'Region' :
