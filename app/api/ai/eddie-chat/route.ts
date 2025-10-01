@@ -106,6 +106,13 @@ export async function POST(req: Request) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
+    // 6. Get access credentials (Zugangsdaten)
+    const { data: accessCredentials } = await svc
+      .from('access_credentials')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
     console.log('✅ Data fetched:', {
       assignments: relevantAssignments?.length || 0,
       documents: documents?.length || 0,
@@ -113,8 +120,43 @@ export async function POST(req: Request) {
       hasProfile: !!promotorProfile,
       hasUserProfile: !!userProfile,
       hasApplicationData: !!applicationData,
-      contracts: contracts?.length || 0
+      contracts: contracts?.length || 0,
+      hasAccessCredentials: !!accessCredentials
     });
+
+    // Format access credentials data
+    let zugangsDaten = 'Keine Zugangsdaten gespeichert.'
+    if (accessCredentials) {
+      const credentials = []
+      
+      if (accessCredentials.huebener_email || accessCredentials.huebener_password) {
+        credentials.push(`Hübener:
+Email: ${accessCredentials.huebener_email || 'Nicht angegeben'}
+Passwort: ${accessCredentials.huebener_password || 'Nicht angegeben'}`)
+      }
+      
+      if (accessCredentials.demotool_email || accessCredentials.demotool_password) {
+        credentials.push(`Demotool:
+Email: ${accessCredentials.demotool_email || 'Nicht angegeben'}
+Passwort: ${accessCredentials.demotool_password || 'Nicht angegeben'}`)
+      }
+      
+      if (accessCredentials.tma_email || accessCredentials.tma_password) {
+        credentials.push(`TMA:
+Email: ${accessCredentials.tma_email || 'Nicht angegeben'}
+Passwort: ${accessCredentials.tma_password || 'Nicht angegeben'}`)
+      }
+      
+      if (accessCredentials.boost_app_email || accessCredentials.boost_app_password) {
+        credentials.push(`Boost App:
+Email: ${accessCredentials.boost_app_email || 'Nicht angegeben'}
+Passwort: ${accessCredentials.boost_app_password || 'Nicht angegeben'}`)
+      }
+      
+      if (credentials.length > 0) {
+        zugangsDaten = credentials.join('\n\n')
+      }
+    }
 
     // Format assignment data for prompt - separate past and future
     let einsatzDaten = 'Keine Einsätze gefunden.'
@@ -340,7 +382,10 @@ Generelle Daten:
 ${promotorDaten}
 
 Dienstvertrag:
-${vertragDaten}`
+${vertragDaten}
+
+Zugangsdaten:
+${zugangsDaten}`
 
     const userPrompt = `Promotor fragt: ${userMessage}`
 
