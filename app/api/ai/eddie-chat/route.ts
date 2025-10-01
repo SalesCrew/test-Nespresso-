@@ -42,22 +42,24 @@ export async function POST(req: Request) {
     const svc = createSupabaseServiceClient()
     console.log('📊 Fetching promotor data from database...');
 
-    // 1. Get assignments (Einsätze) - future/upcoming assignments sorted by date
-    const { data: assignments } = await svc
-      .from('assignments_with_buddy_info')
-      .select('*')
-      .gte('start_ts', new Date().toISOString())
-      .order('start_ts', { ascending: true })
-      .limit(20)
-    
-    // Filter assignments where this user is a participant
+    // 1. Get ALL assignments (Einsätze) - past and future for this promotor
+    // First get all assignment IDs where this user is a participant
     const { data: userAssignments } = await svc
       .from('assignment_participants')
       .select('assignment_id')
       .eq('user_id', user.id)
     
-    const userAssignmentIds = new Set((userAssignments || []).map(ua => ua.assignment_id))
-    const relevantAssignments = (assignments || []).filter(a => userAssignmentIds.has(a.id))
+    const userAssignmentIds = (userAssignments || []).map(ua => ua.assignment_id)
+    
+    // Then get all those assignments (past and future)
+    const { data: assignments } = await svc
+      .from('assignments_with_buddy_info')
+      .select('*')
+      .in('id', userAssignmentIds.length > 0 ? userAssignmentIds : ['00000000-0000-0000-0000-000000000000']) // dummy ID if no assignments
+      .order('start_ts', { ascending: false }) // Most recent first
+      .limit(50) // Increased limit to include more history
+    
+    const relevantAssignments = assignments || []
 
     // 2. Get documents
     const { data: documents } = await svc
@@ -101,23 +103,55 @@ export async function POST(req: Request) {
       contracts: contracts?.length || 0
     });
 
-    // Format assignment data for prompt
-    let einsatzDaten = 'Keine kommenden Einsätze gefunden.'
+    // Format assignment data for prompt - separate past and future
+    let einsatzDaten = 'Keine Einsätze gefunden.'
     if (relevantAssignments && relevantAssignments.length > 0) {
-      einsatzDaten = relevantAssignments.map((a, index) => {
-        const startDate = new Date(a.start_ts)
-        const endDate = new Date(a.end_ts)
-        const dateStr = startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        const timeStart = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-        const timeEnd = endDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-        
-        return `Einsatz ${index + 1}:
+      const now = new Date()
+      const futureAssignments = relevantAssignments.filter(a => new Date(a.start_ts) >= now)
+      const pastAssignments = relevantAssignments.filter(a => new Date(a.start_ts) < now)
+      
+      let formattedData = ''
+      
+      // Future assignments
+      if (futureAssignments.length > 0) {
+        formattedData += 'KOMMENDE EINSÄTZE:\n\n'
+        formattedData += futureAssignments.map((a, index) => {
+          const startDate = new Date(a.start_ts)
+          const endDate = new Date(a.end_ts)
+          const dateStr = startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+          const timeStart = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          const timeEnd = endDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          
+          return `Einsatz ${index + 1}:
 Datum: ${dateStr}
 Adresse: ${a.location_text || 'Keine Adresse angegeben'}
 Uhrzeit: ${timeStart}–${timeEnd}
 ${a.buddy_display_name ? `Buddy: ${a.buddy_display_name}` : ''}
 Status: ${a.status || 'offen'}`
-      }).join('\n\n')
+        }).join('\n\n')
+      }
+      
+      // Past assignments
+      if (pastAssignments.length > 0) {
+        if (formattedData) formattedData += '\n\n'
+        formattedData += 'VERGANGENE EINSÄTZE:\n\n'
+        formattedData += pastAssignments.slice(0, 20).map((a, index) => {
+          const startDate = new Date(a.start_ts)
+          const endDate = new Date(a.end_ts)
+          const dateStr = startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+          const timeStart = startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          const timeEnd = endDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          
+          return `Einsatz ${index + 1}:
+Datum: ${dateStr}
+Adresse: ${a.location_text || 'Keine Adresse angegeben'}
+Uhrzeit: ${timeStart}–${timeEnd}
+${a.buddy_display_name ? `Buddy: ${a.buddy_display_name}` : ''}
+Status: ${a.status || 'offen'}`
+        }).join('\n\n')
+      }
+      
+      einsatzDaten = formattedData
     }
 
     // Format document data
