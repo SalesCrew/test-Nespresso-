@@ -230,7 +230,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     setChatInput("");
 
     // Add typing indicator
-    setChatMessages([...newMessages, { role: "ai", content: "Eddie tippt..." }]);
+    setChatMessages([...newMessages, { role: "ai", content: "TYPING_INDICATOR" }]);
 
     try {
       console.log('🤖 Sending message to Eddie API:', userMessage);
@@ -425,7 +425,18 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                         : 'bg-blue-400 text-white'
                     }`}
                   >
-                    {message.content}
+                    {message.content === "TYPING_INDICATOR" ? (
+                      <div className="flex items-center space-x-1">
+                        <span className="text-white">Eddie tippt</span>
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1s' }}></div>
+                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1s' }}></div>
+                          <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1s' }}></div>
+                        </div>
+                      </div>
+                    ) : (
+                      message.content
+                    )}
                   </div>
                 </div>
               ))}
