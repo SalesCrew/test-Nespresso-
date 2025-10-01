@@ -65,6 +65,8 @@ export default function ProfilPage() {
   const [isEditingEmployment, setIsEditingEmployment] = useState(false)
   const [showHuebenerPassword, setShowHuebenerPassword] = useState(false)
   const [showDemotoolPassword, setShowDemotoolPassword] = useState(false)
+  const [showTmaPassword, setShowTmaPassword] = useState(false)
+  const [showBoostAppPassword, setShowBoostAppPassword] = useState(false)
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false)
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
@@ -94,7 +96,11 @@ export default function ProfilPage() {
     huebener_email: "",
     huebener_password: "",
     demotool_email: "",
-    demotool_password: ""
+    demotool_password: "",
+    tma_email: "",
+    tma_password: "",
+    boost_app_email: "",
+    boost_app_password: ""
   })
   const [editablePersonalData, setEditablePersonalData] = useState({
     birthday: "",
@@ -207,6 +213,10 @@ export default function ProfilPage() {
                 huebener_password: editableAccessData.huebener_password,
                 demotool_email: editableAccessData.demotool_email,
                 demotool_password: editableAccessData.demotool_password,
+                tma_email: editableAccessData.tma_email,
+                tma_password: editableAccessData.tma_password,
+                boost_app_email: editableAccessData.boost_app_email,
+                boost_app_password: editableAccessData.boost_app_password,
               })
               .eq('user_id', user.id)
             
@@ -221,6 +231,10 @@ export default function ProfilPage() {
                 huebener_password: editableAccessData.huebener_password,
                 demotool_email: editableAccessData.demotool_email,
                 demotool_password: editableAccessData.demotool_password,
+                tma_email: editableAccessData.tma_email,
+                tma_password: editableAccessData.tma_password,
+                boost_app_email: editableAccessData.boost_app_email,
+                boost_app_password: editableAccessData.boost_app_password,
               })
             
             if (error) throw error
@@ -284,7 +298,11 @@ export default function ProfilPage() {
             huebener_email: data.huebener_email || "",
             huebener_password: data.huebener_password || "",
             demotool_email: data.demotool_email || "",
-            demotool_password: data.demotool_password || ""
+            demotool_password: data.demotool_password || "",
+            tma_email: data.tma_email || "",
+            tma_password: data.tma_password || "",
+            boost_app_email: data.boost_app_email || "",
+            boost_app_password: data.boost_app_password || ""
           })
         }
       }
@@ -329,13 +347,19 @@ export default function ProfilPage() {
     return "x".repeat(iban.length - 5) + iban.slice(-5)
   }
 
-  const togglePasswordVisibility = (type: 'huebener' | 'demotool') => {
+  const togglePasswordVisibility = (type: 'huebener' | 'demotool' | 'tma' | 'boost_app') => {
     if (type === 'huebener') {
       setShowHuebenerPassword(true)
       setTimeout(() => setShowHuebenerPassword(false), 7000)
-    } else {
+    } else if (type === 'demotool') {
       setShowDemotoolPassword(true)
       setTimeout(() => setShowDemotoolPassword(false), 7000)
+    } else if (type === 'tma') {
+      setShowTmaPassword(true)
+      setTimeout(() => setShowTmaPassword(false), 7000)
+    } else if (type === 'boost_app') {
+      setShowBoostAppPassword(true)
+      setTimeout(() => setShowBoostAppPassword(false), 7000)
     }
   }
 
@@ -1632,6 +1656,126 @@ export default function ProfilPage() {
                           >
                             {accessData?.demotool_password ? 
                               (showDemotoolPassword ? accessData.demotool_password : '••••••••') : 
+                              'Nicht angegeben'
+                            }
+                          </p>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider Line */}
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                {/* TMA Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">TMA</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.tma_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, tma_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        isLoading ? (
+                          <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {accessData?.tma_email || 'Nicht angegeben'}
+                          </p>
+                        )
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.tma_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, tma_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        isLoading ? (
+                          <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p 
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                            onClick={() => accessData?.tma_password && togglePasswordVisibility('tma')}
+                          >
+                            {accessData?.tma_password ? 
+                              (showTmaPassword ? accessData.tma_password : '••••••••') : 
+                              'Nicht angegeben'
+                            }
+                          </p>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider Line */}
+                <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                {/* Boost App Section */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Boost App</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Email
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="email"
+                          value={editableAccessData.boost_app_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, boost_app_email: e.target.value})}
+                          className="text-sm"
+                          placeholder="email@example.com"
+                        />
+                      ) : (
+                        isLoading ? (
+                          <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {accessData?.boost_app_email || 'Nicht angegeben'}
+                          </p>
+                        )
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                        Passwort
+                      </label>
+                      {isEditingAccess ? (
+                        <Input
+                          type="password"
+                          value={editableAccessData.boost_app_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, boost_app_password: e.target.value})}
+                          className="text-sm"
+                          placeholder="••••••••"
+                        />
+                      ) : (
+                        isLoading ? (
+                          <div className="h-4 w-40 rounded-md animate-skeleton-fade" />
+                        ) : (
+                          <p 
+                            className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
+                            onClick={() => accessData?.boost_app_password && togglePasswordVisibility('boost_app')}
+                          >
+                            {accessData?.boost_app_password ? 
+                              (showBoostAppPassword ? accessData.boost_app_password : '••••••••') : 
                               'Nicht angegeben'
                             }
                           </p>
