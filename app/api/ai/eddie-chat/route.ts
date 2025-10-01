@@ -83,21 +83,15 @@ export async function POST(req: Request) {
       bank_bic: promotorProfile.bank_bic
     } : null
 
-    // 4. Get application data and user profile
-    
+    // 4. Get user profile (for display_name and role only)
     const { data: userProfile } = await svc
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle()
     
-    // Get application data (onboarding info)
-    const { data: applicationData } = await svc
-      .from('applications')
-      .select('*')
-      .eq('email', user.email)
-      .order('created_at', { ascending: false })
-      .maybeSingle()
+    // Note: applications table is NOT queried - all promotor data comes from promotor_profiles
+    // promotor_profiles is the single source of truth for all personal data
 
     // 5. Get contract data
     const { data: contracts } = await svc
@@ -117,9 +111,8 @@ export async function POST(req: Request) {
       assignments: relevantAssignments?.length || 0,
       documents: documents?.length || 0,
       hasBankData: !!bankData,
-      hasProfile: !!promotorProfile,
+      hasPromotorProfile: !!promotorProfile,
       hasUserProfile: !!userProfile,
-      hasApplicationData: !!applicationData,
       contracts: contracts?.length || 0,
       hasAccessCredentials: !!accessCredentials
     });
@@ -236,67 +229,36 @@ Status: ${a.status || 'offen'}`
       bankDaten = fields.length > 0 ? fields.join('\n') : 'Keine Bankdaten angegeben. Bitte in der Profil-Seite eingeben.'
     }
 
-    // Format promotor general data - ALL fields from user_profiles, promotor_profiles, and applications
+    // Format promotor general data - ALL fields from promotor_profiles ONLY
     let promotorDaten = 'Keine Profildaten verfügbar.'
     const dataFields: string[] = []
     
-    // User Profile data (ALL fields)
-    if (userProfile) {
-      Object.entries(userProfile)
-        .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at'].includes(key))
-        .forEach(([key, value]) => {
-          if (value) {
-            const label = key === 'display_name' ? 'Name' :
-                         key === 'role' ? 'Rolle' :
-                         key === 'phone' ? 'Telefon' :
-                         key === 'status' ? 'Status' : key
-            dataFields.push(`${label}: ${value}`)
-          }
-        })
+    // Display name from user_profiles
+    if (userProfile?.display_name) {
+      dataFields.push(`Name: ${userProfile.display_name}`)
     }
     
-    // Promotor Profile data (ALL fields except bank data which is shown separately)
+    // ALL Promotor Profile data (single source of truth)
     if (promotorProfile) {
       Object.entries(promotorProfile)
         .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'bank_holder', 'bank_name', 'bank_iban', 'bank_bic'].includes(key))
         .forEach(([key, value]) => {
-          if (value) {
-            const label = key === 'region' ? 'Region' :
+          if (value !== null && value !== undefined && value !== '') {
+            const label = key === 'phone' ? 'Telefon' :
+                         key === 'address' ? 'Adresse' :
                          key === 'postal_code' ? 'Postleitzahl' :
                          key === 'city' ? 'Stadt' :
-                         key === 'address' ? 'Adresse' :
-                         key === 'phone' ? 'Telefon (Profil)' :
+                         key === 'region' ? 'Region' :
                          key === 'working_days' ? 'Arbeitstage' :
+                         key === 'height' ? 'Körpergröße' :
+                         key === 'clothing_size' ? 'Kleidergröße' :
+                         key === 'birth_date' ? 'Geburtsdatum' :
+                         key === 'social_security_number' ? 'SV-Nummer' :
+                         key === 'citizenship' ? 'Staatsbürgerschaft' :
                          key === 'stammmarkt' ? 'Stammmarkt' :
                          key === 'has_driving_license' ? 'Führerschein' :
-                         key === 'has_car' ? 'Auto' : key
-            const displayValue = Array.isArray(value) ? value.join(', ') :
-                                typeof value === 'boolean' ? (value ? 'Ja' : 'Nein') :
-                                value
-            dataFields.push(`${label}: ${displayValue}`)
-          }
-        })
-    }
-    
-    // Application data (ALL fields from onboarding)
-    if (applicationData) {
-      Object.entries(applicationData)
-        .filter(([key]) => !['id', 'user_id', 'created_at', 'updated_at', 'email', 'payload', 'status'].includes(key))
-        .forEach(([key, value]) => {
-          if (value) {
-            const label = key === 'full_name' ? 'Vollständiger Name' :
-                         key === 'phone' ? 'Telefon (Bewerbung)' :
-                         key === 'title' ? 'Titel' :
-                         key === 'gender' ? 'Geschlecht' :
-                         key === 'birthDate' ? 'Geburtsdatum' :
-                         key === 'citizenship' ? 'Staatsbürgerschaft' :
-                         key === 'socialSecurityNumber' ? 'SV-Nummer' :
-                         key === 'drivingLicense' ? 'Führerschein (Bewerbung)' :
-                         key === 'carAvailable' ? 'Auto verfügbar' :
-                         key === 'education' ? 'Ausbildung' :
-                         key === 'preferredRegion' ? 'Bevorzugte Region' :
-                         key === 'hoursPerWeek' ? 'Gewünschte Wochenstunden' :
-                         key === 'workingDays' ? 'Arbeitstage (Bewerbung)' : key
+                         key === 'has_car' ? 'Auto' :
+                         key === 'has_work_permit' ? 'Arbeitsbewilligung' : key
             const displayValue = Array.isArray(value) ? value.join(', ') :
                                 typeof value === 'boolean' ? (value ? 'Ja' : 'Nein') :
                                 value
