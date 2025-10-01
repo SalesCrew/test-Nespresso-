@@ -219,25 +219,53 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
+    const userMessage = chatInput;
     // Add user message
-    const newMessages = [...chatMessages, { role: "user", content: chatInput }];
+    const newMessages = [...chatMessages, { role: "user", content: userMessage }];
     setChatMessages(newMessages);
     setChatInput("");
 
-    // Simulate AI response
-    setTimeout(() => {
+    // Add typing indicator
+    setChatMessages([...newMessages, { role: "ai", content: "Eddie tippt..." }]);
+
+    try {
+      console.log('🤖 Sending message to Eddie API:', userMessage);
+      const response = await fetch('/api/ai/eddie-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage })
+      });
+
+      if (!response.ok) {
+        throw new Error('Eddie API request failed');
+      }
+
+      const data = await response.json();
+      console.log('✅ Eddie response received:', data);
+
+      // Replace typing indicator with actual response
       setChatMessages([
         ...newMessages,
         { 
           role: "ai", 
-          content: "Ich verarbeite Ihre Anfrage. Wie kann ich Ihnen weiter behilflich sein?" 
+          content: data.response || "Entschuldigung, ich konnte keine Antwort generieren." 
         }
       ]);
-    }, 1000);
+    } catch (error) {
+      console.error('❌ Eddie chat error:', error);
+      // Replace typing indicator with error message
+      setChatMessages([
+        ...newMessages,
+        { 
+          role: "ai", 
+          content: "Entschuldigung, ich bin gerade nicht verfügbar. Versuchen Sie es später erneut." 
+        }
+      ]);
+    }
   };
 
   // Get time-based greeting
