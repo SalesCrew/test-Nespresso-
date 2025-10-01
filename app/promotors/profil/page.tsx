@@ -1498,7 +1498,7 @@ export default function ProfilPage() {
             </Card>
           </div>
 
-          <div className="space-y-4 px-2">
+          <div className="space-y-4">
             {/* Access Credentials Card */}
             <Card className={`border-none bg-white dark:bg-gray-900 h-full shadow-lg shadow-yellow-500/20 ${
               isEditingAccess ? "ring-2 ring-yellow-500/30" : ""
