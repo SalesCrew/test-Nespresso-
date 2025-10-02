@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS public.eddie_chat_messages (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
   content TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  -- Index for efficient queries
-  INDEX idx_eddie_chat_user_created (user_id, created_at DESC)
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Create index for efficient queries
+CREATE INDEX IF NOT EXISTS idx_eddie_chat_user_created ON public.eddie_chat_messages(user_id, created_at DESC);
 
 -- Enable RLS
 ALTER TABLE public.eddie_chat_messages ENABLE ROW LEVEL SECURITY;
