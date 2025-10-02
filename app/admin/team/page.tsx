@@ -1096,15 +1096,17 @@ Dein Nespresso Team`;
 
       if (uploadError) throw uploadError
 
-      // Get public URL
+      // Get public URL with cache-busting timestamp
       const { data: urlData } = supabase.storage
         .from('profilbilder-promotoren')
         .getPublicUrl(filePath)
+      
+      const urlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`
 
       // Update promotor_profiles with new URL
       const { error: updateError } = await supabase
         .from('promotor_profiles')
-        .update({ profile_picture_url: urlData.publicUrl })
+        .update({ profile_picture_url: urlWithTimestamp })
         .eq('user_id', promotorUserId)
 
       if (updateError) throw updateError
