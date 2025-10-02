@@ -44,22 +44,39 @@ export async function POST(req: Request) {
     console.log('📊 Fetching promotor data from database...');
 
     // Get recent chat messages (last 15 minutes) for conversation context
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    // Calculate 15 minutes ago in UTC (database stores in UTC)
+    const now = new Date()
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000)
+    
+    console.log('🕐 Timestamp check:', {
+      nowUTC: now.toISOString(),
+      fifteenMinAgoUTC: fifteenMinutesAgo.toISOString(),
+      nowLocal: now.toLocaleString('de-AT', { timeZone: 'Europe/Vienna' }),
+      cutoffLocal: fifteenMinutesAgo.toLocaleString('de-AT', { timeZone: 'Europe/Vienna' })
+    });
+
+    // First, delete ALL messages older than 15 minutes for this user
+    const { error: deleteError, count: deletedCount } = await svc
+      .from('eddie_chat_messages')
+      .delete({ count: 'exact' })
+      .eq('user_id', user.id)
+      .lt('created_at', fifteenMinutesAgo.toISOString())
+    
+    if (deleteError) {
+      console.error('⚠️ Error deleting old messages:', deleteError);
+    } else {
+      console.log(`🗑️ Deleted ${deletedCount || 0} old messages (older than 15 minutes)`);
+    }
+
+    // Get recent chat messages (last 15 minutes)
     const { data: recentMessages } = await svc
       .from('eddie_chat_messages')
       .select('*')
       .eq('user_id', user.id)
-      .gte('created_at', fifteenMinutesAgo)
+      .gte('created_at', fifteenMinutesAgo.toISOString())
       .order('created_at', { ascending: true })
     
     console.log('💬 Recent chat messages:', recentMessages?.length || 0);
-
-    // Delete messages older than 15 minutes
-    await svc
-      .from('eddie_chat_messages')
-      .delete()
-      .eq('user_id', user.id)
-      .lt('created_at', fifteenMinutesAgo)
 
     // Save user message to database
     await svc
