@@ -163,7 +163,10 @@ export default function PromotorenPage() {
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const regionDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [showStammdatenblatt, setShowStammdatenblatt] = useState(false);
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
@@ -1069,6 +1072,49 @@ Dein Nespresso Team`;
       [promotorId]: noteText
     }));
   };
+
+  const handleAdminPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>, promotorUserId: string) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingPhoto(true)
+      const supabase = createSupabaseBrowserClient()
+
+      // Upload to storage bucket
+      const filePath = `${promotorUserId}/profile.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from('profilbilder-promotoren')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('profilbilder-promotoren')
+        .getPublicUrl(filePath)
+
+      // Update promotor_profiles with new URL
+      const { error: updateError } = await supabase
+        .from('promotor_profiles')
+        .update({ profile_picture_url: urlData.publicUrl })
+        .eq('user_id', promotorUserId)
+
+      if (updateError) throw updateError
+
+      alert('Profilfoto erfolgreich hochgeladen!')
+      await loadPromotors() // Reload to show new picture
+    } catch (error: any) {
+      console.error('Photo upload error:', error)
+      alert(error.message || 'Fehler beim Hochladen des Fotos')
+    } finally {
+      setUploadingPhoto(false)
+      setShowPhotoMenu(false)
+    }
+  }
 
   // Detailed view functions
   const toggleDetailedView = (promotorId: number) => {
@@ -2360,12 +2406,42 @@ Dein Nespresso Team`;
                       )}
                       
                       <div className="flex items-center space-x-4">
-                        <Avatar className="h-16 w-16 ring-4 ring-white/20">
-                          <AvatarImage src={promotor.avatar} alt={promotor.name} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-medium">
-                            {promotor.name.split(' ').map((n: string) => (n as string)[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar 
+                            className="h-16 w-16 ring-4 ring-white/20 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+                          >
+                            <AvatarImage src={promotor.avatar} alt={promotor.name} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-medium">
+                              {promotor.name.split(' ').map((n: string) => (n as string)[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          {/* Photo Menu */}
+                          {showPhotoMenu && (
+                            <div className="absolute left-20 top-0 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                              <button
+                                onClick={() => {
+                                  photoInputRef.current?.click();
+                                  setShowPhotoMenu(false);
+                                }}
+                                disabled={uploadingPhoto}
+                                className="whitespace-nowrap px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
+                              >
+                                {uploadingPhoto ? 'Wird hochgeladen...' : 'Foto hochladen'}
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Hidden File Input */}
+                          <input
+                            ref={photoInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleAdminPhotoUpload(e, promotor.id)}
+                            className="hidden"
+                          />
+                        </div>
                         
                         <div className="flex-1">
                           <h2 className="text-2xl font-bold">{promotor.name}</h2>
