@@ -393,9 +393,16 @@ ${zugangsDaten}`
       console.error('❌ OpenAI API error:', {
         status: response.status,
         statusText: response.statusText,
-        errorBody: errText
+        errorBody: errText,
+        conversationId: conversationId
       });
-      return NextResponse.json({ error: `AI error: ${response.status} ${errText}` }, { status: 500 })
+      
+      // Return detailed error to frontend for debugging
+      return NextResponse.json({ 
+        error: `OpenAI API error: ${response.status}`,
+        details: errText,
+        conversationId: conversationId
+      }, { status: 500 })
     }
 
     const result = await response.json()

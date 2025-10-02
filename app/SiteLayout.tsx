@@ -245,7 +245,9 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Eddie API request failed');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Eddie API error details:', errorData);
+        throw new Error(errorData.details || errorData.error || 'Eddie API request failed');
       }
 
       const data = await response.json();
