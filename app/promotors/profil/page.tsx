@@ -72,6 +72,7 @@ export default function ProfilPage() {
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
   const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
   const [isDownloading, setIsDownloading] = useState(false)
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [promotorContracts, setPromotorContracts] = useState<any[]>([])
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null)
@@ -800,12 +801,32 @@ export default function ProfilPage() {
       <Card className="border-none shadow-md bg-white dark:bg-gray-900">
         <CardContent className="p-6">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-20 w-20 border-4 border-blue-200 dark:border-blue-900">
-              <AvatarImage src={userProfile.avatar} alt={headerName || 'Promotor'} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 text-lg font-medium">
-                JP
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar 
+                className="h-20 w-20 border-4 border-blue-200 dark:border-blue-900 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+              >
+                <AvatarImage src={userProfile.avatar} alt={headerName || 'Promotor'} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 text-lg font-medium">
+                  JP
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Photo Menu */}
+              {showPhotoMenu && (
+                <div className="absolute left-24 top-0 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-[140px]">
+                  <button
+                    onClick={() => {
+                      setShowPhotoMenu(false);
+                      // Upload logic will be added later
+                    }}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    Foto hochladen
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {isLoading ? (
