@@ -55,7 +55,7 @@ export async function GET() {
       region: profile?.region ?? app?.preferredRegion ?? app?.preferred_region ?? 'wien-noe-bgl',
       workingDays: profile?.working_days ?? app?.workingDays ?? app?.working_days ?? [],
       status: 'active',
-      avatar: '/placeholder.svg',
+      avatar: profile?.profile_picture_url || '/placeholder.svg',
       bankDetails: {
         accountHolder: profile?.bank_holder ?? '',
         bankName: (profile?.bank_name ?? (profile as any)?.bankname) ?? '',
