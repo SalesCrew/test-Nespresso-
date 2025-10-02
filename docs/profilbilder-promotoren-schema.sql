@@ -6,7 +6,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('profilbilder-promotoren', 'profilbilder-promotoren', true)
 ON CONFLICT (id) DO NOTHING;
 
--- 2. Storage policies for profile pictures bucket
+-- 2. FIRST: Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can upload own profile picture" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own profile picture" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own profile picture" ON storage.objects;
+
+-- Then create new policies with proper admin access
+
 -- Allow authenticated users to upload their own profile pictures OR admins to upload any
 CREATE POLICY "Users can upload own profile picture"
 ON storage.objects FOR INSERT
@@ -15,10 +21,9 @@ WITH CHECK (
   bucket_id = 'profilbilder-promotoren' 
   AND (
     (storage.foldername(name))[1] = auth.uid()::text
-    OR EXISTS (
-      SELECT 1 FROM public.user_profiles
-      WHERE user_id = auth.uid()
-      AND role IN ('admin_of_admins', 'admin_staff')
+    OR auth.uid() IN (
+      SELECT user_id FROM public.user_profiles
+      WHERE role IN ('admin_of_admins', 'admin_staff')
     )
   )
 );
@@ -31,10 +36,9 @@ USING (
   bucket_id = 'profilbilder-promotoren' 
   AND (
     (storage.foldername(name))[1] = auth.uid()::text
-    OR EXISTS (
-      SELECT 1 FROM public.user_profiles
-      WHERE user_id = auth.uid()
-      AND role IN ('admin_of_admins', 'admin_staff')
+    OR auth.uid() IN (
+      SELECT user_id FROM public.user_profiles
+      WHERE role IN ('admin_of_admins', 'admin_staff')
     )
   )
 );
@@ -47,10 +51,9 @@ USING (
   bucket_id = 'profilbilder-promotoren' 
   AND (
     (storage.foldername(name))[1] = auth.uid()::text
-    OR EXISTS (
-      SELECT 1 FROM public.user_profiles
-      WHERE user_id = auth.uid()
-      AND role IN ('admin_of_admins', 'admin_staff')
+    OR auth.uid() IN (
+      SELECT user_id FROM public.user_profiles
+      WHERE role IN ('admin_of_admins', 'admin_staff')
     )
   )
 );
