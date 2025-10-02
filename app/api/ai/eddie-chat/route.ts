@@ -367,7 +367,7 @@ Vorherige Nachrichten für Followups:
 Dies ist der Verlauf eurer aktuellen Unterhaltung. Nutze diese Informationen NUR, wenn der Promotor eine Folgefrage stellt oder sich auf etwas Vorheriges bezieht. Wiederhole NICHT die Keywords oder den Chatverlauf, verstehe den Kontext und antworte natürlich darauf, als würdest du dich an ein normales Gespräch erinnern.
 
 REGELN für Followups:
-- Lies den Verlauf sorgfältig und vollständig in chronologischer Reihenfolge (oben → unten) und verstehe die Unterhaltung. Nur so beantwortest du Folgefragen korrekt.
+- Lies den Verlauf sorgfältig und vollständig in chronologischer Reihenfolge (oben → unten) und verstehe die Unterhaltung. Antworte STANDARDMÄSSIG auf die NEUESTE Nachricht im Verlauf. Nur wenn ausdrücklich darum gebeten wird, bezieh dich auf eine ältere Nachricht.
 - Zitiere NIEMALS wörtlich aus dem Chatverlauf
 - Antworte so, als würdest du dich natürlich an das Gespräch erinnern
 - Nutze den Kontext nur wenn nötig für Folgefragen
