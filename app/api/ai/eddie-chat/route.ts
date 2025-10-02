@@ -55,7 +55,22 @@ export async function POST(req: Request) {
       cutoffLocal: fifteenMinutesAgo.toLocaleString('de-AT', { timeZone: 'Europe/Vienna' })
     });
 
-    // First, delete ALL messages older than 15 minutes for this user
+    // First, check ALL existing messages for this user before deletion
+    const { data: allMessagesBeforeDelete } = await svc
+      .from('eddie_chat_messages')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+    
+    console.log('📊 ALL messages in database BEFORE deletion:', allMessagesBeforeDelete?.length || 0);
+    if (allMessagesBeforeDelete && allMessagesBeforeDelete.length > 0) {
+      allMessagesBeforeDelete.forEach((msg: any, idx: number) => {
+        const age = Math.floor((now.getTime() - new Date(msg.created_at).getTime()) / 60000);
+        console.log(`  Message ${idx + 1}: [${msg.role}] ${msg.content.substring(0, 50)}... | Age: ${age} minutes | Created: ${msg.created_at}`);
+      });
+    }
+
+    // Delete ALL messages older than 15 minutes for this user
     const { error: deleteError, count: deletedCount } = await svc
       .from('eddie_chat_messages')
       .delete({ count: 'exact' })
@@ -76,7 +91,9 @@ export async function POST(req: Request) {
       .gte('created_at', fifteenMinutesAgo.toISOString())
       .order('created_at', { ascending: true })
     
-    console.log('💬 Recent chat messages:', recentMessages?.length || 0);
+    console.log('💬 Recent chat messages AFTER deletion:', recentMessages?.length || 0);
+    console.log('📝 Deletion triggered by: Promotor sending message to Eddie');
+    console.log('⏰ Check frequency: Every time a message is sent (not every minute, on-demand only)');
 
     // Save user message to database
     await svc
