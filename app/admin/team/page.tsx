@@ -1420,7 +1420,7 @@ Dein Nespresso Team`;
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
-                <span>Stammdatenblatt</span>
+                <span>Bewerber</span>
               </button>
             </div>
           </div>
