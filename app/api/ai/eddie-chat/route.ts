@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     
     const body = await req.json().catch(() => ({}))
     const userMessage: string = (body?.message || '').toString()
-    const conversationId: string = body?.conversationId || `eddie-${user.id}`
+    const conversationId: string = body?.conversationId || `conv-eddie-${user.id}`
 
     console.log('💬 User message received:', {
       hasMessage: !!userMessage,
