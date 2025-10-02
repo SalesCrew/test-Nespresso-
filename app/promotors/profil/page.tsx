@@ -814,7 +814,7 @@ export default function ProfilPage() {
               
               {/* Photo Menu */}
               {showPhotoMenu && (
-                <div className="absolute left-24 top-0 z-50 bg-white/97 dark:bg-gray-800/97 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="absolute left-24 top-0 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
                       setShowPhotoMenu(false);
