@@ -1548,9 +1548,9 @@ export default function ProfilPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Hübener Section */}
+                {/* Hübner Section */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübener</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübner</h4>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-0.5">
                       <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
