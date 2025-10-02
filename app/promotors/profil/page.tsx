@@ -2131,7 +2131,7 @@ export default function ProfilPage() {
                       <div>Laufzeit: {contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : 'N/A'} - {contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : 'unbefristet'}</div>
                       <div>Anstellungsart: {contract.employment_type || 'N/A'}</div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between">
                       {contract.file_path && (
                         <button
                           className="px-2 py-1 text-xs rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
@@ -2143,9 +2143,15 @@ export default function ProfilPage() {
                           }}
                           title="Hochgeladenen Vertrag ansehen"
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          Signiert ansehen
                         </button>
                       )}
+                      <button
+                        className="px-2 py-1 text-xs rounded-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                        onClick={() => handleDienstvertragSelect(contract.id)}
+                      >
+                        Vertrag ansehen
+                      </button>
                     </div>
                   </div>
                 ));
