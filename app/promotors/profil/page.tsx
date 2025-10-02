@@ -382,12 +382,16 @@ export default function ProfilPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Upload to storage bucket
+      // Delete old profile picture first
       const filePath = `${user.id}/profile.jpg`
+      await supabase.storage
+        .from('profilbilder-promotoren')
+        .remove([filePath])
+      
+      // Upload new profile picture
       const { error: uploadError } = await supabase.storage
         .from('profilbilder-promotoren')
         .upload(filePath, file, {
-          upsert: true,
           contentType: file.type
         })
 

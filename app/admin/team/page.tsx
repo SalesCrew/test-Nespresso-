@@ -1081,12 +1081,16 @@ Dein Nespresso Team`;
       setUploadingPhoto(true)
       const supabase = createSupabaseBrowserClient()
 
-      // Upload to storage bucket
+      // Delete old profile picture first
       const filePath = `${promotorUserId}/profile.jpg`
+      await supabase.storage
+        .from('profilbilder-promotoren')
+        .remove([filePath])
+      
+      // Upload new profile picture
       const { error: uploadError } = await supabase.storage
         .from('profilbilder-promotoren')
         .upload(filePath, file, {
-          upsert: true,
           contentType: file.type
         })
 
