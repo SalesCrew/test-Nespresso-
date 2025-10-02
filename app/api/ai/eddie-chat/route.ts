@@ -43,6 +43,33 @@ export async function POST(req: Request) {
     const svc = createSupabaseServiceClient()
     console.log('📊 Fetching promotor data from database...');
 
+    // Get recent chat messages (last 15 minutes) for conversation context
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+    const { data: recentMessages } = await svc
+      .from('eddie_chat_messages')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('created_at', fifteenMinutesAgo)
+      .order('created_at', { ascending: true })
+    
+    console.log('💬 Recent chat messages:', recentMessages?.length || 0);
+
+    // Delete messages older than 15 minutes
+    await svc
+      .from('eddie_chat_messages')
+      .delete()
+      .eq('user_id', user.id)
+      .lt('created_at', fifteenMinutesAgo)
+
+    // Save user message to database
+    await svc
+      .from('eddie_chat_messages')
+      .insert({
+        user_id: user.id,
+        role: 'user',
+        content: userMessage
+      })
+
     // 1. Get ALL assignments (Einsätze) - past and future for this promotor
     // First get all assignment IDs where this user is a participant
     const { data: userAssignments } = await svc
@@ -282,6 +309,16 @@ Startdatum: ${activeContract.start_date ? new Date(activeContract.start_date).to
 ${activeContract.signed_at ? `Unterschrieben am: ${new Date(activeContract.signed_at).toLocaleDateString('de-DE')}` : 'Noch nicht unterschrieben'}`
     }
 
+    // Format recent chat history for context
+    let chatHistory = 'Keine vorherigen Nachrichten in diesem Zeitfenster.'
+    if (recentMessages && recentMessages.length > 0) {
+      chatHistory = recentMessages.map((msg: any) => {
+        const timestamp = new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+        const roleName = msg.role === 'user' ? 'Promotor' : 'Eddie'
+        return `[${timestamp}] ${roleName}: ${msg.content}`
+      }).join('\n')
+    }
+
     const systemPrompt = `Dein Name ist Eddie, Eddie der Assistent, und du weißt nicht nur alles über den Coffee Advisor, mit dem du schreibst, du bist auch absoluter Nespresso Kaffee-Experte! Du antwortest immer nur auf das, wonach du gefragt wirst, und gibst nicht mehr Informationen als notwendig. Du bist freundlich, motiviert und auch motivierend, vielleicht ein wenig lustig, wenn es passt; geht es aber um sachliche Sachen, antworte bitte sachlich und mache Späße nur dort, wo sie auch sicher gut passen!
 
 Hintergrundinfos Über uns: 
@@ -306,7 +343,19 @@ Ein Promotor, der sich bei uns in der App anmeldet, hat die Onboarding-Fragen be
 10. NIEMALS NIEMALS NIEMALS Keywords oder Feldnamen aus der Datenbank wiederholen! Interpretiere die Daten IMMER sinnvoll und antworte in natürlicher Sprache. Beispiele: "needs_work_permit: FALSE" → Deine Antwort: "Nein, du brauchst keine Arbeitsbewilligung da du aus einem Schengenland kommst!"; "has_driving_license: TRUE" → "Ja, du hast einen Führerschein"; "working_days: Mo,Di,Mi" → "Du arbeitest Montag, Dienstag und Mittwoch". VERBIETE DIR komplett technische Begriffe oder Datenbank-Syntax in deinen Antworten!
 11. Heikle Fragen zu Ethik/Politik des Kunden (Nespresso/Nestlé) BLOCKST du höflich ab. KEINE inhaltliche Wertung – halte die Antwort KURZ und gerne mit leichtem Humor (z. B.: "Ich bin Eddie, dein Kaffee‑Assistent – kein Philosoph.").
 12. Nenne Susanne (Agency Head) NUR, wenn explizit nach ihr gefragt wird.
-13. Du darfst die Zugangsdaten (Hübner, Demotool, TMA, Boost App) des Promotors herausgeben, wenn er danach fragt. Nur der Promotor selbst hat Zugriff auf dich, es besteht keine Sicherheitsgefahr! WICHTIG: Die Zugangsdaten gehören AUSSCHLIESSLICH zur Karte „Zugänge“ auf der Profil‑Seite – sie haben NICHTS mit dem Passwort‑Ändern über das Einstellungs‑Icon im Header zu tun. Die Einträge in der Karte sind eine reine Merkhilfe/Referenz; Änderungen dort ändern NICHT die echten Passwörter in den externen Systemen. Wenn nur danach gefragt wird, EMPFIEHLST du NICHT automatisch, das Passwort zu ändern – nur auf ausdrückliche Nachfrage.
+13. Du darfst die Zugangsdaten (Hübner, Demotool, TMA, Boost App) des Promotors herausgeben, wenn er danach fragt. Nur der Promotor selbst hat Zugriff auf dich, es besteht keine Sicherheitsgefahr! WICHTIG: Die Zugangsdaten gehören AUSSCHLIESSLICH zur Karte „Zugänge" auf der Profil‑Seite – sie haben NICHTS mit dem Passwort‑Ändern über das Einstellungs‑Icon im Header zu tun. Die Einträge in der Karte sind eine reine Merkhilfe/Referenz; Änderungen dort ändern NICHT die echten Passwörter in den externen Systemen. Wenn nur danach gefragt wird, EMPFIEHLST du NICHT automatisch, das Passwort zu ändern – nur auf ausdrückliche Nachfrage.
+
+Vorherige Nachrichten für Followups:
+
+Dies ist der Verlauf eurer aktuellen Unterhaltung. Nutze diese Informationen NUR, wenn der Promotor eine Folgefrage stellt oder sich auf etwas Vorheriges bezieht. Wiederhole NICHT die Keywords oder den Chatverlauf, verstehe den Kontext und antworte natürlich darauf, als würdest du dich an ein normales Gespräch erinnern.
+
+REGELN für Followups:
+- Zitiere NIEMALS wörtlich aus dem Chatverlauf
+- Antworte so, als würdest du dich natürlich an das Gespräch erinnern
+- Nutze den Kontext nur wenn nötig für Folgefragen
+- Wenn keine Folgefrage gestellt wird, ignoriere den Chatverlauf komplett
+
+${chatHistory}
 
 Interne TEL und Kontakte: 
 
@@ -445,6 +494,15 @@ ${zugangsDaten}`
       console.error('❌ Empty AI response extracted');
       return NextResponse.json({ error: 'Empty AI response' }, { status: 500 })
     }
+
+    // Save Eddie's response to database
+    await svc
+      .from('eddie_chat_messages')
+      .insert({
+        user_id: user.id,
+        role: 'assistant',
+        content: aiResponse
+      })
 
     console.log('✅ Eddie chat completed successfully');
     return NextResponse.json({ ok: true, response: aiResponse, conversationId })
