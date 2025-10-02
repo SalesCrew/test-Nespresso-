@@ -814,13 +814,13 @@ export default function ProfilPage() {
               
               {/* Photo Menu */}
               {showPhotoMenu && (
-                <div className="absolute left-24 top-0 z-50 bg-white/95 dark:bg-gray-800/95 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+                <div className="absolute left-24 top-0 z-50 bg-white/97 dark:bg-gray-800/97 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
                       setShowPhotoMenu(false);
                       // Upload logic will be added later
                     }}
-                    className="whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    className="whitespace-nowrap px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                   >
                     Foto hochladen
                   </button>
