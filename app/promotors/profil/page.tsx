@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -73,6 +73,8 @@ export default function ProfilPage() {
   const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
   const [isDownloading, setIsDownloading] = useState(false)
   const [showPhotoMenu, setShowPhotoMenu] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [promotorContracts, setPromotorContracts] = useState<any[]>([])
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null)
@@ -122,10 +124,10 @@ export default function ProfilPage() {
   const [userProfileData, setUserProfileData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Mock user data
-  const userProfile = {
+  // User profile picture
+  const [userProfile, setUserProfile] = useState({
     avatar: "/placeholder.svg?height=80&width=80"
-  }
+  })
 
   const handleEditToggle = () => {
     if (isEditingContact) {
@@ -330,6 +332,12 @@ export default function ProfilPage() {
         
         if (data) {
           setUserProfileData(data)
+          
+          // Load profile picture if available
+          if (data.profile_picture_url) {
+            setUserProfile({ avatar: data.profile_picture_url })
+          }
+          
           setEditablePersonalData({
             birthday: data.birth_date || "",
             socialSecurityNumber: data.social_security_number || "",
@@ -361,6 +369,52 @@ export default function ProfilPage() {
     } else if (type === 'boost_app') {
       setShowBoostAppPassword(true)
       setTimeout(() => setShowBoostAppPassword(false), 7000)
+    }
+  }
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingPhoto(true)
+      const supabase = createSupabaseBrowserClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Upload to storage bucket
+      const filePath = `${user.id}/profile.jpg`
+      const { error: uploadError } = await supabase.storage
+        .from('profilbilder-promotoren')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('profilbilder-promotoren')
+        .getPublicUrl(filePath)
+
+      // Update promotor_profiles with new URL
+      const { error: updateError } = await supabase
+        .from('promotor_profiles')
+        .update({ profile_picture_url: urlData.publicUrl })
+        .eq('user_id', user.id)
+
+      if (updateError) throw updateError
+
+      // Refresh page to show new profile picture
+      alert('Profilfoto erfolgreich hochgeladen!')
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Photo upload error:', error)
+      alert(error.message || 'Fehler beim Hochladen des Fotos')
+    } finally {
+      setUploadingPhoto(false)
+      setShowPhotoMenu(false)
     }
   }
 
@@ -817,15 +871,25 @@ export default function ProfilPage() {
                 <div className="absolute left-24 top-0 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
+                      photoInputRef.current?.click();
                       setShowPhotoMenu(false);
-                      // Upload logic will be added later
                     }}
-                    className="whitespace-nowrap px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    disabled={uploadingPhoto}
+                    className="whitespace-nowrap px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
                   >
-                    Foto hochladen
+                    {uploadingPhoto ? 'Wird hochgeladen...' : 'Foto hochladen'}
                   </button>
                 </div>
               )}
+              
+              {/* Hidden File Input */}
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
             </div>
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
