@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     
     const body = await req.json().catch(() => ({}))
     const userMessage: string = (body?.message || '').toString()
+    const conversationId: string = body?.conversationId || `eddie-${user.id}`
 
     console.log('💬 User message received:', {
       hasMessage: !!userMessage,
@@ -359,6 +360,7 @@ ${zugangsDaten}`
     console.log('🌐 Calling OpenAI GPT-5-nano API...');
     const requestPayload = {
       model: 'gpt-5-nano',
+      conversation: conversationId,
       input: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -369,6 +371,7 @@ ${zugangsDaten}`
     
     console.log('📤 API request payload:', {
       model: requestPayload.model,
+      conversationId: conversationId,
       inputMessages: requestPayload.input.length,
       reasoning: requestPayload.reasoning,
       text: requestPayload.text
@@ -438,7 +441,7 @@ ${zugangsDaten}`
     }
 
     console.log('✅ Eddie chat completed successfully');
-    return NextResponse.json({ ok: true, response: aiResponse })
+    return NextResponse.json({ ok: true, response: aiResponse, conversationId })
   } catch (e: any) {
     console.error('❌ Critical error in Eddie chat:', e);
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })

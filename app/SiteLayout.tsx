@@ -42,6 +42,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     { role: "ai", content: "Hallo! Wie kann ich Ihnen heute helfen?" },
   ]);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Training session detection
@@ -237,7 +238,10 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       const response = await fetch('/api/ai/eddie-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage })
+        body: JSON.stringify({ 
+          message: userMessage,
+          conversationId: conversationId 
+        })
       });
 
       if (!response.ok) {
@@ -246,6 +250,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
       const data = await response.json();
       console.log('✅ Eddie response received:', data);
+
+      // Update conversationId if received from server
+      if (data.conversationId) {
+        setConversationId(data.conversationId);
+      }
 
       // Replace typing indicator with actual response
       setChatMessages([
