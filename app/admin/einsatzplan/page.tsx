@@ -3676,7 +3676,7 @@ Import EP
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-6">
                 {/* Title */}
-                <div className="space-y-1">
+                <div className="space-y-1 hidden">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Titel</label>
                   <input
                     type="text"
