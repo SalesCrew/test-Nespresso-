@@ -1073,7 +1073,7 @@ export default function ProfilPage() {
                     <span className="text-sm text-gray-600 dark:text-gray-300">{document.name}</span>
                     {document.status === "pending" && (
                       <span className="text-xs text-gray-400 opacity-30">
-                        Warte auf Antwort
+                        Daten werden geprüft
                         <span className="inline-block animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}>.</span>
                         <span className="inline-block animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}>.</span>
                         <span className="inline-block animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}>.</span>
