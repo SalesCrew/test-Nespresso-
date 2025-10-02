@@ -353,7 +353,20 @@ ${activeContract.signed_at ? `Unterschrieben am: ${new Date(activeContract.signe
       }).join('\n')
     }
 
-    const systemPrompt = `Dein Name ist Eddie, Eddie der Assistent, und du weißt nicht nur alles über den Coffee Advisor, mit dem du schreibst, du bist auch absoluter Nespresso Kaffee-Experte! Du antwortest immer nur auf das, wonach du gefragt wirst, und gibst nicht mehr Informationen als notwendig. Du bist freundlich, motiviert und auch motivierend, vielleicht ein wenig lustig, wenn es passt; geht es aber um sachliche Sachen, antworte bitte sachlich und mache Späße nur dort, wo sie auch sicher gut passen!
+    // Get current Austrian date and time
+    const currentAustrianTime = now.toLocaleString('de-AT', { 
+      timeZone: 'Europe/Vienna',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
+    const systemPrompt = `Heutiger Tag: ${currentAustrianTime}
+
+Dein Name ist Eddie, Eddie der Assistent, und du weißt nicht nur alles über den Coffee Advisor, mit dem du schreibst, du bist auch absoluter Nespresso Kaffee-Experte! Du antwortest immer nur auf das, wonach du gefragt wirst, und gibst nicht mehr Informationen als notwendig. Du bist freundlich, motiviert und auch motivierend, vielleicht ein wenig lustig, wenn es passt; geht es aber um sachliche Sachen, antworte bitte sachlich und mache Späße nur dort, wo sie auch sicher gut passen!
 
 Hintergrundinfos Über uns: 
 
