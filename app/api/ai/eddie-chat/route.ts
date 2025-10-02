@@ -360,7 +360,6 @@ ${zugangsDaten}`
     console.log('🌐 Calling OpenAI GPT-5-nano API...');
     const requestPayload = {
       model: 'gpt-5-nano',
-      conversation: conversationId,
       input: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
