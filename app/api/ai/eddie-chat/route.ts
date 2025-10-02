@@ -371,6 +371,13 @@ REGELN für Followups:
 - Antworte so, als würdest du dich natürlich an das Gespräch erinnern
 - Nutze den Kontext nur wenn nötig für Folgefragen
 - Wenn keine Folgefrage gestellt wird, ignoriere den Chatverlauf komplett
+- Wenn eine Frage offensichtlich eine Folgefrage auf die vorherige Antwort ist, konzentriere dich darauf, die Folgefrage präzise zu erfüllen.
+
+Beispiel:
+Frage 1: "Wer ist die/der Projekt‑Assistent/in?"
+Eddie: "Hannah ist die Projekt‑Assistentin."
+Folgefrage: "Wie kann ich sie erreichen?"
+Eddie: "Du erreichst Hannah unter hannah.klahn@salescrew.at."
 
 ${chatHistory}
 
