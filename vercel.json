@@ -1,9 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/cleanup-eddie-messages",
-      "schedule": "* * * * *"
-    }
-  ]
-}
-

@@ -31,7 +31,22 @@ CREATE POLICY "Users can delete own eddie chat messages" ON public.eddie_chat_me
 -- Grant permissions
 GRANT ALL ON public.eddie_chat_messages TO authenticated;
 
--- Note: Automatic cleanup is handled by Vercel Cron Job
--- See: /api/cron/cleanup-eddie-messages (runs every minute)
--- See: vercel.json for cron configuration
+-- Function to auto-delete messages older than 15 minutes
+CREATE OR REPLACE FUNCTION delete_old_eddie_messages()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  DELETE FROM public.eddie_chat_messages
+  WHERE created_at < NOW() - INTERVAL '15 minutes';
+END;
+$$;
+
+-- Optional: Create a scheduled job to run cleanup every minute
+-- (requires pg_cron extension - uncomment if available)
+-- SELECT cron.schedule(
+--   'delete-old-eddie-messages',
+--   '* * * * *', -- Every minute
+--   'SELECT delete_old_eddie_messages();'
+-- );
 
