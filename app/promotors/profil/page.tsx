@@ -1072,7 +1072,7 @@ export default function ProfilPage() {
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600 dark:text-gray-300">{document.name}</span>
                     {document.status === "pending" && (
-                      <span className="text-xs text-gray-400 opacity-30">
+                      <span className="text-[10px] text-gray-400 opacity-30">
                         Daten werden geprüft
                         <span className="inline-block animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}>.</span>
                         <span className="inline-block animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}>.</span>
