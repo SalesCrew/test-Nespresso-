@@ -858,7 +858,12 @@ export default function ProfilPage() {
             <div className="relative">
               <Avatar 
                 className="h-20 w-20 border-4 border-blue-200 dark:border-blue-900 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setShowPhotoMenu(!showPhotoMenu)}
+                onClick={() => {
+                  // Only show menu if no profile picture uploaded yet
+                  if (!userProfile.avatar || userProfile.avatar.includes('placeholder')) {
+                    setShowPhotoMenu(!showPhotoMenu);
+                  }
+                }}
               >
                 <AvatarImage src={userProfile.avatar} alt={headerName || 'Promotor'} />
                 <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 text-lg font-medium">
@@ -866,8 +871,8 @@ export default function ProfilPage() {
                 </AvatarFallback>
               </Avatar>
               
-              {/* Photo Menu */}
-              {showPhotoMenu && (
+              {/* Photo Menu - only show if no picture uploaded */}
+              {showPhotoMenu && (!userProfile.avatar || userProfile.avatar.includes('placeholder')) && (
                 <div className="absolute left-24 top-0 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
