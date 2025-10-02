@@ -48,6 +48,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   // Training session detection
   const [isInTrainingSession, setIsInTrainingSession] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string>("/placeholder.svg?height=40&width=40");
   const [openPwPopover, setOpenPwPopover] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -84,7 +85,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     }
   }, [pathname]);
 
-  // Load signed-in user's display name for header (promotor) using browser Supabase session
+  // Load signed-in user's display name and profile picture for header (promotor) using browser Supabase session
   useEffect(() => {
     async function loadName() {
       try {
@@ -101,6 +102,16 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         const name = profileName || metaName || 'Promotor';
         setDisplayName(name);
         try { localStorage.setItem('displayName', name); } catch {}
+        
+        // Load profile picture from promotor_profiles
+        const { data: promotorProfile } = await supabase
+          .from('promotor_profiles')
+          .select('profile_picture_url')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (promotorProfile?.profile_picture_url) {
+          setProfilePictureUrl(promotorProfile.profile_picture_url);
+        }
       } catch {}
     }
     loadName();
@@ -299,7 +310,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         <div className="container flex h-16 items-center px-4 mx-auto max-w-5xl">
           <div className="flex items-center space-x-3">
             <Avatar className="h-10 w-10 border-2 border-blue-200 dark:border-blue-900">
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Avatar" />
+              <AvatarImage src={profilePictureUrl} alt="Avatar" />
               <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-700 font-medium">JP</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
