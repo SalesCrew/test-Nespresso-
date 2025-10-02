@@ -63,7 +63,7 @@ export default function ProfilPage() {
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isEditingAccess, setIsEditingAccess] = useState(false)
   const [isEditingEmployment, setIsEditingEmployment] = useState(false)
-  const [showHuebenerPassword, setShowHuebenerPassword] = useState(false)
+  const [showHuebnerPassword, setShowHuebnerPassword] = useState(false)
   const [showDemotoolPassword, setShowDemotoolPassword] = useState(false)
   const [showTmaPassword, setShowTmaPassword] = useState(false)
   const [showBoostAppPassword, setShowBoostAppPassword] = useState(false)
@@ -93,8 +93,8 @@ export default function ProfilPage() {
     bic: ""
   })
   const [editableAccessData, setEditableAccessData] = useState({
-    huebener_email: "",
-    huebener_password: "",
+    huebner_email: "",
+    huebner_password: "",
     demotool_email: "",
     demotool_password: "",
     tma_email: "",
@@ -209,8 +209,8 @@ export default function ProfilPage() {
             const { error } = await supabase
               .from('access_credentials')
               .update({
-                huebener_email: editableAccessData.huebener_email,
-                huebener_password: editableAccessData.huebener_password,
+                huebner_email: editableAccessData.huebner_email,
+                huebner_password: editableAccessData.huebner_password,
                 demotool_email: editableAccessData.demotool_email,
                 demotool_password: editableAccessData.demotool_password,
                 tma_email: editableAccessData.tma_email,
@@ -227,8 +227,8 @@ export default function ProfilPage() {
               .from('access_credentials')
               .insert({
                 user_id: user.id,
-                huebener_email: editableAccessData.huebener_email,
-                huebener_password: editableAccessData.huebener_password,
+                huebner_email: editableAccessData.huebner_email,
+                huebner_password: editableAccessData.huebner_password,
                 demotool_email: editableAccessData.demotool_email,
                 demotool_password: editableAccessData.demotool_password,
                 tma_email: editableAccessData.tma_email,
@@ -295,8 +295,8 @@ export default function ProfilPage() {
         if (data) {
           setAccessData(data)
           setEditableAccessData({
-            huebener_email: data.huebener_email || "",
-            huebener_password: data.huebener_password || "",
+            huebner_email: data.huebner_email || "",
+            huebner_password: data.huebner_password || "",
             demotool_email: data.demotool_email || "",
             demotool_password: data.demotool_password || "",
             tma_email: data.tma_email || "",
@@ -347,10 +347,10 @@ export default function ProfilPage() {
     return "x".repeat(iban.length - 5) + iban.slice(-5)
   }
 
-  const togglePasswordVisibility = (type: 'huebener' | 'demotool' | 'tma' | 'boost_app') => {
-    if (type === 'huebener') {
-      setShowHuebenerPassword(true)
-      setTimeout(() => setShowHuebenerPassword(false), 7000)
+  const togglePasswordVisibility = (type: 'huebner' | 'demotool' | 'tma' | 'boost_app') => {
+    if (type === 'huebner') {
+      setShowHuebnerPassword(true)
+      setTimeout(() => setShowHuebnerPassword(false), 7000)
     } else if (type === 'demotool') {
       setShowDemotoolPassword(true)
       setTimeout(() => setShowDemotoolPassword(false), 7000)
@@ -1559,8 +1559,8 @@ export default function ProfilPage() {
                       {isEditingAccess ? (
                         <Input
                           type="email"
-                          value={editableAccessData.huebener_email}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_email: e.target.value})}
+                          value={editableAccessData.huebner_email}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebner_email: e.target.value})}
                           className="text-sm"
                           placeholder="email@example.com"
                         />
@@ -1569,7 +1569,7 @@ export default function ProfilPage() {
                           <div className="h-4 w-56 rounded-md animate-skeleton-fade" />
                         ) : (
                           <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {accessData?.huebener_email || 'Nicht angegeben'}
+                            {accessData?.huebner_email || 'Nicht angegeben'}
                           </p>
                         )
                       )}
@@ -1581,8 +1581,8 @@ export default function ProfilPage() {
                       {isEditingAccess ? (
                         <Input
                           type="password"
-                          value={editableAccessData.huebener_password}
-                          onChange={(e) => setEditableAccessData({...editableAccessData, huebener_password: e.target.value})}
+                          value={editableAccessData.huebner_password}
+                          onChange={(e) => setEditableAccessData({...editableAccessData, huebner_password: e.target.value})}
                           className="text-sm"
                           placeholder="••••••••"
                         />
@@ -1592,10 +1592,10 @@ export default function ProfilPage() {
                         ) : (
                           <p 
                             className="text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:text-yellow-600 transition-colors"
-                            onClick={() => accessData?.huebener_password && togglePasswordVisibility('huebener')}
+                            onClick={() => accessData?.huebner_password && togglePasswordVisibility('huebner')}
                           >
-                            {accessData?.huebener_password ? 
-                              (showHuebenerPassword ? accessData.huebener_password : '••••••••') : 
+                            {accessData?.huebner_password ? 
+                              (showHuebnerPassword ? accessData.huebner_password : '••••••••') : 
                               'Nicht angegeben'
                             }
                           </p>

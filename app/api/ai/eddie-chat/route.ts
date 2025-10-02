@@ -122,10 +122,10 @@ export async function POST(req: Request) {
     if (accessCredentials) {
       const credentials = []
       
-      if (accessCredentials.huebener_email || accessCredentials.huebener_password) {
-        credentials.push(`Hübener:
-Email: ${accessCredentials.huebener_email || 'Nicht angegeben'}
-Passwort: ${accessCredentials.huebener_password || 'Nicht angegeben'}`)
+      if (accessCredentials.huebner_email || accessCredentials.huebner_password) {
+        credentials.push(`Hübner:
+Email: ${accessCredentials.huebner_email || 'Nicht angegeben'}
+Passwort: ${accessCredentials.huebner_password || 'Nicht angegeben'}`)
       }
       
       if (accessCredentials.demotool_email || accessCredentials.demotool_password) {
