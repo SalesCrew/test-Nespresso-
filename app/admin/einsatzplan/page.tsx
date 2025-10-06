@@ -2132,7 +2132,7 @@ Import EP
                       )
                     ) : viewMode === 'days' ? (
                       /* Days View */
-                      <div className="grid grid-cols-4 gap-4">
+                      <div key={`days-${selectedWeeks.join('-')}-${hideVerplant}`} className="grid grid-cols-4 gap-4">
                         {generateDayCards().map((dayData) => {
                           // Green background when there are 0 "Offen" assignments and at least one assignment total
                           const noOpenAssignments = dayData.total > 0 && dayData.offen === 0;
@@ -2221,7 +2221,7 @@ Import EP
                       </div>
                     ) : (
                       /* List View */
-                      <div className="space-y-2">
+                      <div key={`list-${selectedWeeks.join('-')}-${hideVerplant}`} className="space-y-2">
                         {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
