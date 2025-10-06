@@ -2313,28 +2313,18 @@ Import EP
                                   <span>{einsatz.planStart} - {einsatz.planEnd}</span>
                                 </div>
                                 {/* Invite summary (invited / accepted / rejected) */}
-                                <div className="text-[11px] leading-tight text-center flex flex-col items-center justify-center">
+                                <div className="text-[11px] leading-tight text-center flex flex-col items-center justify-center gap-0.5">
                                   <div className="flex items-center gap-1 text-gray-500">
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="w-3 h-3 inline-flex items-center justify-center rounded">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#9CA3AF" strokeWidth="2"/></svg>
-                                      </span>
-                                      Eingeladen: {inviteCounts[einsatz.id]?.invited ?? 0}
-                                    </span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                                    <span>Eingeladen: {inviteCounts[einsatz.id]?.invited ?? 0}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-green-600">
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="w-3 h-3 inline-block rounded-full bg-green-500"></span>
-                                      Angenommen: {inviteCounts[einsatz.id]?.accepted ?? 0}
-                                    </span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    <span>Angenommen: {inviteCounts[einsatz.id]?.accepted ?? 0}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-red-500">
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="w-3 h-3 inline-flex items-center justify-center rounded">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#EF4444" strokeWidth="2"/><line x1="8" y1="8" x2="16" y2="16" stroke="#EF4444" strokeWidth="2"/></svg>
-                                      </span>
-                                      Abgelehnt: {inviteCounts[einsatz.id]?.rejected ?? 0}
-                                    </span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    <span>Abgelehnt: {inviteCounts[einsatz.id]?.rejected ?? 0}</span>
                                   </div>
                                 </div>
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
