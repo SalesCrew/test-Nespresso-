@@ -1862,7 +1862,7 @@ Dein Nespresso Team`;
             <>
           {/* Search and Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative" style={{ flex: '0 0 400px' }}>
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Promotor suchen..."
@@ -1872,7 +1872,7 @@ Dein Nespresso Team`;
               />
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex gap-3 ml-auto">
               {/* Onboarding Filter Button */}
               <div className="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg">
                 {[
