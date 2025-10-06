@@ -2337,7 +2337,7 @@ Import EP
                                 
                                 {/* Popups - rendered outside to avoid clipping */}
                                 {hoveredInvite?.assignmentId === einsatz.id && hoveredInvite && (
-                                  <div className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-3 min-w-[200px] max-w-[300px] pointer-events-none"
+                                  <div className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-md p-3 min-w-[200px] max-w-[300px] pointer-events-none"
                                     style={{
                                       left: `${window.innerWidth > 1400 ? 'calc(50% + 200px)' : 'calc(50% + 150px)'}`,
                                       top: `${(document.querySelector(`[data-einsatz-id="${einsatz.id}"]`) as HTMLElement)?.getBoundingClientRect().top ?? 0}px`
