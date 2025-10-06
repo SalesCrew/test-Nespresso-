@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
-// GET invite counts (invited/accepted/rejected) grouped by assignment_id
+// GET invite counts (invited/applied/rejected) grouped by assignment_id
+// Eingeladen = total invitations sent (all statuses)
+// Angenommen = applied (promotor accepted the invite)
+// Abgelehnt = rejected or withdrawn
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url)
@@ -14,13 +17,11 @@ export async function GET(req: Request) {
 
     const svc = createSupabaseServiceClient()
 
-    // Group by assignment and status
+    // Get all invitations for these assignments
     const { data, error } = await svc
       .from('assignment_invitations')
-      .select('assignment_id,status,count:count()')
+      .select('assignment_id,status')
       .in('assignment_id', ids)
-      .in('status', ['invited', 'accepted', 'rejected'])
-      .group('assignment_id,status')
 
     if (error) {
       console.error('Failed to fetch invite counts:', error)
@@ -31,13 +32,23 @@ export async function GET(req: Request) {
     for (const row of data || []) {
       const assignmentId = (row as any).assignment_id as string
       const status = (row as any).status as string
-      const count = Number((row as any).count || 0)
+      
       if (!result[assignmentId]) {
         result[assignmentId] = { invited: 0, accepted: 0, rejected: 0 }
       }
-      if (status === 'invited') result[assignmentId].invited += count
-      if (status === 'accepted') result[assignmentId].accepted += count
-      if (status === 'rejected') result[assignmentId].rejected += count
+      
+      // Eingeladen = all invitations (count everything)
+      result[assignmentId].invited += 1
+      
+      // Angenommen = applied status
+      if (status === 'applied') {
+        result[assignmentId].accepted += 1
+      }
+      
+      // Abgelehnt = rejected or withdrawn
+      if (status === 'rejected' || status === 'withdrawn') {
+        result[assignmentId].rejected += 1
+      }
     }
 
     return NextResponse.json({ counts: result })
