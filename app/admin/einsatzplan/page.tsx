@@ -1444,18 +1444,7 @@ export default function EinsatzplanPage() {
         
         const matches = item.date >= weekStart && item.date <= weekEnd;
         
-        // Debug logging for troublesome Sept 2 assignments
-        if (item.date.includes('2025-09-02')) {
-          console.log('🔍 Sept 2 assignment check:', {
-            itemDate: item.date,
-            itemId: item.id,
-            weekStr,
-            weekStart,
-            weekEnd,
-            matches,
-            comparison: `${item.date} >= ${weekStart} && ${item.date} <= ${weekEnd}`
-          });
-        }
+        // Debug logging removed for performance
         
         return matches;
       });
@@ -1502,22 +1491,7 @@ export default function EinsatzplanPage() {
     loadInvitesData();
   }, [filteredEinsatzplan]);
 
-  // Debug log filtered results when KW filter is active
-  useEffect(() => {
-    const sept2Items = filteredEinsatzplan.filter(item => item.date.includes('2025-09-02'));
-    console.log('📊 FilteredEinsatzplan total:', filteredEinsatzplan.length);
-    console.log('📊 Sept 2 items in filteredEinsatzplan:', sept2Items.length, sept2Items);
-    console.log('📊 Selected weeks:', selectedWeeks);
-    console.log('📊 ALL filters active:', { 
-      regionFilter, 
-      plzFilter, 
-      statusFilter, 
-      hideVerplant, 
-      dateFilter, 
-      selectedWeeks, 
-      dateRange 
-    });
-  }, [filteredEinsatzplan, selectedWeeks, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, dateRange]);
+  // Debug logging removed for performance
 
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
@@ -2261,7 +2235,8 @@ Import EP
                         const isUnplanned = !hasPromotor;
                         return (
                           <div 
-                            key={einsatz.id} 
+                            key={einsatz.id}
+                            data-einsatz-id={einsatz.id}
                             onClick={(e) => {
                               if (selectionMode) {
                                 e.stopPropagation();
@@ -2328,80 +2303,70 @@ Import EP
                                   <span>{einsatz.planStart} - {einsatz.planEnd}</span>
                                 </div>
                                 {/* Invite summary (invited / accepted / rejected) */}
-                                <div className="text-[11px] leading-tight flex flex-col items-center justify-center gap-0.5 opacity-75 relative">
+                                <div className="text-[11px] leading-tight flex flex-col items-center justify-center gap-0.5 opacity-75">
                                   {/* Eingeladen */}
                                   <div 
-                                    className="flex items-center gap-1 text-gray-500 cursor-pointer hover:opacity-100 transition-opacity relative"
-                                    onMouseEnter={() => setHoveredInvite({ assignmentId: einsatz.id, type: 'invited' })}
+                                    className="flex items-center gap-1 text-gray-500 cursor-pointer hover:opacity-100 transition-opacity"
+                                    onMouseEnter={(e) => {
+                                      setHoveredInvite({ assignmentId: einsatz.id, type: 'invited' });
+                                    }}
                                     onMouseLeave={() => setHoveredInvite(null)}
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                     <span>Eingeladen: {inviteCounts[einsatz.id]?.invited ?? 0}</span>
-                                    {/* Popup */}
-                                    {hoveredInvite?.assignmentId === einsatz.id && hoveredInvite?.type === 'invited' && (
-                                      <div className="absolute left-full ml-2 top-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[200px] pointer-events-none">
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {(inviteDetails[einsatz.id]?.invited || []).map((name, idx) => (
-                                            <span key={idx} className="px-2 py-0.5 bg-gray-50 border border-gray-200 rounded text-[10px] text-gray-700 whitespace-nowrap">
-                                              {name}
-                                            </span>
-                                          ))}
-                                          {(!inviteDetails[einsatz.id]?.invited || inviteDetails[einsatz.id].invited.length === 0) && (
-                                            <span className="text-[10px] text-gray-400">Keine</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
                                   {/* Angenommen */}
                                   <div 
-                                    className="flex items-center gap-1 text-green-600 cursor-pointer hover:opacity-100 transition-opacity relative"
+                                    className="flex items-center gap-1 text-green-600 cursor-pointer hover:opacity-100 transition-opacity"
                                     onMouseEnter={() => setHoveredInvite({ assignmentId: einsatz.id, type: 'accepted' })}
                                     onMouseLeave={() => setHoveredInvite(null)}
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
                                     <span>Angenommen: {inviteCounts[einsatz.id]?.accepted ?? 0}</span>
-                                    {/* Popup */}
-                                    {hoveredInvite?.assignmentId === einsatz.id && hoveredInvite?.type === 'accepted' && (
-                                      <div className="absolute left-full ml-2 top-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[200px] pointer-events-none">
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {(inviteDetails[einsatz.id]?.accepted || []).map((name, idx) => (
-                                            <span key={idx} className="px-2 py-0.5 bg-green-50 border border-green-200 rounded text-[10px] text-green-700 whitespace-nowrap">
-                                              {name}
-                                            </span>
-                                          ))}
-                                          {(!inviteDetails[einsatz.id]?.accepted || inviteDetails[einsatz.id].accepted.length === 0) && (
-                                            <span className="text-[10px] text-gray-400">Keine</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
                                   {/* Abgelehnt */}
                                   <div 
-                                    className="flex items-center gap-1 text-red-500 cursor-pointer hover:opacity-100 transition-opacity relative"
+                                    className="flex items-center gap-1 text-red-500 cursor-pointer hover:opacity-100 transition-opacity"
                                     onMouseEnter={() => setHoveredInvite({ assignmentId: einsatz.id, type: 'rejected' })}
                                     onMouseLeave={() => setHoveredInvite(null)}
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     <span>Abgelehnt: {inviteCounts[einsatz.id]?.rejected ?? 0}</span>
-                                    {/* Popup */}
-                                    {hoveredInvite?.assignmentId === einsatz.id && hoveredInvite?.type === 'rejected' && (
-                                      <div className="absolute left-full ml-2 top-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[200px] pointer-events-none">
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {(inviteDetails[einsatz.id]?.rejected || []).map((name, idx) => (
-                                            <span key={idx} className="px-2 py-0.5 bg-red-50 border border-red-200 rounded text-[10px] text-red-700 whitespace-nowrap">
-                                              {name}
-                                            </span>
-                                          ))}
-                                          {(!inviteDetails[einsatz.id]?.rejected || inviteDetails[einsatz.id].rejected.length === 0) && (
-                                            <span className="text-[10px] text-gray-400">Keine</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
                                 </div>
+                                
+                                {/* Popups - rendered outside to avoid clipping */}
+                                {hoveredInvite?.assignmentId === einsatz.id && hoveredInvite && (
+                                  <div className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-3 min-w-[200px] max-w-[300px] pointer-events-none"
+                                    style={{
+                                      left: `${window.innerWidth > 1400 ? 'calc(50% + 200px)' : 'calc(50% + 150px)'}`,
+                                      top: `${(document.querySelector(`[data-einsatz-id="${einsatz.id}"]`) as HTMLElement)?.getBoundingClientRect().top ?? 0}px`
+                                    }}
+                                  >
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {hoveredInvite.type === 'invited' && (inviteDetails[einsatz.id]?.invited || []).map((name, idx) => (
+                                        <span key={idx} className="px-2 py-0.5 bg-gray-50 border border-gray-200 rounded text-[10px] text-gray-700 whitespace-nowrap">
+                                          {name}
+                                        </span>
+                                      ))}
+                                      {hoveredInvite.type === 'accepted' && (inviteDetails[einsatz.id]?.accepted || []).map((name, idx) => (
+                                        <span key={idx} className="px-2 py-0.5 bg-green-50 border border-green-200 rounded text-[10px] text-green-700 whitespace-nowrap">
+                                          {name}
+                                        </span>
+                                      ))}
+                                      {hoveredInvite.type === 'rejected' && (inviteDetails[einsatz.id]?.rejected || []).map((name, idx) => (
+                                        <span key={idx} className="px-2 py-0.5 bg-red-50 border border-red-200 rounded text-[10px] text-red-700 whitespace-nowrap">
+                                          {name}
+                                        </span>
+                                      ))}
+                                      {((hoveredInvite.type === 'invited' && (!inviteDetails[einsatz.id]?.invited || inviteDetails[einsatz.id].invited.length === 0)) ||
+                                        (hoveredInvite.type === 'accepted' && (!inviteDetails[einsatz.id]?.accepted || inviteDetails[einsatz.id].accepted.length === 0)) ||
+                                        (hoveredInvite.type === 'rejected' && (!inviteDetails[einsatz.id]?.rejected || inviteDetails[einsatz.id].rejected.length === 0))) && (
+                                        <span className="text-[10px] text-gray-400">Keine</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
                                   <span className={`font-medium ${
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'text-green-500' :
