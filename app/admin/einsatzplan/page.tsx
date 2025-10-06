@@ -2036,7 +2036,8 @@ Import EP
                     className="flex-1 overflow-y-auto"
                     style={{
                       scrollbarWidth: 'none',
-                      msOverflowStyle: 'none'
+                      msOverflowStyle: 'none',
+                      overflowX: 'visible'
                     }}
                   >
                     {assignmentsLoading ? (
