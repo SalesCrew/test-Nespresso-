@@ -3779,15 +3779,21 @@ Import EP
                     Abbrechen
                   </button>
                   <button
-                    onClick={handleSendReplacementInvites}
-                    disabled={selectedReplacementAssignments.length === 0}
-                    className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${
-                      selectedReplacementAssignments.length === 0
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700'
-                    }`}
+                    onClick={() => {
+                      if (selectedReplacementAssignments.length === 0) {
+                        // No assignments selected - just close the modal
+                        setShowReplacementModal(false);
+                        setDeclinedPromotor(null);
+                        setSelectedReplacementAssignments([]);
+                        setReplacementRegionFilter("ALLE");
+                      } else {
+                        // Assignments selected - send replacements
+                        handleSendReplacementInvites();
+                      }
+                    }}
+                    className="px-4 py-2 text-sm text-white rounded-lg transition-colors bg-blue-600 hover:bg-blue-700"
                   >
-                    Ersatztermine senden
+                    {selectedReplacementAssignments.length === 0 ? 'Keinen Ersatztermin senden' : 'Ersatztermine senden'}
                   </button>
                 </div>
               </div>
