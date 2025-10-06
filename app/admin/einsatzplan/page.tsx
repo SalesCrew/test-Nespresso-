@@ -399,6 +399,9 @@ export default function EinsatzplanPage() {
         
         if (promotorIds.length === 0) return;
         
+        console.log('🔍 Loading statuses for assignment:', selectedHistoryAssignmentId);
+        console.log('🔍 Promotor IDs:', promotorIds);
+        
         // Fetch invitations for the selected assignment only
         const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
         const { data: invites } = await svc
@@ -407,12 +410,15 @@ export default function EinsatzplanPage() {
           .eq('assignment_id', selectedHistoryAssignmentId)
           .in('user_id', promotorIds);
         
+        console.log('🔍 Fetched invites:', invites);
+        
         // Build status map for this specific assignment
         const statusMap: Record<string, string> = {};
         for (const invite of invites || []) {
           statusMap[invite.user_id] = invite.status;
         }
         
+        console.log('🔍 Status map:', statusMap);
         setHistoryInvitationStatuses(statusMap);
       } catch (error) {
         console.error('Error loading history invitation statuses:', error);
