@@ -340,6 +340,7 @@ export default function EinsatzplanPage() {
   }, [showReplacementModal]);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
+  const [selectedHistoryAssignmentId, setSelectedHistoryAssignmentId] = useState<string | null>(null);
   const [historyInvitationStatuses, setHistoryInvitationStatuses] = useState<Record<string, string>>({});
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
   
@@ -376,51 +377,40 @@ export default function EinsatzplanPage() {
     return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
-  // Load invitation statuses when history detail modal opens
+  // Set initial assignment when modal opens
+  useEffect(() => {
+    if (showHistoryDetail && selectedHistoryItem) {
+      const assignmentIds = selectedHistoryItem.assignmentIds || [];
+      if (assignmentIds.length > 0 && !selectedHistoryAssignmentId) {
+        setSelectedHistoryAssignmentId(assignmentIds[0]);
+      }
+    } else {
+      setSelectedHistoryAssignmentId(null);
+    }
+  }, [showHistoryDetail, selectedHistoryItem]);
+
+  // Load invitation statuses when history detail modal opens or assignment changes
   useEffect(() => {
     const loadHistoryInvitationStatuses = async () => {
-      if (!showHistoryDetail || !selectedHistoryItem) return;
+      if (!showHistoryDetail || !selectedHistoryItem || !selectedHistoryAssignmentId) return;
       
       try {
-        const assignmentIds = selectedHistoryItem.assignmentIds || [];
         const promotorIds = selectedHistoryItem.promotorIds || [];
         
-        if (assignmentIds.length === 0 || promotorIds.length === 0) return;
+        if (promotorIds.length === 0) return;
         
-        // Fetch invitations for each assignment in this history item
-        const statusMap: Record<string, string> = {};
-        
-        for (const assignmentId of assignmentIds) {
-          try {
-            const res = await fetch(`/api/assignments/${assignmentId}/applications`, { cache: 'no-store' });
-            const data = await res.json().catch(() => ({ applications: [] }));
-            const applications = data.applications || [];
-            
-            // Mark all applications as 'applied'
-            for (const app of applications) {
-              if (promotorIds.includes(app.user_id)) {
-                statusMap[app.user_id] = 'applied';
-              }
-            }
-          } catch {}
-        }
-        
-        // Now fetch all invitations to check for rejected/withdrawn/invited statuses
-        // We need to use the service client approach or create a new API endpoint
-        // For now, let's use the bulk approach by fetching from supabase directly
+        // Fetch invitations for the selected assignment only
         const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
         const { data: invites } = await svc
           .from('assignment_invitations')
           .select('user_id,status')
-          .in('assignment_id', assignmentIds)
+          .eq('assignment_id', selectedHistoryAssignmentId)
           .in('user_id', promotorIds);
         
-        // Update status map with all statuses (applied will be overwritten if already set)
+        // Build status map for this specific assignment
+        const statusMap: Record<string, string> = {};
         for (const invite of invites || []) {
-          // Only update if not already marked as applied, or if it's a different status
-          if (!statusMap[invite.user_id] || statusMap[invite.user_id] === 'invited') {
-            statusMap[invite.user_id] = invite.status;
-          }
+          statusMap[invite.user_id] = invite.status;
         }
         
         setHistoryInvitationStatuses(statusMap);
@@ -430,7 +420,7 @@ export default function EinsatzplanPage() {
     };
     
     loadHistoryInvitationStatuses();
-  }, [showHistoryDetail, selectedHistoryItem]);
+  }, [showHistoryDetail, selectedHistoryItem, selectedHistoryAssignmentId]);
 
   // (moved below filteredEinsatzplan definition)
 
@@ -3087,6 +3077,31 @@ Import EP
                   </div>
                   <p className="text-sm text-gray-500 mt-1">Zur Auswahl gesendet</p>
                 </div>
+
+                {/* Assignment Switcher - only show if multiple assignments */}
+                {selectedHistoryItem.promotions.length > 1 && (
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Promotion auswählen</h4>
+                    <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      {selectedHistoryItem.promotions.map((promotion: any) => (
+                        <button
+                          key={promotion.id}
+                          onClick={() => setSelectedHistoryAssignmentId(promotion.id)}
+                          className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs transition-all ${
+                            selectedHistoryAssignmentId === promotion.id
+                              ? 'bg-blue-100 border-2 border-blue-400 text-blue-900 font-medium'
+                              : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">{promotion.address}</div>
+                            <div className="text-[10px] opacity-70">{promotion.date} • {promotion.planStart}-{promotion.planEnd}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Sent Promotions */}
                 <div className="space-y-3">
