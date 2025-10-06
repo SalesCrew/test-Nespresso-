@@ -1421,12 +1421,17 @@ export default function EinsatzplanPage() {
     }
     // Calendar weeks filter
     else if (selectedWeeks.length > 0) {
-      const itemDate = new Date(item.date);
-      const itemWeek = getWeekNumber(itemDate);
-      const itemYear = itemDate.getFullYear();
       dateMatch = selectedWeeks.some(weekStr => {
-        const weekNum = parseInt(weekStr.match(/KW (\d+)/)?.[1] || '0');
-        return weekNum === itemWeek && itemYear === new Date().getFullYear();
+        // Extract date range from label "KW 36 (08.09-14.09)"
+        const match = weekStr.match(/\((\d{2})\.(\d{2})-(\d{2})\.(\d{2})\)/);
+        if (!match) return false;
+        
+        const [, startDay, startMonth, endDay, endMonth] = match;
+        const currentYear = new Date().getFullYear();
+        const weekStart = `${currentYear}-${startMonth.padStart(2, '0')}-${startDay.padStart(2, '0')}`;
+        const weekEnd = `${currentYear}-${endMonth.padStart(2, '0')}-${endDay.padStart(2, '0')}`;
+        
+        return item.date >= weekStart && item.date <= weekEnd;
       });
     }
     // Date range filter
