@@ -2261,11 +2261,12 @@ Import EP
                                 setShowDetailModal(true);
                               }
                             }}
+                            style={selectedEinsatz?.id === einsatz.id && aiMode ? { 
+                              boxShadow: '0 0 20px rgba(134, 239, 172, 0.5)' 
+                            } : undefined}
                             className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
-                                : selectedEinsatz?.id === einsatz.id && aiMode
-                                ? 'border-gray-100 shadow-[0_0_20px_rgba(134,239,172,0.5)] -mx-2 px-6'
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
