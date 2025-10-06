@@ -1106,12 +1106,47 @@ Dein Nespresso Team`;
     return spaceToRight < 320; // 320px is the width of notes panel
   };
 
-  const updateNotes = (promotorId: number, noteText: string) => {
+  const updateNotes = async (promotorId: string, noteText: string) => {
     setNotes(prev => ({
       ...prev,
       [promotorId]: noteText
     }));
+
+    // Debounce the save to database
+    try {
+      await fetch(`/api/promotors/${promotorId}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note_text: noteText })
+      });
+    } catch (error) {
+      console.error('Error saving note:', error);
+    }
   };
+
+  // Load notes from database when promotors are loaded
+  useEffect(() => {
+    const loadNotes = async () => {
+      for (const promotor of promotors) {
+        try {
+          const res = await fetch(`/api/promotors/${promotor.id}/notes`);
+          const data = await res.json();
+          if (data.note && data.note.note_text) {
+            setNotes(prev => ({
+              ...prev,
+              [promotor.id]: data.note.note_text
+            }));
+          }
+        } catch (error) {
+          console.error(`Error loading note for promotor ${promotor.id}:`, error);
+        }
+      }
+    };
+
+    if (promotors.length > 0) {
+      loadNotes();
+    }
+  }, [promotors]);
 
   const handleAdminPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>, promotorUserId: string) => {
     const file = event.target.files?.[0]
