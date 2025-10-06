@@ -340,6 +340,7 @@ export default function EinsatzplanPage() {
   }, [showReplacementModal]);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
+  const [historyInvitationStatuses, setHistoryInvitationStatuses] = useState<Record<string, string>>({});
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
   
   // Promotors list for assignment
@@ -374,6 +375,39 @@ export default function EinsatzplanPage() {
     
     return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
+
+  // Load invitation statuses when history detail modal opens
+  useEffect(() => {
+    const loadHistoryInvitationStatuses = async () => {
+      if (!showHistoryDetail || !selectedHistoryItem) return;
+      
+      try {
+        const assignmentIds = selectedHistoryItem.assignmentIds || [];
+        const promotorIds = selectedHistoryItem.promotorIds || [];
+        
+        if (assignmentIds.length === 0 || promotorIds.length === 0) return;
+        
+        // Fetch all invitations for these assignments and promotors
+        const res = await fetch('/api/assignments/invites/route', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({ invites: [] }));
+        const allInvites = data.invites || [];
+        
+        // Build a map of promotorId -> status for this history item
+        const statusMap: Record<string, string> = {};
+        for (const invite of allInvites) {
+          if (assignmentIds.includes(invite.assignment_id) && promotorIds.includes(invite.user_id)) {
+            statusMap[invite.user_id] = invite.status;
+          }
+        }
+        
+        setHistoryInvitationStatuses(statusMap);
+      } catch (error) {
+        console.error('Error loading history invitation statuses:', error);
+      }
+    };
+    
+    loadHistoryInvitationStatuses();
+  }, [showHistoryDetail, selectedHistoryItem]);
 
   // (moved below filteredEinsatzplan definition)
 
@@ -889,6 +923,16 @@ export default function EinsatzplanPage() {
   const openInGoogleMaps = (address: string, city: string) => {
     const query = encodeURIComponent(`${address}, ${city}`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+  };
+
+  // Helper functions for invitation history pills (same as dashboard nachrichten)
+  const getPromotorRegion = (promotorName: string) => {
+    const promotor = promotorsList.find(p => p.name === promotorName);
+    return promotor?.region || "wien-noe-bgl";
+  };
+
+  const getRegionPillColors = (region: string) => {
+    return `${getRegionGradient(region)} ${getRegionBorder(region)} text-gray-700`;
   };
 
   // Helper function to format promotor name consistently with dropdown
@@ -3059,15 +3103,73 @@ Import EP
                   <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                     Empfänger ({selectedHistoryItem.promotors.length})
                   </h4>
-                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
-                    {selectedHistoryItem.promotors.map((promotor: string) => (
-                      <div 
-                        key={promotor}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm"
-                      >
-                        <span className="font-medium text-gray-900 whitespace-nowrap">{promotor}</span>
+                  <div className="space-y-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {/* Angenommen (Applied) */}
+                    <div>
+                      <p className="text-[11px] text-gray-500 mb-1">Angenommen</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          const applied = selectedHistoryItem.promotors.filter((promotor: string) => {
+                            const promotorData = promotorsList.find(p => p.name === promotor);
+                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                            return status === 'applied';
+                          });
+                          return applied.length > 0 ? applied.map((promotor: string, index: number) => {
+                            const region = getPromotorRegion(promotor);
+                            const colors = getRegionPillColors(region);
+                            return (
+                              <span key={`applied-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} flex items-center gap-1`}>
+                                <Check className="h-3 w-3 text-green-600" /> {promotor}
+                              </span>
+                            );
+                          }) : <span className="text-xs text-gray-400">Keine</span>;
+                        })()}
                       </div>
-                    ))}
+                    </div>
+                    {/* Abgelehnt (Rejected/Withdrawn) */}
+                    <div>
+                      <p className="text-[11px] text-gray-500 mb-1">Abgelehnt</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          const rejected = selectedHistoryItem.promotors.filter((promotor: string) => {
+                            const promotorData = promotorsList.find(p => p.name === promotor);
+                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                            return status === 'rejected' || status === 'withdrawn';
+                          });
+                          return rejected.length > 0 ? rejected.map((promotor: string, index: number) => {
+                            const region = getPromotorRegion(promotor);
+                            const colors = getRegionPillColors(region);
+                            return (
+                              <span key={`rejected-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
+                                <X className="h-3 w-3 text-red-500" /> {promotor}
+                              </span>
+                            );
+                          }) : <span className="text-xs text-gray-400">Keine</span>;
+                        })()}
+                      </div>
+                    </div>
+                    {/* Noch nicht geantwortet (Invited/Pending) */}
+                    <div>
+                      <p className="text-[11px] text-gray-500 mb-1">Noch nicht geantwortet</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          const pending = selectedHistoryItem.promotors.filter((promotor: string) => {
+                            const promotorData = promotorsList.find(p => p.name === promotor);
+                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                            return status === 'invited' || !status;
+                          });
+                          return pending.length > 0 ? pending.map((promotor: string, index: number) => {
+                            const region = getPromotorRegion(promotor);
+                            const colors = getRegionPillColors(region);
+                            return (
+                              <span key={`pending-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
+                                <Loader2 className="h-3 w-3 text-orange-400 animate-spin" /> {promotor}
+                              </span>
+                            );
+                          }) : <span className="text-xs text-gray-400">Keine</span>;
+                        })()}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
