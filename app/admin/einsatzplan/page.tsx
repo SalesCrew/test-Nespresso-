@@ -1485,68 +1485,17 @@ export default function EinsatzplanPage() {
         const ids = filteredEinsatzplan.map((i: any) => i.id);
         if (ids.length === 0) return;
         
-        // Fetch counts
         const qs = new URLSearchParams({ ids: ids.join(',') }).toString();
+        
+        // Fetch counts
         const countsRes = await fetch(`/api/assignments/invites/counts?${qs}`, { cache: 'no-store' });
         const { counts } = await countsRes.json().catch(() => ({ counts: {} }));
         setInviteCounts(counts || {});
         
-        // Fetch ALL invitation data directly from database (not from distributionHistory)
-        const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
-        const { data: allInvites, error: invitesError } = await svc
-          .from('assignment_invitations')
-          .select('assignment_id, user_id, status')
-          .in('assignment_id', ids);
-        
-        console.log('💾 Fetched invitations:', allInvites?.length || 0, allInvites);
-        console.log('💾 Invites error:', invitesError);
-        
-        // Get all unique user_ids from invitations
-        const allUserIds = [...new Set((allInvites || []).map((i: any) => i.user_id))];
-        console.log('💾 Unique user IDs:', allUserIds.length, allUserIds);
-        
-        // Fetch all user profiles at once
-        const { data: allProfiles, error: profilesError } = await svc
-          .from('user_profiles')
-          .select('user_id, display_name')
-          .in('user_id', allUserIds);
-        
-        console.log('💾 Fetched profiles:', allProfiles?.length || 0, allProfiles);
-        console.log('💾 Profiles error:', profilesError);
-        
-        const userMap = new Map((allProfiles || []).map((p: any) => [p.user_id, p.display_name || 'Unbekannt']));
-        console.log('💾 User map size:', userMap.size);
-        
-        // Build details map
-        const details: Record<string, { invited: string[]; accepted: string[]; rejected: string[] }> = {};
-        
-        for (const assignmentId of ids) {
-          details[assignmentId] = { invited: [], accepted: [], rejected: [] };
-          
-          const assignmentInvites = (allInvites || []).filter((i: any) => i.assignment_id === assignmentId);
-          console.log(`💾 Assignment ${assignmentId}: ${assignmentInvites.length} invites`);
-          
-          for (const invite of assignmentInvites) {
-            const userName = userMap.get(invite.user_id) || 'Unbekannt';
-            console.log(`💾   - User ${invite.user_id} (${invite.status}): ${userName}`);
-            
-            // All invites go into "invited"
-            details[assignmentId].invited.push(userName);
-            
-            // Applied goes into "accepted"
-            if (invite.status === 'applied') {
-              details[assignmentId].accepted.push(userName);
-            }
-            
-            // Rejected/withdrawn goes into "rejected"
-            if (invite.status === 'rejected' || invite.status === 'withdrawn') {
-              details[assignmentId].rejected.push(userName);
-            }
-          }
-        }
-        
-        console.log('💾 Final details:', details);
-        setInviteDetails(details);
+        // Fetch details (promotor names)
+        const detailsRes = await fetch(`/api/assignments/invites/details?${qs}`, { cache: 'no-store' });
+        const { details } = await detailsRes.json().catch(() => ({ details: {} }));
+        setInviteDetails(details || {});
       } catch {}
     };
     
