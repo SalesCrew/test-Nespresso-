@@ -615,9 +615,22 @@ export default function EinsatzplanPage() {
 
   // Get week number for any date
   const getWeekNumber = (date: Date) => {
-    const start = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + start.getDay() + 1) / 7);
+    const year = date.getFullYear();
+    const startDate = new Date(year, 0, 1);
+    
+    // Find first Monday of the year (same logic as generateCalendarWeeks)
+    const firstMonday = new Date(startDate);
+    const dayOfWeek = startDate.getDay();
+    const daysToAdd = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    firstMonday.setDate(startDate.getDate() + daysToAdd);
+    
+    // Calculate weeks from first Monday
+    if (date < firstMonday) {
+      // Dates before first Monday are in week 0 or previous year
+      return 0;
+    }
+    const daysSinceFirstMonday = Math.floor((date.getTime() - firstMonday.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.floor(daysSinceFirstMonday / 7) + 1;
   };
 
   // Generate all calendar weeks for current year
