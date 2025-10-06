@@ -2147,7 +2147,7 @@ Dein Nespresso Team`;
                               key={config.key}
                               className={`flex-1 flex items-center justify-center rounded-lg py-2 transition-all duration-300 ${
                                 isDone
-                                  ? 'bg-gradient-to-r from-green-500 to-green-800'
+                                  ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
                                   : 'bg-gray-200'
                               }`}
                             >
