@@ -1485,14 +1485,29 @@ export default function EinsatzplanPage() {
         const ids = filteredEinsatzplan.map((i: any) => i.id);
         if (ids.length === 0) return;
         
-        console.log('💾 Loading invite data for assignments:', ids.length);
-        console.log('💾 distributionHistory available:', distributionHistory.length);
-        
         // Fetch counts
         const qs = new URLSearchParams({ ids: ids.join(',') }).toString();
         const countsRes = await fetch(`/api/assignments/invites/counts?${qs}`, { cache: 'no-store' });
         const { counts } = await countsRes.json().catch(() => ({ counts: {} }));
         setInviteCounts(counts || {});
+        
+        // Fetch ALL invitation data directly from database (not from distributionHistory)
+        const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
+        const { data: allInvites } = await svc
+          .from('assignment_invitations')
+          .select('assignment_id, user_id, status')
+          .in('assignment_id', ids);
+        
+        // Get all unique user_ids from invitations
+        const allUserIds = [...new Set((allInvites || []).map((i: any) => i.user_id))];
+        
+        // Fetch all user profiles at once
+        const { data: allProfiles } = await svc
+          .from('user_profiles')
+          .select('user_id, display_name')
+          .in('user_id', allUserIds);
+        
+        const userMap = new Map((allProfiles || []).map((p: any) => [p.user_id, p.display_name || 'Unbekannt']));
         
         // Build details map
         const details: Record<string, { invited: string[]; accepted: string[]; rejected: string[] }> = {};
@@ -1500,54 +1515,32 @@ export default function EinsatzplanPage() {
         for (const assignmentId of ids) {
           details[assignmentId] = { invited: [], accepted: [], rejected: [] };
           
-          // 1. EINGELADEN: Get from distributionHistory (Gesendet tab data)
-          const sentHistoryItem = distributionHistory.find(item => 
-            item.promotions.some((p: any) => p.id === assignmentId)
-          );
-          console.log(`💾 Assignment ${assignmentId}: found in history?`, !!sentHistoryItem, sentHistoryItem?.promotors);
-          if (sentHistoryItem) {
-            details[assignmentId].invited = sentHistoryItem.promotors || [];
-          }
+          const assignmentInvites = (allInvites || []).filter((i: any) => i.assignment_id === assignmentId);
           
-          // 2. ANGENOMMEN: Get from applications API (Angemeldet tab data)
-          try {
-            const appsRes = await fetch(`/api/assignments/${assignmentId}/applications`, { cache: 'no-store' });
-            const appsData = await appsRes.json().catch(() => ({ applications: [] }));
-            const apps = appsData.applications || [];
-            console.log(`💾 Assignment ${assignmentId}: applications found:`, apps.length, apps);
-            details[assignmentId].accepted = apps.map((a: any) => a.name);
-          } catch {}
-          
-          // 3. ABGELEHNT: Get rejected/withdrawn from assignment_invitations + user_profiles
-          try {
-            const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
-            const { data: rejectedInvites } = await svc
-              .from('assignment_invitations')
-              .select('user_id')
-              .eq('assignment_id', assignmentId)
-              .in('status', ['rejected', 'withdrawn']);
+          for (const invite of assignmentInvites) {
+            const userName = userMap.get(invite.user_id) || 'Unbekannt';
             
-            console.log(`💾 Assignment ${assignmentId}: rejected invites:`, rejectedInvites?.length || 0);
+            // All invites go into "invited"
+            details[assignmentId].invited.push(userName);
             
-            if (rejectedInvites && rejectedInvites.length > 0) {
-              const userIds = rejectedInvites.map((i: any) => i.user_id);
-              const { data: profiles } = await svc
-                .from('user_profiles')
-                .select('display_name')
-                .in('user_id', userIds);
-              
-              details[assignmentId].rejected = (profiles || []).map((p: any) => p.display_name || 'Unbekannt');
+            // Applied goes into "accepted"
+            if (invite.status === 'applied') {
+              details[assignmentId].accepted.push(userName);
             }
-          } catch {}
+            
+            // Rejected/withdrawn goes into "rejected"
+            if (invite.status === 'rejected' || invite.status === 'withdrawn') {
+              details[assignmentId].rejected.push(userName);
+            }
+          }
         }
         
-        console.log('💾 Final invite details:', details);
         setInviteDetails(details);
       } catch {}
     };
     
     loadInvitesData();
-  }, [filteredEinsatzplan, distributionHistory]);
+  }, [filteredEinsatzplan]);
 
   // Debug log filtered results when KW filter is active
   useEffect(() => {
