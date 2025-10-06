@@ -91,6 +91,7 @@ export default function PromotorenPage() {
   const [notesPosition, setNotesPosition] = useState<Record<number, 'left' | 'right'>>({});
   const [detailedViewOpen, setDetailedViewOpen] = useState<number | null>(null);
   const [copiedItems, setCopiedItems] = useState<Record<string, boolean>>({});
+  const notesRef = useRef<HTMLDivElement>(null);
   
   // Magic touch functionality (copied from admin/statistiken)
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
@@ -1075,6 +1076,27 @@ Dein Nespresso Team`;
   const toggleNotes = (promotorId: number) => {
     setNotesOpen(notesOpen === promotorId ? null : promotorId);
   };
+
+  // Click outside handler for notes
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notesRef.current && !notesRef.current.contains(event.target as Node)) {
+        // Check if click is not on the notes button itself
+        const target = event.target as HTMLElement;
+        const isNotesButton = target.closest('button')?.querySelector('.h-4.w-4');
+        if (!isNotesButton) {
+          setNotesOpen(null);
+        }
+      }
+    };
+
+    if (notesOpen !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [notesOpen]);
 
   // Check if notes should open to the left (when card is too close to right edge)
   const shouldOpenLeft = (cardElement: HTMLElement) => {
@@ -2251,11 +2273,14 @@ Dein Nespresso Team`;
 
               {/* Notes Panel */}
               {notesOpen === promotor.id && (
-                <div className={`absolute top-1/2 -translate-y-1/2 w-80 h-80 bg-transparent z-20 ${
-                  notesPosition[promotor.id] === 'left' 
-                    ? 'right-full' 
-                    : 'left-full'
-                }`}>
+                <div 
+                  ref={notesRef}
+                  className={`absolute top-1/2 -translate-y-1/2 w-80 h-80 bg-transparent z-20 ${
+                    notesPosition[promotor.id] === 'left' 
+                      ? 'right-full' 
+                      : 'left-full'
+                  }`}
+                >
                   <textarea
                     value={notes[promotor.id] || ''}
                     onChange={(e) => updateNotes(promotor.id, e.target.value)}
