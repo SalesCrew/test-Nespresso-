@@ -375,6 +375,8 @@ export default function EinsatzplanPage() {
     return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
+  // (moved below filteredEinsatzplan definition)
+
   useEffect(() => {
     (async () => {
       try {
@@ -390,6 +392,8 @@ export default function EinsatzplanPage() {
   
   // Eye filter state - when true, filter out "Verplant" items
   const [hideVerplant, setHideVerplant] = useState(false);
+  // Invite counts per assignment id (for compact list view badges)
+  const [inviteCounts, setInviteCounts] = useState<Record<string, { invited: number; accepted: number; rejected: number }>>({});
   
 
   
@@ -1470,6 +1474,19 @@ export default function EinsatzplanPage() {
   });
   }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
 
+  // Load invite counts for the currently filtered list
+  useEffect(() => {
+    try {
+      const ids = filteredEinsatzplan.map((i: any) => i.id);
+      if (ids.length === 0) return;
+      const qs = new URLSearchParams({ ids: ids.join(',') }).toString();
+      fetch(`/api/assignments/invites/counts?${qs}`, { cache: 'no-store' })
+        .then(r => r.json().catch(() => ({ counts: {} })))
+        .then(({ counts }) => setInviteCounts(counts || {}))
+        .catch(() => {});
+    } catch {}
+  }, [filteredEinsatzplan]);
+
   // Debug log filtered results when KW filter is active
   useEffect(() => {
     const sept2Items = filteredEinsatzplan.filter(item => item.date.includes('2025-09-02'));
@@ -2273,7 +2290,7 @@ Import EP
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="grid grid-cols-5 gap-4 flex-1 items-center">
+                              <div className="grid grid-cols-6 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
                                   <button
@@ -2294,6 +2311,31 @@ Import EP
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
                                   <span>{einsatz.planStart} - {einsatz.planEnd}</span>
+                                </div>
+                                {/* Invite summary (invited / accepted / rejected) */}
+                                <div className="text-[11px] leading-tight text-center flex flex-col items-center justify-center">
+                                  <div className="flex items-center gap-1 text-gray-500">
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="w-3 h-3 inline-flex items-center justify-center rounded">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#9CA3AF" strokeWidth="2"/></svg>
+                                      </span>
+                                      Eingeladen: {inviteCounts[einsatz.id]?.invited ?? 0}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-green-600">
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="w-3 h-3 inline-block rounded-full bg-green-500"></span>
+                                      Angenommen: {inviteCounts[einsatz.id]?.accepted ?? 0}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-red-500">
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="w-3 h-3 inline-flex items-center justify-center rounded">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#EF4444" strokeWidth="2"/><line x1="8" y1="8" x2="16" y2="16" stroke="#EF4444" strokeWidth="2"/></svg>
+                                      </span>
+                                      Abgelehnt: {inviteCounts[einsatz.id]?.rejected ?? 0}
+                                    </span>
+                                  </div>
                                 </div>
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
                                   <span className={`font-medium ${
