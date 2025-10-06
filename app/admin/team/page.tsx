@@ -2102,7 +2102,7 @@ Dein Nespresso Team`;
               // Simple Loading Skeletons - plain grey cards matching real card dimensions
               [...Array(6)].map((_, index) => (
                 <div key={`skeleton-${index}`} className="relative">
-                  <Card className="h-[30.94rem] border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden animate-skeleton-fade">
+                  <Card className="h-[33.14rem] border-0 bg-white/80 backdrop-blur-sm relative overflow-hidden animate-skeleton-fade">
                   </Card>
                 </div>
               ))
