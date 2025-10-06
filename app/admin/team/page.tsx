@@ -186,6 +186,9 @@ export default function PromotorenPage() {
   const [editClothingForm, setEditClothingForm] = useState<Record<string, any>>({});
   const [editWorkingDaysForm, setEditWorkingDaysForm] = useState<Record<string, string[]>>({});
   
+  // Onboarding steps per promotor
+  const [onboardingSteps, setOnboardingSteps] = useState<Record<string, any[]>>({});
+  
   // Stammdatenblatt (submitted onboarding data)
   const [submittedOnboardingData, setSubmittedOnboardingData] = useState<any[]>([
     {
@@ -780,6 +783,8 @@ Dein Nespresso Team`;
             if (!steps.length) return card;
             const done = steps.filter((s: any) => s.status === 'done').length;
             const progress = Math.round((done / steps.length) * 100);
+            // Store steps for icon display
+            setOnboardingSteps(prev => ({ ...prev, [card.id]: steps }));
             return { ...card, onboardingProgress: progress };
           } catch { return card; }
         }));
@@ -2116,23 +2121,45 @@ Dein Nespresso Team`;
                     </span>
                   </div>
 
-                  {/* Onboarding Progress as Divider */}
+                  {/* Onboarding Progress as Icons */}
                   <div className="pt-1">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-medium text-gray-600">Onboarding</p>
                       <span className="text-xs text-gray-500 font-medium">{promotor.onboardingProgress}%</span>
                     </div>
-                    <div className="w-full bg-gray-100/60 rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          promotor.onboardingProgress === 100 
-                            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60' 
-                            : promotor.onboardingProgress >= 50 
-                            ? 'bg-gradient-to-r from-yellow-400/60 to-orange-400/60'
-                            : 'bg-gradient-to-r from-red-600/60 to-red-500/60'
-                        }`}
-                        style={{ width: `${promotor.onboardingProgress}%` }}
-                      ></div>
+                    <div className="flex items-center justify-between gap-2">
+                      {(() => {
+                        const steps = onboardingSteps[promotor.id] || [];
+                        const stepConfig = [
+                          { key: 'profile_basics', icon: User, label: 'Profil' },
+                          { key: 'documents', icon: FileText, label: 'Dokumente' },
+                          { key: 'dienstvertrag', icon: FileSignature, label: 'Vertrag' },
+                          { key: 'bank_details', icon: CreditCard, label: 'Bank' },
+                        ];
+                        
+                        return stepConfig.map((config) => {
+                          const step = steps.find((s: any) => s.step_key === config.key);
+                          const isDone = step?.status === 'done';
+                          const IconComponent = config.icon;
+                          
+                          return (
+                            <div
+                              key={config.key}
+                              className={`flex-1 flex items-center justify-center rounded-lg py-2 transition-all duration-300 ${
+                                isDone
+                                  ? 'bg-gradient-to-r from-green-500 to-green-800'
+                                  : 'bg-gray-200'
+                              }`}
+                            >
+                              <IconComponent 
+                                className={`h-4 w-4 ${
+                                  isDone ? 'text-white' : 'text-gray-400'
+                                }`}
+                              />
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
 
