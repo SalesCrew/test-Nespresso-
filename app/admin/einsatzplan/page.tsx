@@ -1654,10 +1654,11 @@ Import EP
               <div className="h-[600px] w-full"></div>
               
               <Card 
-                className={`border-0 w-full transition-all duration-300 ${isMainCardExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'absolute top-0 left-0 right-0 h-[600px]'}`}
+                className={`border-0 w-full transition-all duration-300 overflow-visible ${isMainCardExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'absolute top-0 left-0 right-0 h-[600px]'}`}
                 style={{
                   background: 'linear-gradient(135deg, #ffffff 0%, rgba(99, 102, 241, 0.003) 50%, rgba(79, 70, 229, 0.005) 100%)',
-                  boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
+                  boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)',
+                  overflow: 'visible'
                 }}
               >
                 <CardContent className={`p-6 h-full flex flex-col overflow-visible ${isMainCardExpanded ? 'bg-white' : ''}`}>
