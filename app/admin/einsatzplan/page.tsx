@@ -1660,7 +1660,7 @@ Import EP
                   boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)'
                 }}
               >
-                <CardContent className={`p-6 h-full flex flex-col ${isMainCardExpanded ? 'bg-white' : ''}`}>
+                <CardContent className={`p-6 h-full flex flex-col overflow-visible ${isMainCardExpanded ? 'bg-white' : ''}`}>
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-2">
