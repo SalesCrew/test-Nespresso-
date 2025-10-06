@@ -3153,17 +3153,19 @@ Import EP
                       <p className="text-[11px] text-gray-500 mb-1">Angenommen</p>
                       <div className="flex flex-wrap gap-2">
                         {(() => {
-                          const applied = selectedHistoryItem.promotors.filter((promotor: string) => {
-                            const promotorData = promotorsList.find(p => p.name === promotor);
-                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                          const promotorIds = selectedHistoryItem.promotorIds || [];
+                          const applied = promotorIds.filter((userId: string) => {
+                            const status = historyInvitationStatuses[userId];
                             return status === 'applied';
                           });
-                          return applied.length > 0 ? applied.map((promotor: string, index: number) => {
-                            const region = getPromotorRegion(promotor);
+                          return applied.length > 0 ? applied.map((userId: string, index: number) => {
+                            const promotorData = promotorsList.find(p => p.id === userId);
+                            const promotorName = promotorData?.name || 'Unbekannt';
+                            const region = promotorData?.region || 'wien-noe-bgl';
                             const colors = getRegionPillColors(region);
                             return (
                               <span key={`applied-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} flex items-center gap-1`}>
-                                <Check className="h-3 w-3 text-green-600" /> {promotor}
+                                <Check className="h-3 w-3 text-green-600" /> {promotorName}
                               </span>
                             );
                           }) : <span className="text-xs text-gray-400">Keine</span>;
@@ -3175,17 +3177,19 @@ Import EP
                       <p className="text-[11px] text-gray-500 mb-1">Abgelehnt</p>
                       <div className="flex flex-wrap gap-2">
                         {(() => {
-                          const rejected = selectedHistoryItem.promotors.filter((promotor: string) => {
-                            const promotorData = promotorsList.find(p => p.name === promotor);
-                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                          const promotorIds = selectedHistoryItem.promotorIds || [];
+                          const rejected = promotorIds.filter((userId: string) => {
+                            const status = historyInvitationStatuses[userId];
                             return status === 'rejected' || status === 'withdrawn';
                           });
-                          return rejected.length > 0 ? rejected.map((promotor: string, index: number) => {
-                            const region = getPromotorRegion(promotor);
+                          return rejected.length > 0 ? rejected.map((userId: string, index: number) => {
+                            const promotorData = promotorsList.find(p => p.id === userId);
+                            const promotorName = promotorData?.name || 'Unbekannt';
+                            const region = promotorData?.region || 'wien-noe-bgl';
                             const colors = getRegionPillColors(region);
                             return (
                               <span key={`rejected-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
-                                <X className="h-3 w-3 text-red-500" /> {promotor}
+                                <X className="h-3 w-3 text-red-500" /> {promotorName}
                               </span>
                             );
                           }) : <span className="text-xs text-gray-400">Keine</span>;
@@ -3197,17 +3201,19 @@ Import EP
                       <p className="text-[11px] text-gray-500 mb-1">Noch nicht geantwortet</p>
                       <div className="flex flex-wrap gap-2">
                         {(() => {
-                          const pending = selectedHistoryItem.promotors.filter((promotor: string) => {
-                            const promotorData = promotorsList.find(p => p.name === promotor);
-                            const status = promotorData ? historyInvitationStatuses[promotorData.id] : undefined;
+                          const promotorIds = selectedHistoryItem.promotorIds || [];
+                          const pending = promotorIds.filter((userId: string) => {
+                            const status = historyInvitationStatuses[userId];
                             return status === 'invited' || !status;
                           });
-                          return pending.length > 0 ? pending.map((promotor: string, index: number) => {
-                            const region = getPromotorRegion(promotor);
+                          return pending.length > 0 ? pending.map((userId: string, index: number) => {
+                            const promotorData = promotorsList.find(p => p.id === userId);
+                            const promotorName = promotorData?.name || 'Unbekannt';
+                            const region = promotorData?.region || 'wien-noe-bgl';
                             const colors = getRegionPillColors(region);
                             return (
                               <span key={`pending-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
-                                <Loader2 className="h-3 w-3 text-orange-400 animate-spin" /> {promotor}
+                                <Loader2 className="h-3 w-3 text-orange-400 animate-spin" /> {promotorName}
                               </span>
                             );
                           }) : <span className="text-xs text-gray-400">Keine</span>;
