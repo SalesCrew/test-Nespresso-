@@ -3078,31 +3078,6 @@ Import EP
                   <p className="text-sm text-gray-500 mt-1">Zur Auswahl gesendet</p>
                 </div>
 
-                {/* Assignment Switcher - only show if multiple assignments */}
-                {selectedHistoryItem.promotions.length > 1 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Promotion auswählen</h4>
-                    <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                      {selectedHistoryItem.promotions.map((promotion: any) => (
-                        <button
-                          key={promotion.id}
-                          onClick={() => setSelectedHistoryAssignmentId(promotion.id)}
-                          className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs transition-all ${
-                            selectedHistoryAssignmentId === promotion.id
-                              ? 'bg-blue-100 border-2 border-blue-400 text-blue-900 font-medium'
-                              : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
-                          }`}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium">{promotion.address}</div>
-                            <div className="text-[10px] opacity-70">{promotion.date} • {promotion.planStart}-{promotion.planEnd}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Sent Promotions */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
@@ -3135,6 +3110,31 @@ Import EP
                     ))}
                   </div>
                 </div>
+
+                {/* Assignment Switcher - only show if multiple assignments */}
+                {selectedHistoryItem.promotions.length > 1 && (
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Promotion auswählen</h4>
+                    <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      {selectedHistoryItem.promotions.map((promotion: any) => (
+                        <button
+                          key={promotion.id}
+                          onClick={() => setSelectedHistoryAssignmentId(promotion.id)}
+                          className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs transition-all ${
+                            selectedHistoryAssignmentId === promotion.id
+                              ? 'bg-blue-100 border-2 border-blue-400 text-blue-900 font-medium'
+                              : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">{promotion.address}</div>
+                            <div className="text-[10px] opacity-70">{promotion.date} • {promotion.planStart}-{promotion.planEnd}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Recipients */}
                 <div className="space-y-3">
