@@ -1445,7 +1445,7 @@ export default function EinsatzplanPage() {
     // Sort by date (nearest to farthest)
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
-  }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, dateRange]);
+  }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
 
 
 
@@ -1814,8 +1814,10 @@ Import EP
                                 <button
                                   onClick={() => {
                                     setSelectedWeeks([]);
+                                    setSelectedDates([]);
                                     setDateRange({ start: null, end: null });
                                     setDateFilter("");
+                                    setShowDateDropdown(false);
                                   }}
                                   className="p-1 rounded hover:bg-gray-100 transition-colors"
                                   title="Filter zurücksetzen"
@@ -1833,6 +1835,9 @@ Import EP
                                     <button
                                       key={week}
                                       onClick={() => {
+                                        setDateFilter("");
+                                        setDateRange({ start: null, end: null });
+                                        setSelectedDates([]);
                                         setSelectedWeeks(prev => 
                                           prev.includes(week) 
                                             ? prev.filter(w => w !== week)
