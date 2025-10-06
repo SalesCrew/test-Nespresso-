@@ -2264,6 +2264,8 @@ Import EP
                             className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
+                                : selectedEinsatz?.id === einsatz.id && aiMode
+                                ? 'border-green-300 bg-green-50 shadow-md ring-2 ring-green-200'
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
