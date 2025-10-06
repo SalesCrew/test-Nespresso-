@@ -2272,7 +2272,10 @@ Import EP
                                 <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
                                   <button
-                                    onClick={() => openInGoogleMaps(einsatz.address, einsatz.city)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openInGoogleMaps(einsatz.address, einsatz.city);
+                                    }}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
                                   >
                                     {einsatz.address}
