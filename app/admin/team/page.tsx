@@ -2127,7 +2127,7 @@ Dein Nespresso Team`;
                       <p className="text-xs font-medium text-gray-600">Onboarding</p>
                       <span className="text-xs text-gray-500 font-medium">{promotor.onboardingProgress}%</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-1.5">
                       {(() => {
                         const steps = onboardingSteps[promotor.id] || [];
                         const stepConfig = [
@@ -2135,6 +2135,7 @@ Dein Nespresso Team`;
                           { key: 'documents', icon: FileText, label: 'Dokumente' },
                           { key: 'dienstvertrag', icon: FileSignature, label: 'Vertrag' },
                           { key: 'bank_details', icon: CreditCard, label: 'Bank' },
+                          { key: 'first_training', icon: GraduationCap, label: 'Schulung' },
                         ];
                         
                         return stepConfig.map((config) => {
@@ -2901,7 +2902,7 @@ Dein Nespresso Team`;
                                 <div className="w-full bg-gray-200 rounded-full h-3">
                                   <div 
                                     className={`h-full rounded-full transition-all duration-500 ${
-                                      promotor.onboardingProgress === 100 
+                                      promotor.onboardingProgress >= 75
                         ? 'bg-gradient-to-r from-green-500 to-green-800' 
                                         : promotor.onboardingProgress >= 50 
                                         ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
