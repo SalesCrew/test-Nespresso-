@@ -781,8 +781,11 @@ Dein Nespresso Team`;
             const j = await r.json();
             const steps = Array.isArray(j.steps) ? j.steps : [];
             if (!steps.length) return card;
-            const done = steps.filter((s: any) => s.status === 'done').length;
-            const progress = Math.round((done / steps.length) * 100);
+            // Only count the 4 steps we display (exclude first_training)
+            const displayedSteps = ['profile_basics', 'documents', 'dienstvertrag', 'bank_details'];
+            const relevantSteps = steps.filter((s: any) => displayedSteps.includes(s.step_key));
+            const done = relevantSteps.filter((s: any) => s.status === 'done').length;
+            const progress = relevantSteps.length > 0 ? Math.round((done / relevantSteps.length) * 100) : 0;
             // Store steps for icon display
             setOnboardingSteps(prev => ({ ...prev, [card.id]: steps }));
             return { ...card, onboardingProgress: progress };
@@ -2127,7 +2130,7 @@ Dein Nespresso Team`;
                       <p className="text-xs font-medium text-gray-600">Onboarding</p>
                       <span className="text-xs text-gray-500 font-medium">{promotor.onboardingProgress}%</span>
                     </div>
-                    <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-2">
                       {(() => {
                         const steps = onboardingSteps[promotor.id] || [];
                         const stepConfig = [
@@ -2135,7 +2138,6 @@ Dein Nespresso Team`;
                           { key: 'documents', icon: FileText, label: 'Dokumente' },
                           { key: 'dienstvertrag', icon: FileSignature, label: 'Vertrag' },
                           { key: 'bank_details', icon: CreditCard, label: 'Bank' },
-                          { key: 'first_training', icon: GraduationCap, label: 'Schulung' },
                         ];
                         
                         return stepConfig.map((config) => {
