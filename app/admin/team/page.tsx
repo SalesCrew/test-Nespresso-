@@ -92,6 +92,7 @@ export default function PromotorenPage() {
   const [detailedViewOpen, setDetailedViewOpen] = useState<number | null>(null);
   const [copiedItems, setCopiedItems] = useState<Record<string, boolean>>({});
   const notesRef = useRef<HTMLDivElement>(null);
+  const notesSaveTimeouts = useRef<{[key: string]: NodeJS.Timeout}>({});
   
   // Magic touch functionality (copied from admin/statistiken)
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
@@ -1106,22 +1107,29 @@ Dein Nespresso Team`;
     return spaceToRight < 320; // 320px is the width of notes panel
   };
 
-  const updateNotes = async (promotorId: string, noteText: string) => {
+  const updateNotes = (promotorId: string, noteText: string) => {
     setNotes(prev => ({
       ...prev,
       [promotorId]: noteText
     }));
 
-    // Debounce the save to database
-    try {
-      await fetch(`/api/promotors/${promotorId}/notes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note_text: noteText })
-      });
-    } catch (error) {
-      console.error('Error saving note:', error);
+    // Clear existing timeout for this promotor
+    if (notesSaveTimeouts.current[promotorId]) {
+      clearTimeout(notesSaveTimeouts.current[promotorId]);
     }
+
+    // Set new timeout to save after 1 second of no typing
+    notesSaveTimeouts.current[promotorId] = setTimeout(async () => {
+      try {
+        await fetch(`/api/promotors/${promotorId}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note_text: noteText })
+        });
+      } catch (error) {
+        console.error('Error saving note:', error);
+      }
+    }, 1000);
   };
 
   // Load notes from database when promotors are loaded

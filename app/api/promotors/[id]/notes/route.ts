@@ -53,43 +53,25 @@ export async function POST(
   const { note_text } = await req.json();
 
   try {
-    // Check if a note already exists for this promotor
-    const { data: existingNote } = await svc
+    // Delete all existing notes for this promotor
+    await svc
       .from('promotor_notes')
-      .select('id')
-      .eq('promotor_user_id', promotorUserId)
-      .maybeSingle();
+      .delete()
+      .eq('promotor_user_id', promotorUserId);
 
-    if (existingNote) {
-      // Update existing note
-      const { data, error } = await svc
-        .from('promotor_notes')
-        .update({
-          note_text,
-          admin_user_id: auth.user.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingNote.id)
-        .select()
-        .single();
+    // Create new note
+    const { data, error } = await svc
+      .from('promotor_notes')
+      .insert({
+        promotor_user_id: promotorUserId,
+        admin_user_id: auth.user.id,
+        note_text
+      })
+      .select()
+      .single();
 
-      if (error) throw error;
-      return NextResponse.json({ note: data });
-    } else {
-      // Create new note
-      const { data, error } = await svc
-        .from('promotor_notes')
-        .insert({
-          promotor_user_id: promotorUserId,
-          admin_user_id: auth.user.id,
-          note_text
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return NextResponse.json({ note: data });
-    }
+    if (error) throw error;
+    return NextResponse.json({ note: data });
   } catch (error: any) {
     console.error('Error saving note:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
