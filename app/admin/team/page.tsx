@@ -81,6 +81,7 @@ export default function PromotorenPage() {
   const [regionFilter, setRegionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [onboardingFilters, setOnboardingFilters] = useState<string[]>([]);
   
 
 
@@ -993,7 +994,16 @@ Dein Nespresso Team`;
     const matchesRegion = regionFilter === "all" || promotor.region === regionFilter;
     const matchesStatus = statusFilter === "all" || promotor.status === statusFilter;
     
-    return matchesSearch && matchesRegion && matchesStatus;
+    // Onboarding filter: if any filters are active, check if promotor has all selected steps completed
+    const matchesOnboarding = onboardingFilters.length === 0 || (() => {
+      const steps = onboardingSteps[promotor.id] || [];
+      return onboardingFilters.every(filterKey => {
+        const step = steps.find((s: any) => s.step_key === filterKey);
+        return step?.status === 'done';
+      });
+    })();
+    
+    return matchesSearch && matchesRegion && matchesStatus && matchesOnboarding;
   }).sort((a, b) => {
     // Sort by status: active first, newjoiner second, inactive last
     if (a.status === 'active' && b.status !== 'active') return -1;
@@ -1852,7 +1862,7 @@ Dein Nespresso Team`;
             <>
           {/* Search and Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+            <div className="relative" style={{ flex: '0 0 400px' }}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Promotor suchen..."
@@ -1863,6 +1873,42 @@ Dein Nespresso Team`;
             </div>
             
             <div className="flex gap-3">
+              {/* Onboarding Filter Button */}
+              <div className="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg">
+                {[
+                  { key: 'profile_basics', icon: User },
+                  { key: 'documents', icon: FileText },
+                  { key: 'dienstvertrag', icon: FileSignature },
+                  { key: 'bank_details', icon: CreditCard },
+                ].map((config) => {
+                  const IconComponent = config.icon;
+                  const isActive = onboardingFilters.includes(config.key);
+                  return (
+                    <button
+                      key={config.key}
+                      onClick={() => {
+                        setOnboardingFilters(prev => 
+                          prev.includes(config.key)
+                            ? prev.filter(k => k !== config.key)
+                            : [...prev, config.key]
+                        );
+                      }}
+                      className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
+                          : 'bg-gray-200 hover:bg-gray-300'
+                      }`}
+                    >
+                      <IconComponent 
+                        className={`h-3.5 w-3.5 ${
+                          isActive ? 'text-white' : 'text-gray-400'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              
               {/* Region Filter Dropdown */}
               <div className="relative" ref={regionDropdownRef}>
                 <button
