@@ -1472,13 +1472,20 @@ export default function EinsatzplanPage() {
 
   // Debug log filtered results when KW filter is active
   useEffect(() => {
-    if (selectedWeeks.length > 0) {
-      const sept2Items = filteredEinsatzplan.filter(item => item.date.includes('2025-09-02'));
-      console.log('📊 FilteredEinsatzplan total:', filteredEinsatzplan.length);
-      console.log('📊 Sept 2 items in filteredEinsatzplan:', sept2Items.length, sept2Items);
-      console.log('📊 Selected weeks:', selectedWeeks);
-    }
-  }, [filteredEinsatzplan, selectedWeeks]);
+    const sept2Items = filteredEinsatzplan.filter(item => item.date.includes('2025-09-02'));
+    console.log('📊 FilteredEinsatzplan total:', filteredEinsatzplan.length);
+    console.log('📊 Sept 2 items in filteredEinsatzplan:', sept2Items.length, sept2Items);
+    console.log('📊 Selected weeks:', selectedWeeks);
+    console.log('📊 ALL filters active:', { 
+      regionFilter, 
+      plzFilter, 
+      statusFilter, 
+      hideVerplant, 
+      dateFilter, 
+      selectedWeeks, 
+      dateRange 
+    });
+  }, [filteredEinsatzplan, selectedWeeks, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, dateRange]);
 
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
