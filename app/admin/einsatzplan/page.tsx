@@ -2223,7 +2223,7 @@ Import EP
                       </div>
                     ) : (
                       /* List View */
-                      <div key={`list-${selectedWeeks.join('-')}-${hideVerplant}`} className="space-y-2">
+                      <div key={`list-${selectedWeeks.join('-')}-${hideVerplant}`} className="space-y-2 px-4 -mx-4">
                         {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
