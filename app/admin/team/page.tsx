@@ -1893,7 +1893,7 @@ Dein Nespresso Team`;
                             : [...prev, config.key]
                         );
                       }}
-                      className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 shadow-sm ${
+                      className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 shadow-md ${
                         isActive
                           ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
                           : 'bg-gray-200 hover:bg-gray-300'
