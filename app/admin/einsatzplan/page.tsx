@@ -1491,47 +1491,47 @@ export default function EinsatzplanPage() {
         const { counts } = await countsRes.json().catch(() => ({ counts: {} }));
         setInviteCounts(counts || {});
         
-        // Fetch detailed invite data with promotor names
-        const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
-        const { data: invites } = await svc
-          .from('assignment_invitations')
-          .select('assignment_id, user_id, status')
-          .in('assignment_id', ids);
-        
-        // Get all unique user_ids
-        const userIds = [...new Set((invites || []).map((i: any) => i.user_id))];
-        if (userIds.length === 0) return;
-        
-        // Fetch user profiles to get names
-        const { data: profiles } = await svc
-          .from('user_profiles')
-          .select('user_id, display_name')
-          .in('user_id', userIds);
-        
-        const userMap = new Map((profiles || []).map((p: any) => [p.user_id, p.display_name || 'Unbekannt']));
-        
         // Build details map
         const details: Record<string, { invited: string[]; accepted: string[]; rejected: string[] }> = {};
-        for (const invite of invites || []) {
-          const assignmentId = invite.assignment_id;
-          const userName = userMap.get(invite.user_id) || 'Unbekannt';
+        
+        for (const assignmentId of ids) {
+          details[assignmentId] = { invited: [], accepted: [], rejected: [] };
           
-          if (!details[assignmentId]) {
-            details[assignmentId] = { invited: [], accepted: [], rejected: [] };
+          // 1. EINGELADEN: Get from distributionHistory (Gesendet tab data)
+          const sentHistoryItem = distributionHistory.find(item => 
+            item.promotions.some((p: any) => p.id === assignmentId)
+          );
+          if (sentHistoryItem) {
+            details[assignmentId].invited = sentHistoryItem.promotors || [];
           }
           
-          // All invites go into "invited"
-          details[assignmentId].invited.push(userName);
+          // 2. ANGENOMMEN: Get from applications API (Angemeldet tab data)
+          try {
+            const appsRes = await fetch(`/api/assignments/${assignmentId}/applications`, { cache: 'no-store' });
+            const appsData = await appsRes.json().catch(() => ({ applications: [] }));
+            const apps = appsData.applications || [];
+            details[assignmentId].accepted = apps.map((a: any) => a.name);
+          } catch {}
           
-          // Applied goes into "accepted"
-          if (invite.status === 'applied') {
-            details[assignmentId].accepted.push(userName);
-          }
-          
-          // Rejected/withdrawn goes into "rejected"
-          if (invite.status === 'rejected' || invite.status === 'withdrawn') {
-            details[assignmentId].rejected.push(userName);
-          }
+          // 3. ABGELEHNT: Get rejected/withdrawn from assignment_invitations + user_profiles
+          try {
+            const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
+            const { data: rejectedInvites } = await svc
+              .from('assignment_invitations')
+              .select('user_id')
+              .eq('assignment_id', assignmentId)
+              .in('status', ['rejected', 'withdrawn']);
+            
+            if (rejectedInvites && rejectedInvites.length > 0) {
+              const userIds = rejectedInvites.map((i: any) => i.user_id);
+              const { data: profiles } = await svc
+                .from('user_profiles')
+                .select('display_name')
+                .in('user_id', userIds);
+              
+              details[assignmentId].rejected = (profiles || []).map((p: any) => p.display_name || 'Unbekannt');
+            }
+          } catch {}
         }
         
         setInviteDetails(details);
@@ -1539,7 +1539,7 @@ export default function EinsatzplanPage() {
     };
     
     loadInvitesData();
-  }, [filteredEinsatzplan]);
+  }, [filteredEinsatzplan, distributionHistory]);
 
   // Debug log filtered results when KW filter is active
   useEffect(() => {
