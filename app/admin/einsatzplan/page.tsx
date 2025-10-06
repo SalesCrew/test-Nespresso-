@@ -2265,7 +2265,7 @@ Import EP
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
                                 : selectedEinsatz?.id === einsatz.id && aiMode
-                                ? 'border-gray-100 shadow-[0_0_20px_rgba(134,239,172,0.5)]'
+                                ? 'border-gray-100 shadow-[0_0_20px_rgba(134,239,172,0.5)] -mx-2 px-6'
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
