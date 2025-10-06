@@ -387,15 +387,38 @@ export default function EinsatzplanPage() {
         
         if (assignmentIds.length === 0 || promotorIds.length === 0) return;
         
-        // Fetch all invitations for these assignments and promotors
-        const res = await fetch('/api/assignments/invites/route', { cache: 'no-store' });
-        const data = await res.json().catch(() => ({ invites: [] }));
-        const allInvites = data.invites || [];
-        
-        // Build a map of promotorId -> status for this history item
+        // Fetch invitations for each assignment in this history item
         const statusMap: Record<string, string> = {};
-        for (const invite of allInvites) {
-          if (assignmentIds.includes(invite.assignment_id) && promotorIds.includes(invite.user_id)) {
+        
+        for (const assignmentId of assignmentIds) {
+          try {
+            const res = await fetch(`/api/assignments/${assignmentId}/applications`, { cache: 'no-store' });
+            const data = await res.json().catch(() => ({ applications: [] }));
+            const applications = data.applications || [];
+            
+            // Mark all applications as 'applied'
+            for (const app of applications) {
+              if (promotorIds.includes(app.user_id)) {
+                statusMap[app.user_id] = 'applied';
+              }
+            }
+          } catch {}
+        }
+        
+        // Now fetch all invitations to check for rejected/withdrawn/invited statuses
+        // We need to use the service client approach or create a new API endpoint
+        // For now, let's use the bulk approach by fetching from supabase directly
+        const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
+        const { data: invites } = await svc
+          .from('assignment_invitations')
+          .select('user_id,status')
+          .in('assignment_id', assignmentIds)
+          .in('user_id', promotorIds);
+        
+        // Update status map with all statuses (applied will be overwritten if already set)
+        for (const invite of invites || []) {
+          // Only update if not already marked as applied, or if it's a different status
+          if (!statusMap[invite.user_id] || statusMap[invite.user_id] === 'invited') {
             statusMap[invite.user_id] = invite.status;
           }
         }
