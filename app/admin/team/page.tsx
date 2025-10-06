@@ -1894,7 +1894,7 @@ Dein Nespresso Team`;
                         );
                       }}
                       style={{
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
                       }}
                       className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
                         isActive
