@@ -340,8 +340,6 @@ export default function EinsatzplanPage() {
   }, [showReplacementModal]);
   const [showHistoryDetail, setShowHistoryDetail] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
-  const [selectedHistoryAssignmentId, setSelectedHistoryAssignmentId] = useState<string | null>(null);
-  const [historyInvitationStatuses, setHistoryInvitationStatuses] = useState<Record<string, string>>({});
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
   
   // Promotors list for assignment
@@ -376,57 +374,6 @@ export default function EinsatzplanPage() {
     
     return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
-
-  // Set initial assignment when modal opens
-  useEffect(() => {
-    if (showHistoryDetail && selectedHistoryItem) {
-      const assignmentIds = selectedHistoryItem.assignmentIds || [];
-      if (assignmentIds.length > 0 && !selectedHistoryAssignmentId) {
-        setSelectedHistoryAssignmentId(assignmentIds[0]);
-      }
-    } else {
-      setSelectedHistoryAssignmentId(null);
-    }
-  }, [showHistoryDetail, selectedHistoryItem]);
-
-  // Load invitation statuses when history detail modal opens or assignment changes
-  useEffect(() => {
-    const loadHistoryInvitationStatuses = async () => {
-      if (!showHistoryDetail || !selectedHistoryItem || !selectedHistoryAssignmentId) return;
-      
-      try {
-        const promotorIds = selectedHistoryItem.promotorIds || [];
-        
-        if (promotorIds.length === 0) return;
-        
-        console.log('🔍 Loading statuses for assignment:', selectedHistoryAssignmentId);
-        console.log('🔍 Promotor IDs:', promotorIds);
-        
-        // Fetch invitations for the selected assignment only
-        const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
-        const { data: invites } = await svc
-          .from('assignment_invitations')
-          .select('user_id,status')
-          .eq('assignment_id', selectedHistoryAssignmentId)
-          .in('user_id', promotorIds);
-        
-        console.log('🔍 Fetched invites:', invites);
-        
-        // Build status map for this specific assignment
-        const statusMap: Record<string, string> = {};
-        for (const invite of invites || []) {
-          statusMap[invite.user_id] = invite.status;
-        }
-        
-        console.log('🔍 Status map:', statusMap);
-        setHistoryInvitationStatuses(statusMap);
-      } catch (error) {
-        console.error('Error loading history invitation statuses:', error);
-      }
-    };
-    
-    loadHistoryInvitationStatuses();
-  }, [showHistoryDetail, selectedHistoryItem, selectedHistoryAssignmentId]);
 
   // (moved below filteredEinsatzplan definition)
 
@@ -942,16 +889,6 @@ export default function EinsatzplanPage() {
   const openInGoogleMaps = (address: string, city: string) => {
     const query = encodeURIComponent(`${address}, ${city}`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-  };
-
-  // Helper functions for invitation history pills (same as dashboard nachrichten)
-  const getPromotorRegion = (promotorName: string) => {
-    const promotor = promotorsList.find(p => p.name === promotorName);
-    return promotor?.region || "wien-noe-bgl";
-  };
-
-  const getRegionPillColors = (region: string) => {
-    return `${getRegionGradient(region)} ${getRegionBorder(region)} text-gray-700`;
   };
 
   // Helper function to format promotor name consistently with dropdown
@@ -3117,109 +3054,20 @@ Import EP
                   </div>
                 </div>
 
-                {/* Assignment Switcher - only show if multiple assignments */}
-                {selectedHistoryItem.promotions.length > 1 && (
-                  <div className="space-y-2">
-                    <h4 className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Promotion auswählen</h4>
-                    <div className="flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                      {selectedHistoryItem.promotions.map((promotion: any) => (
-                        <button
-                          key={promotion.id}
-                          onClick={() => setSelectedHistoryAssignmentId(promotion.id)}
-                          className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs transition-all ${
-                            selectedHistoryAssignmentId === promotion.id
-                              ? 'bg-blue-100 border-2 border-blue-400 text-blue-900 font-medium'
-                              : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'
-                          }`}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium">{promotion.address}</div>
-                            <div className="text-[10px] opacity-70">{promotion.date} • {promotion.planStart}-{promotion.planEnd}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Recipients */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                     Empfänger ({selectedHistoryItem.promotors.length})
                   </h4>
-                  <div className="space-y-2 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {/* Angenommen (Applied) */}
-                    <div>
-                      <p className="text-[11px] text-gray-500 mb-1">Angenommen</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(() => {
-                          const promotorIds = selectedHistoryItem.promotorIds || [];
-                          const applied = promotorIds.filter((userId: string) => {
-                            const status = historyInvitationStatuses[userId];
-                            return status === 'applied';
-                          });
-                          return applied.length > 0 ? applied.map((userId: string, index: number) => {
-                            const promotorData = promotorsList.find(p => p.id === userId);
-                            const promotorName = promotorData?.name || 'Unbekannt';
-                            const region = promotorData?.region || 'wien-noe-bgl';
-                            const colors = getRegionPillColors(region);
-                            return (
-                              <span key={`applied-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} flex items-center gap-1`}>
-                                <Check className="h-3 w-3 text-green-600" /> {promotorName}
-                              </span>
-                            );
-                          }) : <span className="text-xs text-gray-400">Keine</span>;
-                        })()}
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+                    {selectedHistoryItem.promotors.map((promotor: string) => (
+                      <div 
+                        key={promotor}
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm"
+                      >
+                        <span className="font-medium text-gray-900 whitespace-nowrap">{promotor}</span>
                       </div>
-                    </div>
-                    {/* Abgelehnt (Rejected/Withdrawn) */}
-                    <div>
-                      <p className="text-[11px] text-gray-500 mb-1">Abgelehnt</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(() => {
-                          const promotorIds = selectedHistoryItem.promotorIds || [];
-                          const rejected = promotorIds.filter((userId: string) => {
-                            const status = historyInvitationStatuses[userId];
-                            return status === 'rejected' || status === 'withdrawn';
-                          });
-                          return rejected.length > 0 ? rejected.map((userId: string, index: number) => {
-                            const promotorData = promotorsList.find(p => p.id === userId);
-                            const promotorName = promotorData?.name || 'Unbekannt';
-                            const region = promotorData?.region || 'wien-noe-bgl';
-                            const colors = getRegionPillColors(region);
-                            return (
-                              <span key={`rejected-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
-                                <X className="h-3 w-3 text-red-500" /> {promotorName}
-                              </span>
-                            );
-                          }) : <span className="text-xs text-gray-400">Keine</span>;
-                        })()}
-                      </div>
-                    </div>
-                    {/* Noch nicht geantwortet (Invited/Pending) */}
-                    <div>
-                      <p className="text-[11px] text-gray-500 mb-1">Noch nicht geantwortet</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(() => {
-                          const promotorIds = selectedHistoryItem.promotorIds || [];
-                          const pending = promotorIds.filter((userId: string) => {
-                            const status = historyInvitationStatuses[userId];
-                            return status === 'invited' || !status;
-                          });
-                          return pending.length > 0 ? pending.map((userId: string, index: number) => {
-                            const promotorData = promotorsList.find(p => p.id === userId);
-                            const promotorName = promotorData?.name || 'Unbekannt';
-                            const region = promotorData?.region || 'wien-noe-bgl';
-                            const colors = getRegionPillColors(region);
-                            return (
-                              <span key={`pending-${index}`} className={`px-2 py-1 rounded-full text-xs border ${colors} opacity-60 flex items-center gap-1`}>
-                                <Loader2 className="h-3 w-3 text-orange-400 animate-spin" /> {promotorName}
-                              </span>
-                            );
-                          }) : <span className="text-xs text-gray-400">Keine</span>;
-                        })()}
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
