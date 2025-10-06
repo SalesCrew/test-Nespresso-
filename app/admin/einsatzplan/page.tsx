@@ -2264,7 +2264,7 @@ Import EP
                               }
                             }}
                             style={selectedEinsatz?.id === einsatz.id && aiMode ? { 
-                              boxShadow: '0 0 20px rgba(134, 239, 172, 0.5)' 
+                              boxShadow: '0 0 12px rgba(134, 239, 172, 0.5)' 
                             } : undefined}
                             className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
