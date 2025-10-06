@@ -1493,21 +1493,29 @@ export default function EinsatzplanPage() {
         
         // Fetch ALL invitation data directly from database (not from distributionHistory)
         const svc = await import('@/lib/supabase/service').then(m => m.createSupabaseServiceClient());
-        const { data: allInvites } = await svc
+        const { data: allInvites, error: invitesError } = await svc
           .from('assignment_invitations')
           .select('assignment_id, user_id, status')
           .in('assignment_id', ids);
         
+        console.log('💾 Fetched invitations:', allInvites?.length || 0, allInvites);
+        console.log('💾 Invites error:', invitesError);
+        
         // Get all unique user_ids from invitations
         const allUserIds = [...new Set((allInvites || []).map((i: any) => i.user_id))];
+        console.log('💾 Unique user IDs:', allUserIds.length, allUserIds);
         
         // Fetch all user profiles at once
-        const { data: allProfiles } = await svc
+        const { data: allProfiles, error: profilesError } = await svc
           .from('user_profiles')
           .select('user_id, display_name')
           .in('user_id', allUserIds);
         
+        console.log('💾 Fetched profiles:', allProfiles?.length || 0, allProfiles);
+        console.log('💾 Profiles error:', profilesError);
+        
         const userMap = new Map((allProfiles || []).map((p: any) => [p.user_id, p.display_name || 'Unbekannt']));
+        console.log('💾 User map size:', userMap.size);
         
         // Build details map
         const details: Record<string, { invited: string[]; accepted: string[]; rejected: string[] }> = {};
@@ -1516,9 +1524,11 @@ export default function EinsatzplanPage() {
           details[assignmentId] = { invited: [], accepted: [], rejected: [] };
           
           const assignmentInvites = (allInvites || []).filter((i: any) => i.assignment_id === assignmentId);
+          console.log(`💾 Assignment ${assignmentId}: ${assignmentInvites.length} invites`);
           
           for (const invite of assignmentInvites) {
             const userName = userMap.get(invite.user_id) || 'Unbekannt';
+            console.log(`💾   - User ${invite.user_id} (${invite.status}): ${userName}`);
             
             // All invites go into "invited"
             details[assignmentId].invited.push(userName);
@@ -1535,6 +1545,7 @@ export default function EinsatzplanPage() {
           }
         }
         
+        console.log('💾 Final details:', details);
         setInviteDetails(details);
       } catch {}
     };
