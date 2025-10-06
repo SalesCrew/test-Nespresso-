@@ -1424,14 +1424,32 @@ export default function EinsatzplanPage() {
       dateMatch = selectedWeeks.some(weekStr => {
         // Extract date range from label "KW 36 (08.09-14.09)"
         const match = weekStr.match(/\((\d{2})\.(\d{2})-(\d{2})\.(\d{2})\)/);
-        if (!match) return false;
+        if (!match) {
+          console.warn('Failed to parse week string:', weekStr);
+          return false;
+        }
         
         const [, startDay, startMonth, endDay, endMonth] = match;
         const currentYear = new Date().getFullYear();
         const weekStart = `${currentYear}-${startMonth.padStart(2, '0')}-${startDay.padStart(2, '0')}`;
         const weekEnd = `${currentYear}-${endMonth.padStart(2, '0')}-${endDay.padStart(2, '0')}`;
         
-        return item.date >= weekStart && item.date <= weekEnd;
+        const matches = item.date >= weekStart && item.date <= weekEnd;
+        
+        // Debug logging for troublesome Sept 2 assignments
+        if (item.date.includes('2025-09-02')) {
+          console.log('🔍 Sept 2 assignment check:', {
+            itemDate: item.date,
+            itemId: item.id,
+            weekStr,
+            weekStart,
+            weekEnd,
+            matches,
+            comparison: `${item.date} >= ${weekStart} && ${item.date} <= ${weekEnd}`
+          });
+        }
+        
+        return matches;
       });
     }
     // Date range filter
@@ -1452,7 +1470,15 @@ export default function EinsatzplanPage() {
   });
   }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
 
-
+  // Debug log filtered results when KW filter is active
+  useEffect(() => {
+    if (selectedWeeks.length > 0) {
+      const sept2Items = filteredEinsatzplan.filter(item => item.date.includes('2025-09-02'));
+      console.log('📊 FilteredEinsatzplan total:', filteredEinsatzplan.length);
+      console.log('📊 Sept 2 items in filteredEinsatzplan:', sept2Items.length, sept2Items);
+      console.log('📊 Selected weeks:', selectedWeeks);
+    }
+  }, [filteredEinsatzplan, selectedWeeks]);
 
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
@@ -1548,6 +1574,21 @@ export default function EinsatzplanPage() {
       console.log('🟢 First mapped item:', mapped[0]);
       
 
+      
+      // Check for duplicate IDs before setting state
+      const ids = mapped.map(m => m.id);
+      const uniqueIds = new Set(ids);
+      if (ids.length !== uniqueIds.size) {
+        console.error('⚠️ DUPLICATE IDs detected in fetched data!', {
+          total: ids.length,
+          unique: uniqueIds.size,
+          duplicates: ids.filter((id, index) => ids.indexOf(id) !== index)
+        });
+      }
+      
+      // Check for Sept 2 assignments specifically
+      const sept2Assignments = mapped.filter(m => m.date.includes('2025-09-02'));
+      console.log('🟢 Sept 2 assignments in fetched data:', sept2Assignments.length, sept2Assignments.map(a => ({ id: a.id, date: a.date, promotor: a.promotor })));
       
       setEinsatzplanData(mapped);
       console.log('🟢 State updated with', mapped.length, 'assignments');
@@ -2084,7 +2125,7 @@ Import EP
                       )
                     ) : viewMode === 'days' ? (
                       /* Days View */
-                      <div key={`days-view-${hideVerplant ? 'filtered' : 'all'}`} className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-4 gap-4">
                         {generateDayCards().map((dayData) => {
                           // Green background when there are 0 "Offen" assignments and at least one assignment total
                           const noOpenAssignments = dayData.total > 0 && dayData.offen === 0;
@@ -2173,13 +2214,13 @@ Import EP
                       </div>
                     ) : (
                       /* List View */
-                      <div key={`list-view-${hideVerplant ? 'filtered' : 'all'}`} className="space-y-2">
+                      <div className="space-y-2">
                         {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
                         return (
                           <div 
-                            key={`${einsatz.id}-${hideVerplant ? 'filtered' : 'all'}`} 
+                            key={einsatz.id} 
                             onClick={(e) => {
                               if (selectionMode) {
                                 e.stopPropagation();
