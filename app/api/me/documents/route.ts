@@ -12,12 +12,23 @@ export async function GET() {
 
     const svc = createSupabaseServiceClient();
 
-    // Get user profile to check if work permit is needed
+    // Get user profile to check if work permit is needed and application data for driving license
     const { data: profile } = await svc
-      .from('user_profiles')
-      .select('needs_work_permit')
+      .from('promotor_profiles')
+      .select('needs_work_permit, application_id')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    // Get application data for driving license check
+    let hasDrivingLicense = false;
+    if (profile?.application_id) {
+      const { data: appData } = await svc
+        .from('applications')
+        .select('drivingLicense')
+        .eq('id', profile.application_id)
+        .maybeSingle();
+      hasDrivingLicense = !!appData?.drivingLicense;
+    }
 
     // Get documents from database
     const { data: dbDocuments, error: docsError } = await svc
@@ -32,12 +43,11 @@ export async function GET() {
 
     const needsWorkPermit = !!profile?.needs_work_permit;
 
-    // Define all possible documents with their requirements
+    // Define all possible documents with their requirements (matching onboarding logic)
     const documentTypes = [
-      { type: 'citizenship', name: 'Staatsbürgerschaftsnachweis', required: true },
       { type: 'passport', name: 'Pass', required: true },
-      { type: 'strafregister', name: 'Strafregister', required: true },
       { type: 'arbeitserlaubnis', name: 'Arbeitserlaubnis', required: needsWorkPermit },
+      { type: 'fuehrerschein', name: 'Führerschein', required: hasDrivingLicense },
       { type: 'additional', name: 'Zusätzliche Dokumente', required: false }
     ];
 
