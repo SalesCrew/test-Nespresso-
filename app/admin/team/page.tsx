@@ -4233,7 +4233,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   demotool: { ...prev.demotool, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4258,7 +4258,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   demotool: { ...prev.demotool, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <>
@@ -4324,7 +4324,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   tma: { ...prev.tma, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4349,7 +4349,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   tma: { ...prev.tma, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <>
@@ -4415,7 +4415,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   boost_app: { ...prev.boost_app, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4440,7 +4440,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   boost_app: { ...prev.boost_app, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
                               />
                             ) : (
                               <>
