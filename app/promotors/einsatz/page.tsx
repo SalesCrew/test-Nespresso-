@@ -187,24 +187,6 @@ export default function EinsatzPage() {
   }
   };
 
-  // Load assignment note
-  const loadAssignmentNote = async (assignmentId: string) => {
-    try {
-      const response = await fetch(`/api/assignments/promotor-notes?assignment_id=${assignmentId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.note) {
-          setAssignmentNote(data.note.note);
-        } else {
-          setAssignmentNote('');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading assignment note:', error);
-      setAssignmentNote('');
-    }
-  };
-
 const loadProcessState = async () => {
     try {
       console.log('Loading process state...');
@@ -438,6 +420,24 @@ const loadProcessState = async () => {
         console.error('Fallback also failed:', fallbackError);
         setProcessState(prev => ({ ...prev, stage: 'idle' }));
       }
+    }
+  };
+
+  // Load assignment note
+  const loadAssignmentNote = async (assignmentId: string) => {
+    try {
+      const response = await fetch(`/api/assignments/promotor-notes?assignment_id=${assignmentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.note) {
+          setAssignmentNote(data.note.note);
+        } else {
+          setAssignmentNote('');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading assignment note:', error);
+      setAssignmentNote('');
     }
   };
   
