@@ -2247,8 +2247,23 @@ const loadProcessState = async () => {
             </CardContent>
           </Card>
         ) : processState.stage === 'idle' ? (
-          // Hidden - No invitations state (background logic still runs)
-          null
+          // No invitations state
+          <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-blue-600 dark:text-blue-400 text-center text-lg">
+                <span className="bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">Einsatz-Anfragen</span>
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400 text-center">
+                Aktuell sind keine neuen Einladungen verfügbar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center py-6">
+              <div className="text-center">
+                <UserCheck className="h-16 w-16 text-blue-200 dark:text-blue-800 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-500 text-sm">Schau später wieder vorbei!</p>
+              </div>
+            </CardContent>
+          </Card>
         ) : processState.stage === 'select_assignment' ? (
           // NEW: Assignment selection UI
           <Card className="mb-6 border-dashed border-blue-400 dark:border-blue-600 shadow-sm">
