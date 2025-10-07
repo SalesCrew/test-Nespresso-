@@ -289,33 +289,27 @@ const loadProcessState = async () => {
             // For original invites - normal categorization
             const invitedInvites = originalInvites.filter((i: any) => 
               i.status === 'invited');
-            const appliedInvites = originalInvites.filter((i: any) => 
+            // Include ALL applied invites (both original and replacement) in the applied list
+            const appliedInvites = nonVerstandenInvites.filter((i: any) => 
               i.status === 'applied');
-            const acceptedInvites = originalInvites.filter((i: any) => 
+            // Include ALL accepted invites (both original and replacement) in the accepted list
+            const acceptedInvites = nonVerstandenInvites.filter((i: any) => 
               i.status === 'accepted');
-            const rejectedInvites = originalInvites.filter((i: any) => 
+            // Include ALL rejected invites (both original and replacement) in the rejected list
+            const rejectedInvites = nonVerstandenInvites.filter((i: any) => 
               i.status === 'rejected');
             
             // Only uninvited replacement invites should be shown as options
             const replacementInvitedInvites = replacementInvites.filter((i: any) => 
               i.status === 'invited');
             
-            // Also get applied replacement invites - these should trigger waiting stage
-            const replacementAppliedInvites = replacementInvites.filter((i: any) => 
-              i.status === 'applied');
-            
-            // Also get accepted replacement invites - these should trigger accepted stage
-            const replacementAcceptedInvites = replacementInvites.filter((i: any) => 
-              i.status === 'accepted');
             
             console.log('Categorized invites:');
             console.log('- invited:', invitedInvites.length);
-            console.log('- applied:', appliedInvites.length);
-            console.log('- accepted:', acceptedInvites.length);
-            console.log('- rejected:', rejectedInvites.length);
+            console.log('- applied (all):', appliedInvites.length);
+            console.log('- accepted (all):', acceptedInvites.length);
+            console.log('- rejected (all):', rejectedInvites.length);
             console.log('- replacement invited:', replacementInvitedInvites.length);
-            console.log('- replacement applied:', replacementAppliedInvites.length);
-            console.log('- replacement accepted:', replacementAcceptedInvites.length);
             console.log('Raw rejected invites:', rejectedInvites);
             console.log('Raw replacement invites:', replacementInvites);
             
@@ -325,11 +319,11 @@ const loadProcessState = async () => {
             });
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
-            // Include both original applied AND replacement applied invites for waiting
-            const mappedWaiting = [...appliedInvites, ...replacementAppliedInvites]
+            // Applied invites already include all applied (no need to merge with replacements)
+            const mappedWaiting = appliedInvites
               .map(mapInvite).filter((x: any) => x.id);
-            // Include both original accepted AND replacement accepted invites
-            const mappedAccepted = [...acceptedInvites, ...replacementAcceptedInvites]
+            // Accepted invites already include all accepted (no need to merge with replacements)
+            const mappedAccepted = acceptedInvites
               .map(mapInvite).filter((x: any) => x.id);
             const mappedRejected = rejectedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedReplacements = replacementInvitedInvites.map(mapInvite).filter((x: any) => x.id);
