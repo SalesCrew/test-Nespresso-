@@ -13,7 +13,6 @@ import {
   FileText,
   Info,
   MessageSquare,
-  StickyNote,
   Package,
   Play,
   Plus,
@@ -103,7 +102,25 @@ export default function EinsatzPage() {
   
   // Notes popup state
   const [showNotesPopup, setShowNotesPopup] = useState(false);
-  const [assignmentNote, setAssignmentNote] = useState<string>('');
+  const [currentAssignmentNote, setCurrentAssignmentNote] = useState<string>('');
+
+  // Load promotor note for current assignment
+  const loadPromotorNote = async (assignmentId: string) => {
+    try {
+      const response = await fetch(`/api/assignments/promotor-notes?assignment_id=${assignmentId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.note) {
+          setCurrentAssignmentNote(data.note.note);
+        } else {
+          setCurrentAssignmentNote('');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading promotor note:', error);
+      setCurrentAssignmentNote('');
+    }
+  };
 
   // Photo upload states
   const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
@@ -185,7 +202,7 @@ export default function EinsatzPage() {
     console.error('Error loading buddy tags:', error);
     setBuddyTags([]);
   }
-  };
+};
 
 const loadProcessState = async () => {
     try {
@@ -422,24 +439,6 @@ const loadProcessState = async () => {
       }
     }
   };
-
-  // Load assignment note
-  const loadAssignmentNote = async (assignmentId: string) => {
-    try {
-      const response = await fetch(`/api/assignments/promotor-notes?assignment_id=${assignmentId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.note) {
-          setAssignmentNote(data.note.note);
-        } else {
-          setAssignmentNote('');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading assignment note:', error);
-      setAssignmentNote('');
-    }
-  };
   
   // Load assignment tracking data for persistent status
   const loadAssignmentTracking = async (assignmentId: string) => {
@@ -556,13 +555,6 @@ const loadProcessState = async () => {
       clearInterval(statusIv);
     };
   }, []);
-
-  // Load assignment note when displayedAssignment changes
-  useEffect(() => {
-    if (displayedAssignment?.id) {
-      loadAssignmentNote(displayedAssignment.id);
-    }
-  }, [displayedAssignment?.id]);
   
   // Track processState changes
   useEffect(() => {
@@ -1980,7 +1972,7 @@ const loadProcessState = async () => {
             ) : (
             <>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{displayedAssignment.location_text || displayedAssignment.title}</h3>
-            {/* Time display with pill style - made smaller */}
+            {/* Time and Notes pills */}
             <div className="mb-2 mt-1 flex items-center gap-2">
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
                 <Clock className="h-3.5 w-3.5 mr-1" /> 
@@ -1988,15 +1980,18 @@ const loadProcessState = async () => {
               </div>
               
               {/* Notes pill */}
-              {assignmentNote && (
-                <div 
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm cursor-pointer hover:bg-amber-600 transition-all"
-                  onClick={() => setShowNotesPopup(true)}
-                >
-                  <StickyNote className="h-3.5 w-3.5 mr-1" /> 
-                  <span className="text-xs font-medium">Notiz</span>
-                </div>
-              )}
+              <div 
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm cursor-pointer hover:from-amber-600 hover:to-orange-700 transition-all"
+                onClick={() => {
+                  if (displayedAssignment?.id) {
+                    loadPromotorNote(displayedAssignment.id);
+                    setShowNotesPopup(true);
+                  }
+                }}
+              >
+                <FileText className="h-3.5 w-3.5 mr-1" /> 
+                <span className="text-xs font-medium">Notiz</span>
+              </div>
             </div>
             <div 
               className="text-sm text-gray-600 dark:text-gray-400 flex items-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-3"
@@ -3560,24 +3555,24 @@ const loadProcessState = async () => {
         </div>
       )}
 
-      {/* Notes Popup */}
+      {/* Notes Popup Modal */}
       {showNotesPopup && (
         <>
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
             onClick={() => setShowNotesPopup(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[60] w-[400px] max-h-[60vh] overflow-hidden">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-60 w-[400px] max-h-[500px] overflow-hidden">
             {/* Header */}
-            <div className="bg-amber-500 text-white p-4">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <StickyNote className="h-5 w-5" />
+                  <FileText className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Notiz</h3>
                 </div>
                 <button
                   onClick={() => setShowNotesPopup(false)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                  className="p-1 hover:bg-white/20 rounded transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -3585,10 +3580,19 @@ const loadProcessState = async () => {
             </div>
             
             {/* Content */}
-            <div className="p-4 max-h-[calc(60vh-80px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {assignmentNote || 'Keine Notiz verfügbar'}
-              </div>
+            <div className="p-4 max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {currentAssignmentNote ? (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {currentAssignmentNote}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">Keine Notiz verfügbar</p>
+                </div>
+              )}
             </div>
           </div>
         </>
