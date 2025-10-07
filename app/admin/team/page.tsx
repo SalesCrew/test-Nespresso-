@@ -4188,7 +4188,10 @@ Dein Nespresso Team`;
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200"
+                            style={editingCredentials.demotool ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.demotool ? (
                               <Input
                                 type="email"
@@ -4197,7 +4200,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   demotool: { ...prev.demotool, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4210,7 +4213,10 @@ Dein Nespresso Team`;
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between"
+                            style={editingCredentials.demotool ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.demotool ? (
                               <Input
                                 type="text"
@@ -4219,8 +4225,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   demotool: { ...prev.demotool, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
-                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
                               />
                             ) : (
                               <>
@@ -4270,7 +4275,10 @@ Dein Nespresso Team`;
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200"
+                            style={editingCredentials.tma ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.tma ? (
                               <Input
                                 type="email"
@@ -4279,7 +4287,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   tma: { ...prev.tma, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4292,7 +4300,10 @@ Dein Nespresso Team`;
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between"
+                            style={editingCredentials.tma ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.tma ? (
                               <Input
                                 type="text"
@@ -4301,8 +4312,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   tma: { ...prev.tma, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
-                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
                               />
                             ) : (
                               <>
@@ -4352,7 +4362,10 @@ Dein Nespresso Team`;
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200"
+                            style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.boost_app ? (
                               <Input
                                 type="email"
@@ -4361,7 +4374,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   boost_app: { ...prev.boost_app, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent"
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4374,7 +4387,10 @@ Dein Nespresso Team`;
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                          <div 
+                            className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between"
+                            style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
+                          >
                             {editingCredentials.boost_app ? (
                               <Input
                                 type="text"
@@ -4383,8 +4399,7 @@ Dein Nespresso Team`;
                                   ...prev,
                                   boost_app: { ...prev.boost_app, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
-                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent"
                               />
                             ) : (
                               <>
