@@ -1984,27 +1984,13 @@ const loadProcessState = async () => {
             <div className="mb-2 mt-1 flex items-center gap-2">
               <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm">
                 <Clock className="h-3.5 w-3.5 mr-1" /> 
-                <span className="text-xs font-medium">
-                  {(() => {
-                    try {
-                      if (displayedAssignment?.start_ts && displayedAssignment?.end_ts) {
-                        const startStr = typeof displayedAssignment.start_ts === 'string' ? displayedAssignment.start_ts : displayedAssignment.start_ts.toISOString();
-                        const endStr = typeof displayedAssignment.end_ts === 'string' ? displayedAssignment.end_ts : displayedAssignment.end_ts.toISOString();
-                        return `${startStr.substring(11, 16)}-${endStr.substring(11, 16)}`;
-                      }
-                      return '';
-                    } catch (error) {
-                      console.error('Error formatting time:', error);
-                      return '';
-                    }
-                  })()}
-                </span>
+                <span className="text-xs font-medium">{displayedAssignment?.start_ts && displayedAssignment?.end_ts ? `${displayedAssignment.start_ts.substring(11, 16)}-${displayedAssignment.end_ts.substring(11, 16)}` : ''}</span>
               </div>
               
               {/* Notes pill */}
               {assignmentNote && (
                 <div 
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm cursor-pointer hover:from-amber-600 hover:to-orange-700 transition-all"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm cursor-pointer hover:bg-amber-600 transition-all"
                   onClick={() => setShowNotesPopup(true)}
                 >
                   <StickyNote className="h-3.5 w-3.5 mr-1" /> 
@@ -3583,7 +3569,7 @@ const loadProcessState = async () => {
           ></div>
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[60] w-[400px] max-h-[60vh] overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
+            <div className="bg-amber-500 text-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <StickyNote className="h-5 w-5" />
