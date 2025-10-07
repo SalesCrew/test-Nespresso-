@@ -11,22 +11,14 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const svc = createSupabaseServiceClient();
 
   try {
-    // Get the promotor's user_id from promotor_profiles
-    const { data: profile, error: profileError } = await svc
-      .from('promotor_profiles')
-      .select('user_id')
-      .eq('id', promotorId)
-      .single();
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Promotor not found' }, { status: 404 });
-    }
+    // The promotorId is actually the user_id directly
+    const userId = promotorId;
 
     // Get access credentials for this user
     const { data: credentials, error: credentialsError } = await svc
       .from('access_credentials')
       .select('*')
-      .eq('user_id', profile.user_id)
+      .eq('user_id', userId)
       .single();
 
     if (credentialsError && credentialsError.code !== 'PGRST116') {
