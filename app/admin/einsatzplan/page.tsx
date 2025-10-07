@@ -611,6 +611,25 @@ export default function EinsatzplanPage() {
     }
   };
 
+  // Function to load promotor note
+  const loadPromotorNote = async (assignmentId: string) => {
+    try {
+      const response = await fetch(`/api/assignments/promotor-notes?assignment_id=${assignmentId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.note) {
+          setPromotorNotes(prev => ({
+            ...prev,
+            [assignmentId]: data.note.note
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading promotor note:', error);
+    }
+  };
+
   // Function to save promotor note
   const savePromotorNote = async (assignmentId: string, note: string) => {
     try {
@@ -2292,6 +2311,9 @@ Import EP
 
                                 setEditingEinsatz(editingData);
                                 setShowDetailModal(true);
+                                
+                                // Load promotor note for this assignment
+                                loadPromotorNote(einsatz.id);
                               }
                             }}
                             style={selectedEinsatz?.id === einsatz.id && aiMode ? { 
