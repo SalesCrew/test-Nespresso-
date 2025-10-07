@@ -4213,13 +4213,14 @@ Dein Nespresso Team`;
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
                             {editingCredentials.demotool ? (
                               <Input
-                                type="password"
+                                type="text"
                                 value={editCredentialsForm.demotool?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   demotool: { ...prev.demotool, password: e.target.value }
                                 }))}
                                 className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
                               />
                             ) : (
                               <>
@@ -4294,13 +4295,14 @@ Dein Nespresso Team`;
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
                             {editingCredentials.tma ? (
                               <Input
-                                type="password"
+                                type="text"
                                 value={editCredentialsForm.tma?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   tma: { ...prev.tma, password: e.target.value }
                                 }))}
                                 className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
                               />
                             ) : (
                               <>
@@ -4375,13 +4377,14 @@ Dein Nespresso Team`;
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
                             {editingCredentials.boost_app ? (
                               <Input
-                                type="password"
+                                type="text"
                                 value={editCredentialsForm.boost_app?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   boost_app: { ...prev.boost_app, password: e.target.value }
                                 }))}
                                 className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                                style={{ boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }}
                               />
                             ) : (
                               <>
