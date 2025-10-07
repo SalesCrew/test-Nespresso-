@@ -4226,14 +4226,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.demotool ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.demotool ? (
-                              <Input
+                              <input
                                 type="email"
                                 value={editCredentialsForm.demotool?.email || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   demotool: { ...prev.demotool, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-medium text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0"
+                                style={{ all: 'unset', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4251,14 +4252,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.demotool ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.demotool ? (
-                              <Input
+                              <input
                                 type="text"
                                 value={editCredentialsForm.demotool?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   demotool: { ...prev.demotool, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-mono text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0 flex-1"
+                                style={{ all: 'unset', fontFamily: 'monospace', fontSize: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <>
@@ -4317,14 +4319,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.tma ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.tma ? (
-                              <Input
+                              <input
                                 type="email"
                                 value={editCredentialsForm.tma?.email || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   tma: { ...prev.tma, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-medium text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0"
+                                style={{ all: 'unset', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4342,14 +4345,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.tma ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.tma ? (
-                              <Input
+                              <input
                                 type="text"
                                 value={editCredentialsForm.tma?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   tma: { ...prev.tma, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-mono text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0 flex-1"
+                                style={{ all: 'unset', fontFamily: 'monospace', fontSize: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <>
@@ -4408,14 +4412,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.boost_app ? (
-                              <Input
+                              <input
                                 type="email"
                                 value={editCredentialsForm.boost_app?.email || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   boost_app: { ...prev.boost_app, email: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-medium text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0"
+                                style={{ all: 'unset', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <p className="font-medium text-gray-900">
@@ -4433,14 +4438,15 @@ Dein Nespresso Team`;
                             style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
                           >
                             {editingCredentials.boost_app ? (
-                              <Input
+                              <input
                                 type="text"
                                 value={editCredentialsForm.boost_app?.password || ''}
                                 onChange={(e) => setEditCredentialsForm(prev => ({
                                   ...prev,
                                   boost_app: { ...prev.boost_app, password: e.target.value }
                                 }))}
-                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1 bg-transparent outline-none focus:outline-none shadow-none focus:shadow-none"
+                                className="w-full text-sm font-mono text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0 flex-1"
+                                style={{ all: 'unset', fontFamily: 'monospace', fontSize: 'inherit', color: 'inherit' }}
                               />
                             ) : (
                               <>
