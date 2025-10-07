@@ -276,104 +276,75 @@ const loadProcessState = async () => {
               };
             };
             
-            // Categorize invitations by status
-            // Filter out assignments with status 'verstanden' and 'rejected_handled'
-            const nonVerstandenInvites = invites.filter((i: any) => 
-              i.status !== 'verstanden' && i.status !== 'rejected_handled');
+            // NEW KEYWORD-BASED LOGIC
+            // Filter out dismissed statuses (verstanden, rejected_handled) and withdrawn
+            const activeInvites = invites.filter((i: any) => 
+              i.status !== 'verstanden' && 
+              i.status !== 'rejected_handled' && 
+              i.status !== 'withdrawn'
+            );
             
-            // Separate replacements from originals
-            // Only consider it a replacement if replacement_for is NOT null and NOT undefined
-            const originalInvites = nonVerstandenInvites.filter((i: any) => !i.replacement_for || i.replacement_for === null);
-            const replacementInvites = nonVerstandenInvites.filter((i: any) => i.replacement_for && i.replacement_for !== null);
+            // Simple categorization by status only (no replacement logic)
+            const invitedInvites = activeInvites.filter((i: any) => i.status === 'invited');
+            const appliedInvites = activeInvites.filter((i: any) => i.status === 'applied');
+            const acceptedInvites = activeInvites.filter((i: any) => i.status === 'accepted');
+            const rejectedInvites = activeInvites.filter((i: any) => i.status === 'rejected');
             
-            // For original invites - normal categorization
-            const invitedInvites = originalInvites.filter((i: any) => 
-              i.status === 'invited');
-            // Include ALL applied invites (both original and replacement) in the applied list
-            const appliedInvites = nonVerstandenInvites.filter((i: any) => 
-              i.status === 'applied');
-            // Include ALL accepted invites (both original and replacement) in the accepted list
-            const acceptedInvites = nonVerstandenInvites.filter((i: any) => 
-              i.status === 'accepted');
-            // Include ALL rejected invites (both original and replacement) in the rejected list
-            const rejectedInvites = nonVerstandenInvites.filter((i: any) => 
-              i.status === 'rejected');
-            
-            // Only uninvited replacement invites should be shown as options
-            const replacementInvitedInvites = replacementInvites.filter((i: any) => 
-              i.status === 'invited');
+            // For Ersatztermin UI: invited assignments when there are also rejected/accepted
+            const hasRejected = rejectedInvites.length > 0;
+            const hasAccepted = acceptedInvites.length > 0;
+            const ersatzterminInvites = (hasRejected || hasAccepted) ? invitedInvites : [];
             
             
-            console.log('Categorized invites:');
+            console.log('=== KEYWORD-BASED CATEGORIZATION ===');
+            console.log('Active invites (excluding verstanden/rejected_handled/withdrawn):', activeInvites.length);
             console.log('- invited:', invitedInvites.length);
-            console.log('- applied (all):', appliedInvites.length);
-            console.log('- accepted (all):', acceptedInvites.length);
-            console.log('- rejected (all):', rejectedInvites.length);
-            console.log('- replacement invited:', replacementInvitedInvites.length);
-            console.log('Raw rejected invites:', rejectedInvites);
-            console.log('Raw replacement invites:', replacementInvites);
-            
-            // Debug: log each invite to see replacement_for values
-            invites.forEach((inv: any) => {
-              console.log(`Invite ${inv.assignment_id}: status=${inv.status}, replacement_for=${inv.replacement_for}`);
-            });
+            console.log('- applied:', appliedInvites.length);
+            console.log('- accepted:', acceptedInvites.length);
+            console.log('- rejected:', rejectedInvites.length);
+            console.log('- ersatztermin invites:', ersatzterminInvites.length);
             
             const mappedInvited = invitedInvites.map(mapInvite).filter((x: any) => x.id);
-            // Applied invites already include all applied (no need to merge with replacements)
-            const mappedWaiting = appliedInvites
-              .map(mapInvite).filter((x: any) => x.id);
-            // Accepted invites already include all accepted (no need to merge with replacements)
-            const mappedAccepted = acceptedInvites
-              .map(mapInvite).filter((x: any) => x.id);
+            const mappedWaiting = appliedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedAccepted = acceptedInvites.map(mapInvite).filter((x: any) => x.id);
             const mappedRejected = rejectedInvites.map(mapInvite).filter((x: any) => x.id);
-            const mappedReplacements = replacementInvitedInvites.map(mapInvite).filter((x: any) => x.id);
+            const mappedErsatztermin = ersatzterminInvites.map(mapInvite).filter((x: any) => x.id);
             
-            // Determine the stage based on what we have
+            // NEW KEYWORD-BASED STAGE DETERMINATION
             let stage: string = 'idle';
             
-            // Priority order - REJECTED ALWAYS TAKES PRECEDENCE
-            if (mappedRejected.length > 0 && mappedAccepted.length === 0) {
-              // Only rejected - show declined UI (with or without replacements)
+            // Check what keywords we have
+            const hasInvited = mappedInvited.length > 0;
+            const hasApplied = mappedWaiting.length > 0;
+            const hasAcceptedKeyword = mappedAccepted.length > 0;
+            const hasRejectedKeyword = mappedRejected.length > 0;
+            
+            // Determine stage based on keyword combinations
+            if (hasRejectedKeyword || (hasAcceptedKeyword && hasInvited)) {
+              // Any rejected OR (accepted + invited) → Ersatztermin UI
               stage = 'declined';
-            } else if (mappedRejected.length > 0 && mappedAccepted.length > 0) {
-              // Mix of accepted and rejected
-              stage = 'partially_accepted';
-            } else if (mappedAccepted.length > 0) {
-              // Only accepted
+            } else if (hasAcceptedKeyword) {
+              // Only accepted → Accepted UI
               stage = 'accepted';
-            } else if (mappedWaiting.length > 0) {
-              // Waiting for response
+            } else if (hasApplied) {
+              // Applied → Waiting stage
               stage = 'waiting';
-            } else if (mappedInvited.length > 0) {
-              // New invitations to select (but NOT if they are replacements for rejected)
+            } else if (hasInvited) {
+              // Only invited → Selection UI
               stage = 'select_assignment';
-            } else if (mappedReplacements.length > 0) {
-              // If we ONLY have replacements with no rejected (original was already acknowledged)
-              // Show declined UI so replacements appear in the correct Ersatztermin UI
-              stage = 'declined';
-              
-              // When we have replacement invitations but no active rejected invitations,
-              // it means we're in a subsequent round of replacements.
-              // The declined stage will show with empty rejected assignments,
-              // but the replacements will still appear in the Ersatztermin section.
-              console.log('Showing declined stage for replacement invitations without active rejected');
             }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
             console.log('Determined stage:', stage);
-            console.log('mappedInvited:', mappedInvited);
-            console.log('mappedWaiting:', mappedWaiting);
-            console.log('mappedAccepted:', mappedAccepted);
-            console.log('mappedRejected:', mappedRejected);
-            console.log('mappedReplacements:', mappedReplacements);
+            console.log('Based on keywords:', { hasInvited, hasApplied, hasAcceptedKeyword, hasRejectedKeyword });
             
             setProcessState({
               stage: stage as any,
-              invitedAssignments: mappedInvited,
+              invitedAssignments: stage === 'select_assignment' ? mappedInvited : [],
               waitingAssignments: mappedWaiting,
               acceptedAssignments: mappedAccepted,
               rejectedAssignments: mappedRejected,
-              replacementAssignments: mappedReplacements,
+              replacementAssignments: mappedErsatztermin,
               selectedIds: []
             });
             
@@ -760,22 +731,20 @@ const loadProcessState = async () => {
               return [...prev, ...newAssignments];
             });
             
-            // Fetch available replacement assignments - ONLY those with replacement_for set
-            const resReplacements = await fetch('/api/assignments/invites?status=invited', { 
+            // With keyword-based logic, Ersatztermin invites are any invited assignments
+            // when there are also rejected assignments
+            const resErsatztermin = await fetch('/api/assignments/invites?status=invited', { 
               cache: 'no-store', 
               credentials: 'include' 
             });
             
-            if (resReplacements.ok) {
-              const dataReplacements = await resReplacements.json();
-              const allInvites = Array.isArray(dataReplacements?.invites) ? dataReplacements.invites : [];
+            if (resErsatztermin.ok) {
+              const dataErsatztermin = await resErsatztermin.json();
+              const ersatzterminInvites = Array.isArray(dataErsatztermin?.invites) ? dataErsatztermin.invites : [];
               
-              // IMPORTANT: Filter to only actual replacement invites (those with replacement_for set)
-              const replacementInvites = allInvites.filter((i: any) => i.replacement_for && i.replacement_for !== null);
-              
-              // Replace mock data with real replacement assignments
-              if (replacementInvites.length > 0) {
-                const mappedReplacements = replacementInvites.map((i: any) => {
+              // Map all invited assignments as potential Ersatztermin
+              if (ersatzterminInvites.length > 0) {
+                const mappedErsatztermin = ersatzterminInvites.map((i: any) => {
                   const a = i.assignment || {};
                   const start = a.start_ts ? new Date(a.start_ts) : null;
                   const end = a.end_ts ? new Date(a.end_ts) : null;
@@ -791,12 +760,12 @@ const loadProcessState = async () => {
                 }).filter((x: any) => x.id);
                 
                 // Set replacement assignments in state
-                setReplacementAssignments(mappedReplacements);
-                console.log('Set replacement assignments:', mappedReplacements.length, 'items');
+                setReplacementAssignments(mappedErsatztermin);
+                console.log('Set Ersatztermin assignments:', mappedErsatztermin.length, 'items');
               } else {
-                // No replacement assignments - clear the state
+                // No Ersatztermin assignments - clear the state
                 setReplacementAssignments([]);
-                console.log('No replacement assignments available');
+                console.log('No Ersatztermin assignments available');
               }
             }
           }
