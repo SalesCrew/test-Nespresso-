@@ -42,7 +42,9 @@ import {
   CreditCard,
   Ruler,
   Edit2,
-  Key
+  Key,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -186,6 +188,9 @@ export default function PromotorenPage() {
   const [showAccessCredentials, setShowAccessCredentials] = useState(false);
   const [accessCredentials, setAccessCredentials] = useState<any>(null);
   const [loadingCredentials, setLoadingCredentials] = useState(false);
+  const [passwordVisibility, setPasswordVisibility] = useState<Record<string, boolean>>({});
+  const [editingCredentials, setEditingCredentials] = useState<Record<string, boolean>>({});
+  const [editCredentialsForm, setEditCredentialsForm] = useState<Record<string, any>>({});
   
   // Edit states for promotor details
   const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
@@ -1166,38 +1171,54 @@ Dein Nespresso Team`;
   const loadAccessCredentials = async (promotorId: number) => {
     try {
       setLoadingCredentials(true);
-      console.log('🔑 ===== FRONTEND ACCESS CREDENTIALS START =====');
-      console.log('🔑 Frontend - Promotor ID:', promotorId);
-      console.log('🔑 Frontend - Promotor ID type:', typeof promotorId);
-      console.log('🔑 Frontend - API URL:', `/api/promotors/${promotorId}/access-credentials`);
-      
       const response = await fetch(`/api/promotors/${promotorId}/access-credentials`);
-      console.log('🔑 Frontend - Response status:', response.status);
-      console.log('🔑 Frontend - Response ok:', response.ok);
-      console.log('🔑 Frontend - Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
         const data = await response.json();
-        console.log('🔑 Frontend - Full response data:', data);
-        console.log('🔑 Frontend - Credentials from response:', data.credentials);
-        console.log('🔑 Frontend - Credentials type:', typeof data.credentials);
-        console.log('🔑 Frontend - Credentials is null?', data.credentials === null);
-        console.log('🔑 Frontend - Setting accessCredentials to:', data.credentials);
         setAccessCredentials(data.credentials);
+        
+        // Initialize edit form with current data
+        if (data.credentials) {
+          setEditCredentialsForm({
+            demotool: {
+              email: data.credentials.demotool_email || '',
+              password: data.credentials.demotool_password || ''
+            },
+            tma: {
+              email: data.credentials.tma_email || '',
+              password: data.credentials.tma_password || ''
+            },
+            boost_app: {
+              email: data.credentials.boost_app_email || '',
+              password: data.credentials.boost_app_password || ''
+            }
+          });
+        }
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('🔑 Frontend - API error response:', response.status, errorData);
-        console.error('🔑 Frontend - Response text:', await response.text().catch(() => 'Could not read text'));
         setAccessCredentials(null);
       }
-      console.log('🔑 ===== FRONTEND ACCESS CREDENTIALS END =====');
     } catch (error) {
-      console.error('🔑 Frontend - Unexpected error:', error);
-      console.error('🔑 Frontend - Error stack:', error.stack);
+      console.error('Error loading access credentials:', error);
       setAccessCredentials(null);
     } finally {
       setLoadingCredentials(false);
     }
+  };
+
+  // Toggle password visibility
+  const togglePasswordVisibility = (service: string) => {
+    setPasswordVisibility(prev => ({
+      ...prev,
+      [service]: !prev[service]
+    }));
+  };
+
+  // Toggle edit mode for credentials
+  const toggleEditCredentials = (service: string) => {
+    setEditingCredentials(prev => ({
+      ...prev,
+      [service]: !prev[service]
+    }));
   };
 
   const handleAdminPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>, promotorUserId: string) => {
@@ -4139,7 +4160,9 @@ Dein Nespresso Team`;
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
                             <p className="font-mono text-gray-900">
-                              {accessCredentials?.huebner_password || (
+                              {accessCredentials?.huebner_password ? (
+                                <span>••••••••••••</span>
+                              ) : (
                                 <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
                               )}
                             </p>
@@ -4150,29 +4173,80 @@ Dein Nespresso Team`;
 
                     {/* DemoTool */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        DemoTool
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          DemoTool
+                        </div>
+                        <button
+                          onClick={() => toggleEditCredentials('demotool')}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="h-3 w-3 text-gray-500" />
+                        </button>
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {accessCredentials?.demotool_email || (
-                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                              )}
-                            </p>
+                            {editingCredentials.demotool ? (
+                              <Input
+                                type="email"
+                                value={editCredentialsForm.demotool?.email || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  demotool: { ...prev.demotool, email: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                              />
+                            ) : (
+                              <p className="font-medium text-gray-900">
+                                {accessCredentials?.demotool_email || (
+                                  <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                                )}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-mono text-gray-900">
-                              {accessCredentials?.demotool_password || (
-                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                              )}
-                            </p>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                            {editingCredentials.demotool ? (
+                              <Input
+                                type="password"
+                                value={editCredentialsForm.demotool?.password || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  demotool: { ...prev.demotool, password: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                              />
+                            ) : (
+                              <>
+                                <p className="font-mono text-gray-900 flex-1">
+                                  {accessCredentials?.demotool_password ? (
+                                    passwordVisibility.demotool ? 
+                                      accessCredentials.demotool_password : 
+                                      '••••••••••••'
+                                  ) : (
+                                    <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                                  )}
+                                </p>
+                                {accessCredentials?.demotool_password && (
+                                  <button
+                                    onClick={() => togglePasswordVisibility('demotool')}
+                                    className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    {passwordVisibility.demotool ? (
+                                      <EyeOff className="h-3 w-3 text-gray-500" />
+                                    ) : (
+                                      <Eye className="h-3 w-3 text-gray-500" />
+                                    )}
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -4180,29 +4254,80 @@ Dein Nespresso Team`;
 
                     {/* TMA */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
-                        TMA
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                          TMA
+                        </div>
+                        <button
+                          onClick={() => toggleEditCredentials('tma')}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="h-3 w-3 text-gray-500" />
+                        </button>
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {accessCredentials?.tma_email || (
-                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                              )}
-                            </p>
+                            {editingCredentials.tma ? (
+                              <Input
+                                type="email"
+                                value={editCredentialsForm.tma?.email || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  tma: { ...prev.tma, email: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                              />
+                            ) : (
+                              <p className="font-medium text-gray-900">
+                                {accessCredentials?.tma_email || (
+                                  <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                                )}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-mono text-gray-900">
-                              {accessCredentials?.tma_password || (
-                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                              )}
-                            </p>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                            {editingCredentials.tma ? (
+                              <Input
+                                type="password"
+                                value={editCredentialsForm.tma?.password || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  tma: { ...prev.tma, password: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                              />
+                            ) : (
+                              <>
+                                <p className="font-mono text-gray-900 flex-1">
+                                  {accessCredentials?.tma_password ? (
+                                    passwordVisibility.tma ? 
+                                      accessCredentials.tma_password : 
+                                      '••••••••••••'
+                                  ) : (
+                                    <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                                  )}
+                                </p>
+                                {accessCredentials?.tma_password && (
+                                  <button
+                                    onClick={() => togglePasswordVisibility('tma')}
+                                    className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    {passwordVisibility.tma ? (
+                                      <EyeOff className="h-3 w-3 text-gray-500" />
+                                    ) : (
+                                      <Eye className="h-3 w-3 text-gray-500" />
+                                    )}
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -4210,29 +4335,80 @@ Dein Nespresso Team`;
 
                     {/* Boost App */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                        Boost App
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                          Boost App
+                        </div>
+                        <button
+                          onClick={() => toggleEditCredentials('boost_app')}
+                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="h-3 w-3 text-gray-500" />
+                        </button>
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {accessCredentials?.boost_app_email || (
-                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                              )}
-                            </p>
+                            {editingCredentials.boost_app ? (
+                              <Input
+                                type="email"
+                                value={editCredentialsForm.boost_app?.email || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  boost_app: { ...prev.boost_app, email: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0"
+                              />
+                            ) : (
+                              <p className="font-medium text-gray-900">
+                                {accessCredentials?.boost_app_email || (
+                                  <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                                )}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-mono text-gray-900">
-                              {accessCredentials?.boost_app_password || (
-                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                              )}
-                            </p>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between">
+                            {editingCredentials.boost_app ? (
+                              <Input
+                                type="password"
+                                value={editCredentialsForm.boost_app?.password || ''}
+                                onChange={(e) => setEditCredentialsForm(prev => ({
+                                  ...prev,
+                                  boost_app: { ...prev.boost_app, password: e.target.value }
+                                }))}
+                                className="text-sm border-0 p-0 h-auto focus-visible:ring-0 font-mono flex-1"
+                              />
+                            ) : (
+                              <>
+                                <p className="font-mono text-gray-900 flex-1">
+                                  {accessCredentials?.boost_app_password ? (
+                                    passwordVisibility.boost_app ? 
+                                      accessCredentials.boost_app_password : 
+                                      '••••••••••••'
+                                  ) : (
+                                    <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                                  )}
+                                </p>
+                                {accessCredentials?.boost_app_password && (
+                                  <button
+                                    onClick={() => togglePasswordVisibility('boost_app')}
+                                    className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    {passwordVisibility.boost_app ? (
+                                      <EyeOff className="h-3 w-3 text-gray-500" />
+                                    ) : (
+                                      <Eye className="h-3 w-3 text-gray-500" />
+                                    )}
+                                  </button>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
