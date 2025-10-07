@@ -800,7 +800,7 @@ const loadProcessState = async () => {
               return [...prev, ...newAssignments];
             });
             
-            // Fetch available replacement assignments
+            // Fetch available replacement assignments - ONLY those with replacement_for set
             const resReplacements = await fetch('/api/assignments/invites?status=invited', { 
               cache: 'no-store', 
               credentials: 'include' 
@@ -808,7 +808,10 @@ const loadProcessState = async () => {
             
             if (resReplacements.ok) {
               const dataReplacements = await resReplacements.json();
-              const replacementInvites = Array.isArray(dataReplacements?.invites) ? dataReplacements.invites : [];
+              const allInvites = Array.isArray(dataReplacements?.invites) ? dataReplacements.invites : [];
+              
+              // IMPORTANT: Filter to only actual replacement invites (those with replacement_for set)
+              const replacementInvites = allInvites.filter((i: any) => i.replacement_for && i.replacement_for !== null);
               
               // Replace mock data with real replacement assignments
               if (replacementInvites.length > 0) {
@@ -830,6 +833,10 @@ const loadProcessState = async () => {
                 // Set replacement assignments in state
                 setReplacementAssignments(mappedReplacements);
                 console.log('Set replacement assignments:', mappedReplacements.length, 'items');
+              } else {
+                // No replacement assignments - clear the state
+                setReplacementAssignments([]);
+                console.log('No replacement assignments available');
               }
             }
           }
