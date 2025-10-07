@@ -100,6 +100,16 @@ export async function GET(request: NextRequest) {
       stage = 'partially_accepted';
     }
 
+    // Special case: If there are replacement assignments available (new invitations after accept/reject)
+    // and we have some accepted/rejected assignments, show replacement UI
+    if (replacementAssignments.length > 0 && (acceptedAssignments.length > 0 || rejectedAssignments.length > 0)) {
+      // Check if any replacements are still in invited status (need selection)
+      const pendingReplacements = replacementAssignments.filter(r => r.status === 'invited');
+      if (pendingReplacements.length > 0) {
+        stage = 'select_replacement';
+      }
+    }
+
     return NextResponse.json({
       stage,
       invitedAssignments,
