@@ -269,7 +269,7 @@ const loadProcessState = async () => {
                   year: 'numeric' 
                 }) : 'Datum',
                 time: (start && end)
-                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
                   : 'Zeit',
                 location: a.location_text || '',
                 status: i.status
@@ -443,6 +443,11 @@ const loadProcessState = async () => {
           if (isToday) {
             await loadAssignmentTracking(data.assignment.id);
           }
+          // Load promotor note for this assignment
+          await loadPromotorNote(data.assignment.id);
+        } else {
+          // Clear note if no assignment
+          setCurrentAssignmentNote('');
         }
       } else {
         console.error('[loadNextAssignment] Failed with status:', res.status);
@@ -577,7 +582,7 @@ const loadProcessState = async () => {
                         id: a.id,
                         date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                         time: (start && end)
-                          ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
+                          ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
                           : 'Zeit',
                         location: a.location_text || '',
                         description: a.description || ''
@@ -628,7 +633,7 @@ const loadProcessState = async () => {
                 id: a.id,
                 date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                 time: (start && end)
-                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
                   : 'Zeit',
                 location: a.location_text || '',
                 description: a.description || ''
@@ -691,7 +696,7 @@ const loadProcessState = async () => {
                 id: a.id,
                 date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                 time: (start && end)
-                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
+                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
                   : 'Zeit',
                 location: a.location_text || '',
                 description: a.description || ''
@@ -752,7 +757,7 @@ const loadProcessState = async () => {
                     id: a.id,
                     date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : 'Datum',
                     time: (start && end)
-                      ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
+                      ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
                       : 'Zeit',
                     location: a.location_text || '',
                     description: a.description || ''
@@ -1172,16 +1177,6 @@ const loadProcessState = async () => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60; // Kept for potential future use, but prompt asked for HH:MM
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-  };
-
-  // Helper function to format time in Austrian timezone
-  const formatAustrianTime = (date: Date) => {
-    return date.toLocaleString('de-AT', { 
-      timeZone: 'Europe/Vienna', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      hour12: false 
-    });
   };
   
   const handleStartEinsatz = async () => {
@@ -1925,19 +1920,18 @@ const loadProcessState = async () => {
                 <span className="text-xs font-medium">{displayedAssignment?.start_ts && displayedAssignment?.end_ts ? `${displayedAssignment.start_ts.substring(11, 16)}-${displayedAssignment.end_ts.substring(11, 16)}` : ''}</span>
               </div>
               
-              {/* Notes pill */}
-              <div 
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm cursor-pointer hover:from-amber-600 hover:to-orange-700 transition-all"
-                onClick={() => {
-                  if (displayedAssignment?.id) {
-                    loadPromotorNote(displayedAssignment.id);
+              {/* Notes pill - only show if there's a note */}
+              {currentAssignmentNote && (
+                <div 
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-sm cursor-pointer hover:from-amber-600 hover:to-orange-700 transition-all"
+                  onClick={() => {
                     setShowNotesPopup(true);
-                  }
-                }}
-              >
-                <FileText className="h-3.5 w-3.5 mr-1" /> 
-                <span className="text-xs font-medium">Notiz</span>
-              </div>
+                  }}
+                >
+                  <FileText className="h-3.5 w-3.5 mr-1" /> 
+                  <span className="text-xs font-medium">Notiz</span>
+                </div>
+              )}
             </div>
             <div 
               className="text-sm text-gray-600 dark:text-gray-400 flex items-center cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors mb-3"
@@ -2184,7 +2178,7 @@ const loadProcessState = async () => {
                           <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
                           <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
                             <span className="flex items-center">
-                              {`${formatAustrianTime(new Date(buddyTag.assignment.start_ts))}-${formatAustrianTime(new Date(buddyTag.assignment.end_ts))}`}
+                              {`${new Date(buddyTag.assignment.start_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.start_ts).getUTCMinutes().toString().padStart(2, '0')}-${new Date(buddyTag.assignment.end_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.end_ts).getUTCMinutes().toString().padStart(2, '0')}`}
                             </span>
                           </Badge>
                         </div>
@@ -3513,7 +3507,7 @@ const loadProcessState = async () => {
       {showNotesPopup && (
         <>
           <div 
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/30 z-50"
             onClick={() => setShowNotesPopup(false)}
           ></div>
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-60 w-[400px] max-h-[500px] overflow-hidden">
