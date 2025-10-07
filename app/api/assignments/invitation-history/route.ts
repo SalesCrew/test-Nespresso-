@@ -43,7 +43,12 @@ export async function GET(req: Request) {
       return {
         id: item.id,
         date: new Date(item.created_at).toLocaleDateString('de-DE'),
-        time: new Date(item.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+        time: new Date(item.created_at).toLocaleTimeString('de-AT', { 
+          timeZone: 'Europe/Vienna', 
+          hour: '2-digit', 
+          minute: '2-digit', 
+          hour12: false 
+        }),
         promotionCount: item.promotion_count,
         promotorCount: item.promotor_count,
         buddy: item.buddy,
