@@ -41,7 +41,8 @@ import {
   Download,
   CreditCard,
   Ruler,
-  Edit2
+  Edit2,
+  Key
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -180,6 +181,11 @@ export default function PromotorenPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [promotorStammdaten, setPromotorStammdaten] = useState<Record<number, any>>({});
   const [openStammdatenPreviewFor, setOpenStammdatenPreviewFor] = useState<number | null>(null);
+  
+  // Access credentials modal
+  const [showAccessCredentials, setShowAccessCredentials] = useState(false);
+  const [accessCredentials, setAccessCredentials] = useState<any>(null);
+  const [loadingCredentials, setLoadingCredentials] = useState(false);
   
   // Edit states for promotor details
   const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
@@ -1155,6 +1161,25 @@ Dein Nespresso Team`;
       loadNotes();
     }
   }, [promotors]);
+
+  // Load access credentials for a promotor
+  const loadAccessCredentials = async (promotorId: number) => {
+    try {
+      setLoadingCredentials(true);
+      const response = await fetch(`/api/promotors/${promotorId}/access-credentials`);
+      if (response.ok) {
+        const data = await response.json();
+        setAccessCredentials(data.credentials);
+      } else {
+        setAccessCredentials(null);
+      }
+    } catch (error) {
+      console.error('Error loading access credentials:', error);
+      setAccessCredentials(null);
+    } finally {
+      setLoadingCredentials(false);
+    }
+  };
 
   const handleAdminPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>, promotorUserId: string) => {
     const file = event.target.files?.[0]
@@ -2382,6 +2407,20 @@ Dein Nespresso Team`;
                         >
                           <FileText className="h-5 w-5" />
                         </button>
+                        
+                        {/* Access Credentials Toggle */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowAccessCredentials(true);
+                            loadAccessCredentials(promotor.id);
+                          }}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                          title="Zugänge anzeigen"
+                        >
+                          <Key className="h-5 w-5" />
+                        </button>
+                        
                       <button
                         onClick={() => {
                           if (!showDienstvertragPopup && !showDienstvertragContent && !showContractPreview) {
@@ -4028,6 +4067,145 @@ Dein Nespresso Team`;
       )}
 
         {/* Eddie KI Assistant */}
+        {/* Access Credentials Modal */}
+        {showAccessCredentials && (
+          <>
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4"
+              onClick={() => setShowAccessCredentials(false)}
+            ></div>
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[100] w-[500px] max-h-[80vh] overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Key className="h-6 w-6" />
+                    <h3 className="text-xl font-semibold">Zugänge</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowAccessCredentials(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 max-h-[calc(80vh-120px)] overflow-y-auto">
+                {loadingCredentials ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : accessCredentials ? (
+                  <div className="space-y-6">
+                    {/* Hübner */}
+                    {(accessCredentials.huebner_email || accessCredentials.huebner_password) && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                          Hübner
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {accessCredentials.huebner_email && (
+                            <div>
+                              <span className="text-gray-500">E-Mail:</span>
+                              <p className="font-medium text-gray-900">{accessCredentials.huebner_email}</p>
+                            </div>
+                          )}
+                          {accessCredentials.huebner_password && (
+                            <div>
+                              <span className="text-gray-500">Passwort:</span>
+                              <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">{accessCredentials.huebner_password}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* DemoTool */}
+                    {(accessCredentials.demotool_email || accessCredentials.demotool_password) && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          DemoTool
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {accessCredentials.demotool_email && (
+                            <div>
+                              <span className="text-gray-500">E-Mail:</span>
+                              <p className="font-medium text-gray-900">{accessCredentials.demotool_email}</p>
+                            </div>
+                          )}
+                          {accessCredentials.demotool_password && (
+                            <div>
+                              <span className="text-gray-500">Passwort:</span>
+                              <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">{accessCredentials.demotool_password}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TMA */}
+                    {(accessCredentials.tma_email || accessCredentials.tma_password) && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                          TMA
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {accessCredentials.tma_email && (
+                            <div>
+                              <span className="text-gray-500">E-Mail:</span>
+                              <p className="font-medium text-gray-900">{accessCredentials.tma_email}</p>
+                            </div>
+                          )}
+                          {accessCredentials.tma_password && (
+                            <div>
+                              <span className="text-gray-500">Passwort:</span>
+                              <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">{accessCredentials.tma_password}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Boost App */}
+                    {(accessCredentials.boost_app_email || accessCredentials.boost_app_password) && (
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                          Boost App
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {accessCredentials.boost_app_email && (
+                            <div>
+                              <span className="text-gray-500">E-Mail:</span>
+                              <p className="font-medium text-gray-900">{accessCredentials.boost_app_email}</p>
+                            </div>
+                          )}
+                          {accessCredentials.boost_app_password && (
+                            <div>
+                              <span className="text-gray-500">Passwort:</span>
+                              <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">{accessCredentials.boost_app_password}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Key className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Keine Zugangsdaten verfügbar</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         <AdminEddieAssistant />
       </div>
     </>
