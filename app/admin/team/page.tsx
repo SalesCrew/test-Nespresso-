@@ -1166,15 +1166,22 @@ Dein Nespresso Team`;
   const loadAccessCredentials = async (promotorId: number) => {
     try {
       setLoadingCredentials(true);
+      console.log('🔑 Frontend - Loading access credentials for promotor:', promotorId);
+      
       const response = await fetch(`/api/promotors/${promotorId}/access-credentials`);
+      console.log('🔑 Frontend - API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🔑 Frontend - API response data:', data);
         setAccessCredentials(data.credentials);
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('🔑 Frontend - API error:', response.status, errorData);
         setAccessCredentials(null);
       }
     } catch (error) {
-      console.error('Error loading access credentials:', error);
+      console.error('🔑 Frontend - Error loading access credentials:', error);
       setAccessCredentials(null);
     } finally {
       setLoadingCredentials(false);
