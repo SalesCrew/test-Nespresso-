@@ -74,9 +74,13 @@ export async function GET(request: NextRequest) {
         isReplacement: !!inv.replacement_for
       };
 
+      // Add to replacement array if it's a replacement
       if (inv.replacement_for) {
         replacementAssignments.push(assignmentData);
-      } else if (inv.status === 'invited' && !inv.responded_at) {
+      }
+
+      // Process ALL invitations (including replacements) for stage determination
+      if (inv.status === 'invited' && !inv.responded_at) {
         invitedAssignments.push(assignmentData);
         stage = 'select_assignment';
       } else if (inv.status === 'applied') {
