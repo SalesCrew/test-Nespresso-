@@ -277,8 +277,9 @@ const loadProcessState = async () => {
             };
             
             // Categorize invitations by status
-            // Filter out assignments with status 'verstanden'
-            const nonVerstandenInvites = invites.filter((i: any) => i.status !== 'verstanden');
+            // Filter out assignments with status 'verstanden' and 'rejected_handled'
+            const nonVerstandenInvites = invites.filter((i: any) => 
+              i.status !== 'verstanden' && i.status !== 'rejected_handled');
             
             // Separate replacements from originals
             // Only consider it a replacement if replacement_for is NOT null and NOT undefined
@@ -357,46 +358,11 @@ const loadProcessState = async () => {
               // Show declined UI so replacements appear in the correct Ersatztermin UI
               stage = 'declined';
               
-              // Get the original rejected invitations that these are replacements for
-              const replacementForIds = [...new Set(replacementInvites
-                .map((inv: any) => inv.replacement_for)
-                .filter((id: string | null) => id !== null))];
-              
-              if (replacementForIds.length > 0) {
-                // Fetch the original invitations to show what was rejected
-                try {
-                  const originalInvitesRes = await fetch(`/api/assignments/invites?invitation_ids=${replacementForIds.join(',')}`, { 
-                    cache: 'no-store',
-                    credentials: 'include' 
-                  });
-                  
-                  if (originalInvitesRes.ok) {
-                    const originalData = await originalInvitesRes.json();
-                    const originalInvites = originalData.invites || [];
-                    
-                    // Map original invitations to rejected format
-                    mappedRejected = originalInvites.map((invite: any) => {
-                      const assignment = invite.assignment;
-                      if (!assignment) return null;
-                      
-                      return {
-                        id: assignment.id,
-                        date: new Date(assignment.start_ts).toLocaleDateString('de-DE', { 
-                          weekday: 'short', 
-                          day: '2-digit', 
-                          month: '2-digit', 
-                          year: 'numeric' 
-                        }),
-                        time: `${new Date(assignment.start_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(assignment.start_ts).getUTCMinutes().toString().padStart(2, '0')}-${new Date(assignment.end_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(assignment.end_ts).getUTCMinutes().toString().padStart(2, '0')}`,
-                        location: assignment.location_text,
-                        status: 'rejected'
-                      };
-                    }).filter(Boolean);
-                  }
-                } catch (error) {
-                  console.error('Error fetching original rejected invitations:', error);
-                }
-              }
+              // When we have replacement invitations but no active rejected invitations,
+              // it means we're in a subsequent round of replacements.
+              // The declined stage will show with empty rejected assignments,
+              // but the replacements will still appear in the Ersatztermin section.
+              console.log('Showing declined stage for replacement invitations without active rejected');
             }
             
             console.log('=== SETTING PROCESS STATE FROM FALLBACK ===');
