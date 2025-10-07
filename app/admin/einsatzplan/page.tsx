@@ -3843,19 +3843,10 @@ Import EP
                     Abbrechen
                   </button>
                   <button
-                    onClick={async () => {
+                    onClick={() => {
                       if (selectedReplacementAssignments.length === 0) {
-                        // No assignments selected - acknowledge the rejection and close modal
-                        if (declinedPromotor?.invitation_id) {
-                          try {
-                            // Mark the rejected invitation as acknowledged so it doesn't keep appearing
-                            await fetch(`/api/assignments/invites/${declinedPromotor.invitation_id}/acknowledge-rejection`, {
-                              method: 'POST'
-                            });
-                          } catch (error) {
-                            console.error('Error acknowledging rejection:', error);
-                          }
-                        }
+                        // No assignments selected - just close the modal
+                        // The rejection stays unacknowledged so promotor can see it and press "Verstanden"
                         setShowReplacementModal(false);
                         setDeclinedPromotor(null);
                         setSelectedReplacementAssignments([]);
