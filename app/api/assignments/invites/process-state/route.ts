@@ -74,40 +74,39 @@ export async function GET(request: NextRequest) {
         isReplacement: !!inv.replacement_for
       };
 
-      // Add to replacement array if it's a replacement
       if (inv.replacement_for) {
         replacementAssignments.push(assignmentData);
-      }
-
-      // Process ALL invitations (including replacements) for stage determination
-      if (inv.status === 'invited' && !inv.responded_at) {
-        invitedAssignments.push(assignmentData);
-        stage = 'select_assignment';
-      } else if (inv.status === 'applied') {
-        waitingAssignments.push(assignmentData);
-        if (stage !== 'select_assignment') stage = 'waiting';
-      } else if (inv.status === 'accepted' && !inv.acknowledged_at) {
-        acceptedAssignments.push(assignmentData);
-        if (stage !== 'select_assignment' && stage !== 'waiting') stage = 'accepted';
-      } else if (inv.status === 'rejected' && !inv.acknowledged_at) {
-        rejectedAssignments.push(assignmentData);
-        if (stage !== 'select_assignment' && stage !== 'waiting' && stage !== 'accepted') stage = 'declined';
+        // Also process replacements for stage logic
+        if (inv.status === 'invited' && !inv.responded_at) {
+          // Replacement invited - should show declined stage (Ersatztermin UI)
+          if (stage !== 'select_assignment' && stage !== 'waiting' && stage !== 'accepted') {
+            stage = 'declined';
+          }
+        } else if (inv.status === 'applied') {
+          waitingAssignments.push(assignmentData);
+          if (stage !== 'select_assignment') stage = 'waiting';
+        }
+      } else {
+        // Original invitations
+        if (inv.status === 'invited' && !inv.responded_at) {
+          invitedAssignments.push(assignmentData);
+          stage = 'select_assignment';
+        } else if (inv.status === 'applied') {
+          waitingAssignments.push(assignmentData);
+          if (stage !== 'select_assignment') stage = 'waiting';
+        } else if (inv.status === 'accepted' && !inv.acknowledged_at) {
+          acceptedAssignments.push(assignmentData);
+          if (stage !== 'select_assignment' && stage !== 'waiting') stage = 'accepted';
+        } else if (inv.status === 'rejected' && !inv.acknowledged_at) {
+          rejectedAssignments.push(assignmentData);
+          if (stage !== 'select_assignment' && stage !== 'waiting' && stage !== 'accepted') stage = 'declined';
+        }
       }
     }
 
     // Check for partially accepted state
     if (acceptedAssignments.length > 0 && rejectedAssignments.length > 0) {
       stage = 'partially_accepted';
-    }
-
-    // Special case: If there are replacement assignments available (new invitations after accept/reject)
-    // and we have some accepted/rejected assignments, show replacement UI
-    if (replacementAssignments.length > 0 && (acceptedAssignments.length > 0 || rejectedAssignments.length > 0)) {
-      // Check if any replacements are still in invited status (need selection)
-      const pendingReplacements = replacementAssignments.filter(r => r.status === 'invited');
-      if (pendingReplacements.length > 0) {
-        stage = 'select_replacement';
-      }
     }
 
     return NextResponse.json({
