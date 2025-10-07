@@ -4100,105 +4100,121 @@ Dein Nespresso Team`;
                 ) : (
                   <div className="space-y-6">
                     {/* Hübner */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                         Hübner
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-gray-500">E-Mail:</span>
-                          <p className="font-medium text-gray-900">
-                            {accessCredentials?.huebner_email || (
-                              <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                            )}
-                          </p>
+                      <div className="space-y-3 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {accessCredentials?.huebner_email || (
+                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Passwort:</span>
-                          <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">
-                            {accessCredentials?.huebner_password || (
-                              <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                            )}
-                          </p>
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-mono text-gray-900">
+                              {accessCredentials?.huebner_password || (
+                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* DemoTool */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                         <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                         DemoTool
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-gray-500">E-Mail:</span>
-                          <p className="font-medium text-gray-900">
-                            {accessCredentials?.demotool_email || (
-                              <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                            )}
-                          </p>
+                      <div className="space-y-3 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {accessCredentials?.demotool_email || (
+                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Passwort:</span>
-                          <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">
-                            {accessCredentials?.demotool_password || (
-                              <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                            )}
-                          </p>
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-mono text-gray-900">
+                              {accessCredentials?.demotool_password || (
+                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* TMA */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                         <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
                         TMA
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-gray-500">E-Mail:</span>
-                          <p className="font-medium text-gray-900">
-                            {accessCredentials?.tma_email || (
-                              <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                            )}
-                          </p>
+                      <div className="space-y-3 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {accessCredentials?.tma_email || (
+                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Passwort:</span>
-                          <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">
-                            {accessCredentials?.tma_password || (
-                              <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                            )}
-                          </p>
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-mono text-gray-900">
+                              {accessCredentials?.tma_password || (
+                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Boost App */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
                         <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                         Boost App
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-gray-500">E-Mail:</span>
-                          <p className="font-medium text-gray-900">
-                            {accessCredentials?.boost_app_email || (
-                              <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                            )}
-                          </p>
+                      <div className="space-y-3 text-sm">
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {accessCredentials?.boost_app_email || (
+                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Passwort:</span>
-                          <p className="font-mono text-gray-900 bg-white px-2 py-1 rounded border">
-                            {accessCredentials?.boost_app_password || (
-                              <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                            )}
-                          </p>
+                        <div className="space-y-1">
+                          <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-mono text-gray-900">
+                              {accessCredentials?.boost_app_password || (
+                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                              )}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
