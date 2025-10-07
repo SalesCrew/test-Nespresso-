@@ -23,13 +23,23 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
     // First, let's check if there are ANY records in access_credentials table
     console.log('🔑 Step 1: Checking if access_credentials table has any data...');
+    
+    // Try with service client (bypasses RLS)
     const { data: allRecords, error: allError } = await svc
       .from('access_credentials')
       .select('user_id, huebner_email, demotool_email, tma_email, boost_app_email')
       .limit(5);
+      
+    // Also try with server client (uses RLS)
+    const { data: allRecordsRLS, error: allErrorRLS } = await server
+      .from('access_credentials')
+      .select('user_id, huebner_email, demotool_email, tma_email, boost_app_email')
+      .limit(5);
     
-    console.log('🔑 All access_credentials records (first 5):', allRecords);
-    console.log('🔑 Error getting all records:', allError);
+    console.log('🔑 All access_credentials records (SERVICE CLIENT):', JSON.stringify(allRecords, null, 2));
+    console.log('🔑 Error getting all records (SERVICE CLIENT):', JSON.stringify(allError, null, 2));
+    console.log('🔑 All access_credentials records (SERVER CLIENT/RLS):', JSON.stringify(allRecordsRLS, null, 2));
+    console.log('🔑 Error getting all records (SERVER CLIENT/RLS):', JSON.stringify(allErrorRLS, null, 2));
 
     // Check if this specific user_id exists in the table
     console.log('🔑 Step 2: Checking if user_id exists in access_credentials...');
@@ -38,8 +48,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       .select('user_id')
       .eq('user_id', userId);
     
-    console.log('🔑 User check result:', userCheck);
-    console.log('🔑 User check error:', userCheckError);
+    console.log('🔑 User check result:', JSON.stringify(userCheck, null, 2));
+    console.log('🔑 User check error:', JSON.stringify(userCheckError, null, 2));
 
     // Now try the original query
     console.log('🔑 Step 3: Running original query with .single()...');
@@ -49,11 +59,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       .eq('user_id', userId)
       .single();
 
-    console.log('🔑 Original query - Raw credentials data:', credentials);
-    console.log('🔑 Original query - Full error object:', credentialsError);
+    console.log('🔑 Original query - Raw credentials data:', JSON.stringify(credentials, null, 2));
+    console.log('🔑 Original query - Full error object:', JSON.stringify(credentialsError, null, 2));
     console.log('🔑 Original query - Error code:', credentialsError?.code);
     console.log('🔑 Original query - Error message:', credentialsError?.message);
-    console.log('🔑 Original query - Error details:', credentialsError?.details);
+    console.log('🔑 Original query - Error details:', JSON.stringify(credentialsError?.details, null, 2));
 
     // Try without .single() to see if we get multiple records
     console.log('🔑 Step 4: Trying query without .single()...');
@@ -62,8 +72,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       .select('*')
       .eq('user_id', userId);
 
-    console.log('🔑 Array query - Results:', credentialsArray);
-    console.log('🔑 Array query - Error:', arrayError);
+    console.log('🔑 Array query - Results:', JSON.stringify(credentialsArray, null, 2));
+    console.log('🔑 Array query - Error:', JSON.stringify(arrayError, null, 2));
     console.log('🔑 Array query - Result count:', credentialsArray?.length || 0);
 
     if (credentialsError && credentialsError.code !== 'PGRST116') {
