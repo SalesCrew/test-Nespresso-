@@ -43,25 +43,65 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const promotorId = params.id;
   const svc = createSupabaseServiceClient();
 
+  console.log('🔑 PATCH - Updating credentials for promotor:', promotorId);
+
   try {
     const userId = promotorId;
     const updateData = await req.json();
+    console.log('🔑 PATCH - Update data received:', updateData);
 
-    // Update or insert access credentials
-    const { data: credentials, error: updateError } = await svc
+    // First check if record exists
+    const { data: existing, error: checkError } = await svc
       .from('access_credentials')
-      .upsert({ user_id: userId, ...updateData }, { onConflict: 'user_id' })
-      .select()
+      .select('*')
+      .eq('user_id', userId)
       .single();
 
-    if (updateError) {
-      console.error('Error updating access credentials:', updateError);
-      return NextResponse.json({ error: 'Failed to update credentials' }, { status: 500 });
+    console.log('🔑 PATCH - Existing record:', existing);
+    console.log('🔑 PATCH - Check error:', checkError);
+
+    let result;
+    if (existing) {
+      // Update existing record
+      console.log('🔑 PATCH - Updating existing record');
+      const { data: updated, error: updateError } = await svc
+        .from('access_credentials')
+        .update(updateData)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      
+      console.log('🔑 PATCH - Update result:', updated);
+      console.log('🔑 PATCH - Update error:', updateError);
+      
+      if (updateError) {
+        throw updateError;
+      }
+      result = updated;
+    } else {
+      // Insert new record
+      console.log('🔑 PATCH - Creating new record');
+      const { data: inserted, error: insertError } = await svc
+        .from('access_credentials')
+        .insert({ user_id: userId, ...updateData })
+        .select()
+        .single();
+      
+      console.log('🔑 PATCH - Insert result:', inserted);
+      console.log('🔑 PATCH - Insert error:', insertError);
+      
+      if (insertError) {
+        throw insertError;
+      }
+      result = inserted;
     }
 
-    return NextResponse.json({ credentials });
+    console.log('🔑 PATCH - Final result:', result);
+    return NextResponse.json({ credentials: result });
   } catch (error: any) {
-    console.error('Unexpected error updating access credentials:', error);
+    console.error('🔑 PATCH - Unexpected error:', error);
+    console.error('🔑 PATCH - Error details:', error.details);
+    console.error('🔑 PATCH - Error message:', error.message);
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error.message || 'Unknown error'
