@@ -269,7 +269,7 @@ const loadProcessState = async () => {
                   year: 'numeric' 
                 }) : 'Datum',
                 time: (start && end)
-                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
                   : 'Zeit',
                 location: a.location_text || '',
                 status: i.status
@@ -577,7 +577,7 @@ const loadProcessState = async () => {
                         id: a.id,
                         date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                         time: (start && end)
-                          ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                          ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
                           : 'Zeit',
                         location: a.location_text || '',
                         description: a.description || ''
@@ -628,7 +628,7 @@ const loadProcessState = async () => {
                 id: a.id,
                 date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                 time: (start && end)
-                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
                   : 'Zeit',
                 location: a.location_text || '',
                 description: a.description || ''
@@ -691,7 +691,7 @@ const loadProcessState = async () => {
                 id: a.id,
                 date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Datum',
                 time: (start && end)
-                  ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                  ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
                   : 'Zeit',
                 location: a.location_text || '',
                 description: a.description || ''
@@ -752,7 +752,7 @@ const loadProcessState = async () => {
                     id: a.id,
                     date: start ? start.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }) : 'Datum',
                     time: (start && end)
-                      ? `${String(start.getUTCHours()).padStart(2, '0')}:${String(start.getUTCMinutes()).padStart(2, '0')}-${String(end.getUTCHours()).padStart(2, '0')}:${String(end.getUTCMinutes()).padStart(2, '0')}`
+                      ? `${formatAustrianTime(start)}-${formatAustrianTime(end)}`
                       : 'Zeit',
                     location: a.location_text || '',
                     description: a.description || ''
@@ -1172,6 +1172,16 @@ const loadProcessState = async () => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60; // Kept for potential future use, but prompt asked for HH:MM
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  // Helper function to format time in Austrian timezone
+  const formatAustrianTime = (date: Date) => {
+    return date.toLocaleString('de-AT', { 
+      timeZone: 'Europe/Vienna', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    });
   };
   
   const handleStartEinsatz = async () => {
@@ -2174,7 +2184,7 @@ const loadProcessState = async () => {
                           <div className="absolute inset-0 bg-white dark:bg-white opacity-30 rounded-full"></div>
                           <Badge className="relative text-xs font-medium px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-sm whitespace-nowrap rounded-full">
                             <span className="flex items-center">
-                              {`${new Date(buddyTag.assignment.start_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.start_ts).getUTCMinutes().toString().padStart(2, '0')}-${new Date(buddyTag.assignment.end_ts).getUTCHours().toString().padStart(2, '0')}:${new Date(buddyTag.assignment.end_ts).getUTCMinutes().toString().padStart(2, '0')}`}
+                              {`${formatAustrianTime(new Date(buddyTag.assignment.start_ts))}-${formatAustrianTime(new Date(buddyTag.assignment.end_ts))}`}
                             </span>
                           </Badge>
                         </div>
