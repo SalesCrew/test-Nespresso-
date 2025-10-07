@@ -340,7 +340,7 @@ const loadProcessState = async () => {
             
             setProcessState({
               stage: stage as any,
-              invitedAssignments: mappedInvited,
+              invitedAssignments: stage === 'select_assignment' ? mappedInvited : [],
               waitingAssignments: mappedWaiting,
               acceptedAssignments: mappedAccepted,
               rejectedAssignments: mappedRejected,
