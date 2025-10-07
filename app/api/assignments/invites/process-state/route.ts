@@ -1,28 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
-    );
+    const server = createSupabaseServerClient();
+    const { data: auth } = await server.auth.getUser();
+    if (!auth.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const cookieStore = cookies();
-    const token = cookieStore.get('sb-access-token')?.value;
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const svc = createSupabaseServiceClient();
 
     // Get all active invitations for the user
-    const { data: invitations, error } = await supabase
+    const { data: invitations, error } = await svc
       .from('assignment_invitations')
       .select(`
         id,
@@ -43,7 +32,7 @@ export async function GET(request: NextRequest) {
           type
         )
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', auth.user.id)
       .or('acknowledged_at.is.null,status.in.(invited,applied)')
       .order('invited_at', { ascending: false });
 
