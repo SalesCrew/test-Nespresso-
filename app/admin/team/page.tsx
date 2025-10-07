@@ -1213,7 +1213,36 @@ Dein Nespresso Team`;
   };
 
   // Toggle edit mode for credentials
-  const toggleEditCredentials = (service: string) => {
+  const toggleEditCredentials = async (service: string) => {
+    const isCurrentlyEditing = editingCredentials[service];
+    
+    if (isCurrentlyEditing) {
+      // Save changes
+      try {
+        const formData = editCredentialsForm[service];
+        if (!formData) return;
+        
+        const updateData: any = {};
+        updateData[`${service}_email`] = formData.email;
+        updateData[`${service}_password`] = formData.password;
+        
+        const response = await fetch(`/api/promotors/${detailedViewOpen}/access-credentials`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (response.ok) {
+          // Reload credentials to get fresh data
+          await loadAccessCredentials(detailedViewOpen!);
+        } else {
+          console.error('Failed to save credentials');
+        }
+      } catch (error) {
+        console.error('Error saving credentials:', error);
+      }
+    }
+    
     setEditingCredentials(prev => ({
       ...prev,
       [service]: !prev[service]
@@ -4180,9 +4209,13 @@ Dein Nespresso Team`;
                         <button
                           onClick={() => toggleEditCredentials('demotool')}
                           className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="Bearbeiten"
+                          title={editingCredentials.demotool ? "Speichern" : "Bearbeiten"}
                         >
-                          <Edit2 className="h-3 w-3 text-gray-500" />
+                          {editingCredentials.demotool ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Edit2 className="h-3 w-3 text-gray-500" />
+                          )}
                         </button>
                       </h4>
                       <div className="space-y-3 text-sm">
@@ -4267,9 +4300,13 @@ Dein Nespresso Team`;
                         <button
                           onClick={() => toggleEditCredentials('tma')}
                           className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="Bearbeiten"
+                          title={editingCredentials.tma ? "Speichern" : "Bearbeiten"}
                         >
-                          <Edit2 className="h-3 w-3 text-gray-500" />
+                          {editingCredentials.tma ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Edit2 className="h-3 w-3 text-gray-500" />
+                          )}
                         </button>
                       </h4>
                       <div className="space-y-3 text-sm">
@@ -4354,9 +4391,13 @@ Dein Nespresso Team`;
                         <button
                           onClick={() => toggleEditCredentials('boost_app')}
                           className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="Bearbeiten"
+                          title={editingCredentials.boost_app ? "Speichern" : "Bearbeiten"}
                         >
-                          <Edit2 className="h-3 w-3 text-gray-500" />
+                          {editingCredentials.boost_app ? (
+                            <Check className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <Edit2 className="h-3 w-3 text-gray-500" />
+                          )}
                         </button>
                       </h4>
                       <div className="space-y-3 text-sm">
