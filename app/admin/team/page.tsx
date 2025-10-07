@@ -33,6 +33,7 @@ import {
   ChevronDown,
   Loader2,
   Eye,
+  EyeOff,
   Video,
   HelpCircle,
   FileSignature,
@@ -42,9 +43,7 @@ import {
   CreditCard,
   Ruler,
   Edit2,
-  Key,
-  Eye,
-  EyeOff
+  Key
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
