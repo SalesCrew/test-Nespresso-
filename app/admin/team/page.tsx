@@ -1166,22 +1166,34 @@ Dein Nespresso Team`;
   const loadAccessCredentials = async (promotorId: number) => {
     try {
       setLoadingCredentials(true);
-      console.log('🔑 Frontend - Loading access credentials for promotor:', promotorId);
+      console.log('🔑 ===== FRONTEND ACCESS CREDENTIALS START =====');
+      console.log('🔑 Frontend - Promotor ID:', promotorId);
+      console.log('🔑 Frontend - Promotor ID type:', typeof promotorId);
+      console.log('🔑 Frontend - API URL:', `/api/promotors/${promotorId}/access-credentials`);
       
       const response = await fetch(`/api/promotors/${promotorId}/access-credentials`);
-      console.log('🔑 Frontend - API response status:', response.status);
+      console.log('🔑 Frontend - Response status:', response.status);
+      console.log('🔑 Frontend - Response ok:', response.ok);
+      console.log('🔑 Frontend - Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
         const data = await response.json();
-        console.log('🔑 Frontend - API response data:', data);
+        console.log('🔑 Frontend - Full response data:', data);
+        console.log('🔑 Frontend - Credentials from response:', data.credentials);
+        console.log('🔑 Frontend - Credentials type:', typeof data.credentials);
+        console.log('🔑 Frontend - Credentials is null?', data.credentials === null);
+        console.log('🔑 Frontend - Setting accessCredentials to:', data.credentials);
         setAccessCredentials(data.credentials);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('🔑 Frontend - API error:', response.status, errorData);
+        console.error('🔑 Frontend - API error response:', response.status, errorData);
+        console.error('🔑 Frontend - Response text:', await response.text().catch(() => 'Could not read text'));
         setAccessCredentials(null);
       }
+      console.log('🔑 ===== FRONTEND ACCESS CREDENTIALS END =====');
     } catch (error) {
-      console.error('🔑 Frontend - Error loading access credentials:', error);
+      console.error('🔑 Frontend - Unexpected error:', error);
+      console.error('🔑 Frontend - Error stack:', error.stack);
       setAccessCredentials(null);
     } finally {
       setLoadingCredentials(false);
