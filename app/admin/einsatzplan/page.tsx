@@ -163,6 +163,10 @@ export default function EinsatzplanPage() {
   const [selectedReplacementAssignments, setSelectedReplacementAssignments] = useState<string[]>([]);
   const [replacementRegionFilter, setReplacementRegionFilter] = useState("ALLE");
   
+  // Notes toggle state
+  const [notesMode, setNotesMode] = useState<'internal' | 'promotor'>('internal');
+  const [promotorNotes, setPromotorNotes] = useState<Record<string, string>>({});
+  
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
   const [showPromotorSelection, setShowPromotorSelection] = useState(false);
@@ -604,6 +608,26 @@ export default function EinsatzplanPage() {
       ));
     } catch (error) {
       console.error('Error updating assignment notes:', error);
+    }
+  };
+
+  // Function to save promotor note
+  const savePromotorNote = async (assignmentId: string, note: string) => {
+    try {
+      const response = await fetch('/api/assignments/promotor-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignment_id: assignmentId, note })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to save promotor note:', response.status);
+        return;
+      }
+      
+      console.log('Promotor note saved successfully');
+    } catch (error) {
+      console.error('Error saving promotor note:', error);
     }
   };
 
@@ -3334,12 +3358,30 @@ Import EP
                       </div>
                     </div>
                     
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">SC interne Notizen</h4>
+                    <h4 
+                      className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 cursor-pointer hover:text-gray-700 transition-colors"
+                      onClick={() => setNotesMode(notesMode === 'internal' ? 'promotor' : 'internal')}
+                    >
+                      {notesMode === 'internal' ? 'SC interne Notizen' : 'Notiz an Promotor'}
+                    </h4>
                     <textarea
-                      value={editingEinsatz.notes || ''}
-                      onChange={(e) => setEditingEinsatz({...editingEinsatz, notes: e.target.value})}
-                      onBlur={(e) => updateAssignmentNotes(editingEinsatz.id, e.target.value)}
-                      placeholder="Notizen hinzufügen..."
+                      value={notesMode === 'internal' ? (editingEinsatz.notes || '') : (promotorNotes[editingEinsatz.id] || '')}
+                      onChange={(e) => {
+                        if (notesMode === 'internal') {
+                          setEditingEinsatz({...editingEinsatz, notes: e.target.value});
+                        } else {
+                          setPromotorNotes(prev => ({...prev, [editingEinsatz.id]: e.target.value}));
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (notesMode === 'internal') {
+                          updateAssignmentNotes(editingEinsatz.id, e.target.value);
+                        } else {
+                          // Save promotor note to database
+                          savePromotorNote(editingEinsatz.id, e.target.value);
+                        }
+                      }}
+                      placeholder={notesMode === 'internal' ? "Notizen hinzufügen..." : "Notiz an Promotor hinzufügen..."}
                       className="flex-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none transition-colors resize-none"
                     />
                   </div>
