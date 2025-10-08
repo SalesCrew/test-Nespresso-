@@ -4128,20 +4128,30 @@ Import EP
                   return (
                     <div key={index} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
                       {/* Header - fixed height */}
-                      <div className="mb-2 h-12">
-                        <h4 className="font-semibold text-gray-900 text-sm truncate">{promotor.name}</h4>
-                        <div className="flex items-center gap-1.5 mt-1 min-h-[20px]">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
-                            {promotor.cluster}
-                          </span>
-                          {specialStatusInfo ? (
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
-                              {specialStatusInfo.label}
+                      <div className="mb-2 h-12 flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm truncate">{promotor.name}</h4>
+                          <div className="flex items-center gap-1.5 mt-1 min-h-[20px]">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
+                              {promotor.cluster}
                             </span>
-                          ) : (
-                            <span className="opacity-0 px-2 py-0.5 text-[10px]">-</span>
-                          )}
+                            {specialStatusInfo ? (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
+                                {specialStatusInfo.label}
+                              </span>
+                            ) : (
+                              <span className="opacity-0 px-2 py-0.5 text-[10px]">-</span>
+                            )}
+                          </div>
                         </div>
+                        {/* Percentage in top right */}
+                        <span className={`text-sm font-bold ${
+                          percentage >= 100 ? 'text-green-600' : 
+                          percentage >= 75 ? 'text-orange-600' : 
+                          'text-blue-600'
+                        }`}>
+                          {Math.round(percentage)}%
+                        </span>
                       </div>
                       
                       <div className="space-y-1.5">
@@ -4159,7 +4169,7 @@ Import EP
                           </span>
                         </div>
                         
-                        {/* Fill-up bar - always same position */}
+                        {/* Fill-up bar - at bottom without gap */}
                         <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                           <div 
                             className={`h-full rounded-full transition-all duration-500 ${
@@ -4171,17 +4181,6 @@ Import EP
                             }`}
                             style={{ width: `${Math.min(percentage, 100)}%` }}
                           ></div>
-                        </div>
-                        
-                        {/* Percentage - always same position */}
-                        <div className="text-right h-4">
-                          <span className={`text-[10px] font-medium ${
-                            percentage >= 100 ? 'text-green-600' : 
-                            percentage >= 75 ? 'text-orange-600' : 
-                            'text-blue-600'
-                          }`}>
-                            {Math.round(percentage)}%
-                          </span>
                         </div>
                       </div>
                     </div>
