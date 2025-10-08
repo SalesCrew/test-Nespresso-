@@ -3285,12 +3285,13 @@ Import EP
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
-                          <div className="p-1 sticky top-0 bg-white z-10" onPointerDown={(e) => e.stopPropagation()}>
+                          <div className="p-1 sticky top-0 bg-white z-10" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                             <input
                               ref={detailPromotorSearchRef}
                               value={detailPromotorSearch}
                               onChange={(e) => setDetailPromotorSearch(e.target.value)}
                               onKeyDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                               placeholder="Promotor suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                               autoFocus
@@ -3331,12 +3332,13 @@ Import EP
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
-                          <div className="p-1 sticky top-0 bg-white z-10" onPointerDown={(e) => e.stopPropagation()}>
+                          <div className="p-1 sticky top-0 bg-white z-10" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                             <input
                               ref={detailBuddySearchRef}
                               value={detailBuddySearch}
                               onChange={(e) => setDetailBuddySearch(e.target.value)}
                               onKeyDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                               placeholder="Buddy suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                               autoFocus
