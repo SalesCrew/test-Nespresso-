@@ -35,7 +35,8 @@ import {
   Loader2,
   Sparkles,
   Plus,
-  Dumbbell
+  Dumbbell,
+  ChevronDown
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -171,6 +172,8 @@ export default function EinsatzplanPage() {
   // Auslastung (workload) modal state
   const [showAuslastungModal, setShowAuslastungModal] = useState(false);
   const [auslastungKW, setAuslastungKW] = useState<string>('');
+  const [showAuslastungKWDropdown, setShowAuslastungKWDropdown] = useState(false);
+  const [auslastungSearch, setAuslastungSearch] = useState('');
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -4053,24 +4056,44 @@ Import EP
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[80] w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Dumbbell className="h-6 w-6" />
                   <h3 className="text-xl font-semibold">Auslastung</h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* KW Filter */}
-                  <select
-                    value={auslastungKW}
-                    onChange={(e) => setAuslastungKW(e.target.value)}
-                    className="px-3 py-1.5 rounded-lg text-sm bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-white/30"
-                  >
-                    {generateCalendarWeeks().map((week) => (
-                      <option key={week} value={week} className="text-gray-900">
-                        {week}
-                      </option>
-                    ))}
-                  </select>
+                  {/* KW Filter Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowAuslastungKWDropdown(!showAuslastungKWDropdown)}
+                      className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-sm bg-white/10 border border-white/20 text-white hover:bg-white/15 transition-colors min-w-[140px]"
+                    >
+                      <span>{auslastungKW.split(' (')[0] || 'KW wählen'}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAuslastungKWDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {showAuslastungKWDropdown && (
+                      <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[90] w-56 max-h-60 overflow-y-auto custom-scrollbar">
+                        {generateCalendarWeeks().map((week) => (
+                          <button
+                            key={week}
+                            onClick={() => {
+                              setAuslastungKW(week);
+                              setShowAuslastungKWDropdown(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                              auslastungKW === week
+                                ? 'bg-gray-100 text-gray-700'
+                                : 'hover:bg-gray-50 text-gray-600'
+                            }`}
+                          >
+                            {week}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <button
                     onClick={() => setShowAuslastungModal(false)}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -4078,6 +4101,18 @@ Import EP
                     <X className="h-5 w-5" />
                   </button>
                 </div>
+              </div>
+              
+              {/* Searchbar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+                <input
+                  type="text"
+                  placeholder="Promotor suchen..."
+                  value={auslastungSearch}
+                  onChange={(e) => setAuslastungSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15 transition-colors"
+                />
               </div>
             </div>
             
@@ -4094,7 +4129,9 @@ Import EP
                   { name: 'Michael Wagner', cluster: 'V', contractHours: 32, assignedHours: 28, overtime: 0, specialStatus: 'urlaub' },
                   { name: 'Julia Bauer', cluster: 'K', contractHours: 32, assignedHours: 32, overtime: 0, specialStatus: null },
                   { name: 'Stefan Müller', cluster: 'W/NÖ/BGL', contractHours: 40, assignedHours: 36, overtime: 0, specialStatus: 'notfall' },
-                ].map((promotor, index) => {
+                ]
+                .filter(promotor => promotor.name.toLowerCase().includes(auslastungSearch.toLowerCase()))
+                .map((promotor, index) => {
                   const percentage = (promotor.assignedHours / promotor.contractHours) * 100;
                   
                   // Get cluster pill colors (matching admin team page)
