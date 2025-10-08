@@ -358,6 +358,9 @@ export default function EinsatzplanPage() {
   
   // Promotors list for assignment
   const [promotorsList, setPromotorsList] = useState<any[]>([]);
+  // Detail modal dropdown searches
+  const [detailPromotorSearch, setDetailPromotorSearch] = useState("");
+  const [detailBuddySearch, setDetailBuddySearch] = useState("");
   // Buddy toggle for bulk invites
   const [inviteBuddy, setInviteBuddy] = useState(false);
   // Accepted applications for the current assignment (detail view)
@@ -3279,10 +3282,20 @@ Import EP
                               : 'Kein Promotor'}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
+                          <div className="p-1 sticky top-0 bg-white">
+                            <input
+                              value={detailPromotorSearch}
+                              onChange={(e) => setDetailPromotorSearch(e.target.value)}
+                              placeholder="Promotor suchen..."
+                              className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none"
+                            />
+                          </div>
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
-                          {promotorsList.map((p: any) => (
-                            <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                          {promotorsList
+                            .filter((p: any) => p.name.toLowerCase().includes(detailPromotorSearch.toLowerCase()))
+                            .map((p: any) => (
+                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -3312,10 +3325,20 @@ Import EP
                               : 'Kein Buddy'}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg">
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
+                          <div className="p-1 sticky top-0 bg-white">
+                            <input
+                              value={detailBuddySearch}
+                              onChange={(e) => setDetailBuddySearch(e.target.value)}
+                              placeholder="Buddy suchen..."
+                              className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none"
+                            />
+                          </div>
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
-                          {promotorsList.map((p: any) => (
-                            <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                          {promotorsList
+                            .filter((p: any) => p.name.toLowerCase().includes(detailBuddySearch.toLowerCase()))
+                            .map((p: any) => (
+                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
