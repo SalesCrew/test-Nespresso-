@@ -4097,17 +4097,17 @@ Import EP
                 ].map((promotor, index) => {
                   const percentage = (promotor.assignedHours / promotor.contractHours) * 100;
                   
-                  // Get cluster pill colors
+                  // Get cluster pill colors (matching admin team page)
                   const getClusterPill = (cluster: string) => {
                     switch (cluster) {
-                      case 'W/NÖ/BGL': return 'bg-red-100 text-red-700 border-red-200';
-                      case 'ST': return 'bg-green-100 text-green-700 border-green-200';
-                      case 'S': return 'bg-blue-100 text-blue-700 border-blue-200';
-                      case 'OÖ': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-                      case 'T': return 'bg-purple-100 text-purple-700 border-purple-200';
-                      case 'V': return 'bg-orange-100 text-orange-700 border-orange-200';
-                      case 'K': return 'bg-teal-100 text-teal-700 border-teal-200';
-                      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+                      case 'W/NÖ/BGL': return 'bg-[#E8F0FE] text-gray-700 border-[#CBD7F5]';
+                      case 'ST': return 'bg-[#E7F5ED] text-gray-700 border-[#CFECDD]';
+                      case 'S': return 'bg-[#F0E9FF] text-gray-700 border-[#DDD4FF]';
+                      case 'OÖ': return 'bg-[#FFF3E6] text-gray-700 border-[#FFE3C7]';
+                      case 'T': return 'bg-[#FDEBF3] text-gray-700 border-[#F8D5E5]';
+                      case 'V': return 'bg-[#EAF8FF] text-gray-700 border-[#CFEFFF]';
+                      case 'K': return 'bg-[#EAF6FF] text-gray-700 border-[#D6ECFF]';
+                      default: return 'bg-gray-50 text-gray-700 border-gray-200';
                     }
                   };
                   
@@ -4125,8 +4125,20 @@ Import EP
                   
                   const specialStatusInfo = getSpecialStatus(promotor.specialStatus);
                   
+                  // Get gradient background for special status
+                  const getStatusGradient = () => {
+                    if (!promotor.specialStatus) return '';
+                    switch (promotor.specialStatus) {
+                      case 'krankenstand': return 'bg-gradient-to-br from-red-50/60 to-white';
+                      case 'urlaub': return 'bg-gradient-to-br from-blue-50/60 to-white';
+                      case 'notfall': return 'bg-gradient-to-br from-orange-50/60 to-white';
+                      case 'zeitausgleich': return 'bg-gradient-to-br from-yellow-50/60 to-white';
+                      default: return '';
+                    }
+                  };
+                  
                   return (
-                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                    <div key={index} className={`rounded-lg p-3 border border-gray-200 shadow-sm ${getStatusGradient() || 'bg-white'}`}>
                       {/* Header - fixed height */}
                       <div className="mb-2 h-12 flex items-start justify-between">
                         <div className="min-w-0 flex-1">
