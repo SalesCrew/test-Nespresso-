@@ -174,6 +174,8 @@ export default function EinsatzplanPage() {
   const [showAuslastungKWDropdown, setShowAuslastungKWDropdown] = useState(false);
   const [auslastungSearch, setAuslastungSearch] = useState('');
   const auslastungKWDropdownRef = useRef<HTMLDivElement>(null);
+  const [auslastungData, setAuslastungData] = useState<any[]>([]);
+  const [auslastungLoading, setAuslastungLoading] = useState(false);
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -663,6 +665,32 @@ export default function EinsatzplanPage() {
   const plzDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load auslastung data
+  const loadAuslastung = async (kw: string) => {
+    try {
+      setAuslastungLoading(true);
+      const response = await fetch(`/api/admin/auslastung?kw=${encodeURIComponent(kw)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAuslastungData(data.workload || []);
+      } else {
+        setAuslastungData([]);
+      }
+    } catch (error) {
+      console.error('Error loading auslastung:', error);
+      setAuslastungData([]);
+    } finally {
+      setAuslastungLoading(false);
+    }
+  };
+
+  // Load auslastung when KW changes
+  useEffect(() => {
+    if (auslastungKW && showAuslastungModal) {
+      loadAuslastung(auslastungKW);
+    }
+  }, [auslastungKW, showAuslastungModal]);
 
   // Get current week number (uses getWeekNumber for accuracy)
   const getCurrentWeek = () => {
@@ -4134,21 +4162,20 @@ Import EP
             
             {/* Content */}
             <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="grid grid-cols-3 gap-4">
-                {/* Temp data - replace with real promotors later */}
-                {[
-                  { name: 'Maria Huber', cluster: 'W/NÖ/BGL', contractHours: 32, assignedHours: 24, overtime: 0, specialStatus: null },
-                  { name: 'Thomas Weber', cluster: 'ST', contractHours: 40, assignedHours: 40, overtime: 4, specialStatus: null },
-                  { name: 'Lisa Schmidt', cluster: 'S', contractHours: 20, assignedHours: 12, overtime: 0, specialStatus: 'krankenstand' },
-                  { name: 'Peter Gruber', cluster: 'OÖ', contractHours: 32, assignedHours: 16, overtime: 0, specialStatus: null },
-                  { name: 'Anna Maier', cluster: 'T', contractHours: 24, assignedHours: 24, overtime: 2, specialStatus: null },
-                  { name: 'Michael Wagner', cluster: 'V', contractHours: 32, assignedHours: 28, overtime: 0, specialStatus: 'urlaub' },
-                  { name: 'Julia Bauer', cluster: 'K', contractHours: 32, assignedHours: 32, overtime: 0, specialStatus: null },
-                  { name: 'Stefan Müller', cluster: 'W/NÖ/BGL', contractHours: 40, assignedHours: 36, overtime: 0, specialStatus: 'notfall' },
-                ]
-                .filter(promotor => promotor.name.toLowerCase().includes(auslastungSearch.toLowerCase()))
-                .map((promotor, index) => {
-                  const percentage = (promotor.assignedHours / promotor.contractHours) * 100;
+              {auslastungLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-3" />
+                    <p className="text-gray-600">Lade Auslastung...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  {auslastungData
+                    .filter(promotor => promotor.name.toLowerCase().includes(auslastungSearch.toLowerCase()))
+                    .map((promotor, index) => {
+                  const totalHours = promotor.assignedHours + promotor.overtime;
+                  const percentage = promotor.contractHours > 0 ? (totalHours / promotor.contractHours) * 100 : 0;
                   
                   // Get cluster pill colors (matching admin team page)
                   const getClusterPill = (cluster: string) => {
@@ -4258,7 +4285,8 @@ Import EP
                     </div>
                   );
                 })}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </>
