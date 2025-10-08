@@ -4125,16 +4125,23 @@ Import EP
                   
                   const specialStatusInfo = getSpecialStatus(promotor.specialStatus);
                   
-                  // Get gradient background for special status
+                  // Get gradient background for special status or 100% utilization
                   const getStatusGradient = () => {
-                    if (!promotor.specialStatus) return '';
-                    switch (promotor.specialStatus) {
-                      case 'krankenstand': return 'bg-gradient-to-br from-red-50/60 to-white';
-                      case 'urlaub': return 'bg-gradient-to-br from-blue-50/60 to-white';
-                      case 'notfall': return 'bg-gradient-to-br from-orange-50/60 to-white';
-                      case 'zeitausgleich': return 'bg-gradient-to-br from-yellow-50/60 to-white';
-                      default: return '';
+                    // Special status takes priority
+                    if (promotor.specialStatus) {
+                      switch (promotor.specialStatus) {
+                        case 'krankenstand': return 'bg-gradient-to-br from-red-50/60 to-white';
+                        case 'urlaub': return 'bg-gradient-to-br from-blue-50/60 to-white';
+                        case 'notfall': return 'bg-gradient-to-br from-orange-50/60 to-white';
+                        case 'zeitausgleich': return 'bg-gradient-to-br from-yellow-50/60 to-white';
+                        default: return '';
+                      }
                     }
+                    // 100% utilization gets green gradient
+                    if (percentage >= 100) {
+                      return 'bg-gradient-to-br from-green-50/60 to-white';
+                    }
+                    return '';
                   };
                   
                   return (
