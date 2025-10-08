@@ -4127,38 +4127,43 @@ Import EP
                   
                   return (
                     <div key={index} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-gray-900 text-sm truncate">{promotor.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
-                              {promotor.cluster}
+                      {/* Header - fixed height */}
+                      <div className="mb-2 h-12">
+                        <h4 className="font-semibold text-gray-900 text-sm truncate">{promotor.name}</h4>
+                        <div className="flex items-center gap-1.5 mt-1 min-h-[20px]">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
+                            {promotor.cluster}
+                          </span>
+                          {specialStatusInfo ? (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
+                              {specialStatusInfo.label}
                             </span>
-                            {specialStatusInfo && (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
-                                {specialStatusInfo.label}
-                              </span>
-                            )}
-                          </div>
+                          ) : (
+                            <span className="opacity-0 px-2 py-0.5 text-[10px]">-</span>
+                          )}
                         </div>
                       </div>
                       
                       <div className="space-y-1.5">
-                        {/* Hours */}
-                        <div className="flex items-center justify-between text-xs">
+                        {/* Hours - always visible */}
+                        <div className="flex items-center justify-between text-xs h-4">
                           <span className="text-gray-500">Stunden</span>
                           <span className="font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</span>
                         </div>
                         
-                        {/* Overtime */}
-                        {promotor.overtime > 0 && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">Überstunden</span>
-                            <span className="font-medium text-green-600">+{promotor.overtime}h</span>
-                          </div>
-                        )}
+                        {/* Overtime - always reserve space */}
+                        <div className="flex items-center justify-between text-xs h-4">
+                          {promotor.overtime > 0 ? (
+                            <>
+                              <span className="text-gray-500">Überstunden</span>
+                              <span className="font-medium text-green-600">+{promotor.overtime}h</span>
+                            </>
+                          ) : (
+                            <span className="opacity-0">-</span>
+                          )}
+                        </div>
                         
-                        {/* Fill-up bar */}
+                        {/* Fill-up bar - always same position */}
                         <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                           <div 
                             className={`h-full rounded-full transition-all duration-500 ${
@@ -4172,8 +4177,8 @@ Import EP
                           ></div>
                         </div>
                         
-                        {/* Percentage */}
-                        <div className="text-right">
+                        {/* Percentage - always same position */}
+                        <div className="text-right h-4">
                           <span className={`text-[10px] font-medium ${
                             percentage >= 100 ? 'text-green-600' : 
                             percentage >= 75 ? 'text-orange-600' : 
