@@ -3293,6 +3293,7 @@ Import EP
                               onKeyDown={(e) => e.stopPropagation()}
                               placeholder="Promotor suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              autoFocus
                             />
                           </div>
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
@@ -3338,6 +3339,7 @@ Import EP
                               onKeyDown={(e) => e.stopPropagation()}
                               placeholder="Buddy suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              autoFocus
                             />
                           </div>
                           <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
