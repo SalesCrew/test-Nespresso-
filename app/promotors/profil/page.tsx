@@ -70,6 +70,8 @@ export default function ProfilPage() {
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false)
   const [showDienstvertragPopup, setShowDienstvertragPopup] = useState(false)
   const [showDienstvertragContent, setShowDienstvertragContent] = useState(false)
+  const [viewContractHTML, setViewContractHTML] = useState<string>('')
+  const [loadingContractHTML, setLoadingContractHTML] = useState(false)
   const [payrollCountdown, setPayrollCountdown] = useState({ days: 0, hours: 0, minutes: 0, isPayday: false })
   const [isDownloading, setIsDownloading] = useState(false)
   const [showPhotoMenu, setShowPhotoMenu] = useState(false)
@@ -424,10 +426,48 @@ export default function ProfilPage() {
     }
   }
 
-  const handleDienstvertragSelect = (contractId?: string) => {
+  const handleDienstvertragSelect = async (contractId?: string) => {
     if (contractId) setSelectedContractId(contractId)
     setShowDienstvertragPopup(false)
+    setLoadingContractHTML(true)
     setShowDienstvertragContent(true)
+    
+    // Fetch sent HTML from sent_dienstvertrag table
+    try {
+      const targetContractId = contractId || promotorContracts.find(c => c.is_active)?.id;
+      
+      if (targetContractId) {
+        const res = await fetch(`/api/admin/contracts/send-dienstvertrag?contract_id=${targetContractId}`, {
+          cache: 'no-store'
+        });
+        const data = await res.json();
+        
+        if (data.sent_dienstvertrag?.html_content) {
+          setViewContractHTML(data.sent_dienstvertrag.html_content);
+        } else {
+          // Fallback: generate from template if no sent HTML exists yet
+          const contract = promotorContracts.find(c => c.id === targetContractId);
+          if (contract) {
+            const { generateDienstvertragHTML } = await import('@/lib/templates/dienstvertrag');
+            const html = generateDienstvertragHTML({
+              promotorName: headerName || '',
+              promotorBirthDate: editablePersonalData.birthday || '',
+              promotorAddress: headerLocation || '',
+              hoursPerWeek: String(contract.hours_per_week || ''),
+              monthlyGross: String(contract.monthly_gross || ''),
+              startDate: contract.start_date ? new Date(contract.start_date).toLocaleDateString('de-DE') : '',
+              endDate: contract.end_date ? new Date(contract.end_date).toLocaleDateString('de-DE') : '',
+              isTemporary: !!contract.is_temporary
+            });
+            setViewContractHTML(html);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading contract HTML:', error);
+    } finally {
+      setLoadingContractHTML(false);
+    }
   }
 
   // Export Dienstvertrag as PDF using html2pdf.js for robust page breaking
@@ -2345,31 +2385,16 @@ export default function ProfilPage() {
               {/* Content */}
               <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
                 <div id="dienstvertrag-content">
-                  {(() => {
-                    const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                    const fromId = selectedContractId ? contracts.find((c: any) => c.id === selectedContractId) : null;
-                    const fallbackActive = contracts.find((c: any) => c.is_active);
-                    const fallbackPending = [...contracts].filter((c: any) => !c.is_active)
-                      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-                    const useC: any = fromId || fallbackPending || fallbackActive || {};
-                    const h = String(useC?.hours_per_week ?? '').trim();
-                    const m = String(useC?.monthly_gross ?? '').trim();
-                    const sd = useC?.start_date ? new Date(useC.start_date).toLocaleDateString('de-DE') : '';
-                    const ed = useC?.end_date ? new Date(useC.end_date).toLocaleDateString('de-DE') : '';
-                    const tmp = !!useC?.is_temporary;
-                    return (
-                  <DienstvertragTemplate
-                        promotorName={headerName || ''}
-                        promotorBirthDate={editablePersonalData.birthday || ''}
-                        promotorAddress={headerLocation || ''}
-                        hoursPerWeek={h}
-                        monthlyGross={m}
-                        startDate={sd}
-                        endDate={ed}
-                        isTemporary={tmp}
-                      />
-                    );
-                  })()}
+                  {loadingContractHTML ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                    </div>
+                  ) : (
+                    <div 
+                      className="prose prose-sm"
+                      dangerouslySetInnerHTML={{ __html: viewContractHTML }}
+                    />
+                  )}
                 </div>
               </div>
             </div>

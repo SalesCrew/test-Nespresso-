@@ -123,6 +123,9 @@ export default function PromotorenPage() {
     isTemporary: false,
     employmentType: 'geringfügig' as 'geringfügig' | 'teilzeit' | 'vollzeit'
   });
+  const [editableContractHTML, setEditableContractHTML] = useState<string>('');
+  const [viewContractHTML, setViewContractHTML] = useState<string>('');
+  const [loadingContractHTML, setLoadingContractHTML] = useState(false);
   // Contracts for selected promotor
   const [promotorContracts, setPromotorContracts] = useState<any[] | null>(null);
   const [loadingContracts, setLoadingContracts] = useState(false);
@@ -1338,9 +1341,52 @@ Dein Nespresso Team`;
   };
 
   // Dienstvertrag handler functions
-  const handleDienstvertragSelect = () => {
+  const handleDienstvertragSelect = async () => {
     setShowDienstvertragPopup(false);
+    setLoadingContractHTML(true);
     setShowDienstvertragContent(true);
+    
+    // Fetch sent HTML from sent_dienstvertrag table
+    try {
+      const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
+      const active = contracts.find((c: any) => c.is_active);
+      const newestPending = [...contracts]
+        .filter((c: any) => !c.is_active)
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+      const selected = newestPending || active;
+      
+      if (selected?.id) {
+        const res = await fetch(`/api/admin/contracts/send-dienstvertrag?contract_id=${selected.id}`, {
+          cache: 'no-store'
+        });
+        const data = await res.json();
+        
+        if (data.sent_dienstvertrag?.html_content) {
+          setViewContractHTML(data.sent_dienstvertrag.html_content);
+        } else {
+          // Fallback: generate from template if no sent HTML exists yet
+          const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+          if (promotor) {
+            const { generateDienstvertragHTML } = await import('@/lib/templates/dienstvertrag');
+            const html = generateDienstvertragHTML({
+              promotorName: promotor.name || '',
+              promotorBirthDate: promotor.birthDate || '',
+              promotorAddress: promotor.address || '',
+              hoursPerWeek: String(selected.hours_per_week || ''),
+              monthlyGross: String(selected.monthly_gross || ''),
+              startDate: selected.start_date ? new Date(selected.start_date).toLocaleDateString('de-DE') : '',
+              endDate: selected.end_date ? new Date(selected.end_date).toLocaleDateString('de-DE') : '',
+              isTemporary: !!selected.is_temporary
+            });
+            setViewContractHTML(html);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading contract HTML:', error);
+    } finally {
+      setLoadingContractHTML(false);
+    }
   };
 
   // Handle Strafregister special logic
@@ -3640,7 +3686,24 @@ Dein Nespresso Team`;
 
                 {/* Send Button - Now shows preview first */}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    // Generate HTML from template
+                    const promotor = promotors.find(p => p.id === selectedPromotorForContract);
+                    if (!promotor) return;
+                    
+                    const { generateDienstvertragHTML } = await import('@/lib/templates/dienstvertrag');
+                    const html = generateDienstvertragHTML({
+                      promotorName: promotor.name || '',
+                      promotorBirthDate: promotor.birthDate || '',
+                      promotorAddress: promotor.address || '',
+                      hoursPerWeek: contractForm.hoursPerWeek,
+                      monthlyGross: contractForm.monthlyGross,
+                      startDate: contractForm.startDate ? new Date(contractForm.startDate).toLocaleDateString('de-DE') : '',
+                      endDate: contractForm.endDate ? new Date(contractForm.endDate).toLocaleDateString('de-DE') : '',
+                      isTemporary: contractForm.isTemporary
+                    });
+                    
+                    setEditableContractHTML(html);
                     setShowContractPreview(true);
                   }}
                   disabled={!contractForm.hoursPerWeek || !contractForm.monthlyGross || !contractForm.startDate}
@@ -3953,34 +4016,16 @@ Dein Nespresso Team`;
             {/* Content */}
             <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-8 [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
               <div className="max-w-3xl mx-auto" id="dienstvertrag-content">
-                {/* Get promotor data for dynamic fields */}
-                {(() => {
-                  const promotor = promotors.find(p => p.id === selectedPromotorForContract);
-                  const promotorName = promotor?.name || "Vorname Nachname";
-                  const promotorBirthDate = promotor?.birthDate || "Tag.Monat.Jahr";
-                  const promotorAddress = promotor?.address || "Adresse";
-                  
-                  // pick which contract to render in template: prefer newest pending if present, else active
-                  const contracts = Array.isArray(promotorContracts) ? promotorContracts : [];
-                  const active = contracts.find((c: any) => c.is_active);
-                  const newestPending = [...contracts]
-                    .filter((c: any) => !c.is_active)
-                    .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-                  const selected = newestPending || active || {} as any;
-                  
-                  return (
-                    <DienstvertragTemplate
-                      promotorName={promotorName}
-                      promotorBirthDate={promotorBirthDate}
-                      promotorAddress={promotorAddress}
-                      hoursPerWeek={String(selected?.hours_per_week || '')}
-                      monthlyGross={String(selected?.monthly_gross || '')}
-                      startDate={selected?.start_date ? new Date(selected.start_date).toLocaleDateString('de-DE') : ''}
-                      endDate={selected?.end_date ? new Date(selected.end_date).toLocaleDateString('de-DE') : ''}
-                      isTemporary={!!selected?.is_temporary}
-                    />
-                  );
-                })()}
+                {loadingContractHTML ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                  </div>
+                ) : (
+                  <div 
+                    className="prose prose-sm"
+                    dangerouslySetInnerHTML={{ __html: viewContractHTML }}
+                  />
+                )}
                     </div>
                     </div>
                     </div>
@@ -4017,30 +4062,19 @@ Dein Nespresso Team`;
                 </div>
               </div>
               
-              {/* Content */}
+              {/* Content - Editable HTML */}
               <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-8 [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                <div className="max-w-3xl mx-auto">
-                  {/* Get promotor data for preview */}
-                  {(() => {
-                    const promotor = promotors.find(p => p.id === selectedPromotorForContract);
-                    const promotorName = promotor?.name || "Vorname Nachname";
-                    const promotorBirthDate = promotor?.birthDate || "Tag.Monat.Jahr";
-                    const promotorAddress = promotor?.address || "Adresse";
-                    
-                    return (
-                      <DienstvertragTemplate
-                        promotorName={promotorName}
-                        promotorBirthDate={promotorBirthDate}
-                        promotorAddress={promotorAddress}
-                        hoursPerWeek={contractForm.hoursPerWeek}
-                        monthlyGross={contractForm.monthlyGross}
-                        startDate={contractForm.startDate ? new Date(contractForm.startDate).toLocaleDateString('de-DE') : ''}
-                        endDate={contractForm.endDate ? new Date(contractForm.endDate).toLocaleDateString('de-DE') : ''}
-                        isTemporary={contractForm.isTemporary}
-                      />
-                    );
-                  })()}
-                </div>
+                <div 
+                  className="max-w-3xl mx-auto prose prose-sm"
+                  contentEditable
+                  suppressContentEditableWarning
+                  onInput={(e) => setEditableContractHTML(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: editableContractHTML }}
+                  style={{
+                    outline: 'none',
+                    minHeight: '500px'
+                  }}
+                />
               </div>
               
               {/* Footer with confirmation buttons */}
@@ -4061,7 +4095,8 @@ Dein Nespresso Team`;
                         const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
                         if (!promotorId) return;
                         try {
-                          const res = await fetch('/api/admin/contracts', {
+                          // Step 1: Create contract record in contracts table
+                          const contractRes = await fetch('/api/admin/contracts', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -4075,11 +4110,28 @@ Dein Nespresso Team`;
                               is_active: false,
                             })
                           });
-                          const j = await res.json().catch(() => ({}));
-                          if (!res.ok) throw new Error(j?.error || 'Fehler beim Erstellen des Vertrags');
+                          const contractData = await contractRes.json().catch(() => ({}));
+                          if (!contractRes.ok) throw new Error(contractData?.error || 'Fehler beim Erstellen des Vertrags');
+                          
+                          // Step 2: Save edited HTML to sent_dienstvertrag table
+                          const sentRes = await fetch('/api/admin/contracts/send-dienstvertrag', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              contract_id: contractData.contract.id,
+                              user_id: promotorId,
+                              html_content: editableContractHTML
+                            })
+                          });
+                          if (!sentRes.ok) {
+                            const err = await sentRes.json().catch(() => ({}));
+                            throw new Error(err?.error || 'Fehler beim Speichern des Vertragsinhalts');
+                          }
+                          
                           await refreshPromotorContracts(promotorId);
                           setToastMsg('Vertrag erfolgreich erstellt und versendet!');
                           setShowContractPreview(false);
+                          setEditableContractHTML('');
                         } catch (e: any) {
                           console.error(e);
                           setToastMsg(e.message || 'Fehler beim Erstellen des Vertrags');
