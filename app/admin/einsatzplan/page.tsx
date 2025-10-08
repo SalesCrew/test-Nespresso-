@@ -34,7 +34,8 @@ import {
   User,
   Loader2,
   Sparkles,
-  Plus
+  Plus,
+  Dumbbell
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -166,6 +167,10 @@ export default function EinsatzplanPage() {
   // Notes toggle state
   const [notesMode, setNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [promotorNotes, setPromotorNotes] = useState<Record<string, string>>({});
+  
+  // Auslastung (workload) modal state
+  const [showAuslastungModal, setShowAuslastungModal] = useState(false);
+  const [auslastungKW, setAuslastungKW] = useState<string>('');
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -1718,6 +1723,20 @@ Import EP
                         <h3 className="text-lg font-semibold text-gray-900">Einsatzplan</h3>
                       </div>
                       <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            // Set to current week
+                            const currentWeek = getCurrentWeek();
+                            const weeks = generateCalendarWeeks();
+                            const currentWeekStr = weeks.find(w => w.startsWith(`KW ${currentWeek} `)) || weeks[0];
+                            setAuslastungKW(currentWeekStr);
+                            setShowAuslastungModal(true);
+                          }}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                          title="Auslastung anzeigen"
+                        >
+                          <Dumbbell className="h-4 w-4 text-gray-600" />
+                        </button>
                         <button
                           onClick={() => setShowCreateModal(true)}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
@@ -4022,6 +4041,93 @@ Import EP
             </div>
           </div>
         </div>
+      )}
+
+      {/* Auslastung Modal */}
+      {showAuslastungModal && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70]"
+            onClick={() => setShowAuslastungModal(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[80] w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Dumbbell className="h-6 w-6" />
+                  <h3 className="text-xl font-semibold">Auslastung</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* KW Filter */}
+                  <select
+                    value={auslastungKW}
+                    onChange={(e) => setAuslastungKW(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg text-sm bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                  >
+                    {generateCalendarWeeks().map((week) => (
+                      <option key={week} value={week} className="text-gray-900">
+                        {week}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowAuslastungModal(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="space-y-4">
+                {/* Temp data - replace with real promotors later */}
+                {[
+                  { name: 'Maria Huber', cluster: 'W/NÖ/BGL', contractHours: 32, assignedHours: 24 },
+                  { name: 'Thomas Weber', cluster: 'ST', contractHours: 40, assignedHours: 40 },
+                  { name: 'Lisa Schmidt', cluster: 'S', contractHours: 20, assignedHours: 12 },
+                  { name: 'Peter Gruber', cluster: 'OÖ', contractHours: 32, assignedHours: 16 },
+                  { name: 'Anna Maier', cluster: 'T', contractHours: 24, assignedHours: 24 },
+                  { name: 'Michael Wagner', cluster: 'V', contractHours: 32, assignedHours: 28 },
+                ].map((promotor, index) => {
+                  const percentage = (promotor.assignedHours / promotor.contractHours) * 100;
+                  
+                  return (
+                    <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{promotor.name}</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">{promotor.cluster}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</p>
+                          <p className="text-xs text-gray-500">{Math.round(percentage)}%</p>
+                        </div>
+                      </div>
+                      
+                      {/* Fill-up bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            percentage >= 100 
+                              ? 'bg-gradient-to-r from-green-500 to-green-800' 
+                              : percentage >= 75 
+                              ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                              : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                          }`}
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Eddie KI Assistant */}
