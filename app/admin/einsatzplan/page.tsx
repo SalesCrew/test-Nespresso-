@@ -4148,7 +4148,7 @@ Import EP
                         {/* Hours - always visible */}
                         <div className="flex items-center justify-between text-xs h-4">
                           <span className="text-gray-500">Stunden</span>
-                          <span className="font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</span>
+                          <span className="font-medium text-gray-900">{promotor.assignedHours + promotor.overtime}h / {promotor.contractHours}h</span>
                         </div>
                         
                         {/* Overtime - always visible */}
