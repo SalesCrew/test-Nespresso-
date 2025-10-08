@@ -477,6 +477,9 @@ export default function ProfilPage() {
 
     const filename = `Dienstvertrag_${(headerName || 'Promotor').replace(/\s+/g, '_')}.pdf`;
 
+    // Detect mobile devices (iOS/Android)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
     const opt = {
       margin: 15,
       filename: filename,
@@ -499,7 +502,24 @@ export default function ProfilPage() {
     // Dynamically import browser-only library to avoid SSR usage
     const mod = await import('html2pdf.js');
     const html2pdf = mod.default ?? mod;
-    html2pdf().from(clonedElement).set(opt).save();
+    
+    if (isMobile) {
+      // Mobile: generate blob and open in new tab for download
+      const pdfBlob = await html2pdf().from(clonedElement).set(opt).outputPdf('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.click();
+      
+      // Clean up
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    } else {
+      // Desktop: normal save
+      html2pdf().from(clonedElement).set(opt).save();
+    }
   };
 
   const handleDownloadPDF = async () => {
