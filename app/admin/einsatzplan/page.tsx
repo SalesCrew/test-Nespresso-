@@ -4083,43 +4083,105 @@ Import EP
             
             {/* Content */}
             <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
                 {/* Temp data - replace with real promotors later */}
                 {[
-                  { name: 'Maria Huber', cluster: 'W/NÖ/BGL', contractHours: 32, assignedHours: 24 },
-                  { name: 'Thomas Weber', cluster: 'ST', contractHours: 40, assignedHours: 40 },
-                  { name: 'Lisa Schmidt', cluster: 'S', contractHours: 20, assignedHours: 12 },
-                  { name: 'Peter Gruber', cluster: 'OÖ', contractHours: 32, assignedHours: 16 },
-                  { name: 'Anna Maier', cluster: 'T', contractHours: 24, assignedHours: 24 },
-                  { name: 'Michael Wagner', cluster: 'V', contractHours: 32, assignedHours: 28 },
+                  { name: 'Maria Huber', cluster: 'W/NÖ/BGL', contractHours: 32, assignedHours: 24, overtime: 0, specialStatus: null },
+                  { name: 'Thomas Weber', cluster: 'ST', contractHours: 40, assignedHours: 40, overtime: 4, specialStatus: null },
+                  { name: 'Lisa Schmidt', cluster: 'S', contractHours: 20, assignedHours: 12, overtime: 0, specialStatus: 'krankenstand' },
+                  { name: 'Peter Gruber', cluster: 'OÖ', contractHours: 32, assignedHours: 16, overtime: 0, specialStatus: null },
+                  { name: 'Anna Maier', cluster: 'T', contractHours: 24, assignedHours: 24, overtime: 2, specialStatus: null },
+                  { name: 'Michael Wagner', cluster: 'V', contractHours: 32, assignedHours: 28, overtime: 0, specialStatus: 'urlaub' },
+                  { name: 'Julia Bauer', cluster: 'K', contractHours: 32, assignedHours: 32, overtime: 0, specialStatus: null },
+                  { name: 'Stefan Müller', cluster: 'W/NÖ/BGL', contractHours: 40, assignedHours: 36, overtime: 0, specialStatus: 'notfall' },
                 ].map((promotor, index) => {
                   const percentage = (promotor.assignedHours / promotor.contractHours) * 100;
                   
+                  // Get cluster pill colors
+                  const getClusterPill = (cluster: string) => {
+                    switch (cluster) {
+                      case 'W/NÖ/BGL': return 'bg-red-100 text-red-700 border-red-200';
+                      case 'ST': return 'bg-green-100 text-green-700 border-green-200';
+                      case 'S': return 'bg-blue-100 text-blue-700 border-blue-200';
+                      case 'OÖ': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                      case 'T': return 'bg-purple-100 text-purple-700 border-purple-200';
+                      case 'V': return 'bg-orange-100 text-orange-700 border-orange-200';
+                      case 'K': return 'bg-teal-100 text-teal-700 border-teal-200';
+                      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+                    }
+                  };
+                  
+                  // Get special status styling
+                  const getSpecialStatus = (status: string | null) => {
+                    if (!status) return null;
+                    switch (status) {
+                      case 'krankenstand': return { label: 'Krankenstand', color: 'bg-red-100 text-red-700 border-red-300' };
+                      case 'urlaub': return { label: 'Urlaub', color: 'bg-blue-100 text-blue-700 border-blue-300' };
+                      case 'notfall': return { label: 'Notfall', color: 'bg-orange-100 text-orange-700 border-orange-300' };
+                      case 'zeitausgleich': return { label: 'Zeitausgleich', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' };
+                      default: return null;
+                    }
+                  };
+                  
+                  const specialStatusInfo = getSpecialStatus(promotor.specialStatus);
+                  
                   return (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{promotor.name}</h4>
-                          <p className="text-xs text-gray-500 mt-0.5">{promotor.cluster}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</p>
-                          <p className="text-xs text-gray-500">{Math.round(percentage)}%</p>
+                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm truncate">{promotor.name}</h4>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
+                              {promotor.cluster}
+                            </span>
+                            {specialStatusInfo && (
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
+                                {specialStatusInfo.label}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Fill-up bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            percentage >= 100 
-                              ? 'bg-gradient-to-r from-green-500 to-green-800' 
-                              : percentage >= 75 
-                              ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                              : 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                          }`}
-                          style={{ width: `${Math.min(percentage, 100)}%` }}
-                        ></div>
+                      <div className="space-y-1.5">
+                        {/* Hours */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Stunden</span>
+                          <span className="font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</span>
+                        </div>
+                        
+                        {/* Overtime */}
+                        {promotor.overtime > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Überstunden</span>
+                            <span className="font-medium text-green-600">+{promotor.overtime}h</span>
+                          </div>
+                        )}
+                        
+                        {/* Fill-up bar */}
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              percentage >= 100 
+                                ? 'bg-gradient-to-r from-green-500 to-green-800' 
+                                : percentage >= 75 
+                                ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                                : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                            }`}
+                            style={{ width: `${Math.min(percentage, 100)}%` }}
+                          ></div>
+                        </div>
+                        
+                        {/* Percentage */}
+                        <div className="text-right">
+                          <span className={`text-[10px] font-medium ${
+                            percentage >= 100 ? 'text-green-600' : 
+                            percentage >= 75 ? 'text-orange-600' : 
+                            'text-blue-600'
+                          }`}>
+                            {Math.round(percentage)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
