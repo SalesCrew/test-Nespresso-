@@ -4163,11 +4163,22 @@ Import EP
             {/* Content */}
             <div className="p-6 max-h-[calc(85vh-120px)] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {auslastungLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <Loader2 className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-3" />
-                    <p className="text-gray-600">Lade Auslastung...</p>
-                  </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {[...Array(9)].map((_, index) => (
+                    <div key={`skeleton-${index}`} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                      <div className="mb-2 h-12">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-skeleton-fade"></div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-5 bg-gray-200 rounded-full w-16 animate-skeleton-fade"></div>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="h-4 bg-gray-100 rounded w-full animate-skeleton-fade"></div>
+                        <div className="h-4 bg-gray-100 rounded w-full animate-skeleton-fade"></div>
+                        <div className="h-1.5 bg-gray-200 rounded-full w-full animate-skeleton-fade"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
@@ -4180,13 +4191,13 @@ Import EP
                   // Get cluster pill colors (matching admin team page)
                   const getClusterPill = (cluster: string) => {
                     switch (cluster) {
-                      case 'W/NÖ/BGL': return 'bg-[#E8F0FE] text-gray-700 border-[#CBD7F5]';
-                      case 'ST': return 'bg-[#E7F5ED] text-gray-700 border-[#CFECDD]';
-                      case 'S': return 'bg-[#F0E9FF] text-gray-700 border-[#DDD4FF]';
-                      case 'OÖ': return 'bg-[#FFF3E6] text-gray-700 border-[#FFE3C7]';
-                      case 'T': return 'bg-[#FDEBF3] text-gray-700 border-[#F8D5E5]';
-                      case 'V': return 'bg-[#EAF8FF] text-gray-700 border-[#CFEFFF]';
-                      case 'K': return 'bg-[#EAF6FF] text-gray-700 border-[#D6ECFF]';
+                      case 'wien-noe-bgl': return 'bg-[#E8F0FE] text-gray-700 border-[#CBD7F5]';
+                      case 'steiermark': return 'bg-[#E7F5ED] text-gray-700 border-[#CFECDD]';
+                      case 'salzburg': return 'bg-[#F0E9FF] text-gray-700 border-[#DDD4FF]';
+                      case 'oberoesterreich': return 'bg-[#FFF3E6] text-gray-700 border-[#FFE3C7]';
+                      case 'tirol': return 'bg-[#FDEBF3] text-gray-700 border-[#F8D5E5]';
+                      case 'vorarlberg': return 'bg-[#EAF8FF] text-gray-700 border-[#CFEFFF]';
+                      case 'kaernten': return 'bg-[#EAF6FF] text-gray-700 border-[#D6ECFF]';
                       default: return 'bg-gray-50 text-gray-700 border-gray-200';
                     }
                   };
