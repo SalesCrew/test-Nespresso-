@@ -149,6 +149,8 @@ export default function EinsatzplanPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [plzFilter, setPlzFilter] = useState("");
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
+  const [promotorFilter, setPromotorFilter] = useState("");
+  const [showPromotorDropdown, setShowPromotorDropdown] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
@@ -668,6 +670,7 @@ export default function EinsatzplanPage() {
   const weeksContainerRef = useRef<HTMLDivElement>(null);
   const dateDropdownRef = useRef<HTMLDivElement>(null);
   const plzDropdownRef = useRef<HTMLDivElement>(null);
+  const promotorDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -883,6 +886,23 @@ export default function EinsatzplanPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showStatusDropdown]);
+
+  // Close Promotor dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (promotorDropdownRef.current && !promotorDropdownRef.current.contains(event.target as Node)) {
+        setShowPromotorDropdown(false);
+      }
+    };
+
+    if (showPromotorDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPromotorDropdown]);
 
 
 
@@ -1495,6 +1515,9 @@ export default function EinsatzplanPage() {
     // PLZ filter
     const plzMatch = !plzFilter || item.plz === plzFilter;
     
+    // Promotor filter
+    const promotorMatch = !promotorFilter || item.promotor === promotorFilter;
+    
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
@@ -1541,12 +1564,12 @@ export default function EinsatzplanPage() {
       }
     }
     
-    return regionMatch && plzMatch && statusMatch && verplantMatch && dateMatch;
+    return regionMatch && plzMatch && promotorMatch && statusMatch && verplantMatch && dateMatch;
   }).sort((a, b) => {
     // Sort by date (nearest to farthest)
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
-  }, [einsatzplanData, regionFilter, plzFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
+  }, [einsatzplanData, regionFilter, plzFilter, promotorFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
 
   // Load invite counts and details for the currently filtered list
   useEffect(() => {
@@ -1865,6 +1888,55 @@ Import EP
                                     }`}
                                   >
                                     {plz}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Promotor Filter Pill */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowPromotorDropdown(!showPromotorDropdown)}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                              promotorFilter
+                                ? 'text-gray-700 scale-110' 
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {promotorFilter || 'Promotor'}
+                          </button>
+                          
+                          {showPromotorDropdown && (
+                            <div 
+                              ref={promotorDropdownRef}
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-48 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                            >
+                              <div className="p-2">
+                                <button
+                                  onClick={() => {
+                                    setPromotorFilter("");
+                                    setShowPromotorDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                  Alle Promotoren
+                                </button>
+                                {promotorsList.map((promotor) => (
+                                  <button
+                                    key={promotor.id}
+                                    onClick={() => {
+                                      setPromotorFilter(promotor.name);
+                                      setShowPromotorDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                      promotorFilter === promotor.name
+                                        ? 'bg-gray-100 text-gray-700'
+                                        : 'hover:bg-gray-50 text-gray-600'
+                                    }`}
+                                  >
+                                    {promotor.name}
                                   </button>
                                 ))}
                               </div>
