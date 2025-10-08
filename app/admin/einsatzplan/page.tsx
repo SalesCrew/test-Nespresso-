@@ -151,6 +151,7 @@ export default function EinsatzplanPage() {
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
   const [promotorFilter, setPromotorFilter] = useState("");
   const [showPromotorDropdown, setShowPromotorDropdown] = useState(false);
+  const [promotorFilterSearch, setPromotorFilterSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
@@ -1911,34 +1912,50 @@ Import EP
                           {showPromotorDropdown && (
                             <div 
                               ref={promotorDropdownRef}
-                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-48 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-48 bg-white max-h-60 overflow-hidden custom-scrollbar"
                             >
                               <div className="p-2">
-                                <button
-                                  onClick={() => {
-                                    setPromotorFilter("");
-                                    setShowPromotorDropdown(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                  Alle Promotoren
-                                </button>
-                                {promotorsList.map((promotor) => (
+                                <div className="mb-2" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="text"
+                                    value={promotorFilterSearch}
+                                    onChange={(e) => setPromotorFilterSearch(e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="Suchen..."
+                                    className="w-full h-8 px-2 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <div className="max-h-48 overflow-y-auto custom-scrollbar">
                                   <button
-                                    key={promotor.id}
                                     onClick={() => {
-                                      setPromotorFilter(promotor.name);
+                                      setPromotorFilter("");
+                                      setPromotorFilterSearch("");
                                       setShowPromotorDropdown(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
-                                      promotorFilter === promotor.name
-                                        ? 'bg-gray-100 text-gray-700'
-                                        : 'hover:bg-gray-50 text-gray-600'
-                                    }`}
+                                    className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
                                   >
-                                    {promotor.name}
+                                    Alle Promotoren
                                   </button>
-                                ))}
+                                  {promotorsList
+                                    .filter((promotor) => promotor.name.toLowerCase().includes(promotorFilterSearch.toLowerCase()))
+                                    .map((promotor) => (
+                                      <button
+                                        key={promotor.id}
+                                        onClick={() => {
+                                          setPromotorFilter(promotor.name);
+                                          setPromotorFilterSearch("");
+                                          setShowPromotorDropdown(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                          promotorFilter === promotor.name
+                                            ? 'bg-gray-100 text-gray-700'
+                                            : 'hover:bg-gray-50 text-gray-600'
+                                        }`}
+                                      >
+                                        {promotor.name}
+                                      </button>
+                                    ))}
+                                </div>
                               </div>
                             </div>
                           )}
