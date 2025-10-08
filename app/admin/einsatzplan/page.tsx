@@ -4241,16 +4241,22 @@ Import EP
                       <div className="mb-2 h-12 flex items-start justify-between">
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-gray-900 text-sm truncate" title={promotor.name}>{promotor.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-1 min-h-[20px]">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)}`}>
+                          <div className="flex items-center gap-1.5 mt-1 min-h-[20px] min-w-0 overflow-hidden">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)} flex-1 min-w-0 truncate`}
+                              title={promotor.cluster}
+                            >
                               {promotor.cluster}
                             </span>
                             {specialStatusInfo ? (
-                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color}`}>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${specialStatusInfo.color} flex-1 min-w-0 truncate`}
+                                title={specialStatusInfo.label}
+                              >
                                 {specialStatusInfo.label}
                               </span>
                             ) : (
-                              <span className="opacity-0 px-2 py-0.5 text-[10px]">-</span>
+                              <span className="opacity-0 px-2 py-0.5 text-[10px] flex-1">-</span>
                             )}
                           </div>
                         </div>
