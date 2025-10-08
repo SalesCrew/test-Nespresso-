@@ -4055,11 +4055,24 @@ Import EP
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[80] w-[600px] max-w-[90vw] max-h-[85vh] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Dumbbell className="h-6 w-6" />
-                  <h3 className="text-xl font-semibold">Auslastung</h3>
+                  <h3 className="text-xl font-semibold whitespace-nowrap">Auslastung</h3>
                 </div>
+                
+                {/* Searchbar */}
+                <div className="relative flex-1 max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+                  <input
+                    type="text"
+                    placeholder="Promotor suchen..."
+                    value={auslastungSearch}
+                    onChange={(e) => setAuslastungSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15 transition-colors"
+                  />
+                </div>
+                
                 <div className="flex items-center gap-3">
                   {/* KW Filter Dropdown */}
                   <div className="relative">
@@ -4100,18 +4113,6 @@ Import EP
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-              </div>
-              
-              {/* Searchbar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
-                <input
-                  type="text"
-                  placeholder="Promotor suchen..."
-                  value={auslastungSearch}
-                  onChange={(e) => setAuslastungSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15 transition-colors"
-                />
               </div>
             </div>
             
