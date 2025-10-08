@@ -126,6 +126,7 @@ export default function PromotorenPage() {
   const [editableContractHTML, setEditableContractHTML] = useState<string>('');
   const [viewContractHTML, setViewContractHTML] = useState<string>('');
   const [loadingContractHTML, setLoadingContractHTML] = useState(false);
+  const editableContractRef = useRef<HTMLDivElement>(null);
   // Contracts for selected promotor
   const [promotorContracts, setPromotorContracts] = useState<any[] | null>(null);
   const [loadingContracts, setLoadingContracts] = useState(false);
@@ -147,6 +148,13 @@ export default function PromotorenPage() {
       refreshPromotorContracts(uid);
     }
   }, [selectedPromotorForContract, showDienstvertragPopup]);
+
+  // Populate editable ref when HTML is set
+  useEffect(() => {
+    if (editableContractRef.current && editableContractHTML) {
+      editableContractRef.current.innerHTML = editableContractHTML;
+    }
+  }, [editableContractHTML]);
   
   // Bank details functionality - for showing/hiding IBAN
   const [ibanVisible, setIbanVisible] = useState<Record<number, boolean>>({});
@@ -4065,11 +4073,10 @@ Dein Nespresso Team`;
               {/* Content - Editable HTML */}
               <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-8 [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
                 <div 
+                  ref={editableContractRef}
                   className="max-w-3xl mx-auto prose prose-sm"
                   contentEditable
                   suppressContentEditableWarning
-                  onInput={(e) => setEditableContractHTML(e.currentTarget.innerHTML)}
-                  dangerouslySetInnerHTML={{ __html: editableContractHTML }}
                   style={{
                     outline: 'none',
                     minHeight: '500px'
@@ -4094,6 +4101,14 @@ Dein Nespresso Team`;
                       onClick={async () => {
                         const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
                         if (!promotorId) return;
+                        
+                        // Get final HTML from the editable div
+                        const finalHTML = editableContractRef.current?.innerHTML || '';
+                        if (!finalHTML) {
+                          setToastMsg('Fehler: Kein Vertragsinhalt gefunden');
+                          return;
+                        }
+                        
                         try {
                           // Step 1: Create contract record in contracts table
                           const contractRes = await fetch('/api/admin/contracts', {
@@ -4120,7 +4135,7 @@ Dein Nespresso Team`;
                             body: JSON.stringify({
                               contract_id: contractData.contract.id,
                               user_id: promotorId,
-                              html_content: editableContractHTML
+                              html_content: finalHTML
                             })
                           });
                           if (!sentRes.ok) {
