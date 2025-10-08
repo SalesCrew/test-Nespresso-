@@ -173,6 +173,7 @@ export default function EinsatzplanPage() {
   const [auslastungKW, setAuslastungKW] = useState<string>('');
   const [showAuslastungKWDropdown, setShowAuslastungKWDropdown] = useState(false);
   const [auslastungSearch, setAuslastungSearch] = useState('');
+  const auslastungKWDropdownRef = useRef<HTMLDivElement>(null);
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
@@ -4077,7 +4078,21 @@ Import EP
                   {/* KW Filter Dropdown */}
                   <div className="relative">
                     <button
-                      onClick={() => setShowAuslastungKWDropdown(!showAuslastungKWDropdown)}
+                      onClick={() => {
+                        setShowAuslastungKWDropdown(!showAuslastungKWDropdown);
+                        // Scroll to selected item when opening
+                        if (!showAuslastungKWDropdown) {
+                          setTimeout(() => {
+                            const dropdown = auslastungKWDropdownRef.current;
+                            if (dropdown && auslastungKW) {
+                              const selectedButton = dropdown.querySelector(`[data-week="${auslastungKW}"]`) as HTMLElement;
+                              if (selectedButton) {
+                                selectedButton.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                              }
+                            }
+                          }, 10);
+                        }
+                      }}
                       className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-sm bg-white/10 border border-white/20 text-white hover:bg-white/15 transition-colors min-w-[140px]"
                     >
                       <span>{auslastungKW.split(' (')[0] || 'KW wählen'}</span>
@@ -4085,17 +4100,21 @@ Import EP
                     </button>
                     
                     {showAuslastungKWDropdown && (
-                      <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[90] w-56 max-h-60 overflow-y-auto custom-scrollbar">
+                      <div 
+                        ref={auslastungKWDropdownRef}
+                        className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[90] w-56 max-h-60 overflow-y-auto custom-scrollbar"
+                      >
                         {generateCalendarWeeks().map((week) => (
                           <button
                             key={week}
+                            data-week={week}
                             onClick={() => {
                               setAuslastungKW(week);
                               setShowAuslastungKWDropdown(false);
                             }}
                             className={`w-full text-left px-3 py-2 text-xs transition-colors ${
                               auslastungKW === week
-                                ? 'bg-gray-100 text-gray-700'
+                                ? 'bg-gray-200 text-gray-900 font-medium'
                                 : 'hover:bg-gray-50 text-gray-600'
                             }`}
                           >
