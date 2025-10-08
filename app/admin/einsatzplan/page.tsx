@@ -361,6 +361,8 @@ export default function EinsatzplanPage() {
   // Detail modal dropdown searches
   const [detailPromotorSearch, setDetailPromotorSearch] = useState("");
   const [detailBuddySearch, setDetailBuddySearch] = useState("");
+  const detailPromotorSearchRef = useRef<HTMLInputElement | null>(null);
+  const detailBuddySearchRef = useRef<HTMLInputElement | null>(null);
   // Buddy toggle for bulk invites
   const [inviteBuddy, setInviteBuddy] = useState(false);
   // Accepted applications for the current assignment (detail view)
@@ -3282,20 +3284,21 @@ Import EP
                               : 'Kein Promotor'}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
-                          <div className="p-1 sticky top-0 bg-white">
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1" onMouseDown={(e) => e.stopPropagation()}>
+                          <div className="p-1 sticky top-0 bg-white" onMouseDown={(e) => e.stopPropagation()}>
                             <input
+                              ref={detailPromotorSearchRef}
                               value={detailPromotorSearch}
                               onChange={(e) => setDetailPromotorSearch(e.target.value)}
                               placeholder="Promotor suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none"
                             />
                           </div>
-                          <SelectItem value="none" className="focus:bg-gray-100">Kein Promotor</SelectItem>
+                          <SelectItem value="none" className="focus:bg-gray-100" onMouseDown={(e) => e.stopPropagation()}>Kein Promotor</SelectItem>
                           {promotorsList
                             .filter((p: any) => p.name.toLowerCase().includes(detailPromotorSearch.toLowerCase()))
                             .map((p: any) => (
-                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100" onMouseDown={(e) => e.stopPropagation()}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -3325,20 +3328,21 @@ Import EP
                               : 'Kein Buddy'}
                           </SelectValue>
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1">
-                          <div className="p-1 sticky top-0 bg-white">
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg p-1" onMouseDown={(e) => e.stopPropagation()}>
+                          <div className="p-1 sticky top-0 bg-white" onMouseDown={(e) => e.stopPropagation()}>
                             <input
+                              ref={detailBuddySearchRef}
                               value={detailBuddySearch}
                               onChange={(e) => setDetailBuddySearch(e.target.value)}
                               placeholder="Buddy suchen..."
                               className="w-full h-8 px-2 text-sm border border-gray-200 rounded-md focus:outline-none"
                             />
                           </div>
-                          <SelectItem value="none" className="focus:bg-gray-100">Kein Buddy</SelectItem>
+                          <SelectItem value="none" className="focus:bg-gray-100" onMouseDown={(e) => e.stopPropagation()}>Kein Buddy</SelectItem>
                           {promotorsList
                             .filter((p: any) => p.name.toLowerCase().includes(detailBuddySearch.toLowerCase()))
                             .map((p: any) => (
-                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100">{p.name}</SelectItem>
+                              <SelectItem key={p.id} value={p.id} className="focus:bg-gray-100" onMouseDown={(e) => e.stopPropagation()}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
