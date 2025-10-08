@@ -2411,7 +2411,7 @@ Dein Nespresso Team`;
                               key={config.key}
                               className={`flex-1 flex items-center justify-center rounded-lg py-2 transition-all duration-300 ${
                                 isDone
-                                  ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
+                            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60' 
                                   : 'bg-gray-200'
                               }`}
                             >
@@ -2466,9 +2466,9 @@ Dein Nespresso Team`;
                 <div 
                   ref={notesRef}
                   className={`absolute top-1/2 -translate-y-1/2 w-80 h-80 bg-transparent z-20 ${
-                    notesPosition[promotor.id] === 'left' 
-                      ? 'right-full' 
-                      : 'left-full'
+                  notesPosition[promotor.id] === 'left' 
+                    ? 'right-full' 
+                    : 'left-full'
                   }`}
                 >
                   <textarea
@@ -2725,11 +2725,11 @@ Dein Nespresso Team`;
                             className="h-16 w-16 ring-4 ring-white/20 cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() => setShowPhotoMenu(!showPhotoMenu)}
                           >
-                            <AvatarImage src={promotor.avatar} alt={promotor.name} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-medium">
-                              {promotor.name.split(' ').map((n: string) => (n as string)[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
+                          <AvatarImage src={promotor.avatar} alt={promotor.name} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-medium">
+                            {promotor.name.split(' ').map((n: string) => (n as string)[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
                           
                           {/* Photo Menu */}
                           {showPhotoMenu && (
