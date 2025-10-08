@@ -31,6 +31,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showBirthDatePicker, setShowBirthDatePicker] = useState(false)
+  const [calendarStep, setCalendarStep] = useState<'year' | 'month' | 'day'>('year')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
@@ -406,49 +407,79 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 </button>
                 
                 {showBirthDatePicker && (
-                  <div className="absolute z-50 bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full">
-                    {/* Year selector - prominent for easy access */}
-                    <div className="mb-4">
-                      <label className="block text-xs text-gray-500 mb-2">Jahr</label>
-                      <select
-                        value={selectedYear || ''}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        size={5}
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-scrollbar]:hidden overflow-y-auto"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                      >
-                        <option value="">Jahr wählen</option>
-                        {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
+                  <div className="absolute z-50 bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full max-w-sm">
+                    {/* Step indicator */}
+                    <div className="text-center mb-3 text-xs text-gray-500">
+                      {calendarStep === 'year' && 'Schritt 1: Jahr wählen'}
+                      {calendarStep === 'month' && 'Schritt 2: Monat wählen'}
+                      {calendarStep === 'day' && 'Schritt 3: Tag wählen'}
                     </div>
+                    
+                    {/* Year selector */}
+                    {calendarStep === 'year' && (
+                      <div>
+                        <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
+                            <button
+                              key={year}
+                              type="button"
+                              onClick={() => {
+                                setSelectedYear(year);
+                                setCalendarStep('month');
+                              }}
+                              className="px-3 py-2 rounded-lg text-sm bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
+                            >
+                              {year}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Month selector */}
-                    <div className="mb-4">
-                      <label className="block text-xs text-gray-500 mb-2">Monat</label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'].map((month, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setSelectedMonth(idx + 1)}
-                            className={`px-2 py-1.5 rounded-md text-xs transition-all ${
-                              selectedMonth === idx + 1
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
-                            }`}
-                          >
-                            {month}
-                          </button>
-                        ))}
+                    {calendarStep === 'month' && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedYear(null);
+                            setCalendarStep('year');
+                          }}
+                          className="mb-3 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          ← Zurück zu Jahr
+                        </button>
+                        <div className="grid grid-cols-4 gap-2">
+                          {['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'].map((month, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                setSelectedMonth(idx + 1);
+                                setCalendarStep('day');
+                              }}
+                              className="px-3 py-2 rounded-lg text-sm bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
+                            >
+                              {month}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                     
                     {/* Day selector */}
-                    {selectedMonth && selectedYear && (
-                      <div className="mb-4">
-                        <label className="block text-xs text-gray-500 mb-2">Tag</label>
+                    {calendarStep === 'day' && selectedMonth && selectedYear && (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedMonth(null);
+                            setCalendarStep('month');
+                          }}
+                          className="mb-3 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          ← Zurück zu Monat
+                        </button>
                         <div className="grid grid-cols-7 gap-1">
                           {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map(day => (
                             <button
@@ -459,12 +490,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                                 const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
                                 updateFormData("birthDate", formatted);
                                 setShowBirthDatePicker(false);
+                                setCalendarStep('year');
                               }}
-                              className={`px-2 py-1.5 rounded-md text-xs transition-all ${
-                                selectedDay === day
-                                  ? 'bg-gray-900 text-white'
-                                  : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
-                              }`}
+                              className="px-2 py-2 rounded-lg text-xs bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
                             >
                               {day}
                             </button>
