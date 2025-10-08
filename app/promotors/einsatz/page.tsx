@@ -3510,7 +3510,7 @@ const loadProcessState = async () => {
             className="fixed inset-0 bg-black/30 z-50"
             onClick={() => setShowNotesPopup(false)}
           ></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[60] w-[400px] max-h-[500px] overflow-hidden">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[60] w-[85vw] max-w-[400px] max-h-[500px] overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4">
               <div className="flex items-center justify-between">
