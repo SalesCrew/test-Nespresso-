@@ -4151,16 +4151,12 @@ Import EP
                           <span className="font-medium text-gray-900">{promotor.assignedHours}h / {promotor.contractHours}h</span>
                         </div>
                         
-                        {/* Overtime - always reserve space */}
+                        {/* Overtime - always visible */}
                         <div className="flex items-center justify-between text-xs h-4">
-                          {promotor.overtime > 0 ? (
-                            <>
-                              <span className="text-gray-500">Überstunden</span>
-                              <span className="font-medium text-green-600">+{promotor.overtime}h</span>
-                            </>
-                          ) : (
-                            <span className="opacity-0">-</span>
-                          )}
+                          <span className="text-gray-500">Überstunden</span>
+                          <span className={`font-medium ${promotor.overtime > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                            {promotor.overtime > 0 ? `+${promotor.overtime}h` : '0h'}
+                          </span>
                         </div>
                         
                         {/* Fill-up bar - always same position */}
