@@ -35,8 +35,7 @@ import {
   Loader2,
   Sparkles,
   Plus,
-  Dumbbell,
-  ChevronDown
+  Dumbbell
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
