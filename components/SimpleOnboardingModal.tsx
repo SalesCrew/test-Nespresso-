@@ -30,6 +30,10 @@ interface SimpleOnboardingModalProps {
 export default function SimpleOnboardingModal({ isOpen, onComplete, onClose }: SimpleOnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [showBirthDatePicker, setShowBirthDatePicker] = useState(false)
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     // Step 1: Personal Info
     firstName: "",
@@ -260,23 +264,99 @@ export default function SimpleOnboardingModal({ isOpen, onComplete, onClose }: S
           <div className="space-y-4">
             <div className="flex items-center mb-6">
               <FileText className="h-6 w-6 text-blue-500 mr-3" />
-              <h2 className="text-xl font-semibold">Zur Anmeldung</h2>
+              <h2 className="text-xl font-semibold">Anmeldungsdaten</h2>
             </div>
             <div className="space-y-4">
+              {/* Geburtsdatum - now first */}
+              <div className="relative">
+                <label className="block text-sm text-gray-600 mb-1">Geburtsdatum</label>
+                <button
+                  type="button"
+                  onClick={() => setShowBirthDatePicker(!showBirthDatePicker)}
+                  className="w-full px-3 py-2 text-left bg-gray-50 dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                  {formData.birthDate || 'Geburtsdatum (TT.MM.JJJJ)'}
+                </button>
+                
+                {showBirthDatePicker && (
+                  <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full">
+                    {/* Year selector - prominent for easy access */}
+                    <div className="mb-4">
+                      <label className="block text-xs text-gray-500 mb-2">Jahr</label>
+                      <select
+                        value={selectedYear || ''}
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Jahr wählen</option>
+                        {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* Month selector */}
+                    <div className="mb-4">
+                      <label className="block text-xs text-gray-500 mb-2">Monat</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'].map((month, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setSelectedMonth(idx + 1)}
+                            className={`px-2 py-1.5 rounded-md text-xs transition-all ${
+                              selectedMonth === idx + 1
+                                ? 'bg-gray-900 text-white'
+                                : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                            }`}
+                          >
+                            {month}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Day selector */}
+                    {selectedMonth && selectedYear && (
+                      <div className="mb-4">
+                        <label className="block text-xs text-gray-500 mb-2">Tag</label>
+                        <div className="grid grid-cols-7 gap-1">
+                          {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map(day => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDay(day);
+                                const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
+                                updateFormData("birthDate", formatted);
+                                setShowBirthDatePicker(false);
+                              }}
+                              className={`px-2 py-1.5 rounded-md text-xs transition-all ${
+                                selectedDay === day
+                                  ? 'bg-gray-900 text-white'
+                                  : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                              }`}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* SV-Nummer - now second */}
               <Input
-                placeholder="Sozialversicherungsnummer"
+                placeholder="SV-Nummer"
                 value={formData.socialSecurityNumber}
                 onChange={(e) => updateFormData("socialSecurityNumber", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
               />
+              
               <Input
-                placeholder="Geburtsdatum (TT.MM.JJJJ)"
-                value={formData.birthDate}
-                onChange={(e) => updateFormData("birthDate", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
-              <Input
-                placeholder="Staatsbürgerschaft"
+                placeholder="Staatsbürgerschaft (Land eingeben, dann aus Liste auswählen)"
                 value={formData.citizenship}
                 onChange={(e) => updateFormData("citizenship", e.target.value)}
                 className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
