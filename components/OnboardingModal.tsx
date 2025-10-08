@@ -418,7 +418,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                     {/* Year selector */}
                     {calendarStep === 'year' && (
                       <div>
-                        <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                           {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
                             <button
                               key={year}
@@ -504,13 +504,54 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 )}
               </div>
               
-              {/* SV-Nummer - now second */}
-              <Input
-                placeholder="SV-Nummer"
-                value={formData.socialSecurityNumber}
-                onChange={(e) => updateFormData("socialSecurityNumber", e.target.value)}
-                className="!border-0 !ring-0 !ring-offset-0 focus-visible:!ring-2 focus-visible:!ring-blue-500 bg-gray-50 dark:bg-gray-800 text-sm"
-              />
+              {/* SV-Nummer - now second with auto-filled birthdate prefix */}
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">SV-Nummer</label>
+                <div className="flex items-center gap-2">
+                  {/* Auto-filled prefix from birthdate (DDMMYY) */}
+                  {formData.birthDate && (() => {
+                    const parts = formData.birthDate.split('.');
+                    if (parts.length === 3) {
+                      const prefix = parts[0] + parts[1] + parts[2].slice(-2);
+                      return (
+                        <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-700 font-mono">
+                          {prefix}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                  
+                  {/* Editable suffix */}
+                  <input
+                    type="text"
+                    placeholder={formData.birthDate ? "Restliche Ziffern" : "SV-Nummer"}
+                    value={(() => {
+                      if (!formData.birthDate) return formData.socialSecurityNumber;
+                      const parts = formData.birthDate.split('.');
+                      if (parts.length === 3) {
+                        const prefix = parts[0] + parts[1] + parts[2].slice(-2);
+                        return formData.socialSecurityNumber.startsWith(prefix) 
+                          ? formData.socialSecurityNumber.slice(6) 
+                          : formData.socialSecurityNumber;
+                      }
+                      return formData.socialSecurityNumber;
+                    })()}
+                    onChange={(e) => {
+                      if (!formData.birthDate) {
+                        updateFormData("socialSecurityNumber", e.target.value);
+                      } else {
+                        const parts = formData.birthDate.split('.');
+                        if (parts.length === 3) {
+                          const prefix = parts[0] + parts[1] + parts[2].slice(-2);
+                          updateFormData("socialSecurityNumber", prefix + e.target.value);
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-800 border-0 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
               {/* Citizenship with typeahead + enforced selection */}
               <div className="relative">
                 <Input
