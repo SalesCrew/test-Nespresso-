@@ -406,14 +406,16 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 </button>
                 
                 {showBirthDatePicker && (
-                  <div className="absolute z-50 mt-1 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full">
+                  <div className="absolute z-50 bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full">
                     {/* Year selector - prominent for easy access */}
                     <div className="mb-4">
                       <label className="block text-xs text-gray-500 mb-2">Jahr</label>
                       <select
                         value={selectedYear || ''}
                         onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        size={5}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 [&::-webkit-scrollbar]:hidden overflow-y-auto"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                       >
                         <option value="">Jahr wählen</option>
                         {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
