@@ -149,6 +149,7 @@ Die wichtigsten To-Dos gerade sind:
 5. Verwende keine Emojis.
 6. Vermeide Dopplungen: Eine Information darf nur in EINEM Bulletpoint vorkommen.
 7. Lasse zwischen zwei Bulletpoints eine Leerzeile für bessere Lesbarkeit.
+8. JEDER Bereich (Verplanung, Einladungen, Anfragen, Dienstvertrag, Bewerber) MUSS in einem EIGENEN Bulletpoint behandelt werden – NIEMALS Kategorien vermischen oder zu einem langen Punkt zusammenfassen.
 
 ----------------------------------
 
