@@ -2603,10 +2603,12 @@ Import EP
                 <CardContent className="p-3 h-full flex flex-col">
                   {/* Header with Toggle Button */}
                   <div className="flex items-center justify-between mb-3">
-                   <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 relative">
+                    <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                       {aiMode ? 'Perfect Match' : 'Perfect Match'}
                       <Sparkles className="h-4 w-4 text-black" />
-                      {/* Help tooltip */}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {/* Help tooltip placed left of the brain button */}
                       <div className="group inline-block">
                         <button className="ml-1 text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
@@ -2615,18 +2617,17 @@ Import EP
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
                           </svg>
                         </button>
-                        <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20">
+                        <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-20">
                           <div className="w-72 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
                             <p className="font-semibold text-gray-900 mb-2">Wie funktioniert Perfect Match?</p>
                             <p className="mb-2 text-gray-700">1. Klicke zuerst auf das <span className="font-medium text-blue-600">Gehirn</span>, um den AI‑Modus zu aktivieren.</p>
                             <p className="mb-2 text-gray-700">2. Klicke dann auf einen <span className="font-medium text-blue-600">Einsatz</span>. Eddie analysiert kurz und schlägt geeignete Promotoren vor.</p>
-                            <p className="mb-2 text-gray-700">3. Du kannst Personen direkt zuweisen, indem du auf den Namen <span className="font-medium text-blue-600">mehrfach klickst</span> (Anzahl = Einsatztage).</p>
+                            <p className="mb-2 text-gray-700">3. Du kannst Personen direkt zuweisen, indem du auf den Namen <span className="font-medium text-blue-600">mehrfach klickst</span>.</p>
                             <p className="mb-0 text-gray-700">4. Über das <span className="font-medium text-blue-600">Medaille‑Icon</span> erhältst du detaillierte Begründungen und zusätzliche Infos.</p>
                           </div>
                         </div>
                       </div>
-                    </h3>
-                    <button
+                      <button
                       onClick={() => {
                         const newAiMode = !aiMode;
                         console.log('🧠 [CLIENT] Brain button clicked', { currentAiMode: aiMode, newAiMode });
@@ -2648,6 +2649,7 @@ Import EP
                     >
                       <Brain className="h-4 w-4" />
                     </button>
+                    </div>
                   </div>
 
                   <div 
