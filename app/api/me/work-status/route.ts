@@ -38,13 +38,8 @@ export async function GET() {
     };
 
     const kw = getISOWeek(monday);
-    console.log('[work-status] user', userId, {
-      now: now.toString(),
-      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      kw,
-      weekStart,
-      weekEnd
-    });
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    console.log('[work-status] user', userId, { now: now.toString(), tz: timezone, kw, weekStart, weekEnd });
 
     // Get active contract hours
     const { data: contract } = await svc
@@ -65,6 +60,8 @@ export async function GET() {
     // Calculate working hours (only count assignments that have already ended)
     let totalHours = 0;
     const currentTime = new Date();
+
+    const countedAssignments: Array<{ start_ts: string; end_ts: string; hours: number }> = [];
 
     (participants || []).forEach((p: any) => {
       if (p.assignment?.start_ts && p.assignment?.end_ts) {
@@ -87,6 +84,11 @@ export async function GET() {
             end_ts: p.assignment.end_ts,
             hours: Math.round(hours * 100) / 100
           });
+          countedAssignments.push({
+            start_ts: p.assignment.start_ts,
+            end_ts: p.assignment.end_ts,
+            hours: Math.round(hours * 100) / 100
+          });
         }
       }
     });
@@ -98,7 +100,15 @@ export async function GET() {
     return NextResponse.json({
       goalHours,
       workedHours,
-      percentage: goalHours > 0 ? Math.round((workedHours / goalHours) * 100) : 0
+      percentage: goalHours > 0 ? Math.round((workedHours / goalHours) * 100) : 0,
+      debug: {
+        kw,
+        weekStart,
+        weekEnd,
+        timezone,
+        now: now.toString(),
+        countedAssignments
+      }
     });
   } catch (error: any) {
     console.error('Error fetching work status:', error);
