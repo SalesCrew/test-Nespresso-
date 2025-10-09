@@ -203,7 +203,15 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
       <div class="mt-12 pt-8 border-t border-gray-300" style="page-break-inside: avoid;">
         <div class="grid grid-cols-2 gap-8">
           <div class="text-center">
-            <div class="mb-8">________________________</div>
+            <div class="mb-4 flex justify-center">
+              <img 
+                src="/contracts/signature-stamp.png" 
+                alt="Unterschrift Sales Crew" 
+                style="width: 180px; height: auto; display: block;"
+                crossorigin="anonymous"
+              />
+            </div>
+            <div class="mb-2">________________________</div>
             <p>Sales Crew Verkaufsförderung GmbH</p>
             <p class="mt-4">Datum: ……………</p>
           </div>
