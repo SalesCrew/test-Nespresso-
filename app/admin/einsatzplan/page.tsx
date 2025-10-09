@@ -2832,32 +2832,32 @@ Import EP
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2 relative">
-                    <div>
+                  <div>
+                    <div className="flex items-center gap-2">
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">Einsätze verteilen</h3>
-                      <p className="text-sm text-gray-500">Wähle Promotionen aus und sende sie an Promotoren zur Auswahl</p>
-                    </div>
-                    {/* Help tooltip */}
-                    <div className="group inline-block relative mt-[-4px]">
-                      <button className="text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a3.375 3.375 0 1 1 6.75 0c0 1.257-.665 2.174-1.879 2.864-.686.395-1.121 1.11-1.121 1.886v.375"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
-                        </svg>
-                      </button>
-                      <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 pointer-events-none group-hover:pointer-events-auto">
-                        <div className="w-80 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
-                          <p className="font-semibold text-gray-900 mb-2">Wie verteile ich Einsätze?</p>
-                          <p className="mb-2">1. Klicke auf <span className="font-medium text-blue-600">Auswahl starten</span>.</p>
-                          <p className="mb-2">2. Wähle beliebig viele <span className="font-medium text-blue-600">Einsätze</span> aus.</p>
-                          <p className="mb-2">3. Im zweiten Schritt Promotoren über das <span className="font-medium text-blue-600">Promotoren‑Icon</span> hinzufügen.</p>
-                          <p className="mb-2">4. Klicke anschließend auf <span className="font-medium text-blue-600">Senden</span>.</p>
-                          <p className="mb-2">Hinweis: Du kannst auch bereits <span className="font-medium text-blue-600">zugewiesene Einsätze</span> auswählen – dabei wird automatisch ein <span className="font-medium text-blue-600">Buddy‑Tag</span> vorgeschlagen.</p>
-                          <p className="mb-0">Optional: Im zweiten Schritt kannst du <span className="font-medium text-blue-600">Buddy‑Tag manuell aktivieren</span>.</p>
+                      {/* Help tooltip right next to the header text */}
+                      <div className="group inline-block relative mt-[-2px]">
+                        <button className="text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a3.375 3.375 0 1 1 6.75 0c0 1.257-.665 2.174-1.879 2.864-.686.395-1.121 1.11-1.121 1.886v.375"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
+                          </svg>
+                        </button>
+                        <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20 pointer-events-none group-hover:pointer-events-auto">
+                          <div className="w-80 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
+                            <p className="font-semibold text-gray-900 mb-2">Wie verteile ich Einsätze?</p>
+                            <p className="mb-2">1. Klicke auf <span className="font-medium text-blue-600">Auswahl starten</span>.</p>
+                            <p className="mb-2">2. Wähle beliebig viele <span className="font-medium text-blue-600">Einsätze</span> aus.</p>
+                            <p className="mb-2">3. Im zweiten Schritt Promotoren über das <span className="font-medium text-blue-600">Promotoren‑Icon</span> hinzufügen.</p>
+                            <p className="mb-2">4. Klicke anschließend auf <span className="font-medium text-blue-600">Senden</span>.</p>
+                            <p className="mb-2">Hinweis: Du kannst auch bereits <span className="font-medium text-blue-600">zugewiesene Einsätze</span> auswählen – dabei wird automatisch ein <span className="font-medium text-blue-600">Buddy‑Tag</span> vorgeschlagen.</p>
+                            <p className="mb-0">Optional: Im zweiten Schritt kannst du <span className="font-medium text-blue-600">Buddy‑Tag manuell aktivieren</span>.</p>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <p className="text-sm text-gray-500">Wähle Promotionen aus und sende sie an Promotoren zur Auswahl</p>
                   </div>
                   <button
                     onClick={() => {
