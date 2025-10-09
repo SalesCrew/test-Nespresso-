@@ -175,6 +175,7 @@ export default function DashboardPage() {
 
   const fullSubtitle = "Hier ist dein Überblick für heute.";
   const [animatedSubtitle, setAnimatedSubtitle] = useState(fullSubtitle.split('').map(() => '\u00A0').join('')); 
+  const [aiSubtitle, setAiSubtitle] = useState<string>("");
   const [greeting, setGreeting] = useState("");
   const [displayName, setDisplayName] = useState<string>("");
 
@@ -284,14 +285,22 @@ export default function DashboardPage() {
     setGreeting(newGreeting);
   }, [displayName]);
 
+  // On mount: fetch short "Was gibts zu tun?" hint from GPT-5 nano
   useEffect(() => {
+    let cancelled = false;
+    const fetchAi = async () => {
+      try {
+        const res = await fetch('/api/me/whats-todo', { cache: 'no-store' });
+        if (!res.ok) throw new Error('ai request failed');
+        const data = await res.json();
+        if (!cancelled) setAiSubtitle(data.text || '');
+      } catch {}
+    };
+
+    // Keep the existing typing animation as a fallback while AI loads
     setAnimatedSubtitle(fullSubtitle.split('').map(() => '\u00A0').join(''));
-
     let currentTypedIndex = 0;
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
+    if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
       if (currentTypedIndex < fullSubtitle.length) {
         setAnimatedSubtitle(
@@ -299,15 +308,16 @@ export default function DashboardPage() {
           Array(fullSubtitle.length - (currentTypedIndex + 1)).fill('\u00A0').join('')
         );
         currentTypedIndex++;
-      } else {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+      } else if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     }, 50);
 
+    fetchAi();
+
     return () => {
+      cancelled = true;
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -906,7 +916,9 @@ export default function DashboardPage() {
     <>
       <section className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{greeting}</h1>
-        <p className="text-gray-600 dark:text-gray-400">{animatedSubtitle}</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          {aiSubtitle || animatedSubtitle}
+        </p>
       </section>
 
       <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
