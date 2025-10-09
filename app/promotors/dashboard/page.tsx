@@ -728,11 +728,6 @@ export default function DashboardPage() {
       if (res.ok) {
         const data = await res.json();
         setWorkStatus(data);
-        if (data?.debug) {
-          console.log('[Wochenstatus] KW', data.debug.kw, 'Week range', data.debug.weekStart, '→', data.debug.weekEnd, 'TZ', data.debug.timezone);
-          console.log('[Wochenstatus] Counted assignments', data.debug.countedAssignments);
-          console.log('[Wochenstatus] Worked/Goal', data.workedHours, '/', data.goalHours, '=>', data.percentage, '%');
-        }
       } else {
         console.error('Failed to load work status:', res.status);
       }
@@ -2287,7 +2282,7 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">Arbeitsstunden</span>
-                  <span className="text-sm font-medium">
+                  <span className={`text-sm font-medium ${!workStatusLoading && workStatus.workedHours > workStatus.goalHours ? 'text-green-600' : ''}`}>
                     {workStatusLoading ? '...' : `${workStatus.workedHours}h/${workStatus.goalHours}h`}
                   </span>
                 </div>

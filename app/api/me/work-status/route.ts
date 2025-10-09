@@ -26,21 +26,6 @@ export async function GET() {
     const weekStart = monday.toISOString().split('T')[0];
     const weekEnd = sunday.toISOString().split('T')[0];
 
-    // Compute ISO week number (KW)
-    const getISOWeek = (d: Date) => {
-      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-      // Set to nearest Thursday: current date + 4 - current day number
-      const dayNum = date.getUTCDay() || 7;
-      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-      const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-      return weekNo;
-    };
-
-    const kw = getISOWeek(monday);
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    console.log('[work-status] user', userId, { now: now.toString(), tz: timezone, kw, weekStart, weekEnd });
-
     // Get active contract hours
     const { data: contract } = await svc
       .from('contracts')
@@ -61,8 +46,6 @@ export async function GET() {
     let totalHours = 0;
     const currentTime = new Date();
 
-    const countedAssignments: Array<{ start_ts: string; end_ts: string; hours: number }> = [];
-
     (participants || []).forEach((p: any) => {
       if (p.assignment?.start_ts && p.assignment?.end_ts) {
         const end = new Date(p.assignment.end_ts);
@@ -79,16 +62,6 @@ export async function GET() {
           }
 
           totalHours += hours;
-          console.log('[work-status] counted assignment', {
-            start_ts: p.assignment.start_ts,
-            end_ts: p.assignment.end_ts,
-            hours: Math.round(hours * 100) / 100
-          });
-          countedAssignments.push({
-            start_ts: p.assignment.start_ts,
-            end_ts: p.assignment.end_ts,
-            hours: Math.round(hours * 100) / 100
-          });
         }
       }
     });
@@ -96,19 +69,10 @@ export async function GET() {
     const goalHours = contract?.hours_per_week || 0;
     const workedHours = Math.round(totalHours * 10) / 10; // Round to 1 decimal place
 
-    console.log('[work-status] summary', { goalHours, workedHours: Math.round(totalHours * 10) / 10 });
     return NextResponse.json({
       goalHours,
       workedHours,
-      percentage: goalHours > 0 ? Math.round((workedHours / goalHours) * 100) : 0,
-      debug: {
-        kw,
-        weekStart,
-        weekEnd,
-        timezone,
-        now: now.toString(),
-        countedAssignments
-      }
+      percentage: goalHours > 0 ? Math.round((workedHours / goalHours) * 100) : 0
     });
   } catch (error: any) {
     console.error('Error fetching work status:', error);
