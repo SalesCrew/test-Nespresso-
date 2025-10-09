@@ -1268,10 +1268,26 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                     msOverflowStyle: 'none'
                   }}
                 >
-                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line pr-2">
-                    {eddieText}
-                    {isTyping && <span className="animate-pulse">|</span>}
-                  </p>
+                  {eddieLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full py-12">
+                      <div className="relative">
+                        <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
+                        <img 
+                          src="/icons/robot 1.svg" 
+                          alt="Eddie AI" 
+                          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 opacity-50"
+                        />
+                      </div>
+                      <p className="mt-4 text-sm text-gray-500 animate-pulse">
+                        Eddie durchforstet gerade das System nach To-Dos...
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line pr-2">
+                      {eddieText}
+                      {isTyping && <span className="animate-pulse">|</span>}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
