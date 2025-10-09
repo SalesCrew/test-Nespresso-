@@ -60,6 +60,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   });
   const [eddieText, setEddieText] = useState("");
   const [isTyping, setIsTyping] = useState(true);
+  const [eddieLoading, setEddieLoading] = useState(true);
+  const [fullEddieText, setFullEddieText] = useState("");
   const [einsatzFilter, setEinsatzFilter] = useState("alle");
   const [showDropdown, setShowDropdown] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'cards'>('list');
@@ -913,15 +915,29 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     return () => clearInterval(interval);
   }, []);
   
-  const fullEddieText = `Guten Tag! Hier ist ein Überblick über die wichtigsten Aufgaben für heute:
-
-Die 4 aktiven Promotions laufen alle sehr erfolgreich und zeigen gute Verkaufszahlen. Es gibt jedoch 2 neue Promotion-Anfragen, die Ihre Aufmerksamkeit benötigen - diese sollten heute noch bearbeitet werden.
-
-Sehr erfreulich: Die Verkaufszahlen dieser Woche liegen 15% über dem Durchschnitt! Das Team leistet wirklich hervorragende Arbeit.
-
-3 Promotoren haben ihre Schulungen erfolgreich abgeschlossen und sind nun bereit für neue Einsätze. Außerdem stehen heute noch einige Berichte zur Überprüfung an.
-
-Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schulungsabsolventen für kommende Promotions einzuplanen.`;
+  // Load AI response for "Was gibts zu tun"
+  useEffect(() => {
+    const loadWhatsTodo = async () => {
+      try {
+        setEddieLoading(true);
+        const res = await fetch('/api/admin/whats-todo', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setFullEddieText(data.response || '');
+        } else {
+          console.error('Failed to load whats-todo:', res.status);
+          setFullEddieText('Fehler beim Laden der Aufgaben.');
+        }
+      } catch (e) {
+        console.error('Error loading whats-todo:', e);
+        setFullEddieText('Fehler beim Laden der Aufgaben.');
+      } finally {
+        setEddieLoading(false);
+      }
+    };
+    
+    loadWhatsTodo();
+  }, []);
 
   // Mock data for promotions
   const todaysPromotions = [
@@ -1150,7 +1166,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
 
   // Typing animation effect
   useEffect(() => {
-    if (fullEddieText.length === 0) return;
+    if (eddieLoading || fullEddieText.length === 0) return;
     
     let index = 0;
     const timer = setInterval(() => {
@@ -1164,7 +1180,7 @@ Ich empfehle, zuerst die offenen Anfragen zu bearbeiten und dann die neuen Schul
     }, 30); // Typing speed: 30ms per character
     
     return () => clearInterval(timer);
-  }, []);
+  }, [fullEddieText, eddieLoading]);
 
   // Auto-scroll effect during typing
   useEffect(() => {
