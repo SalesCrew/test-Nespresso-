@@ -28,6 +28,24 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
   const today = new Date();
   const signatureDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
 
+  // Calculate default end date (start date + 1 month) if not provided
+  let displayEndDate = endDate;
+  if (!endDate && startDate) {
+    try {
+      // Parse start date (format: DD.MM.YYYY)
+      const parts = startDate.split('.');
+      if (parts.length === 3) {
+        const startDateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        // Add 1 month
+        const endDateObj = new Date(startDateObj);
+        endDateObj.setMonth(endDateObj.getMonth() + 1);
+        displayEndDate = `${endDateObj.getDate().toString().padStart(2, '0')}.${(endDateObj.getMonth() + 1).toString().padStart(2, '0')}.${endDateObj.getFullYear()}`;
+      }
+    } catch (error) {
+      displayEndDate = "Keine Daten gefunden";
+    }
+  }
+
   return `
     <div class="space-y-6 text-sm text-gray-700 leading-relaxed">
       <h2 class="text-center text-lg font-bold text-gray-900 mb-8">DIENSTVERTRAG</h2>
@@ -113,7 +131,7 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
       <!-- Section 4: Vertragsdauer/Beendigung -->
       <div class="space-y-3">
         <h3 class="font-bold">4. Vertragsdauer/Beendigung</h3>
-        <p class="indent-8">Das Dienstverhältnis beginnt am <span class="font-semibold">${startDate || "Keine Daten gefunden"}</span> und ist bis zum <span class="font-semibold">${endDate || "Keine Daten gefunden"}</span> befristet. Es wird eine Probezeit von der Dauer eines Monats vereinbart, während der das Dienstverhältnis von jeder Vertragspartei ohne Angabe von Gründen jederzeit mit sofortiger Wirkung gelöst werden kann. Wird das Dienstverhältnis nicht innerhalb des Probemonats bzw. mit Ende der Befristung gelöst, geht es in ein unbefristetes Dienstverhältnis über.</p>
+        <p class="indent-8">Das Dienstverhältnis beginnt am <span class="font-semibold">${startDate || "Keine Daten gefunden"}</span> und ist bis zum <span class="font-semibold">${displayEndDate || "Keine Daten gefunden"}</span> befristet. Es wird eine Probezeit von der Dauer eines Monats vereinbart, während der das Dienstverhältnis von jeder Vertragspartei ohne Angabe von Gründen jederzeit mit sofortiger Wirkung gelöst werden kann. Wird das Dienstverhältnis nicht innerhalb des Probemonats bzw. mit Ende der Befristung gelöst, geht es in ein unbefristetes Dienstverhältnis über.</p>
         <p>Der Arbeitnehmer kann das Dienstverhältnis unter Einhaltung einer einmonatigen Kündigungsfrist jeweils zum Letzten jeden Monats aufkündigen. Der Arbeitgeber kann das Dienstverhältnis unter Einhaltung der gesetzlichen Kündigungsfrist gemäß § 20 Abs 3 Angestelltengesetz jeweils zum Fünfzehnten oder Monatsletzten beenden. Während der gesetzlichen Kündigungsfrist ist nach Möglichkeit ein allenfalls vorhandener Resturlaub sowie ein allenfalls vorhandenes Zeitguthaben zu konsumieren.</p>
       </div>
 
