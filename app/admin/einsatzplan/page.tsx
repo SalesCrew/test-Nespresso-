@@ -2608,18 +2608,20 @@ Import EP
                       <Sparkles className="h-4 w-4 text-black" />
                       {/* Help tooltip */}
                       <div className="group inline-block">
-                        <button className="ml-1 text-gray-400 hover:text-gray-600" aria-label="Hilfe">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm0 13.5a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-1.5 0v-.75a.75.75 0 0 1 .75-.75zm0-9a3.75 3.75 0 0 1 3.75 3.75c0 1.338-.72 2.29-1.768 3.01-.256.175-.516.338-.775.499-.828.514-1.207.867-1.207 1.241v.25a.75.75 0 0 1-1.5 0v-.25c0-1.277.888-1.94 1.75-2.46.22-.136.44-.27.64-.408.73-.5 1.11-.97 1.11-1.882A2.25 2.25 0 0 0 12 6.75a2.25 2.25 0 0 0-2.25 2.25.75.75 0 0 1-1.5 0A3.75 3.75 0 0 1 12 6.75z" clipRule="evenodd" />
+                        <button className="ml-1 text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a3.375 3.375 0 1 1 6.75 0c0 1.257-.665 2.174-1.879 2.864-.686.395-1.121 1.11-1.121 1.886v.375"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
                           </svg>
                         </button>
                         <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-20">
                           <div className="w-72 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
-                            <p className="font-semibold mb-2">Wie funktioniert Perfect Match?</p>
-                            <p className="mb-2">1. Klicke zuerst auf das <span className="font-medium">Gehirn</span>, um den AI‑Modus zu aktivieren.</p>
-                            <p className="mb-2">2. Klicke dann auf einen <span className="font-medium">Einsatz</span>. Eddie analysiert kurz und schlägt geeignete Promotoren vor.</p>
-                            <p className="mb-2">3. Du kannst Personen direkt zuweisen, indem du auf den Namen <span className="font-medium">mehrfach klickst</span> (Anzahl = Einsatztage).</p>
-                            <p className="mb-0">4. Über das <span className="font-medium">Medaille‑Icon</span> erhältst du detaillierte Begründungen und zusätzliche Infos.</p>
+                            <p className="font-semibold text-gray-900 mb-2">Wie funktioniert Perfect Match?</p>
+                            <p className="mb-2 text-gray-700">1. Klicke zuerst auf das <span className="font-medium text-blue-600">Gehirn</span>, um den AI‑Modus zu aktivieren.</p>
+                            <p className="mb-2 text-gray-700">2. Klicke dann auf einen <span className="font-medium text-blue-600">Einsatz</span>. Eddie analysiert kurz und schlägt geeignete Promotoren vor.</p>
+                            <p className="mb-2 text-gray-700">3. Du kannst Personen direkt zuweisen, indem du auf den Namen <span className="font-medium text-blue-600">mehrfach klickst</span> (Anzahl = Einsatztage).</p>
+                            <p className="mb-0 text-gray-700">4. Über das <span className="font-medium text-blue-600">Medaille‑Icon</span> erhältst du detaillierte Begründungen und zusätzliche Infos.</p>
                           </div>
                         </div>
                       </div>
