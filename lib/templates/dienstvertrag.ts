@@ -24,6 +24,10 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
     isTemporary
   } = data;
 
+  // Generate current date for Sales Crew signature
+  const today = new Date();
+  const signatureDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+
   return `
     <div class="space-y-6 text-sm text-gray-700 leading-relaxed">
       <h2 class="text-center text-lg font-bold text-gray-900 mb-8">DIENSTVERTRAG</h2>
@@ -213,7 +217,7 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
               <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">________________________</div>
             </div>
             <p>Sales Crew Verkaufsförderung GmbH</p>
-            <p class="mt-4">Datum: ……………</p>
+            <p class="mt-4">Datum: ${signatureDate}</p>
           </div>
           <div class="text-center">
             <div style="height: 80px; margin-bottom: 8px; display: flex; align-items: flex-end; justify-content: center;">________________________</div>
