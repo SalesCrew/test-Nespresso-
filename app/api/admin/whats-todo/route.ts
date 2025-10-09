@@ -57,7 +57,7 @@ export async function GET() {
     const { data: appliedInvitations } = await svc
       .from('assignment_invitations')
       .select('id, assignment:assignments!inner(start_ts)')
-      .eq('status', 'applied')
+      .eq('invitation_status', 'applied')
       .lte('assignment.start_ts', endOfMonth.toISOString())
       .gte('assignment.start_ts', now.toISOString());
     
