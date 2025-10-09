@@ -127,20 +127,12 @@ export default function LandingPage() {
               </div>
 
         {/* Login Selection Cards - Single Card */}
-        <div className="flex justify-center w-full mx-auto mb-16 px-4">
+        <div className="mb-16">
           {/* Promotors Card */}
           <Card 
-            className={`w-full max-w-4xl group relative overflow-hidden border-2 cursor-pointer transition-all duration-500 hover:scale-[1.02] ${
-              hoveredCard === 'promotors' 
-                ? 'border-blue-300 shadow-2xl shadow-blue-500/30' 
-                : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 shadow-xl shadow-blue-500/10'
-            }`}
-            onMouseEnter={() => setHoveredCard('promotors')}
-            onMouseLeave={() => setHoveredCard(null)}
+            className="border-2 cursor-pointer transition-all duration-200 shadow-xl"
             onClick={() => handleRoleSelect('promotors')}
           >
-            {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <CardHeader className="relative z-10 text-center pb-6">
               <div className="mx-auto mb-6 relative">
