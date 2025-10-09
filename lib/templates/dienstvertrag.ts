@@ -28,6 +28,36 @@ export function generateDienstvertragHTML(data: DienstvertragData): string {
     <div class="space-y-6 text-sm text-gray-700 leading-relaxed">
       <h2 class="text-center text-lg font-bold text-gray-900 mb-8">DIENSTVERTRAG</h2>
       
+      <!-- Contract parties header -->
+      <div class="space-y-6">
+        <div>
+          <p class="mb-2">Die Firma</p>
+          <p class="font-semibold">Sales Crew Verkaufsförderung GmbH</p>
+          <p>campus 21, Liebermannstraße A01 303-6</p>
+          <p>2345 Brunn am Gebirge</p>
+        </div>
+        
+        <div class="mt-6">
+          <p>stellt die</p>
+          <p>Arbeitskraft (Angestellte/Angestellter – im folgenden „Arbeitnehmer" genannt)</p>
+        </div>
+        
+        <div class="mt-8 ml-8">
+          <div class="grid grid-cols-[150px_1fr] gap-4">
+            <p>Frau/Herr:</p>
+            <p class="font-semibold">${promotorName || "Keine Daten gefunden"}</p>
+
+            <p>geboren am:</p>
+            <p class="font-semibold">${promotorBirthDate || "Keine Daten gefunden"}</p>
+
+            <p>wohnhaft in:</p>
+            <p class="font-semibold">${promotorAddress || "Keine Daten gefunden"}</p>
+          </div>
+        </div>
+        
+        <p class="mt-6">zu folgenden Bedingungen ein:</p>
+      </div>
+      
       <!-- Section 1: Art der Arbeitsleistung -->
       <div class="space-y-3">
         <h3 class="font-bold">1. Art der Arbeitsleistung</h3>
