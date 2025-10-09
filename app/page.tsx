@@ -127,10 +127,10 @@ export default function LandingPage() {
               </div>
 
         {/* Login Selection Cards - Single Card */}
-        <div className="flex justify-center max-w-4xl w-full mx-auto mb-16 px-4 md:px-0">
+        <div className="flex justify-center w-full mx-auto mb-16 px-4">
           {/* Promotors Card */}
           <Card 
-            className={`w-full group relative overflow-hidden border-2 cursor-pointer transition-all duration-500 hover:scale-[1.02] ${
+            className={`w-full max-w-4xl group relative overflow-hidden border-2 cursor-pointer transition-all duration-500 hover:scale-[1.02] ${
               hoveredCard === 'promotors' 
                 ? 'border-blue-300 shadow-2xl shadow-blue-500/30' 
                 : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 shadow-xl shadow-blue-500/10'
