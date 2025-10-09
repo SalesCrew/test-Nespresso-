@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET() {
   try {
@@ -14,10 +15,199 @@ export async function GET() {
       return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
-    // Temporary prompt - will be replaced with system prompt in next step
-    const systemPrompt = `Du bist ein hilfreicher Admin-Assistent für ein Promotions-Management-System. Gib einen kurzen Überblick über die wichtigsten Aufgaben des Tages.`;
+    const svc = createSupabaseServiceClient();
+    const now = new Date();
     
-    const userPrompt = `Erstelle einen kurzen Überblick über die wichtigsten Aufgaben für heute als Admin.`;
+    // Calculate end of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+    
+    // Calculate end of current week (Sunday)
+    const dayOfWeek = now.getDay();
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    const endOfWeek = new Date(now);
+    endOfWeek.setDate(now.getDate() + daysUntilSunday);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // 1. Offene Einsätze bis ende des Monats (assignments without participants)
+    const { data: assignmentsMonth } = await svc
+      .from('assignments')
+      .select('id')
+      .lte('start_ts', endOfMonth.toISOString())
+      .gte('start_ts', now.toISOString());
+    
+    const { data: participantsMonth } = await svc
+      .from('assignment_participants')
+      .select('assignment_id');
+    
+    const assignedIdsMonth = new Set((participantsMonth || []).map(p => p.assignment_id));
+    const openAssignmentsMonth = (assignmentsMonth || []).filter(a => !assignedIdsMonth.has(a.id)).length;
+
+    // 2. Offene Einsätze bis ende der Woche
+    const { data: assignmentsWeek } = await svc
+      .from('assignments')
+      .select('id')
+      .lte('start_ts', endOfWeek.toISOString())
+      .gte('start_ts', now.toISOString());
+    
+    const assignedIdsWeek = new Set((participantsMonth || []).map(p => p.assignment_id));
+    const openAssignmentsWeek = (assignmentsWeek || []).filter(a => !assignedIdsWeek.has(a.id)).length;
+
+    // 3. Verplanung Einladungen mit Status "applied" bis ende des Monats
+    const { data: appliedInvitations } = await svc
+      .from('assignment_invitations')
+      .select('id, assignment:assignments!inner(start_ts)')
+      .eq('status', 'applied')
+      .lte('assignment.start_ts', endOfMonth.toISOString())
+      .gte('assignment.start_ts', now.toISOString());
+    
+    const appliedInvitationsCount = appliedInvitations?.length || 0;
+
+    // 4. Anfragen (special_status_requests with pending status)
+    const { data: pendingRequests } = await svc
+      .from('special_status_requests')
+      .select('request_type')
+      .eq('status', 'pending');
+    
+    const krankenstandCount = (pendingRequests || []).filter(r => r.request_type === 'krankenstand').length;
+    const notfallCount = (pendingRequests || []).filter(r => r.request_type === 'notfall').length;
+
+    // 5. Promotors ohne Dienstvertrag (promotor_profiles without active contracts)
+    const { data: allPromotors } = await svc
+      .from('promotor_profiles')
+      .select('user_id');
+    
+    const { data: activeContracts } = await svc
+      .from('contracts')
+      .select('user_id')
+      .eq('is_active', true);
+    
+    const promotorsWithContracts = new Set((activeContracts || []).map(c => c.user_id));
+    const promotorsWithoutContractIds = (allPromotors || [])
+      .filter(p => !promotorsWithContracts.has(p.user_id))
+      .map(p => p.user_id);
+    
+    const { data: promotorsWithoutContract } = await svc
+      .from('user_profiles')
+      .select('display_name')
+      .in('user_id', promotorsWithoutContractIds.length > 0 ? promotorsWithoutContractIds : ['00000000-0000-0000-0000-000000000000']);
+    
+    const promotorsWithoutContractNames = (promotorsWithoutContract || []).map(p => p.display_name).join(', ') || 'Keine';
+
+    // 6. Dienstvertrag zum Annehmen (uploaded signed DV in documents)
+    const { data: uploadedDVs } = await svc
+      .from('documents')
+      .select('user_id, document_type')
+      .eq('document_type', 'signed_dienstvertrag')
+      .eq('status', 'uploaded');
+    
+    const uploadedDVUserIds = (uploadedDVs || []).map(d => d.user_id);
+    
+    const { data: dvPromotors } = await svc
+      .from('user_profiles')
+      .select('display_name')
+      .in('user_id', uploadedDVUserIds.length > 0 ? uploadedDVUserIds : ['00000000-0000-0000-0000-000000000000']);
+    
+    const dvPromotorNames = (dvPromotors || []).map(p => p.display_name).join(', ') || 'Keine';
+
+    // 7. Bewerber mit Status "received"
+    const { data: receivedApplications } = await svc
+      .from('applications')
+      .select('id')
+      .eq('status', 'received');
+    
+    const receivedApplicationsCount = receivedApplications?.length || 0;
+
+    const systemPrompt = `Dein Name ist Eddie der Kaffee Assistent und du bist teil einer Karte die heißt "was gibt's zu tun". Deine Aufgabe ist es mit den Daten im Prompt die wichtigsten To-Dos in kurzen kompakten bulletpoints aufzulisten damit unsere Admins auf den ersten blick eine Idee bekommen was sie als erstes machen können. 
+
+!!!!Du Antowrtest IMMER in diesem Format: 
+
+(Fröhliche Begrüng sowas wie HalliHallo lass mich schnell schauen was es zu tun gibt (nimm nicht 1:1 den Satz aber sowas in die Richtung)) 
+("Die wichtigsten To-Dos gerade sind:")
+(To Dos in Bulletpoints) 
+
+Bsp: 
+
+HalliHallo! schön, dass du da bist! Ich werf' mal fix einen Blick drauf, was gerade so ansteht 
+
+Die wichtigsten To-Dos gerade sind:
+
+⦁	(To-Do 1 einfügen)
+⦁	(To-Do 2 einfügen)
+⦁	(To-Do 3 einfügen)
+⦁	(To-Do 4 einfügen)
+
+----------------------------------
+
+!!!Wichtige Regeln IMMER einhalten!!!
+
+1. Schreibe menschlich und hilfreich, keine unnötigen Dashes ("-") im Satz, menschliche Sprache, verständnisvoll und lösungsorientiert, strikt an die Regeln! Keine anderen KI-Erkennungsmerkmale in der Satzsyntax.
+2. Antworte gezielt auf die Frage und teile nicht mehr als nötig.
+3. Überprüfe im Denkprozess zweimal, ob du alles richtig hast! Dass du Daten akkurat wiedergibst, ist das Allerwichtigste!!!!
+4. Achte auf deine Rechtschreibung mache keine Fehler
+5. Verwende keine Emojis 
+
+----------------------------------
+
+Daten: 
+
+Verplanung: 
+
+Verplanung Regeln: 
+1.	Wichtigster Bestandteil der Arbeit liste das immer als ersten Bullet Point wenn es etwas zu tun gibt.
+2.	In deinem Output wirst du immer in der Struktur schreiben du kannst das Wording natürlich leicht anpassen damit es nicht immer das selbe ist. "Bis ende des Monats sind noch (Anzahl offenen Termine) Einsätze offen. Diese Woche sind noch (Anzahl der Termine) Termine offen."
+3. Wenn keine Termine offen sind dann erwähne das als letzten Bullet Point und schreib einfach was motivierendes dass es fertig ist.
+
+Offene Einsätze bis ende des Monats: 
+${openAssignmentsMonth}
+
+Offene Einsätze bis ende der Woche: 
+${openAssignmentsWeek}
+
+Verplanung Einladungen: 
+
+Verplanung Einladungen Regeln:
+1.	Das Keyword "applied" bedeutet dass ein Promotor einen Einsatztermin den wir ihm als Vorschlag geschickt haben angenommen hat. Jetzt können wir nochmal den Einsatz an oder ablehnen. 
+2.	Der fokus hier liegt darauf dass du sagst wieviele offenen Anfragen es gerade gibt. Das kannst du ca so machen "Bis ende des Monats gibt es noch (Anzahl der Anfragen) offene Anfragen! 
+
+Verplanung Einladungen bis ende des Monats: 
+${appliedInvitationsCount}
+
+Anfragen: 
+
+Anfragen Regeln: 
+1. Können Krankenstand oder Notfälle sein
+2. Gib wieder wieviele Anfragen offen sind und welche. Das kannst du zB so machen: "3 Krankenstand und 2 Notfall Anfragen offen!" 
+
+Anfragen Daten: 
+${krankenstandCount} Krankenstand und ${notfallCount} Notfall
+
+Dienstvertrag: 
+
+Dienstvertrag Regeln: 
+1. Wenn Ein Promotor noch keinen Dienstvertrag hat dann bitte erwähne dass die Person noch keinen Dienstvertrag hat zB so: "Name 1 und Name 2 haben noch keinen Dienstvertrag zugeschickt bekommen" 
+
+Kein Dienstvertrag:
+${promotorsWithoutContractNames}
+
+Dienstvertrag zum Annehmen: 
+
+Dienstvertrag zum Annehmen Regeln:
+1.	It detects this via the documents table: when the promotor uploads the signed DV as a document, the document's status changes to "uploaded/accepted" and the admin UI reads that to show the "waiting for approval" state. Das bedeutet wir müssen dann zu dem Promotor gehen und den Vertrag Annehmen. 
+2.	Das kannst du so machen: "Name 1 hat den unterschriebenen DV geschickt!"
+
+Dienstvertrag zum Annehmen:
+${dvPromotorNames}
+
+Bewerber: 
+
+Bewerber Regeln: 
+1. Wenn ein Neuer Bewerber seine Stammdaten eingeschickt hat erwähne dass es einen neuen eintrg gibt, ibt es jedoch mehr sag die Anzahl dazu! 
+
+Bewerber: 
+${receivedApplicationsCount}`;
+    
+    const userPrompt = `Erstelle die To-Do Liste basierend auf den Daten.`;
 
     const requestPayload = {
       model: 'gpt-5-nano',
