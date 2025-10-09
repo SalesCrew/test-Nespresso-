@@ -26,6 +26,26 @@ export async function GET() {
     const weekStart = monday.toISOString().split('T')[0];
     const weekEnd = sunday.toISOString().split('T')[0];
 
+    // Compute ISO week number (KW)
+    const getISOWeek = (d: Date) => {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      // Set to nearest Thursday: current date + 4 - current day number
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+      return weekNo;
+    };
+
+    const kw = getISOWeek(monday);
+    console.log('[work-status] user', userId, {
+      now: now.toString(),
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      kw,
+      weekStart,
+      weekEnd
+    });
+
     // Get active contract hours
     const { data: contract } = await svc
       .from('contracts')
@@ -62,6 +82,11 @@ export async function GET() {
           }
 
           totalHours += hours;
+          console.log('[work-status] counted assignment', {
+            start_ts: p.assignment.start_ts,
+            end_ts: p.assignment.end_ts,
+            hours: Math.round(hours * 100) / 100
+          });
         }
       }
     });
@@ -69,6 +94,7 @@ export async function GET() {
     const goalHours = contract?.hours_per_week || 0;
     const workedHours = Math.round(totalHours * 10) / 10; // Round to 1 decimal place
 
+    console.log('[work-status] summary', { goalHours, workedHours: Math.round(totalHours * 10) / 10 });
     return NextResponse.json({
       goalHours,
       workedHours,
