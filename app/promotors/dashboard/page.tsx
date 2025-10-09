@@ -2282,15 +2282,23 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm">Arbeitsstunden</span>
-                  <span className={`text-sm font-medium ${!workStatusLoading && workStatus.workedHours > workStatus.goalHours ? 'text-green-600' : ''}`}>
-                    {workStatusLoading ? '...' : `${workStatus.workedHours}h/${workStatus.goalHours}h`}
-                  </span>
+                  {workStatusLoading ? (
+                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                  ) : (
+                    <span className={`text-sm font-medium ${workStatus.workedHours > workStatus.goalHours ? 'text-green-600' : ''}`}>
+                      {`${workStatus.workedHours}h/${workStatus.goalHours}h`}
+                    </span>
+                  )}
                 </div>
                 <div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" 
-                    style={{ width: progressBarsVisible ? `${Math.min(workStatus.percentage, 100)}%` : '0%' }}
-                  ></div>
+                  {workStatusLoading ? (
+                    <div className="h-full w-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full animate-pulse"></div>
+                  ) : (
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" 
+                      style={{ width: progressBarsVisible ? `${Math.min(workStatus.percentage, 100)}%` : '0%' }}
+                    ></div>
+                  )}
                 </div>
               </div>
               <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Erledigte Aufgaben</span><span className="text-sm font-medium">7/12</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-200" style={{ width: progressBarsVisible ? '58%' : '0%' }}></div></div></div>
