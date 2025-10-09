@@ -2609,7 +2609,7 @@ Import EP
                     </h3>
                     <div className="flex items-center gap-2">
                       {/* Help tooltip placed left of the brain button */}
-                      <div className="group inline-block">
+                      <div className="group inline-block relative">
                         <button className="ml-1 text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
@@ -2617,7 +2617,7 @@ Import EP
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
                           </svg>
                         </button>
-                        <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-20">
+                        <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-20 pointer-events-none group-hover:pointer-events-auto">
                           <div className="w-72 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
                             <p className="font-semibold text-gray-900 mb-2">Wie funktioniert Perfect Match?</p>
                             <p className="mb-2 text-gray-700">1. Klicke zuerst auf das <span className="font-medium text-blue-600">Gehirn</span>, um den AI‑Modus zu aktivieren.</p>
