@@ -363,6 +363,10 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
   const [todosLoading, setTodosLoading] = useState(true); // Start with loading state
+  
+  // Work status data
+  const [workStatus, setWorkStatus] = useState({ goalHours: 0, workedHours: 0, percentage: 0 });
+  const [workStatusLoading, setWorkStatusLoading] = useState(false);
 
   // Convert assignments to todos
   const getAssignmentTodos = (): TodoItem[] => {
@@ -716,6 +720,24 @@ export default function DashboardPage() {
     }
   };
 
+  // Load work status for current week
+  const loadWorkStatus = async () => {
+    try {
+      setWorkStatusLoading(true);
+      const res = await fetch('/api/me/work-status', { cache: 'no-store', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setWorkStatus(data);
+      } else {
+        console.error('Failed to load work status:', res.status);
+      }
+    } catch (e) {
+      console.error('Error loading work status:', e);
+    } finally {
+      setWorkStatusLoading(false);
+    }
+  };
+
   const formatDateRange = (startDate: Date, endDate: Date): string => {
     const startMonth = startDate.toLocaleDateString('de-DE', { month: 'short' });
     const endMonth = endDate.toLocaleDateString('de-DE', { month: 'short' });
@@ -817,7 +839,8 @@ export default function DashboardPage() {
         loadCalendarAssignments(),
         loadMessages(),
         loadDocuments(),
-        loadTodoHistory()
+        loadTodoHistory(),
+        loadWorkStatus()
       ]);
       
       // Ensure minimum loading time to show beautiful skeletons
@@ -838,6 +861,7 @@ export default function DashboardPage() {
       loadMessages();
       loadDocuments();
       loadTodoHistory();
+      loadWorkStatus();
     }, 120000);
     return () => clearInterval(iv);
   }, []);
@@ -2255,7 +2279,20 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="space-y-4">
-              <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Arbeitsstunden</span><span className="text-sm font-medium">24/40</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" style={{ width: progressBarsVisible ? '60%' : '0%' }}></div></div></div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm">Arbeitsstunden</span>
+                  <span className="text-sm font-medium">
+                    {workStatusLoading ? '...' : `${workStatus.workedHours}h/${workStatus.goalHours}h`}
+                  </span>
+                </div>
+                <div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out" 
+                    style={{ width: progressBarsVisible ? `${Math.min(workStatus.percentage, 100)}%` : '0%' }}
+                  ></div>
+                </div>
+              </div>
               <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Erledigte Aufgaben</span><span className="text-sm font-medium">7/12</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-200" style={{ width: progressBarsVisible ? '58%' : '0%' }}></div></div></div>
               <div><div className="flex items-center justify-between mb-1"><span className="text-sm">Schulungen</span><span className="text-sm font-medium">1/2</span></div><div className="h-2 w-full bg-blue-100 dark:bg-blue-950/30 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-300 to-blue-600 rounded-full transition-all duration-1000 ease-out delay-400" style={{ width: progressBarsVisible ? '50%' : '0%' }}></div></div></div>
                   </div>
