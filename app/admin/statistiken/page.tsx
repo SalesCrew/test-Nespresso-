@@ -364,7 +364,7 @@ export default function StatistikenPage() {
     const card = cardData.find(c => c.id === cardId);
     if (!card) return;
     setGeneratingStates(prev => ({ ...prev, [cardId]: true }));
-
+    
     try {
       // Calculate rankings: sort by MC/ET and VL Share descending
       const mcetSorted = [...cardData].sort((a, b) => parseFloat(String(b.mcet)) - parseFloat(String(a.mcet)));
@@ -445,7 +445,7 @@ export default function StatistikenPage() {
       generatedText: editedTexts[card.id] || getGeneratedEmailText(),
       sentAt: new Date()
     }));
-
+    
     if (validatedCards.length === 0) {
       alert('Keine validierten Karten mit zugewiesenem Promotor gefunden.');
       return;
@@ -485,14 +485,14 @@ export default function StatistikenPage() {
       console.log('Saved', result.count, 'feedback records to database');
       
       // Add to history UI
-      setHistoryCards(prev => [...prev, ...validatedCards]);
-      
-      // Remove from current cards
-      const validatedCardIds = validatedCards.map(card => card.id);
-      setCardData(prev => prev.filter(card => !validatedCardIds.includes(card.id)));
-      
-      // Clean up states for moved cards
-      validatedCardIds.forEach(cardId => {
+    setHistoryCards(prev => [...prev, ...validatedCards]);
+    
+    // Remove from current cards
+    const validatedCardIds = validatedCards.map(card => card.id);
+    setCardData(prev => prev.filter(card => !validatedCardIds.includes(card.id)));
+    
+    // Clean up states for moved cards
+    validatedCardIds.forEach(cardId => {
       setValidationStates(prev => {
         const newState = { ...prev };
         delete newState[cardId];
@@ -532,7 +532,7 @@ export default function StatistikenPage() {
         const newState = { ...prev };
         delete newState[cardId];
         return newState;
-      });
+    });
     });
     } catch (e) {
       console.error('Error saving feedback to database:', e);
@@ -1495,6 +1495,13 @@ Liebe Grüße, dein Nespresso Team`;
           75% { transform: rotate(-3deg); }
           100% { transform: rotate(0deg); }
         }
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
+        }
       `}</style>
       {/* Admin Navigation */}
       <AdminNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -1532,7 +1539,7 @@ Liebe Grüße, dein Nespresso Team`;
                 }`}
               >
                 <FileText className="h-4 w-4" />
-                <span>History ({historyCards.length})</span>
+                <span>History {historyLoading ? <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle" /> : `(${historyCards.length})`}</span>
               </button>
               
               {/* Vertical Divider */}
@@ -1904,21 +1911,21 @@ Liebe Grüße, dein Nespresso Team`;
                     {/* All Time */}
                     <div className="text-center px-6">
                       <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        All Time ({calculateAverages("alltime").count})
+                        All Time {historyLoading ? <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-skeleton-fade align-middle" /> : `(${calculateAverages("alltime").count})`}
                       </h3>
                     </div>
 
                     {/* Last 30 Days */}
                     <div className="text-center px-6">
                       <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Last 30 Days ({calculateAverages("30days").count})
+                        Last 30 Days {historyLoading ? <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-skeleton-fade align-middle" /> : `(${calculateAverages("30days").count})`}
                       </h3>
                     </div>
 
                     {/* Last 6 Months */}
                     <div className="text-center px-6">
                       <h3 className="text-sm font-medium text-gray-700 mb-2">
-                        Last 6 Months ({calculateAverages("6months").count})
+                        Last 6 Months {historyLoading ? <span className="inline-block h-4 w-14 bg-gray-200 rounded animate-skeleton-fade align-middle" /> : `(${calculateAverages("6months").count})`}
                       </h3>
                     </div>
                   </div>
@@ -1933,7 +1940,9 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="space-y-1">
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg MC/ET: {calculateAverages("alltime").mcet !== "N/A" ? (
+                          Avg MC/ET: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("alltime").mcet !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForMcEt(parseFloat(calculateAverages("alltime").mcet)) !== "custom-orange" ? getColorForMcEt(parseFloat(calculateAverages("alltime").mcet)) : ""}`}
                               style={{...getStyleForColor(getColorForMcEt(parseFloat(calculateAverages("alltime").mcet)))}}
@@ -1956,7 +1965,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg TMA: {calculateAverages("alltime").tma !== "N/A" ? (
+                          Avg TMA: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("alltime").tma !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForTma(parseFloat(calculateAverages("alltime").tma)) !== "custom-orange" ? getColorForTma(parseFloat(calculateAverages("alltime").tma)) : ""}`}
                               style={{...getStyleForColor(getColorForTma(parseFloat(calculateAverages("alltime").tma)))}}
@@ -1979,7 +1990,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg VL Share: {calculateAverages("alltime").vlShare !== "N/A" ? (
+                          Avg VL Share: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("alltime").vlShare !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForVlShare(parseFloat(calculateAverages("alltime").vlShare)) !== "custom-orange" ? getColorForVlShare(parseFloat(calculateAverages("alltime").vlShare)) : ""}`}
                               style={{...getStyleForColor(getColorForVlShare(parseFloat(calculateAverages("alltime").vlShare)))}}
@@ -2008,7 +2021,9 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="space-y-1">
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg MC/ET: {calculateAverages("30days").mcet !== "N/A" ? (
+                          Avg MC/ET: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("30days").mcet !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForMcEt(parseFloat(calculateAverages("30days").mcet)) !== "custom-orange" ? getColorForMcEt(parseFloat(calculateAverages("30days").mcet)) : ""}`}
                               style={{...getStyleForColor(getColorForMcEt(parseFloat(calculateAverages("30days").mcet)))}}
@@ -2031,7 +2046,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg TMA: {calculateAverages("30days").tma !== "N/A" ? (
+                          Avg TMA: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("30days").tma !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForTma(parseFloat(calculateAverages("30days").tma)) !== "custom-orange" ? getColorForTma(parseFloat(calculateAverages("30days").tma)) : ""}`}
                               style={{...getStyleForColor(getColorForTma(parseFloat(calculateAverages("30days").tma)))}}
@@ -2054,7 +2071,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg VL Share: {calculateAverages("30days").vlShare !== "N/A" ? (
+                          Avg VL Share: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("30days").vlShare !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForVlShare(parseFloat(calculateAverages("30days").vlShare)) !== "custom-orange" ? getColorForVlShare(parseFloat(calculateAverages("30days").vlShare)) : ""}`}
                               style={{...getStyleForColor(getColorForVlShare(parseFloat(calculateAverages("30days").vlShare)))}}
@@ -2083,7 +2102,9 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="space-y-1">
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg MC/ET: {calculateAverages("6months").mcet !== "N/A" ? (
+                          Avg MC/ET: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("6months").mcet !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForMcEt(parseFloat(calculateAverages("6months").mcet)) !== "custom-orange" ? getColorForMcEt(parseFloat(calculateAverages("6months").mcet)) : ""}`}
                               style={{...getStyleForColor(getColorForMcEt(parseFloat(calculateAverages("6months").mcet)))}}
@@ -2106,7 +2127,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg TMA: {calculateAverages("6months").tma !== "N/A" ? (
+                          Avg TMA: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("6months").tma !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForTma(parseFloat(calculateAverages("6months").tma)) !== "custom-orange" ? getColorForTma(parseFloat(calculateAverages("6months").tma)) : ""}`}
                               style={{...getStyleForColor(getColorForTma(parseFloat(calculateAverages("6months").tma)))}}
@@ -2129,7 +2152,9 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                       <div className="text-sm text-gray-600 flex items-center justify-center space-x-2">
                         <span>
-                          Avg VL Share: {calculateAverages("6months").vlShare !== "N/A" ? (
+                          Avg VL Share: {historyLoading ? (
+                            <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade align-middle"></span>
+                          ) : calculateAverages("6months").vlShare !== "N/A" ? (
                             <span 
                               className={`font-medium ${getColorForVlShare(parseFloat(calculateAverages("6months").vlShare)) !== "custom-orange" ? getColorForVlShare(parseFloat(calculateAverages("6months").vlShare)) : ""}`}
                               style={{...getStyleForColor(getColorForVlShare(parseFloat(calculateAverages("6months").vlShare)))}}
