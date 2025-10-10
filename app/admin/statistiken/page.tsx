@@ -68,7 +68,7 @@ export default function StatistikenPage() {
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [chartTimeFilter, setChartTimeFilter] = useState<"3months" | "6months" | "1year" | "all">("all");
 
-  // Fetch promotors from database on mount
+  // Fetch promotors and history from database on mount
   useEffect(() => {
     const fetchPromoters = async () => {
       try {
@@ -81,7 +81,33 @@ export default function StatistikenPage() {
         console.error('Failed to fetch promoters', e);
       }
     };
+
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch('/api/admin/kpi-feedback');
+        if (res.ok) {
+          const data = await res.json();
+          const historyData = (data.feedback || []).map((item: any) => ({
+            id: item.id,
+            name: item.promotor_name || 'Unbekannt',
+            email: item.promotor_email || '',
+            mcet: item.mc_et,
+            tma: item.tma,
+            vlShare: item.vl_value,
+            magicTouchCategory: item.magic_touch,
+            matchedPromoter: item.promotor_name,
+            generatedText: item.feedback_text,
+            sentAt: new Date(item.created_at)
+          }));
+          setHistoryCards(historyData);
+        }
+      } catch (e) {
+        console.error('Failed to fetch history', e);
+      }
+    };
+
     fetchPromoters();
+    fetchHistory();
   }, []);
 
   const availablePromoters = availablePromotersData.map(p => p.name);

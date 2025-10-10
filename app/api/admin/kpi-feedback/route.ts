@@ -2,6 +2,56 @@ import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
+export async function GET() {
+  try {
+    const server = createSupabaseServerClient();
+    const { data: { user } } = await server.auth.getUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: profile } = await server
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || !['admin_staff', 'admin_of_admins'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const svc = createSupabaseServiceClient();
+
+    // Fetch all feedback with promotor details
+    const { data: feedback, error } = await svc
+      .from('kpi_feedback')
+      .select(`
+        *,
+        promotor:user_profiles!kpi_feedback_user_id_fkey(display_name, email)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching KPI feedback:', error);
+      return NextResponse.json({ error: 'Failed to fetch feedback' }, { status: 500 });
+    }
+
+    // Map to include promotor details at top level
+    const feedbackWithDetails = (feedback || []).map((item: any) => ({
+      ...item,
+      promotor_name: item.promotor?.display_name || 'Unbekannt',
+      promotor_email: item.promotor?.email || ''
+    }));
+
+    return NextResponse.json({ feedback: feedbackWithDetails });
+  } catch (e: any) {
+    console.error('Error in kpi-feedback GET:', e);
+    return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const server = createSupabaseServerClient();
