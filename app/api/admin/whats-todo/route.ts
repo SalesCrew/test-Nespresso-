@@ -215,16 +215,15 @@ ${receivedApplicationsCount}`;
     const userPrompt = `Erstelle die To-Do Liste basierend auf den Daten.`;
 
     const requestPayload = {
-      model: 'gpt-5-nano',
-      input: [
+      model: 'gpt-5-chat-latest',
+      messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      reasoning: { effort: 'low' },
-      text: { verbosity: 'low' }
+      temperature: 0.4
     };
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -246,28 +245,7 @@ ${receivedApplicationsCount}`;
     }
 
     const result = await response.json();
-
-    const extractText = (res: any): string => {
-      if (typeof res?.output_text === 'string') return res.output_text.trim();
-      const out = res?.output;
-      if (Array.isArray(out)) {
-        let text = '';
-        for (const item of out) {
-          const content = (item && item.content) || [];
-          if (typeof content === 'string') text += content;
-          else if (Array.isArray(content)) {
-            for (const seg of content) {
-              if (typeof seg?.text === 'string') text += seg.text;
-              else if (typeof seg === 'string') text += seg;
-            }
-          }
-        }
-        return text.trim();
-      }
-      return (typeof res === 'string' ? res : '').trim();
-    };
-
-    const aiResponse = extractText(result);
+    const aiResponse: string = (result?.choices?.[0]?.message?.content || '').trim();
     
     if (!aiResponse) {
       return NextResponse.json({ error: 'Empty AI response' }, { status: 500 });
