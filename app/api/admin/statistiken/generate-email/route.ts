@@ -67,11 +67,11 @@ Aufbau der E‑Mail:
    TMA Anteil: ${tma}%
    VL Share: ${vlShare}% (Platz ${vlRank})
 
-5. Bewertung:
+5. Bewertung – wichtig: Schreibe im finalen E‑Mail‑Text NICHT das Wort "Bewertung". Nutze die folgenden Punkte ausschließlich als Leitfaden, um ein natürlich klingendes Feedback in fließendem Text zu formulieren:
 
-   * Bei MC/ET und VL Share jeweils das Ranking nennen diese info bekommst du im code (z. B. "Du bist in diesem Monat auf Platz 1" bzw. "auf Platz 30").
-   * Beim TMA-Anteil nur einordnen: einer der Besten, im Mittelfeld oder im unteren Drittel.
-   * Gehe auf die Plätze nur nochmal im Text ausführlicher ein (zusätzlich zur Auflistung oben), wenn die Person Top 3 ist ODER zu den niedrigsten 10 gehört. Erkläre dann, was die Zahlen bedeuten und ob Verbesserungspotenzial besteht oder ob es bereits super läuft. (Für die "niedrigsten 10" gehe von ca. 80 Promotoren gesamt aus, wie im Hintergrund erwähnt.)
+   * Bei MC/ET und VL Share jeweils die Platzierung nennen (z. B. "Du bist in diesem Monat auf Platz 1" bzw. "auf Platz 30").
+   * Beim TMA‑Anteil nur einordnen: einer der Besten, im Mittelfeld oder im unteren Drittel.
+   * Gehe auf die Plätze nur dann ausführlicher ein (zusätzlich zur Auflistung oben), wenn die Person Top 3 ist ODER zu den niedrigsten 10 gehört. Erkläre dann kurz, was die Zahlen bedeuten und ob Verbesserungspotenzial besteht oder ob es bereits sehr gut läuft. (Für die "niedrigsten 10" gehe von ca. 80 Promotoren gesamt aus.)
 
 ZUSÄTZLICHER KONTEXT ZUR AKTUELLEN LEISTUNG (BERÜCKSICHTIGE DIESEN BEI DER BEWERTUNG DER KPIS):
 ${historicalContextString}
