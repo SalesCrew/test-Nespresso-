@@ -461,26 +461,24 @@ ${zugangsDaten}`
 
     const userPrompt = `Promotor fragt: ${userMessage}`
 
-    console.log('🌐 Calling OpenAI GPT-5-nano API...');
+    console.log('🌐 Calling OpenAI GPT-5 Chat API...');
     const requestPayload = {
-      model: 'gpt-5-nano',
-      input: [
+      model: 'gpt-5-chat-latest',
+      messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      reasoning: { effort: 'medium' },
-      text: { verbosity: 'medium' }
+      temperature: 0.6
     };
     
     console.log('📤 API request payload:', {
       model: requestPayload.model,
       conversationId: conversationId,
-      inputMessages: requestPayload.input.length,
-      reasoning: requestPayload.reasoning,
-      text: requestPayload.text
+      messages: requestPayload.messages.length,
+      temperature: requestPayload.temperature
     });
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -510,35 +508,12 @@ ${zugangsDaten}`
 
     const result = await response.json()
     console.log('📥 OpenAI response structure:', {
-      hasOutputText: typeof result.output_text === 'string',
-      hasOutput: !!result.output,
-      outputType: Array.isArray(result.output) ? 'array' : typeof result.output,
-      responseId: result.response_id,
-      reasoningTokens: result.reasoning_tokens,
-      outputTokens: result.output_tokens
+      hasChoices: Array.isArray(result?.choices),
+      choiceCount: result?.choices?.length || 0,
+      responseId: result?.id
     });
 
-    const extractText = (res: any): string => {
-      if (typeof res?.output_text === 'string') return res.output_text.trim()
-      const out = res?.output
-      if (Array.isArray(out)) {
-        let text = ''
-        for (const item of out) {
-          const content = (item && item.content) || []
-          if (typeof content === 'string') text += content
-          else if (Array.isArray(content)) {
-            for (const seg of content) {
-              if (typeof seg?.text === 'string') text += seg.text
-              else if (typeof seg === 'string') text += seg
-            }
-          }
-        }
-        return text.trim()
-      }
-      return (typeof res === 'string' ? res : '').trim()
-    }
-
-    const aiResponse = extractText(result)
+    const aiResponse: string = (result?.choices?.[0]?.message?.content || '').trim()
     console.log('💬 Extracted AI response:', {
       hasResponse: !!aiResponse,
       responseLength: aiResponse.length,
