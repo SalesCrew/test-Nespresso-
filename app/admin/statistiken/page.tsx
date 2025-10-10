@@ -281,13 +281,19 @@ export default function StatistikenPage() {
           const newMatches: {[key: string]: string | null} = {};
           const newIds: {[key: string]: string | null} = {};
           
+          console.log('🔍 Starting auto-match with', availablePromotersData.length, 'promotors in DB');
+          
           newCardData.forEach(card => {
             const match = fuzzyMatchName(card.name, availablePromotersData);
+            console.log(`Match attempt: "${card.name}" →`, match ? `${match.name} (${match.user_id})` : 'NO MATCH');
             if (match) {
               newMatches[card.id] = match.name;
               newIds[card.id] = match.user_id;
             }
           });
+          
+          console.log('✅ Matched promotors:', newMatches);
+          console.log('✅ Matched IDs:', newIds);
           
           setMatchedPromoters(newMatches);
           setMatchedPromoterIds(newIds);
@@ -438,15 +444,23 @@ export default function StatistikenPage() {
     }
 
     try {
+      console.log('💾 Preparing to save', validatedCards.length, 'validated cards');
+      console.log('Current matchedPromoterIds state:', matchedPromoterIds);
+      
       // Prepare feedback items for database
-      const feedbackItems = validatedCards.map(card => ({
-        user_id: card.matchedPromoterId,
-        mc_et: card.mcet,
-        vl_value: card.vlShare,
-        tma: card.tma,
-        feedback_text: card.generatedText,
-        magic_touch: card.magicTouchCategory || null
-      }));
+      const feedbackItems = validatedCards.map(card => {
+        console.log(`Card ${card.id}: promoter="${card.matchedPromoter}", id=${card.matchedPromoterId}`);
+        return {
+          user_id: card.matchedPromoterId,
+          mc_et: card.mcet,
+          vl_value: card.vlShare,
+          tma: card.tma,
+          feedback_text: card.generatedText,
+          magic_touch: card.magicTouchCategory || null
+        };
+      });
+
+      console.log('📤 Sending feedback items:', feedbackItems);
 
       // Save to database
       const res = await fetch('/api/admin/kpi-feedback', {
