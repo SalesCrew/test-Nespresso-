@@ -57,7 +57,7 @@ export async function GET() {
     
     const { data: profiles, error: profileError } = await svc
       .from('user_profiles')
-      .select('user_id, display_name, email')
+      .select('user_id, display_name')
       .in('user_id', userIds);
 
     if (profileError) {
@@ -82,7 +82,7 @@ export async function GET() {
       return {
         ...item,
         promotor_name: profile?.display_name || 'Name nicht gefunden',
-        promotor_email: profile?.email || ''
+        promotor_email: ''
       };
     });
 
