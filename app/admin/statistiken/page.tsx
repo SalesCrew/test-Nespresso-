@@ -374,27 +374,58 @@ export default function StatistikenPage() {
     setValidationStates(prev => ({ ...prev, [cardId]: !prev[cardId] }));
   };
 
-  const handleSendToHistory = () => {
+  const handleSendToHistory = async () => {
     // Get all validated cards with their complete state
     const validatedCards = cardData.filter(card => 
-      validationStates[card.id] && generatedStates[card.id]
+      validationStates[card.id] && generatedStates[card.id] && matchedPromoterIds[card.id]
     ).map(card => ({
       ...card,
       magicTouchCategory: magicTouchCategories[card.id],
       matchedPromoter: matchedPromoters[card.id],
+      matchedPromoterId: matchedPromoterIds[card.id],
       generatedText: editedTexts[card.id] || getGeneratedEmailText(),
       sentAt: new Date()
     }));
-    
-    // Add to history
-    setHistoryCards(prev => [...prev, ...validatedCards]);
-    
-    // Remove from current cards
-    const validatedCardIds = validatedCards.map(card => card.id);
-    setCardData(prev => prev.filter(card => !validatedCardIds.includes(card.id)));
-    
-    // Clean up states for moved cards
-    validatedCardIds.forEach(cardId => {
+
+    if (validatedCards.length === 0) {
+      alert('Keine validierten Karten mit zugewiesenem Promotor gefunden.');
+      return;
+    }
+
+    try {
+      // Prepare feedback items for database
+      const feedbackItems = validatedCards.map(card => ({
+        user_id: card.matchedPromoterId,
+        mc_et: card.mcet,
+        vl_value: card.vlShare,
+        tma: card.tma,
+        feedback_text: card.generatedText,
+        magic_touch: card.magicTouchCategory || null
+      }));
+
+      // Save to database
+      const res = await fetch('/api/admin/kpi-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedbackItems })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to save feedback');
+      }
+
+      const result = await res.json();
+      console.log('Saved', result.count, 'feedback records to database');
+      
+      // Add to history UI
+      setHistoryCards(prev => [...prev, ...validatedCards]);
+      
+      // Remove from current cards
+      const validatedCardIds = validatedCards.map(card => card.id);
+      setCardData(prev => prev.filter(card => !validatedCardIds.includes(card.id)));
+      
+      // Clean up states for moved cards
+      validatedCardIds.forEach(cardId => {
       setValidationStates(prev => {
         const newState = { ...prev };
         delete newState[cardId];
@@ -430,7 +461,16 @@ export default function StatistikenPage() {
         delete newState[cardId];
         return newState;
       });
+      setMatchedPromoterIds(prev => {
+        const newState = { ...prev };
+        delete newState[cardId];
+        return newState;
+      });
     });
+    } catch (e) {
+      console.error('Error saving feedback to database:', e);
+      alert('Fehler beim Speichern der Feedback-Daten. Bitte versuchen Sie es erneut.');
+    }
   };
 
   const handleRegenerateEmail = (cardId: string) => {
