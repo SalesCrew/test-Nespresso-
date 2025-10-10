@@ -226,7 +226,7 @@ ACHTUNG – MAGIC TOUCH (sehr wichtig, unbedingt berücksichtigen): ${category}`
     const userPrompt = 'Erzeuge jetzt den endgültigen E-Mail-Text.'
 
     const requestPayload = {
-      model: 'gpt-5-nano',
+      model: 'gpt-5-chat-latest',
       input: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
