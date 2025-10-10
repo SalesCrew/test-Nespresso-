@@ -3,13 +3,17 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET() {
+  console.log('🔍 KPI-FEEDBACK GET: Request started');
   try {
     const server = createSupabaseServerClient();
     const { data: { user } } = await server.auth.getUser();
     
     if (!user) {
+      console.log('❌ No authenticated user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    console.log('✅ User authenticated:', user.id);
 
     // Check if user is admin
     const { data: profile } = await server
@@ -18,10 +22,14 @@ export async function GET() {
       .eq('user_id', user.id)
       .single();
 
+    console.log('👤 User profile role:', profile?.role);
+
     if (!profile || !['admin_staff', 'admin_of_admins'].includes(profile.role)) {
+      console.log('❌ User not authorized, role:', profile?.role);
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    console.log('✅ Admin access granted');
     const svc = createSupabaseServiceClient();
 
     // Fetch all feedback
@@ -53,12 +61,19 @@ export async function GET() {
       .in('user_id', userIds);
 
     if (profileError) {
-      console.error('Error fetching user profiles:', profileError);
+      console.error('❌ Error fetching user profiles:', profileError);
     }
 
-    console.log('Fetched profiles:', profiles?.length || 0);
-
-    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+    console.log('✅ Fetched profiles:', profiles?.length || 0);
+    if (profiles) {
+      profiles.forEach((p: any) => console.log(`  Profile: ${p.user_id} → ${p.display_name}`));
+    }
+    
+    console.log('Building profile map...');
+    const profileMap = new Map((profiles || []).map((p: any) => {
+      console.log(`  Adding to map: ${p.user_id} → ${p.display_name}`);
+      return [p.user_id, p];
+    }));
 
     // Map to include promotor details at top level
     const feedbackWithDetails = (feedback || []).map((item: any) => {
