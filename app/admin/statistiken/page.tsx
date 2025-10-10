@@ -71,10 +71,15 @@ export default function StatistikenPage() {
   // Fetch promotors and history from database on mount
   useEffect(() => {
     const fetchPromoters = async () => {
+      console.log('👥 Fetching promotors list...');
       try {
         const res = await fetch('/api/admin/promotors-list');
         if (res.ok) {
           const data = await res.json();
+          console.log('✅ Received promotors:', data.promotors?.length || 0);
+          if (data.promotors && data.promotors.length > 0) {
+            console.log('Sample promotor:', data.promotors[0]);
+          }
           setAvailablePromotersData(data.promotors || []);
         }
       } catch (e) {
