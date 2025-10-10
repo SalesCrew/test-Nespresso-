@@ -227,15 +227,14 @@ ACHTUNG – MAGIC TOUCH (sehr wichtig, unbedingt berücksichtigen): ${category}`
 
     const requestPayload = {
       model: 'gpt-5-chat-latest',
-      input: [
+      messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      reasoning: { effort: 'low' },
-      text: { verbosity: 'medium' }
+      temperature: 0.7
     }
 
-    const response = await fetch('https://api.openai.com/v1/responses', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -250,28 +249,7 @@ ACHTUNG – MAGIC TOUCH (sehr wichtig, unbedingt berücksichtigen): ${category}`
     }
 
     const result = await response.json()
-
-    const extractText = (res: any): string => {
-      if (typeof res?.output_text === 'string') return res.output_text.trim()
-      const out = res?.output
-      if (Array.isArray(out)) {
-        let text = ''
-        for (const item of out) {
-          const content = (item && item.content) || []
-          if (typeof content === 'string') text += content
-          else if (Array.isArray(content)) {
-            for (const seg of content) {
-              if (typeof seg?.text === 'string') text += seg.text
-              else if (typeof seg === 'string') text += seg
-            }
-          }
-        }
-        return text.trim()
-      }
-      return (typeof res === 'string' ? res : '').trim()
-    }
-
-    const text = extractText(result)
+    const text: string = (result?.choices?.[0]?.message?.content || '').trim()
     if (!text) {
       return NextResponse.json({ error: 'Empty AI response' }, { status: 500 })
     }

@@ -251,9 +251,6 @@ export default function StatistikenPage() {
       setGeneratedStates(prev => ({ ...prev, [cardId]: true }));
     } catch (e) {
       console.error('AI generation failed', e);
-      // fallback temp text
-      setEditedTexts(prev => ({ ...prev, [cardId]: getGeneratedEmailText() }));
-      setGeneratedStates(prev => ({ ...prev, [cardId]: true }));
     } finally {
       setGeneratingStates(prev => ({ ...prev, [cardId]: false }));
     }
