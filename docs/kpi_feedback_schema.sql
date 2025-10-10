@@ -46,7 +46,7 @@ CREATE POLICY "Admins full access to kpi_feedback"
     EXISTS (
       SELECT 1 FROM user_profiles
       WHERE user_profiles.user_id = auth.uid()
-      AND user_profiles.role = 'admin'
+      AND user_profiles.role IN ('admin_staff','admin_of_admins')
     )
   );
 
