@@ -202,7 +202,7 @@ ${selectedMood ? '\n' + selectedMood : ''}`
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      reasoning: { effort: 'low' },
+      reasoning: { effort: 'medium' },
       text: { verbosity: 'medium' }
     }
 
