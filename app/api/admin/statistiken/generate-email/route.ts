@@ -20,6 +20,28 @@ export async function POST(req: Request) {
     const tma: string = (body?.tma || '').toString()
     const vlShare: string = (body?.vlShare || '').toString()
     const category: string = (body?.category || 'Neutral').toString()
+    const mcetRank: number = parseInt(body?.mcetRank || '0')
+    const vlRank: number = parseInt(body?.vlRank || '0')
+    
+    // Get current month name in German
+    const currentDate = new Date()
+    const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+    const currentMonthName = monthNames[currentDate.getMonth()]
+    
+    // Extract first name from full name
+    const pName = name.split(' ')[0]
+    
+    // Map category to mood text
+    const moodMap: Record<string, string> = {
+      'Beeindruckt': `Mood: Stark Beeindruckt - Priorität Höchste Anerkennung! Schreibe diese E-Mail im Ton höchster Anerkennung und Wertschätzung. Die Leistung war außergewöhnlich. Formulierungen wie "herausragende Leistung", "wirklich beeindruckend", "exzellent" und "ein großes Lob für diese Performance" sollen den Kern der E-Mail bilden. Stelle sicher, dass diese positive Emotion in jedem Abschnitt mitschwingt, von der Einleitung bis zum Schluss. Vermeide jede neutrale oder zurückhaltende Formulierung.`,
+      'Zufrieden': `Mood: Solide Zufriedenheit - Fokus auf das Positive! Der Ton dieser E-Mail soll klarstellen: Trotz eventueller kleinerer Schwächen sind wir mit der Gesamtleistung zufrieden und blicken positiv auf die Zusammenarbeit. Nutze Formulierungen wie "eine solide Leistung unter diesen Umständen", "wir sind damit zufrieden", "gut gemacht". Die E-Mail soll unterstützend und positiv klingen, ohne die Realität zu beschönigen. Betone das Engagement.`,
+      'Verbesserung': `Mood: Deutliche Verbesserung - Trend hervorheben! Diese E-Mail muss den positiven Entwicklungstrend klar hervorheben. Auch wenn das Ziel noch nicht erreicht ist, ist der Fortschritt offensichtlich und anerkennenswert. Formuliere aktiv und positiv über die Verbesserung, z.B. "eine klare positive Entwicklung ist sichtbar", "Sie sind auf einem sehr guten Weg", "diese Steigerung ist ein tolles Signal". Motiviere, diesen Weg konsequent weiterzugehen.`,
+      'Motivierend (unzufrieden)': `Mood: Konstruktiv-Motivierend - Handlungsbedarf bei schwachen Zahlen! Die Zahlen sind aktuell nicht zufriedenstellend und es besteht klarer Handlungsbedarf. Wichtig: Formuliere absolut lösungsorientiert und unterstützend, nicht anklagend. Ziel ist es, den Promoter zu motivieren, gemeinsam Ursachen zu finden und die Performance zu steigern. Nutze Formulierungen wie "lassen Sie uns gemeinsam analysieren, wie wir hier eine Wende schaffen können", "wir möchten Sie unterstützen, wieder auf Kurs zu kommen", "wir sind überzeugt, dass mit den richtigen Anpassungen eine Verbesserung möglich ist". Der Ton ist ernst, aber partnerschaftlich und zukunftsorientiert.`,
+      'Verschlechterung': `Mood: Besorgniserregende Verschlechterung - Ursachenforschung ist jetzt wichtig! Die Performance ist leider spürbar zurückgegangen. Dies muss klar, aber konstruktiv und nicht demotivierend angesprochen werden. Ziel ist es, den Promoter zur Reflexion anzuregen und gemeinsam nach Ursachen und Lösungen zu suchen. Formuliere Sätze wie: "Uns ist aufgefallen, dass die Zahlen in diesem Monat leider einen Rückgang zeigen. Lassen Sie uns gemeinsam überlegen, woran das liegen könnte und wie wir gegensteuern können.", "Es ist wichtig, diesen Trend zu verstehen, um wieder an frühere Erfolge anzuknüpfen." Biete Unterstützung an.`
+    }
+    
+    const selectedMood = moodMap[category] || ''
+    const historicalContextString = 'Noch keine historischen Daten verfügbar.'
 
     const systemPrompt = `Du bist Teil einer Webapp, die automatisch E‑Mails an unsere externen Promotoren verschickt. Deine Aufgabe ist es, den E‑Mail-Text zu verfassen. Dabei beachtest du folgende Grundregeln:
 
@@ -33,17 +55,17 @@ export async function POST(req: Request) {
 
 Aufbau der E‑Mail:
 
-1. Anrede: "Liebe" bzw. "Lieber" + \${pName}. Verwende in der Anrede nur den Vornamen der Person.
+1. Anrede: "Liebe" bzw. "Lieber" + ${pName}. Verwende in der Anrede nur den Vornamen der Person.
 
-2. Einleitung, z. B. "Ich darf dir heute deine \${currentMonthName} KPIs zukommen lassen."
+2. Einleitung, z. B. "Ich darf dir heute deine ${currentMonthName} KPIs zukommen lassen."
 
 3. Kurzer motivierender Satz ("Trotz [gegebenen Umständen] machst du das Beste draus und dafür ein großes Dankeschön unsererseits. 😊").
 
 4. Rückblick auf die Zahlen mit folgenden Daten in genau dieser Form:
 
-   MC/ET: \${mcEtVal} (Platz \${mcEtRnk})
-   TMA Anteil: \${tmaVal}
-   VL Share: \${vlVal} (Platz \${vlRnk})
+   MC/ET: ${mcet} (Platz ${mcetRank})
+   TMA Anteil: ${tma}%
+   VL Share: ${vlShare}% (Platz ${vlRank})
 
 5. Bewertung:
 
@@ -52,7 +74,7 @@ Aufbau der E‑Mail:
    * Gehe auf die Plätze nur nochmal im Text ausführlicher ein (zusätzlich zur Auflistung oben), wenn die Person Top 3 ist ODER zu den niedrigsten 10 gehört. Erkläre dann, was die Zahlen bedeuten und ob Verbesserungspotenzial besteht oder ob es bereits super läuft. (Für die "niedrigsten 10" gehe von ca. 80 Promotoren gesamt aus, wie im Hintergrund erwähnt.)
 
 ZUSÄTZLICHER KONTEXT ZUR AKTUELLEN LEISTUNG (BERÜCKSICHTIGE DIESEN BEI DER BEWERTUNG DER KPIS):
-\${historicalContextString}
+${historicalContextString}
 Bitte integriere diese Informationen subtil in deine Bewertung der einzelnen KPIs. Erwähne signifikante Verbesserungen ("deutliche Verbesserung") oder Verschlechterungen ("deutlicher Rückgang"). Wenn die Änderungen gering sind ("leichter Rückgang", "leichte Verbesserung") oder stabil sind, erwähne eher Stabilität oder konzentriere dich nur auf die aktuellen Werte und Ränge. Übertreibe die Erwähnung dieser Veränderungen nicht, sondern nutze sie, um deine Aussagen treffender zu machen und ggf. Ratschläge oder Lob spezifischer zu formulieren.
 
 6. Abschließender motivierender Satz, der zum Weitermachen anregt.
@@ -170,20 +192,7 @@ Solltet ihr noch Tipps und Tricks brauchen, könnt ihr euch jederzeit bei uns me
 
 Liebe Grüße, dein Nespresso Team
 
-Moods:
-Mood: Stark Beeindruckt - Priorität Höchste Anerkennung! Schreibe diese E-Mail im Ton höchster Anerkennung und Wertschätzung. Die Leistung war außergewöhnlich. Formulierungen wie "herausragende Leistung", "wirklich beeindruckend", "exzellent" und "ein großes Lob für diese Performance" sollen den Kern der E-Mail bilden. Stelle sicher, dass diese positive Emotion in jedem Abschnitt mitschwingt, von der Einleitung bis zum Schluss. Vermeide jede neutrale oder zurückhaltende Formulierung.
-
-zufrieden: Mood: Solide Zufriedenheit - Fokus auf das Positive!
-Der Ton dieser E-Mail soll klarstellen: Trotz eventueller kleinerer Schwächen sind wir mit der Gesamtleistung zufrieden und blicken positiv auf die Zusammenarbeit. Nutze Formulierungen wie "eine solide Leistung unter diesen Umständen", "wir sind damit zufrieden", "gut gemacht". Die E-Mail soll unterstützend und positiv klingen, ohne die Realität zu beschönigen. Betone das Engagement.
-
-verbesserung: Mood: Deutliche Verbesserung - Trend hervorheben!
-Diese E-Mail muss den positiven Entwicklungstrend klar hervorheben. Auch wenn das Ziel noch nicht erreicht ist, ist der Fortschritt offensichtlich und anerkennenswert. Formuliere aktiv und positiv über die Verbesserung, z.B. "eine klare positive Entwicklung ist sichtbar", "Sie sind auf einem sehr guten Weg", "diese Steigerung ist ein tolles Signal". Motiviere, diesen Weg konsequent weiterzugehen.
-
-motivierend: Mood: Konstruktiv-Motivierend - Handlungsbedarf bei schwachen Zahlen!
-Die Zahlen sind aktuell nicht zufriedenstellend und es besteht klarer Handlungsbedarf. Wichtig: Formuliere absolut lösungsorientiert und unterstützend, nicht anklagend. Ziel ist es, den Promoter zu motivieren, gemeinsam Ursachen zu finden und die Performance zu steigern. Nutze Formulierungen wie "lassen Sie uns gemeinsam analysieren, wie wir hier eine Wende schaffen können", "wir möchten Sie unterstützen, wieder auf Kurs zu kommen", "wir sind überzeugt, dass mit den richtigen Anpassungen eine Verbesserung möglich ist". Der Ton ist ernst, aber partnerschaftlich und zukunftsorientiert.
-
-verschlechterung: Mood: Besorgniserregende Verschlechterung - Ursachenforschung ist jetzt wichtig!
-Die Performance ist leider spürbar zurückgegangen. Dies muss klar, aber konstruktiv und nicht demotivierend angesprochen werden. Ziel ist es, den Promoter zur Reflexion anzuregen und gemeinsam nach Ursachen und Lösungen zu suchen. Formuliere Sätze wie: "Uns ist aufgefallen, dass die Zahlen in diesem Monat leider einen Rückgang zeigen. Lassen Sie uns gemeinsam überlegen, woran das liegen könnte und wie wir gegensteuern können.", "Es ist wichtig, diesen Trend zu verstehen, um wieder an frühere Erfolge anzuknüpfen." Biete Unterstützung an.`
+${selectedMood ? '\n' + selectedMood : ''}`
 
     const userPrompt = 'Erzeuge jetzt den endgültigen E-Mail-Text.'
 

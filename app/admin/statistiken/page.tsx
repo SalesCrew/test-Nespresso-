@@ -223,6 +223,13 @@ export default function StatistikenPage() {
     setGeneratingStates(prev => ({ ...prev, [cardId]: true }));
 
     try {
+      // Calculate rankings: sort by MC/ET and VL Share descending
+      const mcetSorted = [...cardData].sort((a, b) => parseFloat(String(b.mcet)) - parseFloat(String(a.mcet)));
+      const vlShareSorted = [...cardData].sort((a, b) => parseFloat(String(b.vlShare)) - parseFloat(String(a.vlShare)));
+      
+      const mcetRank = mcetSorted.findIndex(c => c.id === cardId) + 1;
+      const vlRank = vlShareSorted.findIndex(c => c.id === cardId) + 1;
+
       const res = await fetch('/api/admin/statistiken/generate-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,7 +239,9 @@ export default function StatistikenPage() {
           mcet: card.mcet,
           tma: card.tma,
           vlShare: card.vlShare,
-          category: magicTouchCategories[cardId] || 'Neutral'
+          category: magicTouchCategories[cardId] || 'Neutral',
+          mcetRank,
+          vlRank
         })
       });
       const data = await res.json();
