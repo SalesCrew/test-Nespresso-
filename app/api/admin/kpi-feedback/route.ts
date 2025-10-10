@@ -29,7 +29,7 @@ export async function GET() {
       .from('kpi_feedback')
       .select(`
         *,
-        promotor:user_profiles!kpi_feedback_user_id_fkey(display_name, email)
+        user_profiles!inner(display_name, email)
       `)
       .order('created_at', { ascending: false });
 
@@ -41,8 +41,8 @@ export async function GET() {
     // Map to include promotor details at top level
     const feedbackWithDetails = (feedback || []).map((item: any) => ({
       ...item,
-      promotor_name: item.promotor?.display_name || 'Unbekannt',
-      promotor_email: item.promotor?.email || ''
+      promotor_name: item.user_profiles?.display_name || 'Unbekannt',
+      promotor_email: item.user_profiles?.email || ''
     }));
 
     return NextResponse.json({ feedback: feedbackWithDetails });
