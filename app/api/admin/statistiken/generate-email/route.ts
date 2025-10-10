@@ -16,12 +16,29 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}))
     const name: string = (body?.name || '').toString()
     const email: string = (body?.email || '').toString()
-    const mcet: string = (body?.mcet || '').toString()
-    const tma: string = (body?.tma || '').toString()
-    const vlShare: string = (body?.vlShare || '').toString()
+    const mcetRaw: string = (body?.mcet || '').toString()
+    const tmaRaw: string = (body?.tma || '').toString()
+    const vlShareRaw: string = (body?.vlShare || '').toString()
     const category: string = (body?.category || 'Neutral').toString()
     const mcetRank: number = parseInt(body?.mcetRank || '0')
     const vlRank: number = parseInt(body?.vlRank || '0')
+
+    // Format numeric values to one decimal with comma separator (de-DE style)
+    const parseNum = (v: string): number => {
+      const cleaned = (v || '').replace('%', '').replace(',', '.').trim()
+      const n = parseFloat(cleaned)
+      return isNaN(n) ? NaN : n
+    }
+    const fmt1 = (n: number): string => {
+      if (isNaN(n)) return ''
+      return n.toFixed(1).replace('.', ',')
+    }
+    const mcetNum = parseNum(mcetRaw)
+    const tmaNum = parseNum(tmaRaw)
+    const vlNum = parseNum(vlShareRaw)
+    const mcetDisplay = fmt1(mcetNum)
+    const tmaDisplay = fmt1(tmaNum)
+    const vlDisplay = fmt1(vlNum)
     
     // Get current month name in German
     const currentDate = new Date()
@@ -55,7 +72,7 @@ export async function POST(req: Request) {
 
 Aufbau der E‑Mail:
 
-1. Anrede: "Liebe" bzw. "Lieber" + ${pName}. Verwende in der Anrede nur den Vornamen der Person.
+1. Anrede: "Liebe" bzw. "Lieber" + ${pName}. Verwende in der Anrede nur den Vornamen der Person. Schreibe IMMER in Du‑Form; verwende niemals "ihr" oder "euch".
 
 2. Einleitung, z. B. "Ich darf dir heute deine ${currentMonthName} KPIs zukommen lassen."
 
@@ -63,15 +80,16 @@ Aufbau der E‑Mail:
 
 4. Rückblick auf die Zahlen mit folgenden Daten in genau dieser Form:
 
-   MC/ET: ${mcet} (Platz ${mcetRank})
-   TMA Anteil: ${tma}%
-   VL Share: ${vlShare}% (Platz ${vlRank})
+   MC/ET: ${mcetDisplay} (Platz ${mcetRank})
+   TMA Anteil: ${tmaDisplay}%
+   VL Share: ${vlDisplay}% (Platz ${vlRank})
 
 5. Bewertung – wichtig: Schreibe im finalen E‑Mail‑Text NICHT das Wort "Bewertung". Nutze die folgenden Punkte ausschließlich als Leitfaden, um ein natürlich klingendes Feedback in fließendem Text zu formulieren:
 
    * Bei MC/ET und VL Share jeweils die Platzierung nennen (z. B. "Du bist in diesem Monat auf Platz 1" bzw. "auf Platz 30").
    * Beim TMA‑Anteil nur einordnen: einer der Besten, im Mittelfeld oder im unteren Drittel.
    * Gehe auf die Plätze nur dann ausführlicher ein (zusätzlich zur Auflistung oben), wenn die Person Top 3 ist ODER zu den niedrigsten 10 gehört. Erkläre dann kurz, was die Zahlen bedeuten und ob Verbesserungspotenzial besteht oder ob es bereits sehr gut läuft. (Für die "niedrigsten 10" gehe von ca. 80 Promotoren gesamt aus.)
+   * Wenn einzelne Werte unter sinnvollen Richtwerten liegen (MC/ET < 4, VL Share < 10 %, TMA < 75 %), sprich das kurz konstruktiv an und ermutige zu konkretem Fokus, z. B. bei zu niedrigem VL‑Share: "setz diesen Monat etwas mehr Fokus auf Vertuo". Formuliere immer positiv, lösungsorientiert und motivierend.
 
 ZUSÄTZLICHER KONTEXT ZUR AKTUELLEN LEISTUNG (BERÜCKSICHTIGE DIESEN BEI DER BEWERTUNG DER KPIS):
 ${historicalContextString}
