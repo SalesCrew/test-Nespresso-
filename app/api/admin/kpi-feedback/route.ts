@@ -24,26 +24,35 @@ export async function GET() {
 
     const svc = createSupabaseServiceClient();
 
-    // Fetch all feedback with promotor details
+    // Fetch all feedback
     const { data: feedback, error } = await svc
       .from('kpi_feedback')
-      .select(`
-        *,
-        user_profiles!inner(display_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching KPI feedback:', error);
-      return NextResponse.json({ error: 'Failed to fetch feedback' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch feedback', details: error }, { status: 500 });
     }
 
+    // Fetch promotor details for each feedback
+    const userIds = (feedback || []).map((f: any) => f.user_id);
+    const { data: profiles } = await svc
+      .from('user_profiles')
+      .select('user_id, display_name, email')
+      .in('user_id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000']);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+
     // Map to include promotor details at top level
-    const feedbackWithDetails = (feedback || []).map((item: any) => ({
-      ...item,
-      promotor_name: item.user_profiles?.display_name || 'Unbekannt',
-      promotor_email: item.user_profiles?.email || ''
-    }));
+    const feedbackWithDetails = (feedback || []).map((item: any) => {
+      const profile = profileMap.get(item.user_id);
+      return {
+        ...item,
+        promotor_name: profile?.display_name || 'Unbekannt',
+        promotor_email: profile?.email || ''
+      };
+    });
 
     return NextResponse.json({ feedback: feedbackWithDetails });
   } catch (e: any) {
