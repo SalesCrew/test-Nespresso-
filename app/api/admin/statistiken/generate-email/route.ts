@@ -14,14 +14,14 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}))
-    const name: string = (body?.name || '').toString()
-    const email: string = (body?.email || '').toString()
-    const mcetRaw: string = (body?.mcet || '').toString()
-    const tmaRaw: string = (body?.tma || '').toString()
-    const vlShareRaw: string = (body?.vlShare || '').toString()
-    const category: string = (body?.category || 'Neutral').toString()
-    const mcetRank: number = parseInt(body?.mcetRank || '0')
-    const vlRank: number = parseInt(body?.vlRank || '0')
+    const name: string = (body?.name ?? '').toString()
+    const email: string = (body?.email ?? '').toString()
+    const mcetRaw: string = (body?.mcet ?? '').toString()
+    const tmaRaw: string = (body?.tma ?? '').toString()
+    const vlShareRaw: string = (body?.vlShare ?? '').toString()
+    const category: string = (body?.category ?? 'Neutral').toString()
+    const mcetRank: number = parseInt((body?.mcetRank ?? '0').toString())
+    const vlRank: number = parseInt((body?.vlRank ?? '0').toString())
 
     // Format numeric values to one decimal with comma separator (de-DE style)
     const parseNum = (v: string): number => {
