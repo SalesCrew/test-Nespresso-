@@ -2338,7 +2338,7 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="grid grid-cols-5 gap-4">
                         {cards.map((card) => (
                           <div key={card.id} className="bg-white border border-gray-100 rounded-lg p-4 shadow">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <h3 className="font-medium text-gray-900">{card.name}</h3>
                               <button 
                                 className={`text-red-500 hover:text-red-600 ${pendingHistoryDelete[card.id] ? 'wobble' : ''}`}
@@ -2348,10 +2348,6 @@ Liebe Grüße, dein Nespresso Team`;
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M5 6v14a2 2 0 002 2h10a2 2 0 002-2V6M10 11v6M14 11v6" />
                                 </svg>
                               </button>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3">
-                              <Mail className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                              <p className="text-sm text-gray-600 truncate">{card.email}</p>
                             </div>
                             
                             {/* KPI Metrics */}

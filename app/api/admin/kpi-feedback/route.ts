@@ -35,25 +35,43 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch feedback', details: error }, { status: 500 });
     }
 
+    console.log('Fetched feedback records:', feedback?.length || 0);
+
     // Fetch promotor details for each feedback
     const userIds = (feedback || []).map((f: any) => f.user_id);
-    const { data: profiles } = await svc
+    
+    if (userIds.length === 0) {
+      console.log('No feedback records found');
+      return NextResponse.json({ feedback: [] });
+    }
+    
+    console.log('Fetching profiles for user IDs:', userIds);
+    
+    const { data: profiles, error: profileError } = await svc
       .from('user_profiles')
       .select('user_id, display_name, email')
-      .in('user_id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000']);
+      .in('user_id', userIds);
+
+    if (profileError) {
+      console.error('Error fetching user profiles:', profileError);
+    }
+
+    console.log('Fetched profiles:', profiles?.length || 0);
 
     const profileMap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
 
     // Map to include promotor details at top level
     const feedbackWithDetails = (feedback || []).map((item: any) => {
       const profile = profileMap.get(item.user_id);
+      console.log(`Mapping feedback ${item.id}: user_id=${item.user_id}, profile=${profile?.display_name || 'NOT FOUND'}`);
       return {
         ...item,
-        promotor_name: profile?.display_name || 'Unbekannt',
+        promotor_name: profile?.display_name || 'Name nicht gefunden',
         promotor_email: profile?.email || ''
       };
     });
 
+    console.log('Returning', feedbackWithDetails.length, 'feedback items with details');
     return NextResponse.json({ feedback: feedbackWithDetails });
   } catch (e: any) {
     console.error('Error in kpi-feedback GET:', e);
