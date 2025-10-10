@@ -192,7 +192,17 @@ Solltet ihr noch Tipps und Tricks brauchen, könnt ihr euch jederzeit bei uns me
 
 Liebe Grüße, dein Nespresso Team
 
-${selectedMood ? '\n' + selectedMood : ''}`
+\`Mood: Stark Beeindruckt - Priorität Höchste Anerkennung! Schreibe diese E-Mail im Ton höchster Anerkennung und Wertschätzung. Die Leistung war außergewöhnlich. Formulierungen wie "herausragende Leistung", "wirklich beeindruckend", "exzellent" und "ein großes Lob für diese Performance" sollen den Kern der E-Mail bilden. Stelle sicher, dass diese positive Emotion in jedem Abschnitt mitschwingt, von der Einleitung bis zum Schluss. Vermeide jede neutrale oder zurückhaltende Formulierung.\`,
+        
+        zufrieden: \`Mood: Solide Zufriedenheit - Fokus auf das Positive!\nDer Ton dieser E-Mail soll klarstellen: Trotz eventueller kleinerer Schwächen sind wir mit der Gesamtleistung zufrieden und blicken positiv auf die Zusammenarbeit. Nutze Formulierungen wie "eine solide Leistung unter diesen Umständen", "wir sind damit zufrieden", "gut gemacht". Die E-Mail soll unterstützend und positiv klingen, ohne die Realität zu beschönigen. Betone das Engagement.\`,
+        
+        verbesserung: \`Mood: Deutliche Verbesserung - Trend hervorheben!\nDiese E-Mail muss den positiven Entwicklungstrend klar hervorheben. Auch wenn das Ziel noch nicht erreicht ist, ist der Fortschritt offensichtlich und anerkennenswert. Formuliere aktiv und positiv über die Verbesserung, z.B. "eine klare positive Entwicklung ist sichtbar", "Sie sind auf einem sehr guten Weg", "diese Steigerung ist ein tolles Signal". Motiviere, diesen Weg konsequent weiterzugehen.\`,
+        
+        motivierend: \`Mood: Konstruktiv-Motivierend - Handlungsbedarf bei schwachen Zahlen!\nDie Zahlen sind aktuell nicht zufriedenstellend und es besteht klarer Handlungsbedarf. Wichtig: Formuliere absolut lösungsorientiert und unterstützend, nicht anklagend. Ziel ist es, den Promoter zu motivieren, gemeinsam Ursachen zu finden und die Performance zu steigern. Nutze Formulierungen wie "lassen Sie uns gemeinsam analysieren, wie wir hier eine Wende schaffen können", "wir möchten Sie unterstützen, wieder auf Kurs zu kommen", "wir sind überzeugt, dass mit den richtigen Anpassungen eine Verbesserung möglich ist". Der Ton ist ernst, aber partnerschaftlich und zukunftsorientiert.\`,
+        
+        verschlechterung: \`Mood: Besorgniserregende Verschlechterung - Ursachenforschung ist jetzt wichtig!\nDie Performance ist leider spürbar zurückgegangen. Dies muss klar, aber konstruktiv und nicht demotivierend angesprochen werden. Ziel ist es, den Promoter zur Reflexion anzuregen und gemeinsam nach Ursachen und Lösungen zu suchen. Formuliere Sätze wie: "Uns ist aufgefallen, dass die Zahlen in diesem Monat leider einen Rückgang zeigen. Lassen Sie uns gemeinsam überlegen, woran das liegen könnte und wie wir gegensteuern können.", "Es ist wichtig, diesen Trend zu verstehen, um wieder an frühere Erfolge anzuknüpfen." Biete Unterstützung an.\`
+
+ACHTUNG – MAGIC TOUCH (sehr wichtig, unbedingt berücksichtigen): ${category}`
 
     const userPrompt = 'Erzeuge jetzt den endgültigen E-Mail-Text.'
 
@@ -202,7 +212,7 @@ ${selectedMood ? '\n' + selectedMood : ''}`
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      reasoning: { effort: 'medium' },
+      reasoning: { effort: 'low' },
       text: { verbosity: 'medium' }
     }
 
