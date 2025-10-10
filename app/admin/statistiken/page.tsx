@@ -2674,7 +2674,7 @@ Liebe Grüße, dein Nespresso Team`;
               </div>
 
               {/* Modal Content */}
-              <div className="p-6 overflow-y-auto flex flex-col" style={{height: 'calc(80vh - 80px)'}}>
+              <div className="p-6 overflow-y-auto scrollbar-hide flex flex-col" style={{height: 'calc(80vh - 80px)'}}>
                 {/* Current Stats - Larger Display */}
                 <div className="bg-gray-100/60 border border-gray-200 rounded px-4 py-3 mb-4">
                   <div className="flex justify-around">
