@@ -83,26 +83,40 @@ export default function StatistikenPage() {
     };
 
     const fetchHistory = async () => {
+      console.log('📊 Fetching KPI feedback history...');
       try {
         const res = await fetch('/api/admin/kpi-feedback');
+        console.log('📥 Response status:', res.status);
+        
         if (res.ok) {
           const data = await res.json();
-          const historyData = (data.feedback || []).map((item: any) => ({
-            id: item.id,
-            name: item.promotor_name || 'Unbekannt',
-            email: item.promotor_email || '',
-            mcet: item.mc_et,
-            tma: item.tma,
-            vlShare: item.vl_value,
-            magicTouchCategory: item.magic_touch,
-            matchedPromoter: item.promotor_name,
-            generatedText: item.feedback_text,
-            sentAt: new Date(item.created_at)
-          }));
+          console.log('📦 Received data:', data);
+          console.log('📋 Feedback items count:', data.feedback?.length || 0);
+          
+          const historyData = (data.feedback || []).map((item: any) => {
+            console.log('🔄 Mapping item:', item.id, 'Name:', item.promotor_name);
+            return {
+              id: item.id,
+              name: item.promotor_name || 'Unbekannt',
+              email: item.promotor_email || '',
+              mcet: item.mc_et,
+              tma: item.tma,
+              vlShare: item.vl_value,
+              magicTouchCategory: item.magic_touch,
+              matchedPromoter: item.promotor_name,
+              generatedText: item.feedback_text,
+              sentAt: new Date(item.created_at)
+            };
+          });
+          
+          console.log('✅ Mapped history data:', historyData.length, 'cards');
           setHistoryCards(historyData);
+        } else {
+          const errorData = await res.json();
+          console.error('❌ API error:', errorData);
         }
       } catch (e) {
-        console.error('Failed to fetch history', e);
+        console.error('❌ Failed to fetch history:', e);
       }
     };
 
