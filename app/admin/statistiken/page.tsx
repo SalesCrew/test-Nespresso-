@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Settings, Send, FileText, Download, Phone, Crown, Check, Zap, Mail, ChevronDown, Copy, Edit, X, TrendingUp, PieChart, Percent, ChevronUp } from "lucide-react";
 import { IoColorWandOutline } from "react-icons/io5";
@@ -67,6 +67,18 @@ export default function StatistikenPage() {
   const [showPromoterFilterDropdown, setShowPromoterFilterDropdown] = useState(false);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [chartTimeFilter, setChartTimeFilter] = useState<"3months" | "6months" | "1year" | "all">("all");
+
+  // Unique promoter names that actually appear in history
+  const historyPromoterNames = useMemo(() => {
+    const names = historyCards.map(c => c.name).filter(Boolean) as string[];
+    return Array.from(new Set(names)).sort();
+  }, [historyCards]);
+
+  // Apply promoter filter to history cards
+  const displayedHistoryCards = useMemo(() => {
+    if (selectedPromoterFilter === "all") return historyCards;
+    return historyCards.filter(c => c.name === selectedPromoterFilter);
+  }, [historyCards, selectedPromoterFilter]);
 
   // Fetch promotors and history from database on mount
   useEffect(() => {
@@ -190,15 +202,7 @@ export default function StatistikenPage() {
     return (bestMatch && bestMatch.score > 0.85) ? bestMatch : null;
   };
 
-  // Promoters from admin/team page for filtering
-  const teamPromoters = [
-    "Sarah Schmidt",
-    "Michael Weber",
-    "Jan Müller", 
-    "Lisa König",
-    "Anna Bauer",
-    "Tom Fischer"
-  ];
+  // Removed temp teamPromoters list; using names from history instead
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -2339,7 +2343,7 @@ Liebe Grüße, dein Nespresso Team`;
                           >
                             All Promoters
                           </div>
-                          {teamPromoters.map((promoter) => (
+                          {historyPromoterNames.map((promoter) => (
                             <div
                               key={promoter}
                               onClick={() => {
@@ -2355,14 +2359,14 @@ Liebe Grüße, dein Nespresso Team`;
                       )}
                     </div>
                   </div>
-                  <span className="text-sm text-gray-400">(0 entries found)</span>
+                  <span className="text-sm text-gray-400">({displayedHistoryCards.length} entries found)</span>
                 </div>
               </div>
 
               {/* History Cards */}
-              {historyCards.length > 0 ? (
+              {displayedHistoryCards.length > 0 ? (
                 <div className="space-y-8">
-                  {Object.entries(groupCardsByDate(historyCards)).map(([date, cards]) => (
+                  {Object.entries(groupCardsByDate(displayedHistoryCards)).map(([date, cards]) => (
                     <div key={date}>
                       {/* Date Header */}
                       <h2 className="text-lg font-bold text-gray-900 mb-4">{date}</h2>
