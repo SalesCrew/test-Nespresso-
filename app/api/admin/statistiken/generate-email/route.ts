@@ -76,6 +76,7 @@ Aufbau der E‑Mail:
 ZUSÄTZLICHER KONTEXT ZUR AKTUELLEN LEISTUNG (BERÜCKSICHTIGE DIESEN BEI DER BEWERTUNG DER KPIS):
 ${historicalContextString}
 Bitte integriere diese Informationen subtil in deine Bewertung der einzelnen KPIs. Erwähne signifikante Verbesserungen ("deutliche Verbesserung") oder Verschlechterungen ("deutlicher Rückgang"). Wenn die Änderungen gering sind ("leichter Rückgang", "leichte Verbesserung") oder stabil sind, erwähne eher Stabilität oder konzentriere dich nur auf die aktuellen Werte und Ränge. Übertreibe die Erwähnung dieser Veränderungen nicht, sondern nutze sie, um deine Aussagen treffender zu machen und ggf. Ratschläge oder Lob spezifischer zu formulieren.
+WICHTIG: Erwähne niemals explizit, ob historische Daten vorhanden sind oder fehlen. Nutze sie nur natürlich im Text. Wenn keine historischen Daten geliefert sind, ignoriere diesen Abschnitt vollständig und schreibe das Feedback ganz natürlich, ohne das Fehlen historischer Daten zu erwähnen.
 
 6. Abschließender motivierender Satz, der zum Weitermachen anregt.
 
