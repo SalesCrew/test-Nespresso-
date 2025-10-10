@@ -62,6 +62,7 @@ export default function StatistikenPage() {
   const [promoterSearch, setPromoterSearch] = useState<{[cardId: string]: string}>({});
   const [validationStates, setValidationStates] = useState<Record<string, boolean>>({});
   const [historyCards, setHistoryCards] = useState<HistoryCardData[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [pendingHistoryDelete, setPendingHistoryDelete] = useState<Record<string, boolean>>({});
   const [selectedPromoterFilter, setSelectedPromoterFilter] = useState("all");
   const [showPromoterFilterDropdown, setShowPromoterFilterDropdown] = useState(false);
@@ -101,6 +102,7 @@ export default function StatistikenPage() {
 
     const fetchHistory = async () => {
       console.log('📊 Fetching KPI feedback history...');
+      setHistoryLoading(true);
       try {
         const res = await fetch('/api/admin/kpi-feedback');
         console.log('📥 Response status:', res.status);
@@ -134,6 +136,8 @@ export default function StatistikenPage() {
         }
       } catch (e) {
         console.error('❌ Failed to fetch history:', e);
+      } finally {
+        setHistoryLoading(false);
       }
     };
 
@@ -2364,7 +2368,42 @@ Liebe Grüße, dein Nespresso Team`;
               </div>
 
               {/* History Cards */}
-              {displayedHistoryCards.length > 0 ? (
+              {historyLoading ? (
+                <div className="space-y-8">
+                  {/* Skeleton date header */}
+                  <div>
+                    <div className="h-5 w-32 bg-gray-200 rounded mb-4 animate-skeleton-fade"></div>
+                    {/* Skeleton cards grid */}
+                    <div className="grid grid-cols-5 gap-4">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={`history-skel-${i}`} className="bg-white border border-gray-100 rounded-lg p-4 shadow">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="h-4 w-32 bg-gray-200 rounded animate-skeleton-fade"></div>
+                            <div className="h-4 w-4 bg-gray-200 rounded animate-skeleton-fade"></div>
+                          </div>
+                          <div className="bg-gray-100 border border-gray-200 rounded px-3 py-2 mb-4">
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="text-center">
+                                <div className="h-3 w-10 bg-gray-200 rounded mb-1 animate-skeleton-fade"></div>
+                                <div className="h-4 w-8 bg-gray-200 rounded animate-skeleton-fade"></div>
+                              </div>
+                              <div className="text-center">
+                                <div className="h-3 w-10 bg-gray-200 rounded mb-1 animate-skeleton-fade"></div>
+                                <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade"></div>
+                              </div>
+                              <div className="text-center">
+                                <div className="h-3 w-8 bg-gray-200 rounded mb-1 animate-skeleton-fade"></div>
+                                <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade"></div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="h-32 bg-gray-50 border border-gray-200 rounded animate-skeleton-fade"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : displayedHistoryCards.length > 0 ? (
                 <div className="space-y-8">
                   {Object.entries(groupCardsByDate(displayedHistoryCards)).map(([date, cards]) => (
                     <div key={date}>
