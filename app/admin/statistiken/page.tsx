@@ -56,6 +56,8 @@ export default function StatistikenPage() {
   const [activeRanksTab, setActiveRanksTab] = useState<"mcet" | "tma" | "vlshare">("mcet");
   const [recentlyScheduled, setRecentlyScheduled] = useState<{[key: string]: boolean}>({});
   const [matchedPromoters, setMatchedPromoters] = useState<{[cardId: string]: string | null}>({});
+  const [matchedPromoterIds, setMatchedPromoterIds] = useState<{[cardId: string]: string | null}>({});
+  const [availablePromotersData, setAvailablePromotersData] = useState<{name: string, user_id: string}[]>([]);
   const [showPromoterDropdown, setShowPromoterDropdown] = useState<{[cardId: string]: boolean}>({});
   const [promoterSearch, setPromoterSearch] = useState<{[cardId: string]: string}>({});
   const [validationStates, setValidationStates] = useState<Record<string, boolean>>({});
@@ -66,17 +68,82 @@ export default function StatistikenPage() {
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [chartTimeFilter, setChartTimeFilter] = useState<"3months" | "6months" | "1year" | "all">("all");
 
-  // Sample promoter list for matching
-  const availablePromoters = [
-    "Max Mustermann",
-    "Anna Schmidt", 
-    "Peter Weber",
-    "Lisa Mueller",
-    "Tom Fischer",
-    "Sarah Johnson",
-    "Michael Brown",
-    "Emma Wilson"
-  ];
+  // Fetch promotors from database on mount
+  useEffect(() => {
+    const fetchPromoters = async () => {
+      try {
+        const res = await fetch('/api/admin/promotors-list');
+        if (res.ok) {
+          const data = await res.json();
+          setAvailablePromotersData(data.promotors || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch promoters', e);
+      }
+    };
+    fetchPromoters();
+  }, []);
+
+  const availablePromoters = availablePromotersData.map(p => p.name);
+
+  // Robust fuzzy name matching function
+  const fuzzyMatchName = (inputName: string, dbPromoters: {name: string, user_id: string}[]): {name: string, user_id: string} | null => {
+    if (!inputName || !dbPromoters.length) return null;
+
+    const normalize = (str: string) => str.toLowerCase().trim().replace(/\s+/g, ' ');
+    const inputNorm = normalize(inputName);
+    
+    // Helper: calculate Levenshtein distance
+    const levenshtein = (a: string, b: string): number => {
+      const matrix: number[][] = [];
+      for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+      for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+      for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+          matrix[i][j] = b.charAt(i - 1) === a.charAt(j - 1)
+            ? matrix[i - 1][j - 1]
+            : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+        }
+      }
+      return matrix[b.length][a.length];
+    };
+
+    let bestMatch: {name: string, user_id: string, score: number} | null = null;
+
+    for (const promotor of dbPromoters) {
+      const dbNorm = normalize(promotor.name);
+      
+      // Exact match
+      if (inputNorm === dbNorm) {
+        return promotor;
+      }
+
+      // Try reversed name order (firstname lastname vs lastname firstname)
+      const inputParts = inputNorm.split(' ');
+      const dbParts = dbNorm.split(' ');
+      if (inputParts.length === 2 && dbParts.length === 2) {
+        const inputReversed = `${inputParts[1]} ${inputParts[0]}`;
+        if (inputReversed === dbNorm) {
+          return promotor;
+        }
+      }
+
+      // Calculate fuzzy similarity
+      const dist = levenshtein(inputNorm, dbNorm);
+      const maxLen = Math.max(inputNorm.length, dbNorm.length);
+      const similarity = 1 - (dist / maxLen);
+
+      // Only consider matches with >80% similarity
+      if (similarity > 0.80) {
+        if (!bestMatch || similarity > bestMatch.score) {
+          bestMatch = { ...promotor, score: similarity };
+        }
+      }
+    }
+
+    // Return best match only if confidence is high enough (>85%)
+    return (bestMatch && bestMatch.score > 0.85) ? bestMatch : null;
+  };
 
   // Promoters from admin/team page for filtering
   const teamPromoters = [
@@ -164,7 +231,24 @@ export default function StatistikenPage() {
         
         if (newCardData.length > 0) {
           setCardData(newCardData);
+          
+          // Auto-match promotors using fuzzy matching
+          const newMatches: {[key: string]: string | null} = {};
+          const newIds: {[key: string]: string | null} = {};
+          
+          newCardData.forEach(card => {
+            const match = fuzzyMatchName(card.name, availablePromotersData);
+            if (match) {
+              newMatches[card.id] = match.name;
+              newIds[card.id] = match.user_id;
+            }
+          });
+          
+          setMatchedPromoters(newMatches);
+          setMatchedPromoterIds(newIds);
+          
           console.log('Imported', newCardData.length, 'records');
+          console.log('Auto-matched', Object.keys(newMatches).length, 'promotors');
         }
         
       } catch (error) {
@@ -570,6 +654,11 @@ Liebe Grüße, dein Nespresso Team`;
 
   const handlePromoterSelect = (cardId: string, promoterName: string) => {
     setMatchedPromoters(prev => ({ ...prev, [cardId]: promoterName }));
+    // Find and store the user_id
+    const promotorData = availablePromotersData.find(p => p.name === promoterName);
+    if (promotorData) {
+      setMatchedPromoterIds(prev => ({ ...prev, [cardId]: promotorData.user_id }));
+    }
     setShowPromoterDropdown(prev => ({ ...prev, [cardId]: false }));
     setPromoterSearch(prev => ({ ...prev, [cardId]: '' }));
   };
