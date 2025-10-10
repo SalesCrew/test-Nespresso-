@@ -217,13 +217,37 @@ export default function StatistikenPage() {
     }
   };
 
-  const handleGenerateEmail = (cardId: string) => {
+  const handleGenerateEmail = async (cardId: string) => {
+    const card = cardData.find(c => c.id === cardId);
+    if (!card) return;
     setGeneratingStates(prev => ({ ...prev, [cardId]: true }));
-    
-    setTimeout(() => {
-      setGeneratingStates(prev => ({ ...prev, [cardId]: false }));
+
+    try {
+      const res = await fetch('/api/admin/statistiken/generate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: card.name,
+          email: card.email,
+          mcet: card.mcet,
+          tma: card.tma,
+          vlShare: card.vlShare,
+          category: magicTouchCategories[cardId] || 'Neutral'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'AI error');
+
+      setEditedTexts(prev => ({ ...prev, [cardId]: data.text }));
       setGeneratedStates(prev => ({ ...prev, [cardId]: true }));
-    }, 3000);
+    } catch (e) {
+      console.error('AI generation failed', e);
+      // fallback temp text
+      setEditedTexts(prev => ({ ...prev, [cardId]: getGeneratedEmailText() }));
+      setGeneratedStates(prev => ({ ...prev, [cardId]: true }));
+    } finally {
+      setGeneratingStates(prev => ({ ...prev, [cardId]: false }));
+    }
   };
 
   const handleCopyGeneratedText = async (cardId: string) => {
@@ -370,15 +394,8 @@ Liebe Grüße, dein Nespresso Team`;
       // Skip if already generated
       if (generatedStates[cardId]) continue;
       
-      // Start generating this card
-      setGeneratingStates(prev => ({ ...prev, [cardId]: true }));
-      
-      // Wait for 3 seconds (let current card finish completely)
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mark as generated and stop generating
-      setGeneratingStates(prev => ({ ...prev, [cardId]: false }));
-      setGeneratedStates(prev => ({ ...prev, [cardId]: true }));
+      // Start generating this card with a fresh request
+      await handleGenerateEmail(cardId);
       
       // Check if generation should stop after current card completes
       if (shouldStopGenerationRef.current) {
