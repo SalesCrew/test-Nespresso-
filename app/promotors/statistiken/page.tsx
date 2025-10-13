@@ -849,7 +849,11 @@ Mario`
                             className={`font-semibold ${statsData[timeFrame].mcet.value !== null ? (getColorForMcEt(statsData[timeFrame].mcet.value) !== "custom-orange" ? getColorForMcEt(statsData[timeFrame].mcet.value) : "") : "text-gray-300"}`}
                             style={{marginLeft: '4px', ...(statsData[timeFrame].mcet.value !== null ? getStyleForColor(getColorForMcEt(statsData[timeFrame].mcet.value)) : {})}}
                           >
-                            {statsData[timeFrame].mcet.value !== null ? statsData[timeFrame].mcet.value.toFixed(1) : '—'}
+                            {statsData[timeFrame].mcet.value !== null ? (
+                              statsData[timeFrame].mcet.value.toFixed(1)
+                            ) : (
+                              <span className="inline-block h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse align-middle"></span>
+                            )}
                           </div>
                           {statsData[timeFrame].mcet.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].mcet.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
@@ -867,7 +871,11 @@ Mario`
                             className={`font-semibold ${statsData[timeFrame].tma.value !== null ? (getColorForTma(statsData[timeFrame].tma.value) !== "custom-orange" ? getColorForTma(statsData[timeFrame].tma.value) : "") : "text-gray-300"}`}
                             style={{marginLeft: '4px', ...(statsData[timeFrame].tma.value !== null ? getStyleForColor(getColorForTma(statsData[timeFrame].tma.value)) : {})}}
                           >
-                            {statsData[timeFrame].tma.value !== null ? `${statsData[timeFrame].tma.value.toFixed(1)}%` : '—'}
+                            {statsData[timeFrame].tma.value !== null ? (
+                              `${statsData[timeFrame].tma.value.toFixed(1)}%`
+                            ) : (
+                              <span className="inline-block h-3 w-12 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse align-middle"></span>
+                            )}
                           </div>
                           {statsData[timeFrame].tma.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].tma.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
@@ -886,7 +894,11 @@ Mario`
                             className={`font-semibold ${statsData[timeFrame].vlShare.value !== null ? (getColorForVlShare(statsData[timeFrame].vlShare.value) !== "custom-orange" ? getColorForVlShare(statsData[timeFrame].vlShare.value) : "") : "text-gray-300"}`}
                             style={{marginLeft: '4px', ...(statsData[timeFrame].vlShare.value !== null ? getStyleForColor(getColorForVlShare(statsData[timeFrame].vlShare.value)) : {})}}
                           >
-                            {statsData[timeFrame].vlShare.value !== null ? `${statsData[timeFrame].vlShare.value.toFixed(1)}%` : '—'}
+                            {statsData[timeFrame].vlShare.value !== null ? (
+                              `${statsData[timeFrame].vlShare.value.toFixed(1)}%`
+                            ) : (
+                              <span className="inline-block h-3 w-14 bg-gray-200 dark:bg-gray-700 rounded-md animate-pulse align-middle"></span>
+                            )}
                           </div>
                           {statsData[timeFrame].vlShare.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].vlShare.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
