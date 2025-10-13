@@ -105,7 +105,8 @@ export default function StatistikenPage() {
               date: new Date(item.created_at),
               mcet: item.mc_et,
               tma: item.tma,
-              vl: item.vl_value
+              vl: item.vl_value,
+              feedback_text: item.feedback_text
             }))
             
             setRealHistoryData(mappedHistory)
@@ -469,9 +470,11 @@ Anbei der Bogen.
 Liebe Grüße,
 Mario`
   
-  const currentPageData = historyData.slice(historyPage * entriesPerPage, (historyPage + 1) * entriesPerPage)
+  // Use real data for Verlauf, fallback to mock for smooth transition
+  const verlaufData = realHistoryData.length > 0 ? realHistoryData : historyData
+  const currentPageData = verlaufData.slice(historyPage * entriesPerPage, (historyPage + 1) * entriesPerPage)
   
-  const totalPages = Math.ceil(historyData.length / entriesPerPage)
+  const totalPages = Math.ceil(verlaufData.length / entriesPerPage)
 
   // Mystery Shop pagination data
   const mysteryCurrentPageData = mysteryHistoryData.slice(mysteryHistoryPage * entriesPerPage, (mysteryHistoryPage + 1) * entriesPerPage)
@@ -1471,7 +1474,7 @@ Mario`
           <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
             <h3 className="text-center font-medium text-white flex items-center justify-center">
               <History className="h-4 w-4 mr-2" />
-              Verlauf ({historyData.length})
+              Verlauf ({verlaufData.length})
             </h3>
           </div>
           
@@ -1587,7 +1590,7 @@ Mario`
               <div className="py-2 px-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
                 <h3 className="font-medium text-gray-600 dark:text-gray-300 text-sm">
                   CA KPIs <span className="text-gray-400 dark:text-gray-500">
-                    {historyData[selectedHistoryEntry]?.date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
+                    {verlaufData[selectedHistoryEntry]?.date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}
                   </span>
                 </h3>
                 <button 
@@ -1601,7 +1604,9 @@ Mario`
               <CardContent className="p-4">
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed whitespace-pre-line">
-                    {getFeedbackText(selectedHistoryEntry)}
+                    {realHistoryData.length > 0 && realHistoryData[selectedHistoryEntry]?.feedback_text 
+                      ? realHistoryData[selectedHistoryEntry].feedback_text 
+                      : getFeedbackText(selectedHistoryEntry)}
                   </div>
                 </ScrollArea>
               </CardContent>
