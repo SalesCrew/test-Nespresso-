@@ -1160,7 +1160,7 @@ Mario`
       )}
 
       {/* Sales Challenge Card */}
-      <div className="w-full max-w-md mx-auto mb-6">
+      <div className="w-full max-w-md mx-auto mb-6 relative">
         {!challengeCompleted && !challengeCardDismissed ? (
           <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
             {/* Challenge gradient header */}
@@ -1456,16 +1456,15 @@ Mario`
             </Card>
           )
         ) : null}
-      </div>
-      
-      {/* Temporary Test Button */}
-      <div className="w-full max-w-md mx-auto mb-4">
-        <button 
-          onClick={() => setChallengeCompleted(!challengeCompleted)}
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-        >
-          🧪 TEST: Toggle Challenge {challengeCompleted ? 'Active' : 'Complete'}
-        </button>
+        
+        {/* Dark Overlay with "kommt bald!" */}
+        {!challengeCompleted && !challengeCardDismissed && (
+          <div className="absolute inset-0 bg-black/60 dark:bg-black/70 rounded-lg flex items-center justify-center pointer-events-none z-10">
+            <div className="bg-gray-900/90 dark:bg-gray-800/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-xl">
+              <span className="text-white text-lg font-medium">kommt bald!</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* History Section */}
