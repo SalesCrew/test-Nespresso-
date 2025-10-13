@@ -45,6 +45,23 @@ export default function StatistikenPage() {
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardCategory, setLeaderboardCategory] = useState<"mcet" | "tma" | "vlshare">("mcet")
   
+  // Fetch leaderboard when timeframe changes
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch(`/api/me/leaderboard?timeframe=${timeFrame}`)
+        if (res.ok) {
+          const data = await res.json()
+          setRealLeaderboardData(data.leaderboard || [])
+          setCurrentUserData(data.currentUserData || null)
+        }
+      } catch (e) {
+        console.error('Failed to fetch leaderboard:', e)
+      }
+    }
+    fetchLeaderboard()
+  }, [timeFrame])
+
   // Reset scroll to top when changing leaderboard category
   useEffect(() => {
     const leaderboardContainer = document.querySelector('.leaderboard-scroll-container')
@@ -56,6 +73,8 @@ export default function StatistikenPage() {
   // State for real KPI history data from database
   const [realHistoryData, setRealHistoryData] = useState<any[]>([])
   const [historyDataLoading, setHistoryDataLoading] = useState(true)
+  const [realLeaderboardData, setRealLeaderboardData] = useState<any[]>([])
+  const [currentUserData, setCurrentUserData] = useState<any>(null)
 
   // Fetch unread KPI feedback and all history on mount
   useEffect(() => {
@@ -353,9 +372,11 @@ Liebe Grüße, dein Nespresso Team.`
     setLeaderboardData(leaderData)
   }, [])
 
-  // Get sorted leaderboard for the selected category
+  // Get sorted leaderboard for the selected category (using real data)
   const getSortedLeaderboard = () => {
-    let sortedData = [...leaderboardData]
+    // Use real data if available, otherwise use mock
+    const dataToUse = realLeaderboardData.length > 0 ? realLeaderboardData : leaderboardData
+    let sortedData = [...dataToUse]
     
     // Sort by selected category (highest to lowest)
     if (leaderboardCategory === "mcet") {
@@ -366,25 +387,34 @@ Liebe Grüße, dein Nespresso Team.`
       sortedData.sort((a, b) => b.vlshare - a.vlshare)
     }
     
-    // Add rank and isCurrentUser based on position
+    // Add rank and name for display
     return sortedData.map((user, index) => ({
       ...user,
       rank: index + 1,
-      name: index + 1 === getCurrentUserRank() ? "Ich" : null,
-      isCurrentUser: index + 1 === getCurrentUserRank()
+      name: user.isCurrentUser ? "Ich" : null
     }))
   }
 
   // Get current user's rank for the selected category
   const getCurrentUserRank = () => {
-    // User has specific scores: MC/ET: 4.2, TMA: 72%, VL Share: 15%
-    const userScores = { mcet: 4.2, tma: 72, vlshare: 15 }
+    if (!currentUserData) return 0
+    
+    const dataToUse = realLeaderboardData.length > 0 ? realLeaderboardData : leaderboardData
+    const userValue = leaderboardCategory === "mcet" 
+      ? currentUserData.mcet 
+      : leaderboardCategory === "tma" 
+        ? currentUserData.tma 
+        : currentUserData.vlshare
     
     let rank = 1
-    leaderboardData.forEach(user => {
-      if (leaderboardCategory === "mcet" && user.mcet > userScores.mcet) rank++
-      else if (leaderboardCategory === "tma" && user.tma > userScores.tma) rank++
-      else if (leaderboardCategory === "vlshare" && user.vlshare > userScores.vlshare) rank++
+    dataToUse.forEach(user => {
+      const compareValue = leaderboardCategory === "mcet" 
+        ? user.mcet 
+        : leaderboardCategory === "tma" 
+          ? user.tma 
+          : user.vlshare
+      
+      if (compareValue > userValue) rank++
     })
     
     return rank
