@@ -111,7 +111,7 @@ export default function PromotorChatPage() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const { createClient } = await import('@/utils/supabase/client');
+        const { createClient } = await import('@/lib/supabase/client');
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -326,107 +326,15 @@ export default function PromotorChatPage() {
       readOnly: conv.is_read_only,
     }));
 
-  // Mock data removed - using real conversations from chatIntegration
-  const __unused_placeholder = [{
-      id: 1,
-      name: "Dummy",
-      lastMessage: "Perfekt, danke!",
-      time: "10:22",
-      unread: 0,
-      online: false,
-      profileImage: null
-    },
-    {
-      id: 6,
-      name: "Michael Braun",
-      lastMessage: "Bis morgen früh!",
-      time: "09:45",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 7,
-      name: "Julia Fischer",
-      lastMessage: "Super Arbeit heute!",
-      time: "09:12",
-      unread: 3,
-      online: false,
-      profileImage: null
-    },
-    {
-      id: 8,
-      name: "David Hoffmann",
-      lastMessage: "Können wir das besprechen?",
-      time: "08:55",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 9,
-      name: "Nina Schulz",
-      lastMessage: "Danke für deine Hilfe!",
-      time: "08:30",
-      unread: 1,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 10,
-      name: "Robert Wagner",
-      lastMessage: "Alles erledigt ✓",
-      time: "08:15",
-      unread: 0,
-      online: false,
-      profileImage: null
-    },
-    {
-      id: 11,
-      name: "Sandra Meyer",
-      lastMessage: "Guten Morgen!",
-      time: "07:45",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 12,
-      name: "Christian Wolf",
-      lastMessage: "Bis später!",
-      time: "07:20",
-      unread: 2,
-      online: false,
-      profileImage: null
-    },
-    {
-      id: 13,
-      name: "Petra Richter",
-      lastMessage: "Verstanden, mache ich",
-      time: "07:00",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 14,
-      name: "Marco Bauer",
-      lastMessage: "Sehr gut!",
-      time: "06:45",
-      unread: 0,
-      online: false,
-      profileImage: null
-    },
-    {
-      id: 15,
-      name: "Sabine Koch",
-      lastMessage: "Wir schaffen das!",
-      time: "06:30",
-      unread: 1,
-      online: true,
-      profileImage: null
-    }
-  ]);
+
+  // Stub functions for features not yet integrated with Socket.IO
+  // These are no-ops to prevent errors in UI code paths we're keeping for later
+  const setAllMessages = (updater: any) => {
+    console.log('[Chat] setAllMessages called - feature not yet integrated with Socket.IO');
+  };
+  const setContacts = (updater: any) => {
+    console.log('[Chat] setContacts called - feature not yet integrated with Socket.IO');
+  };
 
   // Get messages for the selected conversation from real data
   const conversationMessages: Message[] = selectedChat && selectedChat.id
@@ -742,12 +650,6 @@ export default function PromotorChatPage() {
         // TODO: Show error notification to user
       }
     }
-  };
-    
-    // Ensure scrolling happens after message is rendered
-    setTimeout(() => {
-      scrollToBottom();
-    }, 50);
   };
 
   // Handle long press for context menu (mobile)

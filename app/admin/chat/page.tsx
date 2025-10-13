@@ -548,6 +548,15 @@ export default function ChatPage() {
     contactId: null
   });
 
+  // Stub functions for features not yet integrated with Socket.IO
+  // These are no-ops to prevent errors in UI code paths we're keeping for later
+  const setAllMessages = (updater: any) => {
+    console.log('[Chat] setAllMessages called - feature not yet integrated with Socket.IO');
+  };
+  const setContacts = (updater: any) => {
+    console.log('[Chat] setContacts called - feature not yet integrated with Socket.IO');
+  };
+
   // Get messages for the selected conversation from real data
   const conversationMessages: Message[] = selectedChat && selectedChat.id
     ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => ({
@@ -1106,7 +1115,7 @@ export default function ChatPage() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const { createClient } = await import('@/utils/supabase/client');
+        const { createClient } = await import('@/lib/supabase/client');
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
