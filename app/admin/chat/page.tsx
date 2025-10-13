@@ -639,13 +639,13 @@ export default function ChatPage() {
         
         // Clear input and reply state
         setMessageInput('');
-        setReplyingTo(null);
-        setReplyAnimation(null);
+      setReplyingTo(null);
+      setReplyAnimation(null);
         
-        // Clean up keyframe
-        const existingStyle = document.getElementById('reply-keyframes');
-        if (existingStyle) {
-          existingStyle.remove();
+      // Clean up keyframe
+      const existingStyle = document.getElementById('reply-keyframes');
+      if (existingStyle) {
+        existingStyle.remove();
         }
         
         // Scroll to bottom after a short delay to let new message render
@@ -1289,14 +1289,56 @@ export default function ChatPage() {
                           background: 'linear-gradient(135deg, #22C55E, #105F2D)'
                         }}
                         data-group-popup
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           e.preventDefault();
+                          
+                          // If only 1 contact selected, create direct chat immediately
+                          if (groupCreationPopup.selectedContacts.length === 1) {
+                            try {
+                              const newConversation = await chatIntegration.createConversation(
+                                'direct',
+                                groupCreationPopup.selectedContacts,
+                                undefined, // No name for direct chats
+                                undefined
+                              );
+                              
+                              // Close popup
+                              setGroupCreationPopup({ 
+                                show: false, 
+                                selectedContacts: [], 
+                                searchQuery: '', 
+                                step: 1, 
+                                groupName: '', 
+                                groupDescription: '', 
+                                profileImage: null, 
+                                readOnly: false 
+                              });
+                              
+                              // Select the new chat
+                              setSelectedChat({
+                                id: newConversation.id,
+                                name: newConversation.name,
+                                lastMessage: '',
+                                time: '',
+                                unread: 0,
+                                online: false,
+                                isGroup: false,
+                                readOnly: false,
+                              });
+                            } catch (error) {
+                              console.error('Failed to create direct chat:', error);
+                            }
+                          } else {
+                            // Multiple contacts - go to group naming step
                           console.log('Weiter clicked, advancing to step 2');
                           setGroupCreationPopup(prev => ({ ...prev, step: 2 }));
+                          }
                         }}
                       >
-                        Weiter ({groupCreationPopup.selectedContacts.length})
+                        {groupCreationPopup.selectedContacts.length === 1 
+                          ? 'Chat erstellen' 
+                          : `Weiter (${groupCreationPopup.selectedContacts.length})`}
                       </button>
                     </div>
                   )}
