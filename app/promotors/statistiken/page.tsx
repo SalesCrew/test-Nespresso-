@@ -736,7 +736,7 @@ Mario`
   }
 
   // Helper function to get feedback text for entry
-  const getFeedbackText = (entryIndex: number) => {
+  const getFeedbackText = (entryIndex: number): string => {
     if (entryIndex === 0) return feedbackTexts[0]
     return feedbackTexts[((entryIndex - 1) % 3) + 1]
   }
