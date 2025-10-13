@@ -924,22 +924,24 @@ Mario`
             </CardContent>
           </Card>
           
-          {/* Feedback dropdown that peeks from behind the card - only visible when feedback is closed */}
-          <div 
-            className={`absolute left-1/2 transform -translate-x-1/2 -bottom-[1.65rem] z-0 flex justify-center w-full transition-all duration-500 ${
-              feedbackOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
-            }`}
-          >
+          {/* Feedback dropdown that peeks from behind the card - only visible when feedback is closed and data exists */}
+          {realHistoryData.length > 0 && (
             <div 
-              className="bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 cursor-pointer w-52 text-center filter drop-shadow-md"
-              onClick={toggleFeedback}
+              className={`absolute left-1/2 transform -translate-x-1/2 -bottom-[1.65rem] z-0 flex justify-center w-full transition-all duration-500 ${
+                feedbackOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
             >
-              <button className="flex items-center justify-center w-full">
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Potential Analyse</span>
-                <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
-              </button>
+              <div 
+                className="bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 cursor-pointer w-52 text-center filter drop-shadow-md"
+                onClick={toggleFeedback}
+              >
+                <button className="flex items-center justify-center w-full">
+                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Potential Analyse</span>
+                  <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Feedback Card with CSS transition */}
@@ -974,9 +976,15 @@ Mario`
                           💰 Prämien-Potenzial
                         </h4>
                         <p className="text-sm text-green-700 dark:text-green-200 leading-relaxed">
-                          Bei deinem aktuellen <strong>MC/ET-Wert von {statsData[timeFrame].mcet.value.toFixed(1)}</strong> hast du bereits eine solide Basis. 
-                          Wenn du deinen <strong>TMA-Anteil im nächsten Monat auf 90%</strong> verbesserst, kannst du dir eine 
-                          <strong className="text-green-800 dark:text-green-300"> zusätzliche Prämie von 100€</strong> sichern.
+                          {statsData[timeFrame].mcet.value !== null ? (
+                            <>
+                              Bei deinem aktuellen <strong>MC/ET-Wert von {statsData[timeFrame].mcet.value.toFixed(1)}</strong> hast du bereits eine solide Basis. 
+                              Wenn du deinen <strong>TMA-Anteil im nächsten Monat auf 90%</strong> verbesserst, kannst du dir eine 
+                              <strong className="text-green-800 dark:text-green-300"> zusätzliche Prämie von 100€</strong> sichern.
+                            </>
+                          ) : (
+                            'Sobald deine ersten KPI-Daten verfügbar sind, siehst du hier dein Prämien-Potenzial.'
+                          )}
                         </p>
                       </div>
 
