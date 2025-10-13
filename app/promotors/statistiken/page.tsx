@@ -474,6 +474,15 @@ Mario`
 
   // Calculate Mystery Shop statistics
   const calculateMysteryStatsData = () => {
+    // Return empty state if no data
+    if (mysteryHistoryData.length === 0) {
+      return {
+        "30days": { percentage: { value: 0, changePercent: '+0.0%' } },
+        "6months": { percentage: { value: 0, changePercent: '+0.0%' } },
+        "alltime": { percentage: { value: 0, changePercent: '+0.0%' } }
+      }
+    }
+
     // Calculate averages for all time
     const allTimeAvg = mysteryHistoryData.reduce((sum, entry) => sum + entry.percentage, 0) / mysteryHistoryData.length
 
