@@ -169,6 +169,13 @@ export async function POST(req: Request) {
       .eq('user_id', user.id)
       .maybeSingle()
 
+    // 7. Get KPI feedback history for statistics
+    const { data: kpiFeedbackHistory } = await svc
+      .from('kpi_feedback')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
     console.log('✅ Data fetched:', {
       assignments: relevantAssignments?.length || 0,
       documents: documents?.length || 0,
@@ -176,7 +183,8 @@ export async function POST(req: Request) {
       hasPromotorProfile: !!promotorProfile,
       hasUserProfile: !!userProfile,
       contracts: contracts?.length || 0,
-      hasAccessCredentials: !!accessCredentials
+      hasAccessCredentials: !!accessCredentials,
+      kpiFeedback: kpiFeedbackHistory?.length || 0
     });
 
     // Format access credentials data
@@ -210,6 +218,82 @@ Passwort: ${accessCredentials.boost_app_password || 'Nicht angegeben'}`)
       
       if (credentials.length > 0) {
         zugangsDaten = credentials.join('\n\n')
+      }
+    }
+
+    // Format KPI data (same logic as statistiken page)
+    let kpiDaten = 'Keine KPI-Daten verfügbar.'
+    if (kpiFeedbackHistory && kpiFeedbackHistory.length > 0) {
+      // Sort by created_at descending (newest first)
+      const sortedKpiFeedback = [...kpiFeedbackHistory].sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+
+      // Map to expected format
+      const historyData = sortedKpiFeedback.map((item: any) => ({
+        date: new Date(item.created_at),
+        mcet: item.mc_et,
+        tma: item.tma,
+        vl: item.vl_value
+      }))
+
+      if (historyData.length > 0) {
+        // Calculate statistics (same logic as statistiken page)
+        // Latest wave
+        const currentWave = historyData[0]
+        const previousWave = historyData[1]
+        const sixWavesAgo = historyData[6]
+
+        // Calculate averages for last 6 waves
+        const last6Waves = historyData.slice(0, Math.min(6, historyData.length))
+        const sixMonthsAvg = {
+          mcet: last6Waves.reduce((sum: number, entry: any) => sum + entry.mcet, 0) / last6Waves.length,
+          tma: last6Waves.reduce((sum: number, entry: any) => sum + entry.tma, 0) / last6Waves.length,
+          vl: last6Waves.reduce((sum: number, entry: any) => sum + entry.vl, 0) / last6Waves.length
+        }
+
+        // Calculate all time averages
+        const allTimeAvg = {
+          mcet: historyData.reduce((sum: number, entry: any) => sum + entry.mcet, 0) / historyData.length,
+          tma: historyData.reduce((sum: number, entry: any) => sum + entry.tma, 0) / historyData.length,
+          vl: historyData.reduce((sum: number, entry: any) => sum + entry.vl, 0) / historyData.length
+        }
+
+        // Helper to calculate percentage change
+        const calcPercentChange = (current: number, previous: number) => {
+          const change = ((current - previous) / previous) * 100
+          return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`
+        }
+
+        kpiDaten = `KPI ERKLÄRUNG:
+
+MC/ET (Maschinen pro Einsatztag):
+Dies ist die durchschnittliche Anzahl an Kaffeemaschinen, die du pro Arbeitstag verkaufst. Werte ab 4,0 und höher sind wirklich gute Zahlen! Dieser KPI zeigt deine Verkaufseffizienz.
+
+TMA % (Take Me Away Anteil):
+Dies ist der Prozentsatz der verkauften Maschinen, bei denen der Kunde deinen Gutschein verwendet und die Maschine direkt im MediaMarkt gekauft hat. Manche Kunden nehmen den Gutschein mit und kaufen die Maschine später woanders. Werte ab 85% und höher sind sehr gut!
+
+VL Share (Vertuo-Linien Anteil):
+Dies ist der Prozentsatz aller verkauften Maschinen aus der Vertuo-Reihe. Werte ab 10% sind gut, aber beachte: Wenn dein MC/ET niedrig ist, ist es leichter, über 10% VL Share zu erreichen. Dieser KPI sollte immer im Kontext mit MC/ET betrachtet werden.
+
+AKTUELLE KPI WERTE:
+
+Letzte Welle (aktuellster Monat):
+MC/ET: ${currentWave.mcet.toFixed(1)}${previousWave ? ` (${calcPercentChange(currentWave.mcet, previousWave.mcet)} im Vergleich zur Vorwelle)` : ''}
+TMA: ${currentWave.tma.toFixed(1)}%${previousWave ? ` (${calcPercentChange(currentWave.tma, previousWave.tma)} im Vergleich zur Vorwelle)` : ''}
+VL Share: ${currentWave.vl.toFixed(1)}%${previousWave ? ` (${calcPercentChange(currentWave.vl, previousWave.vl)} im Vergleich zur Vorwelle)` : ''}
+
+6-Monats-Durchschnitt:
+MC/ET: ${sixMonthsAvg.mcet.toFixed(1)}${sixWavesAgo ? ` (${calcPercentChange(currentWave.mcet, sixWavesAgo.mcet)} Veränderung von vor 6 Wellen zu jetzt)` : ''}
+TMA: ${sixMonthsAvg.tma.toFixed(1)}%${sixWavesAgo ? ` (${calcPercentChange(currentWave.tma, sixWavesAgo.tma)} Veränderung von vor 6 Wellen zu jetzt)` : ''}
+VL Share: ${sixMonthsAvg.vl.toFixed(1)}%${sixWavesAgo ? ` (${calcPercentChange(currentWave.vl, sixWavesAgo.vl)} Veränderung von vor 6 Wellen zu jetzt)` : ''}
+
+All-Time Durchschnitt:
+MC/ET: ${allTimeAvg.mcet.toFixed(1)} (Optimal: 4,5+, Differenz: ${(allTimeAvg.mcet - 4.5).toFixed(1)})
+TMA: ${allTimeAvg.tma.toFixed(1)}% (Optimal: 75%+, Differenz: ${(allTimeAvg.tma - 75).toFixed(1)}%)
+VL Share: ${allTimeAvg.vl.toFixed(1)}% (Optimal: 10%+, Differenz: ${(allTimeAvg.vl - 10).toFixed(1)}%)
+
+Anzahl erfasster Wellen: ${historyData.length}`
       }
     }
 
@@ -459,7 +543,19 @@ Dienstvertrag:
 ${vertragDaten}
 
 Zugangsdaten:
-${zugangsDaten}`
+${zugangsDaten}
+
+KPI Daten & Performance:
+
+KPI spezifische Regeln:
+
+1. Die KPI-Werte zeigen die Verkaufsperformance des Promotors. Diese Daten werden monatlich in "Wellen" erfasst.
+2. Nutze die KPI-Erklärungen, um dem Promotor seine Werte verständlich zu erklären.
+3. Sei motivierend bei guten Werten, konstruktiv bei Verbesserungspotenzial.
+4. Die Vergleichswerte (Prozentangaben) zeigen Trends - nutze sie, um Entwicklungen zu erkennen.
+5. Erwähne die Optimalwerte nur, wenn danach gefragt wird oder wenn es für den Kontext sinnvoll ist.
+
+${kpiDaten}`
 
     const userPrompt = `Promotor fragt: ${userMessage}`
 
