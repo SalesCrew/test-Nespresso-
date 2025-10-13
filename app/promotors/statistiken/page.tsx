@@ -465,26 +465,27 @@ Mario`
     }
   }
 
-  // Calculate statistics from history data
+  // Calculate statistics from history data (wave-based)
+  // Each feedback entry is treated as one "wave" (we send monthly, but logic is wave‑based)
   const calculateStatsData = () => {
-    // Calculate averages for all time
+    // Calculate averages for all time (across all waves)
     const allTimeAvg = {
       mcet: historyData.reduce((sum, entry) => sum + entry.mcet, 0) / historyData.length,
       tma: historyData.reduce((sum, entry) => sum + entry.tma, 0) / historyData.length,
       vl: historyData.reduce((sum, entry) => sum + entry.vl, 0) / historyData.length
     }
 
-    // Get current month (most recent entry) and comparison months
-    const currentMonth = historyData[0] // Most recent
-    const lastMonth = historyData[1] // Previous month  
-    const sixMonthsAgo = historyData[6] // 6 months ago
+    // Latest and comparison waves (each history entry represents a wave)
+    const currentWave = historyData[0] // latest wave
+    const previousWave = historyData[1] // previous wave
+    const sixWavesAgo = historyData[6] // six waves ago
 
-    // Calculate averages for last 6 months
-    const last6MonthsData = historyData.slice(0, 6)
+    // Calculate averages for last 6 waves
+    const last6Waves = historyData.slice(0, 6)
     const sixMonthsAvg = {
-      mcet: last6MonthsData.reduce((sum, entry) => sum + entry.mcet, 0) / last6MonthsData.length,
-      tma: last6MonthsData.reduce((sum, entry) => sum + entry.tma, 0) / last6MonthsData.length,
-      vl: last6MonthsData.reduce((sum, entry) => sum + entry.vl, 0) / last6MonthsData.length
+      mcet: last6Waves.reduce((sum, entry) => sum + entry.mcet, 0) / last6Waves.length,
+      tma: last6Waves.reduce((sum, entry) => sum + entry.tma, 0) / last6Waves.length,
+      vl: last6Waves.reduce((sum, entry) => sum + entry.vl, 0) / last6Waves.length
     }
 
     // Helper to calculate percentage change
@@ -500,32 +501,32 @@ Mario`
     }
 
     return {
-      "30days": {
+      "30days": { // actually latest wave vs previous wave
         mcet: { 
-          value: currentMonth.mcet, 
-          changePercent: calcPercentChange(currentMonth.mcet, lastMonth.mcet)
+          value: currentWave.mcet, 
+          changePercent: calcPercentChange(currentWave.mcet, previousWave.mcet)
         },
         tma: { 
-          value: currentMonth.tma, 
-          changePercent: calcPercentChange(currentMonth.tma, lastMonth.tma)
+          value: currentWave.tma, 
+          changePercent: calcPercentChange(currentWave.tma, previousWave.tma)
         },
         vlShare: { 
-          value: currentMonth.vl, 
-          changePercent: calcPercentChange(currentMonth.vl, lastMonth.vl)
+          value: currentWave.vl, 
+          changePercent: calcPercentChange(currentWave.vl, previousWave.vl)
         }
       },
       "6months": {
         mcet: { 
           value: sixMonthsAvg.mcet, 
-          changePercent: calcPercentChange(currentMonth.mcet, sixMonthsAgo.mcet)
+          changePercent: calcPercentChange(currentWave.mcet, sixWavesAgo.mcet)
         },
         tma: { 
           value: sixMonthsAvg.tma, 
-          changePercent: calcPercentChange(currentMonth.tma, sixMonthsAgo.tma)
+          changePercent: calcPercentChange(currentWave.tma, sixWavesAgo.tma)
         },
         vlShare: { 
           value: sixMonthsAvg.vl, 
-          changePercent: calcPercentChange(currentMonth.vl, sixMonthsAgo.vl)
+          changePercent: calcPercentChange(currentWave.vl, sixWavesAgo.vl)
         }
       },
       "alltime": {
