@@ -2493,6 +2493,11 @@ Liebe Grüße, dein Nespresso Team`;
                                 <IoColorWandOutline className="h-3 w-3 text-gray-600" />
                                 <span className="text-xs text-gray-600 font-semibold">Magic Touch</span>
                               </div>
+                              {/* Status indicator dot (default red; can turn green later) */}
+                              <div
+                                className="w-2 h-2 rounded-full bg-red-500 opacity-80 shadow-sm"
+                                aria-label="status-indicator"
+                              ></div>
                             </div>
 
                             <div className="flex items-center justify-between mb-3 px-2 py-1 rounded-md border border-gray-300 shadow-sm text-xs bg-gray-50 text-gray-600"
