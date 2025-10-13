@@ -1160,9 +1160,31 @@ Mario`
       )}
 
       {/* Sales Challenge Card */}
-      <div className="w-full max-w-md mx-auto mb-6">
-        {!challengeCompleted && !challengeCardDismissed ? (
-          <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
+      <div className="w-full max-w-md mx-auto mb-6 relative">
+        {/* Coming Soon Overlay */}
+        <div className="absolute inset-0 z-20 bg-gradient-to-br from-blue-50/95 via-purple-50/95 to-pink-50/95 dark:from-gray-900/95 dark:via-gray-800/95 dark:to-gray-900/95 backdrop-blur-sm rounded-lg flex items-center justify-center border-2 border-dashed border-blue-300 dark:border-blue-700">
+          <div className="text-center px-6 py-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-600 via-purple-500 to-pink-500 rounded-full mb-4 shadow-xl animate-pulse">
+              <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              Bald verfügbar
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+              Sales Challenge kommt bald
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Bleib gespannt auf spannende Wettbewerbe und tolle Preise!
+            </p>
+          </div>
+        </div>
+        
+        {/* Dimmed/Blurred Card Preview */}
+        <div className="opacity-30 blur-[2px] pointer-events-none">
+          {!challengeCompleted && !challengeCardDismissed ? (
+            <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
             {/* Challenge gradient header */}
             <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 text-white rounded-t-lg relative">
               {/* Info icon */}
@@ -1456,16 +1478,7 @@ Mario`
             </Card>
           )
         ) : null}
-      </div>
-      
-      {/* Temporary Test Button */}
-      <div className="w-full max-w-md mx-auto mb-4">
-        <button 
-          onClick={() => setChallengeCompleted(!challengeCompleted)}
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-        >
-          🧪 TEST: Toggle Challenge {challengeCompleted ? 'Active' : 'Complete'}
-        </button>
+        </div>
       </div>
 
       {/* History Section */}
