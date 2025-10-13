@@ -53,23 +53,52 @@ export default function StatistikenPage() {
     }
   }, [leaderboardCategory])
 
-  // Fetch unread KPI feedback on mount
+  // State for real KPI history data from database
+  const [realHistoryData, setRealHistoryData] = useState<any[]>([])
+  const [historyDataLoading, setHistoryDataLoading] = useState(true)
+
+  // Fetch unread KPI feedback and all history on mount
   useEffect(() => {
-    const fetchKPIFeedback = async () => {
+    const fetchKPIData = async () => {
       try {
-        const res = await fetch('/api/me/kpi-feedback')
-        if (res.ok) {
-          const data = await res.json()
-          if (data.feedback) {
-            setFeedbackData(data.feedback)
+        // Fetch unread feedback
+        const unreadRes = await fetch('/api/me/kpi-feedback')
+        if (unreadRes.ok) {
+          const unreadData = await unreadRes.json()
+          if (unreadData.feedback) {
+            setFeedbackData(unreadData.feedback)
             setShowNewFeedback(true)
           }
         }
+
+        // Fetch all KPI feedback history for this promotor
+        const historyRes = await fetch('/api/me/kpi-feedback-history')
+        if (historyRes.ok) {
+          const historyData = await historyRes.json()
+          if (historyData.feedback && historyData.feedback.length > 0) {
+            // Sort by created_at descending (newest first)
+            const sortedFeedback = historyData.feedback.sort((a: any, b: any) => 
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )
+            
+            // Map to expected format
+            const mappedHistory = sortedFeedback.map((item: any) => ({
+              date: new Date(item.created_at),
+              mcet: item.mc_et,
+              tma: item.tma,
+              vl: item.vl_value
+            }))
+            
+            setRealHistoryData(mappedHistory)
+          }
+        }
       } catch (e) {
-        console.error('Failed to fetch KPI feedback:', e)
+        console.error('Failed to fetch KPI data:', e)
+      } finally {
+        setHistoryDataLoading(false)
       }
     }
-    fetchKPIFeedback()
+    fetchKPIData()
   }, [])
   
   // Feedback texts for history entries
@@ -502,20 +531,32 @@ Mario`
   // Calculate statistics from history data (wave-based)
   // Each feedback entry is treated as one "wave" (we send monthly, but logic is wave‑based)
   const calculateStatsData = () => {
+    // Use real data if available, otherwise fall back to mock
+    const dataToUse = realHistoryData.length > 0 ? realHistoryData : historyData
+    
+    if (dataToUse.length === 0) {
+      // Return empty/null stats if no data
+      return {
+        "30days": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } },
+        "6months": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } },
+        "alltime": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } }
+      }
+    }
+
     // Calculate averages for all time (across all waves)
     const allTimeAvg = {
-      mcet: historyData.reduce((sum, entry) => sum + entry.mcet, 0) / historyData.length,
-      tma: historyData.reduce((sum, entry) => sum + entry.tma, 0) / historyData.length,
-      vl: historyData.reduce((sum, entry) => sum + entry.vl, 0) / historyData.length
+      mcet: dataToUse.reduce((sum, entry) => sum + entry.mcet, 0) / dataToUse.length,
+      tma: dataToUse.reduce((sum, entry) => sum + entry.tma, 0) / dataToUse.length,
+      vl: dataToUse.reduce((sum, entry) => sum + entry.vl, 0) / dataToUse.length
     }
 
     // Latest and comparison waves (each history entry represents a wave)
-    const currentWave = historyData[0] // latest wave
-    const previousWave = historyData[1] // previous wave
-    const sixWavesAgo = historyData[6] // six waves ago
+    const currentWave = dataToUse[0] // latest wave
+    const previousWave = dataToUse[1] // previous wave (may not exist)
+    const sixWavesAgo = dataToUse[6] // six waves ago (may not exist)
 
-    // Calculate averages for last 6 waves
-    const last6Waves = historyData.slice(0, 6)
+    // Calculate averages for last 6 waves (or fewer if less than 6 exist)
+    const last6Waves = dataToUse.slice(0, Math.min(6, dataToUse.length))
     const sixMonthsAvg = {
       mcet: last6Waves.reduce((sum, entry) => sum + entry.mcet, 0) / last6Waves.length,
       tma: last6Waves.reduce((sum, entry) => sum + entry.tma, 0) / last6Waves.length,
@@ -538,29 +579,29 @@ Mario`
       "30days": { // actually latest wave vs previous wave
         mcet: { 
           value: currentWave.mcet, 
-          changePercent: calcPercentChange(currentWave.mcet, previousWave.mcet)
+          changePercent: previousWave ? calcPercentChange(currentWave.mcet, previousWave.mcet) : null
         },
         tma: { 
           value: currentWave.tma, 
-          changePercent: calcPercentChange(currentWave.tma, previousWave.tma)
+          changePercent: previousWave ? calcPercentChange(currentWave.tma, previousWave.tma) : null
         },
         vlShare: { 
           value: currentWave.vl, 
-          changePercent: calcPercentChange(currentWave.vl, previousWave.vl)
+          changePercent: previousWave ? calcPercentChange(currentWave.vl, previousWave.vl) : null
         }
       },
       "6months": {
         mcet: { 
           value: sixMonthsAvg.mcet, 
-          changePercent: calcPercentChange(currentWave.mcet, sixWavesAgo.mcet)
+          changePercent: sixWavesAgo ? calcPercentChange(currentWave.mcet, sixWavesAgo.mcet) : null
         },
         tma: { 
           value: sixMonthsAvg.tma, 
-          changePercent: calcPercentChange(currentWave.tma, sixWavesAgo.tma)
+          changePercent: sixWavesAgo ? calcPercentChange(currentWave.tma, sixWavesAgo.tma) : null
         },
         vlShare: { 
           value: sixMonthsAvg.vl, 
-          changePercent: calcPercentChange(currentWave.vl, sixWavesAgo.vl)
+          changePercent: sixWavesAgo ? calcPercentChange(currentWave.vl, sixWavesAgo.vl) : null
         }
       },
       "alltime": {
@@ -809,9 +850,11 @@ Mario`
                           >
                             {statsData[timeFrame].mcet.value.toFixed(1)}
                           </div>
-                          <div className={`text-xs ${getPillColor(statsData[timeFrame].mcet.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
-                            {statsData[timeFrame].mcet.changePercent}
-                          </div>
+                          {statsData[timeFrame].mcet.changePercent !== null && (
+                            <div className={`text-xs ${getPillColor(statsData[timeFrame].mcet.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
+                              {statsData[timeFrame].mcet.changePercent}
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -825,9 +868,11 @@ Mario`
                           >
                             {statsData[timeFrame].tma.value.toFixed(1)}%
                           </div>
-                          <div className={`text-xs ${getPillColor(statsData[timeFrame].tma.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
-                            {statsData[timeFrame].tma.changePercent}
-                          </div>
+                          {statsData[timeFrame].tma.changePercent !== null && (
+                            <div className={`text-xs ${getPillColor(statsData[timeFrame].tma.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
+                              {statsData[timeFrame].tma.changePercent}
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -842,9 +887,11 @@ Mario`
                           >
                             {statsData[timeFrame].vlShare.value.toFixed(1)}%
                           </div>
-                          <div className={`text-xs ${getPillColor(statsData[timeFrame].vlShare.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
-                            {statsData[timeFrame].vlShare.changePercent}
-                          </div>
+                          {statsData[timeFrame].vlShare.changePercent !== null && (
+                            <div className={`text-xs ${getPillColor(statsData[timeFrame].vlShare.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
+                              {statsData[timeFrame].vlShare.changePercent}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
