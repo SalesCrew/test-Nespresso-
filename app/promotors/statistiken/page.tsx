@@ -814,16 +814,20 @@ Mario`
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             }`}>CA KPIs</span>
           </button>
-          <button
-            onClick={() => setActiveSection("mystery-shop")}
-            className="relative flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10"
-          >
-            <span className={`transition-all duration-200 ${
-              activeSection === "mystery-shop" 
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent" 
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            }`}>Mystery Shop</span>
-          </button>
+          <div className="relative flex-1">
+            <button
+              disabled
+              className="relative w-full py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 z-10 cursor-not-allowed"
+            >
+              <span className="text-gray-400 dark:text-gray-500">Mystery Shop</span>
+            </button>
+            {/* Coming Soon Badge */}
+            <div className="absolute -top-1 -right-1 z-20">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                BALD
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
