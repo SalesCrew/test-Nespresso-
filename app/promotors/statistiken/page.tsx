@@ -736,8 +736,8 @@ Mario`
 
   // Helper function to get feedback text for entry
   const getFeedbackText = (entryIndex: number) => {
-    if (entryIndex === 0) return feedbackTexts[0] // Use existing feedback for newest month
-    return feedbackTexts[((entryIndex - 1) % 3) + 1] // Cycle through templates 1-3 for older entries
+    if (entryIndex === 0) return feedbackTexts[0]
+    return feedbackTexts[((entryIndex - 1) % 3) + 1]
   }
 
   return (
