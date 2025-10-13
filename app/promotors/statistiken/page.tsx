@@ -688,7 +688,8 @@ Mario`
   }
 
   // Helper function to get pill color based on change type
-  const getPillColor = (changePercent: string, timeFrame: string) => {
+  const getPillColor = (changePercent: string | null, timeFrame: string) => {
+    if (!changePercent) return 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
     if (timeFrame === "alltime") {
       // For all-time, green = positive (above optimal), red = negative (below optimal)
       return changePercent.startsWith('+') ? 'bg-green-600/30 dark:bg-green-500/30 text-green-800 dark:text-green-200' : 'bg-red-600/30 dark:bg-red-500/30 text-red-800 dark:text-red-200'
