@@ -291,75 +291,67 @@ Liebe Grüße, dein Nespresso Team.`
     setMysteryFeedbackRead(true)
   }
 
-  // Generate mock history data - only once when component mounts
-  const [historyData] = useState(() => {
-    const data = []
+  // Mock data state (initialized empty to avoid SSR hydration mismatch)
+  const [historyData, setHistoryData] = useState<any[]>([])
+  const [mysteryHistoryData, setMysteryHistoryData] = useState<any[]>([])
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([])
+
+  // Generate mock data on client-side only (after mount) to prevent hydration mismatch
+  useEffect(() => {
+    // Generate CA KPI history data
+    const caData = []
     const today = new Date()
     
     for (let i = 0; i < 30; i++) {
       const date = new Date(today)
       date.setMonth(today.getMonth() - i)
       
-      // Generate random values within appropriate ranges
       const mcet = (3.6 + Math.random() * 1.5).toFixed(1)
       const tma = (60 + Math.random() * 25).toFixed(0)
       const vl = (5 + Math.random() * 20).toFixed(0)
       
-      data.push({
+      caData.push({
         date,
         mcet: parseFloat(mcet),
         tma: parseInt(tma),
         vl: parseInt(vl)
       })
     }
-    
-    return data
-  })
+    setHistoryData(caData)
 
-  // Generate mystery shop mock data
-  const [mysteryHistoryData] = useState(() => {
-    const data = []
-    const today = new Date()
-    
+    // Generate mystery shop history data
+    const mysteryData = []
     for (let i = 0; i < 20; i++) {
       const date = new Date(today)
       date.setMonth(today.getMonth() - i)
       
-      // Generate random mystery shop percentages (typically high scores)
-      const percentage = (85 + Math.random() * 15).toFixed(0) // 85-100%
+      const percentage = (85 + Math.random() * 15).toFixed(0)
       
-      data.push({
+      mysteryData.push({
         date,
         percentage: parseInt(percentage)
       })
     }
-    
-    return data
-  })
+    setMysteryHistoryData(mysteryData)
 
-  // Generate leaderboard data - 60 users with realistic values
-  const [leaderboardData] = useState(() => {
-    const data = []
-    
-    // Generate 60 users with random but realistic scores
+    // Generate leaderboard data
+    const leaderData = []
     for (let i = 0; i < 60; i++) {
       const userId = i + 1
       
-      // Generate random scores for each category
-      const mcet = parseFloat((Math.random() * 8.5 + 0.5).toFixed(1)) // 0.5-9.0
-      const tma = Math.floor(Math.random() * 60 + 40) // 40-100%
-      const vlShare = Math.floor(Math.random() * 35) // 0-35%
+      const mcet = parseFloat((Math.random() * 8.5 + 0.5).toFixed(1))
+      const tma = Math.floor(Math.random() * 60 + 40)
+      const vlShare = Math.floor(Math.random() * 35)
       
-      data.push({
+      leaderData.push({
         id: userId,
         mcet: mcet,
         tma: tma,
         vlshare: vlShare
       })
     }
-    
-    return data
-  })
+    setLeaderboardData(leaderData)
+  }, [])
 
   // Get sorted leaderboard for the selected category
   const getSortedLeaderboard = () => {
