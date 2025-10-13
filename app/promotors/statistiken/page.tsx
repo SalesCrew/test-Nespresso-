@@ -1459,9 +1459,9 @@ Mario`
         
         {/* Dark Overlay with "kommt bald!" */}
         {!challengeCompleted && !challengeCardDismissed && (
-          <div className="absolute inset-0 bg-black/60 dark:bg-black/70 rounded-lg flex items-center justify-center pointer-events-none z-10">
-            <div className="bg-gray-900/90 dark:bg-gray-800/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-xl">
-              <span className="text-white text-lg font-medium">kommt bald!</span>
+          <div className="absolute inset-0 bg-black/50 dark:bg-black/60 rounded-lg flex items-center justify-center pointer-events-none z-10">
+            <div className="bg-gray-900/80 dark:bg-gray-800/85 backdrop-blur-md px-8 py-4 rounded-xl shadow-2xl border border-white/10">
+              <span className="text-white text-xl font-semibold tracking-wide">kommt bald!</span>
             </div>
           </div>
         )}
