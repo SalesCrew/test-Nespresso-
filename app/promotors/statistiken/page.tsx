@@ -1161,8 +1161,18 @@ Mario`
 
       {/* Sales Challenge Card */}
       <div className="w-full max-w-md mx-auto mb-6">
+        {/* Coming Soon Banner */}
+        <div className="mb-3 bg-gray-900 dark:bg-gray-800 text-white rounded-lg px-4 py-3 shadow-lg border border-gray-700">
+          <div className="flex items-center justify-center space-x-2">
+            <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z"/>
+            </svg>
+            <span className="text-sm font-semibold">Bald verfügbar - Coming Soon</span>
+          </div>
+        </div>
+        
         {!challengeCompleted && !challengeCardDismissed ? (
-          <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
+          <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible pointer-events-none">
             {/* Challenge gradient header */}
             <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 via-indigo-600 via-purple-500 to-pink-500 text-white rounded-t-lg relative">
               {/* Info icon */}
@@ -1457,16 +1467,7 @@ Mario`
           )
         ) : null}
       </div>
-      
-      {/* Temporary Test Button */}
-      <div className="w-full max-w-md mx-auto mb-4">
-        <button 
-          onClick={() => setChallengeCompleted(!challengeCompleted)}
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-        >
-          🧪 TEST: Toggle Challenge {challengeCompleted ? 'Active' : 'Complete'}
-        </button>
-      </div>
+
 
       {/* History Section */}
       <div className="w-full max-w-md mx-auto mb-8">
