@@ -17,8 +17,9 @@ export default function StatistikenPage() {
   const entriesPerPage = 15
   const [showInfoContent, setShowInfoContent] = useState(false)
   const [selectedHistoryEntry, setSelectedHistoryEntry] = useState<number | null>(null)
-  const [showNewFeedback, setShowNewFeedback] = useState(true)
+  const [showNewFeedback, setShowNewFeedback] = useState(false)
   const [feedbackRead, setFeedbackRead] = useState(false)
+  const [feedbackData, setFeedbackData] = useState<any>(null)
 
   // Mystery Shop specific state
   const [mysteryTimeFrame, setMysteryTimeFrame] = useState<"30days" | "6months" | "alltime">("30days")
@@ -51,6 +52,25 @@ export default function StatistikenPage() {
       leaderboardContainer.scrollTop = 0
     }
   }, [leaderboardCategory])
+
+  // Fetch unread KPI feedback on mount
+  useEffect(() => {
+    const fetchKPIFeedback = async () => {
+      try {
+        const res = await fetch('/api/me/kpi-feedback')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.feedback) {
+            setFeedbackData(data.feedback)
+            setShowNewFeedback(true)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch KPI feedback:', e)
+      }
+    }
+    fetchKPIFeedback()
+  }, [])
   
   // Feedback texts for history entries
   const feedbackTexts = [
@@ -220,8 +240,22 @@ Liebe Grüße, dein Nespresso Team.`
     setFeedbackOpen(!feedbackOpen)
   }
 
-  const handleFeedbackRead = () => {
-    setFeedbackRead(true)
+  const handleFeedbackRead = async () => {
+    if (!feedbackData?.id) return
+    
+    try {
+      const res = await fetch('/api/me/kpi-feedback', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback_id: feedbackData.id })
+      })
+      
+      if (res.ok) {
+        setFeedbackRead(true)
+      }
+    } catch (e) {
+      console.error('Failed to mark feedback as read:', e)
+    }
   }
 
   const handleMysteryFeedbackRead = () => {
@@ -994,23 +1028,7 @@ Mario`
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4 border border-white/20 relative">
                         <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
                         <div className="text-white text-xs leading-relaxed text-left whitespace-pre-line relative">
-{`Liebe Ulrike,
-
-ich darf dir heute deine Mai KPIs zukommen lassen.
-
-Trotz der stabilen Marktlage machst du das Beste draus und dafür ein großes Dankeschön unsererseits. 😊
-
-Hier ein Rückblick auf deine Mai-Zahlen:
-
-MC/ET: 7.3 (Platz 1)
-TMA Anteil: 94%
-VL Share: 23% (Platz 2)
-
-Du hast im Mai mit deinem MC/ET den ersten Platz erreicht – eine wirklich beeindruckende Leistung! Deine hohe Verkaufszahl spiegelt dein Engagement wider und zeigt, dass du genau weißt, wie man Kunden begeistert. Auch dein VL Share ist mit Platz 2 bemerkenswert und zeigt, dass du einen hervorragenden Job machst. Beim TMA-Anteil gehörst du zu den Besten, was zeigt, wie effektiv du die Kundenbindung vor Ort gestaltest.
-
-Mach weiter so, deine Arbeit ist inspirierend!
-
-Liebe Grüße, dein Nespresso Team`}
+                          {feedbackData?.feedback_text || 'Feedback text wird geladen...'}
                         </div>
                       </div>
                       

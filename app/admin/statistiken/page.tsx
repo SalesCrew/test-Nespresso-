@@ -27,6 +27,7 @@ interface HistoryCardData extends CardData {
   matchedPromoter?: string | null;
   generatedText?: string;
   sentAt?: Date;
+  read?: boolean;
 }
 
 export default function StatistikenPage() {
@@ -124,7 +125,8 @@ export default function StatistikenPage() {
               magicTouchCategory: item.magic_touch,
               matchedPromoter: item.promotor_name,
               generatedText: item.feedback_text,
-              sentAt: new Date(item.created_at)
+              sentAt: new Date(item.created_at),
+              read: item.read || false
             };
           });
           
@@ -2493,10 +2495,11 @@ Liebe Grüße, dein Nespresso Team`;
                                 <IoColorWandOutline className="h-3 w-3 text-gray-600" />
                                 <span className="text-xs text-gray-600 font-semibold">Magic Touch</span>
                               </div>
-                              {/* Status indicator dot (default red; can turn green later) */}
+                              {/* Status indicator dot (red = unread, green = read) */}
                               <div
-                                className="w-2 h-2 rounded-full bg-red-500 opacity-80 shadow-sm"
+                                className={`w-2 h-2 rounded-full ${card.read ? 'bg-green-500' : 'bg-red-500'} opacity-80 shadow-sm`}
                                 aria-label="status-indicator"
+                                title={card.read ? 'Gelesen' : 'Ungelesen'}
                               ></div>
                             </div>
 
