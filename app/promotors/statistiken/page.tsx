@@ -311,14 +311,36 @@ Liebe Grüße, dein Nespresso Team.`
     setMysteryFeedbackRead(true)
   }
 
-  // Mock data state for Mystery Shop and Leaderboard (initialized empty to avoid SSR hydration mismatch)
+  // Mock data state (initialized empty to avoid SSR hydration mismatch)
+  const [historyData, setHistoryData] = useState<any[]>([])
   const [mysteryHistoryData, setMysteryHistoryData] = useState<any[]>([])
+  const [leaderboardData, setLeaderboardData] = useState<any[]>([])
 
   // Generate mock data on client-side only (after mount) to prevent hydration mismatch
   useEffect(() => {
+    // Generate CA KPI history data
+    const caData = []
+    const today = new Date()
+    
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(today)
+      date.setMonth(today.getMonth() - i)
+      
+      const mcet = (3.6 + Math.random() * 1.5).toFixed(1)
+      const tma = (60 + Math.random() * 25).toFixed(0)
+      const vl = (5 + Math.random() * 20).toFixed(0)
+      
+      caData.push({
+        date,
+        mcet: parseFloat(mcet),
+        tma: parseInt(tma),
+        vl: parseInt(vl)
+      })
+    }
+    setHistoryData(caData)
+
     // Generate mystery shop history data
     const mysteryData = []
-    const today = new Date()
     for (let i = 0; i < 20; i++) {
       const date = new Date(today)
       date.setMonth(today.getMonth() - i)
@@ -331,6 +353,24 @@ Liebe Grüße, dein Nespresso Team.`
       })
     }
     setMysteryHistoryData(mysteryData)
+
+    // Generate leaderboard data
+    const leaderData = []
+    for (let i = 0; i < 60; i++) {
+      const userId = i + 1
+      
+      const mcet = parseFloat((Math.random() * 8.5 + 0.5).toFixed(1))
+      const tma = Math.floor(Math.random() * 60 + 40)
+      const vlShare = Math.floor(Math.random() * 35)
+      
+      leaderData.push({
+        id: userId,
+        mcet: mcet,
+        tma: tma,
+        vlshare: vlShare
+      })
+    }
+    setLeaderboardData(leaderData)
   }, [])
 
   // Get sorted leaderboard for the selected category (using real data)
@@ -688,8 +728,7 @@ Mario`
   }
 
   // Helper function to get pill color based on change type
-  const getPillColor = (changePercent: string | null, timeFrame: string) => {
-    if (!changePercent) return 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+  const getPillColor = (changePercent: string, timeFrame: string) => {
     if (timeFrame === "alltime") {
       // For all-time, green = positive (above optimal), red = negative (below optimal)
       return changePercent.startsWith('+') ? 'bg-green-600/30 dark:bg-green-500/30 text-green-800 dark:text-green-200' : 'bg-red-600/30 dark:bg-red-500/30 text-red-800 dark:text-red-200'
@@ -736,9 +775,9 @@ Mario`
   }
 
   // Helper function to get feedback text for entry
-  const getFeedbackText = (entryIndex: number): string => {
-    if (entryIndex === 0) return feedbackTexts[0]
-    return feedbackTexts[((entryIndex - 1) % 3) + 1]
+  const getFeedbackText = (entryIndex: number) => {
+    if (entryIndex === 0) return feedbackTexts[0] // Use existing feedback for newest month
+    return feedbackTexts[((entryIndex - 1) % 3) + 1] // Cycle through templates 1-3 for older entries
   }
 
   return (
@@ -1491,8 +1530,8 @@ Mario`
                     </div>
                   </div>
                 </div>
-              ))}
-              
+                ))}
+                
                 {/* Blurred overlay for collapsed state */}
                 {!historyExpanded && currentPageData.length > 5 && (
                   <div className="relative">
@@ -1505,10 +1544,10 @@ Mario`
             {/* Footer with Show more/less button and navigation - only show when data exists */}
             {verlaufData.length > 0 && (
               <div className="p-2 border-t border-gray-100 dark:border-gray-800">
-                <div className="flex items-center justify-between">
-                  {/* Left navigation arrow - only show if not on first page */}
-                  <div className="w-20">
-                    {historyPage > 0 && (
+              <div className="flex items-center justify-between">
+                {/* Left navigation arrow - only show if not on first page */}
+                <div className="w-20">
+                  {historyPage > 0 && (
                     <button 
                       onClick={() => navigateHistoryPrev()}
                       className="flex items-center text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
@@ -1549,6 +1588,7 @@ Mario`
                     </button>
                   )}
                 </div>
+              </div>
               </div>
             )}
           </CardContent>
