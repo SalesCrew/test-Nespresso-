@@ -1459,9 +1459,15 @@ Mario`
         
         {/* Dark Overlay with "kommt bald!" */}
         {!challengeCompleted && !challengeCardDismissed && (
-          <div className="absolute inset-0 bg-black/50 dark:bg-black/60 rounded-lg flex items-center justify-center pointer-events-none z-10">
-            <div className="bg-gray-900/80 dark:bg-gray-800/85 backdrop-blur-md px-8 py-4 rounded-xl shadow-2xl border border-white/10">
-              <span className="text-white text-xl font-semibold tracking-wide">kommt bald!</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-gray-900/50 to-black/40 dark:from-black/50 dark:via-gray-950/60 dark:to-black/50 rounded-lg flex items-center justify-center pointer-events-none z-10 backdrop-blur-[2px]">
+            <div className="relative">
+              {/* Glow effect behind the box */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl rounded-xl"></div>
+              
+              {/* Main "kommt bald!" box */}
+              <div className="relative bg-gradient-to-br from-gray-800/95 via-gray-900/95 to-gray-800/95 dark:from-gray-900/95 dark:via-black/95 dark:to-gray-900/95 backdrop-blur-md px-8 py-4 rounded-xl shadow-2xl border border-white/10 dark:border-white/5">
+                <span className="text-white text-lg font-semibold tracking-wide drop-shadow-lg">kommt bald!</span>
+              </div>
             </div>
           </div>
         )}
