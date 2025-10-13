@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { createClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -22,7 +22,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const initializeSocket = async () => {
-      const supabase = createClient();
+      const supabase = createSupabaseBrowserClient();
       
       // Get current session
       const { data: { session } } = await supabase.auth.getSession();

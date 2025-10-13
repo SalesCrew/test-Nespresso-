@@ -1115,8 +1115,8 @@ export default function ChatPage() {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const { createClient } = await import('@/lib/supabase/client');
-        const supabase = createClient();
+        const { createSupabaseBrowserClient } = await import('@/lib/supabase/client');
+        const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setCurrentUserId(user.id);
