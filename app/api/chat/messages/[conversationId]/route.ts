@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { conversationId: string } }
 ) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

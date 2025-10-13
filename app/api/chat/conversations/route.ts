@@ -4,10 +4,13 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 // GET: Fetch user's conversations with participants, last message, and unread count
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    console.log('[/api/chat/conversations] Starting request');
+    const supabase = createSupabaseServerClient();
+    console.log('[/api/chat/conversations] Supabase client created');
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('[/api/chat/conversations] User:', user?.id, 'Auth error:', authError);
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -159,7 +162,7 @@ export async function GET(request: NextRequest) {
 // POST: Create a new conversation
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
