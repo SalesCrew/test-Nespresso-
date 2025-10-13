@@ -68,7 +68,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Listen for auth state changes and reconnect if needed
   useEffect(() => {
-    const supabase = createClient();
+    const supabase = createSupabaseBrowserClient();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
