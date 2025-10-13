@@ -531,15 +531,15 @@ Mario`
   // Calculate statistics from history data (wave-based)
   // Each feedback entry is treated as one "wave" (we send monthly, but logic is wave‑based)
   const calculateStatsData = () => {
-    // Use real data if available, otherwise fall back to mock
-    const dataToUse = realHistoryData.length > 0 ? realHistoryData : historyData
+    // Use only real data - no mock fallback
+    const dataToUse = realHistoryData
     
     if (dataToUse.length === 0) {
-      // Return empty/null stats if no data
+      // Return null stats if no data (for empty state)
       return {
-        "30days": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } },
-        "6months": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } },
-        "alltime": { mcet: { value: 0, changePercent: null }, tma: { value: 0, changePercent: null }, vlShare: { value: 0, changePercent: null } }
+        "30days": { mcet: { value: null, changePercent: null }, tma: { value: null, changePercent: null }, vlShare: { value: null, changePercent: null } },
+        "6months": { mcet: { value: null, changePercent: null }, tma: { value: null, changePercent: null }, vlShare: { value: null, changePercent: null } },
+        "alltime": { mcet: { value: null, changePercent: null }, tma: { value: null, changePercent: null }, vlShare: { value: null, changePercent: null } }
       }
     }
 
@@ -845,10 +845,10 @@ Mario`
                           <div className="text-right text-gray-500 dark:text-gray-400">Avg MC/</div>
                           <div className="text-right text-gray-500 dark:text-gray-400">ET:</div>
                           <div 
-                            className={`font-semibold ${getColorForMcEt(statsData[timeFrame].mcet.value) !== "custom-orange" ? getColorForMcEt(statsData[timeFrame].mcet.value) : ""}`}
-                            style={{marginLeft: '4px', ...getStyleForColor(getColorForMcEt(statsData[timeFrame].mcet.value))}}
+                            className={`font-semibold ${statsData[timeFrame].mcet.value !== null ? (getColorForMcEt(statsData[timeFrame].mcet.value) !== "custom-orange" ? getColorForMcEt(statsData[timeFrame].mcet.value) : "") : "text-gray-300"}`}
+                            style={{marginLeft: '4px', ...(statsData[timeFrame].mcet.value !== null ? getStyleForColor(getColorForMcEt(statsData[timeFrame].mcet.value)) : {})}}
                           >
-                            {statsData[timeFrame].mcet.value.toFixed(1)}
+                            {statsData[timeFrame].mcet.value !== null ? statsData[timeFrame].mcet.value.toFixed(1) : '—'}
                           </div>
                           {statsData[timeFrame].mcet.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].mcet.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
@@ -863,10 +863,10 @@ Mario`
                         <div className="flex items-center justify-center">
                           <div className="text-right text-gray-500 dark:text-gray-400">Avg TMA:</div>
                           <div 
-                            className={`font-semibold ${getColorForTma(statsData[timeFrame].tma.value) !== "custom-orange" ? getColorForTma(statsData[timeFrame].tma.value) : ""}`}
-                            style={{marginLeft: '4px', ...getStyleForColor(getColorForTma(statsData[timeFrame].tma.value))}}
+                            className={`font-semibold ${statsData[timeFrame].tma.value !== null ? (getColorForTma(statsData[timeFrame].tma.value) !== "custom-orange" ? getColorForTma(statsData[timeFrame].tma.value) : "") : "text-gray-300"}`}
+                            style={{marginLeft: '4px', ...(statsData[timeFrame].tma.value !== null ? getStyleForColor(getColorForTma(statsData[timeFrame].tma.value)) : {})}}
                           >
-                            {statsData[timeFrame].tma.value.toFixed(1)}%
+                            {statsData[timeFrame].tma.value !== null ? `${statsData[timeFrame].tma.value.toFixed(1)}%` : '—'}
                           </div>
                           {statsData[timeFrame].tma.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].tma.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
@@ -882,10 +882,10 @@ Mario`
                           <div className="text-right text-gray-500 dark:text-gray-400">Avg VL</div>
                           <div className="text-right text-gray-500 dark:text-gray-400">Share:</div>
                           <div 
-                            className={`font-semibold ${getColorForVlShare(statsData[timeFrame].vlShare.value) !== "custom-orange" ? getColorForVlShare(statsData[timeFrame].vlShare.value) : ""}`}
-                            style={{marginLeft: '4px', ...getStyleForColor(getColorForVlShare(statsData[timeFrame].vlShare.value))}}
+                            className={`font-semibold ${statsData[timeFrame].vlShare.value !== null ? (getColorForVlShare(statsData[timeFrame].vlShare.value) !== "custom-orange" ? getColorForVlShare(statsData[timeFrame].vlShare.value) : "") : "text-gray-300"}`}
+                            style={{marginLeft: '4px', ...(statsData[timeFrame].vlShare.value !== null ? getStyleForColor(getColorForVlShare(statsData[timeFrame].vlShare.value)) : {})}}
                           >
-                            {statsData[timeFrame].vlShare.value.toFixed(1)}%
+                            {statsData[timeFrame].vlShare.value !== null ? `${statsData[timeFrame].vlShare.value.toFixed(1)}%` : '—'}
                           </div>
                           {statsData[timeFrame].vlShare.changePercent !== null && (
                             <div className={`text-xs ${getPillColor(statsData[timeFrame].vlShare.changePercent, timeFrame)} rounded-full px-1 py-0`} style={{marginLeft: '4px'}}>
