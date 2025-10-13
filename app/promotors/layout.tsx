@@ -1,6 +1,7 @@
 import SiteLayout from "../SiteLayout";
 import { getCurrentUserAndProfile } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
+import { SocketProvider } from "@/lib/socket/SocketContext";
 
 interface PromotorLayoutProps {
   children: React.ReactNode;
@@ -15,11 +16,19 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
 
   // If profile is missing but user is authenticated, allow access for now
   if (!profile) {
-    return <SiteLayout>{children}</SiteLayout>;
+    return (
+      <SiteLayout>
+        <SocketProvider>{children}</SocketProvider>
+      </SiteLayout>
+    );
   }
 
   if (profile.role === "promotor") {
-    return <SiteLayout>{children}</SiteLayout>;
+    return (
+      <SiteLayout>
+        <SocketProvider>{children}</SocketProvider>
+      </SiteLayout>
+    );
   }
 
   if (profile.role === "admin_of_admins" || profile.role === "admin_staff") {

@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import AdminNavigation from "@/components/AdminNavigation";
+import { useChatIntegration } from "@/lib/chat/useChatIntegration";
+import { useSocket } from "@/lib/socket/SocketContext";
 
 interface Contact {
-  id: number;
+  id: string | number;  // Support both UUID strings and number IDs for compatibility
   name: string;
   lastMessage: string;
   time: string;
@@ -20,12 +22,12 @@ interface Contact {
   isGroup?: boolean;
   profileImage?: string | null;
   description?: string;
-  members?: number[];
+  members?: (string | number)[];  // Support both types
   readOnly?: boolean;
 }
 
 interface Message {
-  id: number;
+  id: string | number;  // Support both UUID strings and number IDs
   sender: string;
   content: string;
   time: string;
@@ -37,7 +39,7 @@ interface Message {
   pdfName?: string;
   type?: string;
   replyTo?: {
-    id: number;
+    id: string | number;
     sender: string;
     content: string;
     photo?: string;
@@ -47,6 +49,13 @@ interface Message {
 }
 
 export default function ChatPage() {
+  // Initialize chat integration
+  const chatIntegration = useChatIntegration();
+  const { socket, isConnected } = useSocket();
+  const [promotorsList, setPromotorsList] = useState<Array<{ user_id: string; display_name: string }>>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  
   const [selectedChat, setSelectedChat] = useState<Contact | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);  
 
@@ -344,7 +353,7 @@ export default function ChatPage() {
   const [contactContextMenu, setContactContextMenu] = useState<{ show: boolean; x: number; y: number; contactId: number | null }>({
     show: false, x: 0, y: 0, contactId: null
   });
-  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: number[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null; readOnly: boolean }>({
+  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: string[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null; readOnly: boolean }>({
     show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false
   });
   const [showParticipants, setShowParticipants] = useState(false);
@@ -539,67 +548,55 @@ export default function ChatPage() {
     contactId: null
   });
 
-  const [allMessages, setAllMessages] = useState<Record<number, Message[]>>({
-    1: [ // Lisa Müller - lots of messages for scrolling
-      { id: 1, sender: "Lisa Müller", content: "Hallo! Wie läuft es heute?", time: "09:15", own: false },
-      { id: 2, sender: "You", content: "Hi Lisa! Alles bestens, danke der Nachfrage.", time: "09:16", own: true },
-      { id: 3, sender: "Lisa Müller", content: "Super! Hast du schon die neuen Zahlen gesehen?", time: "09:17", own: false },
-      { id: 4, sender: "You", content: "Ja, die sehen wirklich gut aus. Besonders der Umsatz ist gestiegen.", time: "09:18", own: true },
-      { id: 5, sender: "Lisa Müller", content: "Genau! Das Team arbeitet wirklich hart.", time: "09:19", own: false },
-      { id: 6, sender: "You", content: "Absolut. Wir sollten das beim nächsten Meeting besprechen.", time: "09:20", own: true },
-      { id: 7, sender: "Lisa Müller", content: "Gute Idee! Wann passt es dir denn?", time: "09:25", own: false },
-      { id: 8, sender: "You", content: "Wie wäre es morgen um 10 Uhr?", time: "09:26", own: true },
-      { id: 9, sender: "Lisa Müller", content: "Perfekt, das passt mir sehr gut.", time: "09:27", own: false },
-      { id: 10, sender: "You", content: "Super, dann trage ich das gleich in den Kalender ein.", time: "09:28", own: true },
-      { id: 11, sender: "Lisa Müller", content: "Danke! Soll ich schon mal eine Agenda vorbereiten?", time: "09:30", own: false },
-      { id: 12, sender: "You", content: "Das wäre fantastisch. Fokus auf die Q1 Ergebnisse?", time: "09:31", own: true },
-      { id: 13, sender: "Lisa Müller", content: "Ja, und vielleicht auch die Planung für Q2.", time: "09:35", own: false },
-      { id: 14, sender: "You", content: "Sehr gute Idee. Lass uns auch über das neue Projekt sprechen.", time: "09:36", own: true },
-      { id: 15, sender: "Lisa Müller", content: "Welches meinst du? Das mit den neuen Kunden?", time: "09:40", own: false },
-      { id: 16, sender: "You", content: "Genau das! Ich denke, wir haben da großes Potenzial.", time: "09:41", own: true },
-      { id: 17, sender: "Lisa Müller", content: "Da stimme ich dir zu. Die ersten Gespräche liefen sehr vielversprechend.", time: "09:45", own: false },
-      { id: 18, sender: "You", content: "Exzellent! Dann können wir morgen die nächsten Schritte planen.", time: "09:46", own: true },
-      { id: 19, sender: "Lisa Müller", content: "Freue mich schon darauf! Bis morgen dann.", time: "14:30", own: false },
-      { id: 20, sender: "You", content: "Bis morgen, Lisa! Hab einen schönen Tag.", time: "14:31", own: true },
-      { id: 21, sender: "Lisa Müller", content: "Alles klar, bis später!", time: "14:32", own: false },
-    ],
-    2: [ // Max Schmidt
-      { id: 1, sender: "Max Schmidt", content: "Hey! Wie siehts aus mit dem Report?", time: "13:40", own: false },
-      { id: 2, sender: "You", content: "Hi Max! Bin gerade dabei, sollte in einer Stunde fertig sein.", time: "13:41", own: true },
-      { id: 3, sender: "Max Schmidt", content: "Perfekt! Die Zahlen sehen gut aus.", time: "13:42", own: false },
-      { id: 4, sender: "You", content: "Ja, sehr zufrieden mit der Entwicklung.", time: "13:44", own: true },
-      { id: 5, sender: "Max Schmidt", content: "Die Zahlen sehen gut aus", time: "13:45", own: false },
-    ],
-    3: [ // Anna Weber
-      { id: 1, sender: "Anna Weber", content: "Hi! Kannst du mir mit dem Projekt helfen?", time: "12:10", own: false },
-      { id: 2, sender: "You", content: "Klar! Was brauchst du denn?", time: "12:11", own: true },
-      { id: 3, sender: "Anna Weber", content: "Hauptsächlich Feedback zu meinem Entwurf.", time: "12:13", own: false },
-      { id: 4, sender: "You", content: "Schick mir gerne den Link, schaue ich mir an.", time: "12:14", own: true },
-      { id: 5, sender: "Anna Weber", content: "Danke für die Info!", time: "12:15", own: false },
-    ],
-    4: [ // Tom Klein
-      { id: 1, sender: "Tom Klein", content: "Hey, weißt du noch wegen dem Meeting heute?", time: "11:25", own: false },
-      { id: 2, sender: "You", content: "Hi Tom! Ja, 15 Uhr oder?", time: "11:26", own: true },
-      { id: 3, sender: "Tom Klein", content: "Genau! Konferenzraum B ist reserviert.", time: "11:28", own: false },
-      { id: 4, sender: "You", content: "Super, bis dann!", time: "11:29", own: true },
-      { id: 5, sender: "Tom Klein", content: "Wann ist das Meeting?", time: "11:30", own: false },
-    ],
-    5: [ // Sarah Lange
-      { id: 1, sender: "Sarah Lange", content: "Alles erledigt! Das Projekt ist abgeschlossen.", time: "10:20", own: false },
-      { id: 2, sender: "You", content: "Wow, das ging schnell! Großartige Arbeit.", time: "10:21", own: true },
-      { id: 3, sender: "Sarah Lange", content: "Perfekt, danke!", time: "10:22", own: false },
-    ]
-  });
+  // Get messages for the selected conversation from real data
+  const conversationMessages: Message[] = selectedChat && selectedChat.id
+    ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => ({
+        id: msg.id,
+        sender: msg.sender_name,
+        content: msg.message_text,
+        time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+        own: msg.sender_id === currentUserId,
+        edited: msg.edited,
+        reaction: undefined,
+        photo: msg.message_type === 'photo' && msg.file_url ? msg.file_url : undefined,
+        pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
+        pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
+        type: msg.message_type,
+        replyTo: msg.reply_to ? {
+          id: msg.reply_to.id,
+          sender: msg.reply_to.sender_name,
+          content: msg.reply_to.message_text,
+          photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+          pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+          pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
+        } : undefined,
+      }))
+    : [];
+
+  // For compatibility with existing code that expects allMessages[id]
+  const allMessages = selectedChat && selectedChat.id 
+    ? { [selectedChat.id]: conversationMessages }
+    : {};
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock data - replace with real data later
-  const [contacts, setContacts] = useState<Contact[]>([
-    { id: 1, name: "Lisa Müller", lastMessage: "Alles klar, bis später!", time: "14:32", unread: 2, online: true, pinned: false, markedUnread: false },
-    { id: 2, name: "Max Schmidt", lastMessage: "Die Zahlen sehen gut aus", time: "13:45", unread: 0, online: false, pinned: false, markedUnread: false },
-    { id: 3, name: "Anna Weber", lastMessage: "Danke für die Info!", time: "12:15", unread: 1, online: true, pinned: false, markedUnread: false },
-    { id: 4, name: "Tom Klein", lastMessage: "Wann ist das Meeting?", time: "11:30", unread: 0, online: true, pinned: false, markedUnread: false },
-    { id: 5, name: "Sarah Lange", lastMessage: "Perfekt, danke!", time: "10:22", unread: 0, online: false, pinned: false, markedUnread: false },
-  ]);
+  // Convert real conversations to Contact format
+  const contacts: Contact[] = chatIntegration.conversations.map(conv => ({
+    id: conv.id,
+    name: conv.name || 'Unknown',
+    lastMessage: conv.last_message?.text || '',
+    time: conv.last_message?.created_at 
+      ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      : '',
+    unread: conv.unread_count,
+    online: false, // Can be enhanced with presence tracking
+    pinned: false,
+    markedUnread: false,
+    isGroup: conv.is_group,
+    profileImage: null,
+    description: conv.description || undefined,
+    members: conv.participants.map(p => p.user_id),
+    readOnly: conv.is_read_only,
+  }));
 
   // Sort contacts to show pinned ones first
   const sortedContacts = [...contacts].sort((a, b) => {
@@ -609,62 +606,46 @@ export default function ChatPage() {
   });
 
     // Handle sending messages
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageInput.trim() || !selectedChat) return;
 
     if (editingMessage) {
-      // Edit existing message
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
-          msg.id === editingMessage.id 
-            ? { ...msg, content: messageInput.trim(), edited: true }
-            : msg
-        )
-      }));
+      // TODO: Implement edit via Socket.IO in future
+      // For now, keep local edit functionality
       setEditingMessage(null);
       setEditAnimation(null);
-      // Clean up edit keyframe
       const existingEditStyle = document.getElementById('edit-keyframes');
       if (existingEditStyle) {
         existingEditStyle.remove();
       }
     } else {
-      // Send new message
-      const newMessage: Message = {
-        id: Date.now(),
-        sender: "You",
-        content: messageInput.trim(),
-        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-        own: true,
-        ...(replyingTo && {
-          replyTo: {
-            id: replyingTo.id,
-            sender: replyingTo.sender,
-            content: replyingTo.content,
-            photo: replyingTo.photo,
-            pdf: replyingTo.pdf,
-            pdfName: replyingTo.pdfName
-          }
-        })
-      };
-
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-      }));
-
-      setReplyingTo(null);
-      setReplyAnimation(null);
-      // Clean up keyframe
-      const existingStyle = document.getElementById('reply-keyframes');
-      if (existingStyle) {
-        existingStyle.remove();
+      // Send new message via Socket.IO
+      try {
+        await chatIntegration.sendMessage(
+          String(selectedChat.id),
+          messageInput.trim(),
+          replyingTo ? String(replyingTo.id) : null
+        );
+        
+        // Clear input and reply state
+        setMessageInput('');
+        setReplyingTo(null);
+        setReplyAnimation(null);
+        
+        // Clean up keyframe
+        const existingStyle = document.getElementById('reply-keyframes');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+        
+        // Scroll to bottom after a short delay to let new message render
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        // TODO: Show error notification to user
       }
     }
-
-    setMessageInput("");
   };
 
   // Handle right-click context menu
@@ -1121,6 +1102,51 @@ export default function ChatPage() {
     }
   }, [photoEditor, replyingTo, editingMessage, deleteDialog, clearChatDialog, emojiPicker, groupCreationPopup]);
 
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Fetch promotors list for group creation
+  useEffect(() => {
+    const fetchPromotors = async () => {
+      try {
+        const response = await fetch('/api/chat/promotors');
+        if (response.ok) {
+          const data = await response.json();
+          setPromotorsList(data.promotors || []);
+        }
+      } catch (error) {
+        console.error('Error fetching promotors:', error);
+      }
+    };
+
+    fetchPromotors();
+  }, []);
+
+  // Load messages when a conversation is selected
+  useEffect(() => {
+    if (selectedChat && selectedChat.id) {
+      // Convert number ID to string for API call (if needed)
+      const convId = String(selectedChat.id);
+      chatIntegration.fetchMessages(convId);
+      chatIntegration.markAsRead(convId).catch(err => console.error('Error marking as read:', err));
+    }
+  }, [selectedChat, chatIntegration]);
+
   // Helper function to check if line segment intersects with circle
   const checkLineCircleIntersection = (
     pointA: { x: number; y: number }, 
@@ -1198,46 +1224,46 @@ export default function ChatPage() {
                     </div>
                   </div>
 
-                  {/* Contacts List with Checkboxes */}
+                  {/* Promotors List with Checkboxes */}
                   <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                    {contacts
-                      .filter(contact => 
-                        contact.name.toLowerCase().includes(groupCreationPopup.searchQuery.toLowerCase())
+                    {promotorsList
+                      .filter(promotor => 
+                        promotor.display_name.toLowerCase().includes(groupCreationPopup.searchQuery.toLowerCase())
                       )
-                      .map(contact => (
+                      .map(promotor => (
                         <div 
-                          key={contact.id}
+                          key={promotor.user_id}
                           className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
                           onClick={() => {
                             setGroupCreationPopup(prev => ({
                               ...prev,
-                              selectedContacts: prev.selectedContacts.includes(contact.id)
-                                ? prev.selectedContacts.filter(id => id !== contact.id)
-                                : [...prev.selectedContacts, contact.id]
+                              selectedContacts: prev.selectedContacts.includes(promotor.user_id)
+                                ? prev.selectedContacts.filter(id => id !== promotor.user_id)
+                                : [...prev.selectedContacts, promotor.user_id]
                             }));
                           }}
                         >
                           <div className="flex items-center">
                             <div 
                               className={`mr-3 w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer ${
-                                groupCreationPopup.selectedContacts.includes(contact.id) 
+                                groupCreationPopup.selectedContacts.includes(promotor.user_id) 
                                   ? 'border-transparent' 
                                   : 'border-gray-300'
                               }`}
-                              style={groupCreationPopup.selectedContacts.includes(contact.id) 
+                              style={groupCreationPopup.selectedContacts.includes(promotor.user_id) 
                                 ? { backgroundColor: '#22C55E' }
                                 : {}
                               }
                             >
-                              {groupCreationPopup.selectedContacts.includes(contact.id) && (
+                              {groupCreationPopup.selectedContacts.includes(promotor.user_id) && (
                                 <Check className="w-2.5 h-2.5 text-white" />
                               )}
                             </div>
                             <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium mr-3">
-                              {contact.name.charAt(0)}
+                              {promotor.display_name.charAt(0)}
                             </div>
                             <div className="flex-1">
-                              <div className="font-medium text-gray-900">{contact.name}</div>
+                              <div className="font-medium text-gray-900">{promotor.display_name}</div>
                             </div>
                           </div>
                         </div>
@@ -1348,20 +1374,7 @@ export default function ChatPage() {
                       </div>
                     </div>
 
-                    {/* Read-only group (admins only may write) */}
-                    <div className="mt-2 p-3 border border-gray-200 rounded-lg flex items-start justify-between">
-                      <div className="pr-3">
-                        <p className="text-sm font-medium text-gray-800">Nur Admins dürfen schreiben</p>
-                        <p className="text-xs text-gray-500 mt-0.5">Aktiviere dies, um eine reine Ankündigungsgruppe zu erstellen. Promotors können dann nur lesen.</p>
-                      </div>
-                      <Switch
-                        className={cn("overflow-hidden", groupCreationPopup.readOnly ? "border-0" : "")}
-                        checked={groupCreationPopup.readOnly}
-                        onCheckedChange={(checked: boolean) => setGroupCreationPopup(prev => ({ ...prev, readOnly: checked }))}
-                        style={groupCreationPopup.readOnly ? { background: 'linear-gradient(135deg, #22C55E, #105F2D)' } : undefined}
-                        aria-label="Nur Admins dürfen schreiben"
-                      />
-                    </div>
+                    {/* Note: All group chats are automatically read-only for promotors */}
                   </div>
 
                   {/* Create Button */}
@@ -1373,47 +1386,44 @@ export default function ChatPage() {
                         opacity: groupCreationPopup.groupName.trim() ? 1 : 0.3
                       }}
                       disabled={!groupCreationPopup.groupName.trim()}
-                      onClick={() => {
-                        if (groupCreationPopup.groupName.trim()) {
-                          // Create new group chat
-                          const newGroupId = Date.now(); // Simple ID generation
-                          const newGroup = {
-                            id: newGroupId,
-                            name: groupCreationPopup.groupName,
-                            lastMessage: "Gruppe erstellt",
-                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                      onClick={async () => {
+                        if (!groupCreationPopup.groupName.trim()) return;
+                        
+                        try {
+                          // Create new group conversation via API
+                          const newConversation = await chatIntegration.createConversation(
+                            'group',
+                            groupCreationPopup.selectedContacts, // These are user_id strings
+                            groupCreationPopup.groupName,
+                            groupCreationPopup.groupDescription || undefined
+                          );
+                          
+                          // Close popup and reset state
+                          setGroupCreationPopup({ 
+                            show: false, 
+                            selectedContacts: [], 
+                            searchQuery: '', 
+                            step: 1, 
+                            groupName: '', 
+                            groupDescription: '', 
+                            profileImage: null, 
+                            readOnly: false 
+                          });
+                          
+                          // Select the new conversation (conversation list will auto-update via chatIntegration)
+                          setSelectedChat({
+                            id: newConversation.id,
+                            name: newConversation.name,
+                            lastMessage: '',
+                            time: '',
                             unread: 0,
-                            online: true,
-                            pinned: false,
-                            markedUnread: false,
+                            online: false,
                             isGroup: true,
-                            profileImage: groupCreationPopup.profileImage,
-                            description: groupCreationPopup.groupDescription,
-                            members: groupCreationPopup.selectedContacts,
-                            readOnly: groupCreationPopup.readOnly
-                          };
-                          
-                          // Add group to contacts
-                          setContacts(prev => [newGroup, ...prev]);
-                          
-                          // Initialize group messages
-                          setAllMessages(prev => ({
-                            ...prev,
-                            [newGroupId]: [{
-                              id: 1,
-                              sender: "System",
-                              content: `Die Gruppe "${groupCreationPopup.groupName}" wurde am ${new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: 'numeric' })} erstellt`,
-                              time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                              own: false,
-                              type: "system"
-                            }]
-                          }));
-                          
-                          // Select the new group
-                          setSelectedChat(newGroup);
-                          
-                          // Close popup
-                          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
+                            readOnly: true, // Groups are always read-only for promotors
+                          });
+                        } catch (error) {
+                          console.error('Failed to create group:', error);
+                          // TODO: Show error notification to user
                         }
                       }}
                     >

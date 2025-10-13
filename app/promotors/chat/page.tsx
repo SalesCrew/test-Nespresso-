@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock } from "lucide-react";
+import { useChatIntegration } from "@/lib/chat/useChatIntegration";
+import { useSocket } from "@/lib/socket/SocketContext";
 
 interface Contact {
-  id: number;
+  id: string | number;  // Support both UUID strings and number IDs
   name: string;
   lastMessage: string;
   time: string;
@@ -15,11 +17,12 @@ interface Contact {
   isGroup?: boolean;
   profileImage?: string | null;
   description?: string;
-  members?: number[];
+  members?: (string | number)[];
+  readOnly?: boolean;  // Track if conversation is read-only
 }
 
 interface Message {
-  id: number;
+  id: string | number;  // Support both UUID strings and number IDs
   sender: string;
   content: string;
   time: string;
@@ -31,7 +34,7 @@ interface Message {
   pdfName?: string;
   type?: string;
   replyTo?: {
-    id: number;
+    id: string | number;
     sender: string;
     content: string;
     photo?: string;
@@ -41,6 +44,12 @@ interface Message {
 }
 
 export default function PromotorChatPage() {
+  // Initialize chat integration
+  const chatIntegration = useChatIntegration();
+  const { socket, isConnected } = useSocket();
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  
   const [selectedChat, setSelectedChat] = useState<Contact | null>(null);
 
   useEffect(() => {
@@ -97,6 +106,33 @@ export default function PromotorChatPage() {
       document.head.removeChild(style);
     };
   }, []);
+
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Load messages when a conversation is selected
+  useEffect(() => {
+    if (selectedChat && selectedChat.id) {
+      const convId = String(selectedChat.id);
+      chatIntegration.fetchMessages(convId);
+      chatIntegration.markAsRead(convId).catch(err => console.error('Error marking as read:', err));
+    }
+  }, [selectedChat, chatIntegration]);
 
   const [messageInput, setMessageInput] = useState("");
   const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' }>({ show: false, selectedCategory: 'smileys', context: 'input' });
@@ -262,48 +298,38 @@ export default function PromotorChatPage() {
     }
   };
 
-  // Mock contacts data
-  const [contacts, setContacts] = useState<Contact[]>([
-    {
-      id: 1,
-      name: "Lisa Müller",
-      lastMessage: "Alles klar, bis später!",
-      time: "14:32",
-      unread: 2,
-      online: true,
+  // Convert real conversations to Contact format (filter to only show admins and groups)
+  const contacts: Contact[] = chatIntegration.conversations
+    .filter(conv => {
+      // Show only groups and direct chats with admins (no other promotors)
+      if (conv.type === 'group') return true;
+      
+      // For direct chats, check if other participant is admin
+      const otherParticipant = conv.participants.find(p => p.user_id !== currentUserId);
+      return otherParticipant?.role && ['admin_staff', 'admin_of_admins'].includes(otherParticipant.role);
+    })
+    .map(conv => ({
+      id: conv.id,
+      name: conv.name || 'Unknown',
+      lastMessage: conv.last_message?.text || '',
+      time: conv.last_message?.created_at 
+        ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+        : '',
+      unread: conv.unread_count,
+      online: false,
       pinned: false,
-      profileImage: null
-    },
-    {
-      id: 2,
-      name: "Max Schmidt",
-      lastMessage: "Die Zahlen sehen gut aus",
-      time: "13:45",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 3,
-      name: "Anna Weber",
-      lastMessage: "Danke für die Info!",
-      time: "12:15",
-      unread: 1,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 4,
-      name: "Tom Klein",
-      lastMessage: "Wann ist das Meeting?",
-      time: "11:30",
-      unread: 0,
-      online: true,
-      profileImage: null
-    },
-    {
-      id: 5,
-      name: "Sarah Lange",
+      markedUnread: false,
+      isGroup: conv.is_group,
+      profileImage: null,
+      description: conv.description || undefined,
+      members: conv.participants.map(p => p.user_id),
+      readOnly: conv.is_read_only,
+    }));
+
+  // Mock data removed - using real conversations from chatIntegration
+  const __unused_placeholder = [{
+      id: 1,
+      name: "Dummy",
       lastMessage: "Perfekt, danke!",
       time: "10:22",
       unread: 0,
@@ -402,59 +428,35 @@ export default function PromotorChatPage() {
     }
   ]);
 
-  // Mock messages data
-  const [allMessages, setAllMessages] = useState<Record<number, Message[]>>({
-    1: [
-      { id: 1, sender: "Lisa Müller", content: "Hallo! Wie läuft der heutige Einsatz?", time: "14:20", own: false },
-      { id: 2, sender: "Du", content: "Sehr gut! Die Kunden sind heute sehr interessiert.", time: "14:25", own: true },
-      { id: 3, sender: "Lisa Müller", content: "Das freut mich zu hören! 😊", time: "14:27", own: false },
-      { id: 4, sender: "Du", content: "Ja, ich denke wir werden heute ein gutes Ergebnis erzielen.", time: "14:30", own: true },
-      { id: 5, sender: "Lisa Müller", content: "Danke für die Infos!", time: "14:32", own: false },
-      { id: 6, sender: "Du", content: "Gerne! Wie ist es denn bei dir gelaufen?", time: "14:35", own: true },
-      { id: 7, sender: "Lisa Müller", content: "Auch sehr gut! Ich habe heute schon 3 Verkäufe abgeschlossen.", time: "14:36", own: false },
-      { id: 8, sender: "Du", content: "Wow, das ist ja fantastisch! 👏", time: "14:37", own: true },
-      { id: 9, sender: "Lisa Müller", content: "Ja, ich bin auch sehr zufrieden. Die neuen Schulungsunterlagen haben wirklich geholfen.", time: "14:38", own: false },
-      { id: 10, sender: "Du", content: "Das ist super zu hören! Welche Unterlagen meinst du genau?", time: "14:39", own: true },
-      { id: 11, sender: "Lisa Müller", content: "Die neuen Produktpräsentationen und die Einwandbehandlung. Sehr hilfreich!", time: "14:40", own: false },
-      { id: 12, sender: "Du", content: "Perfekt! Ich sollte mir die auch nochmal anschauen.", time: "14:41", own: true },
-      { id: 13, sender: "Lisa Müller", content: "Auf jeden Fall! Sie sind wirklich gut strukturiert und praxisnah.", time: "14:42", own: false },
-      { id: 14, sender: "Du", content: "Danke für den Tipp! Ich werde sie mir heute Abend durchlesen.", time: "14:43", own: true },
-      { id: 15, sender: "Lisa Müller", content: "Gerne! Lass mich wissen, wie du sie findest.", time: "14:44", own: false },
-      { id: 16, sender: "Du", content: "Mache ich! Übrigens, hast du schon gehört wann das nächste Team-Meeting ist?", time: "14:45", own: true },
-      { id: 17, sender: "Lisa Müller", content: "Ja, ich glaube es ist nächste Woche Donnerstag um 10 Uhr.", time: "14:46", own: false },
-      { id: 18, sender: "Du", content: "Alright, dann trage ich es mir gleich in den Kalender ein.", time: "14:47", own: true },
-      { id: 19, sender: "Lisa Müller", content: "Gute Idee! Ich freue mich schon darauf, alle wieder zu sehen.", time: "14:48", own: false },
-      { id: 20, sender: "Du", content: "Ja, ich auch! Es ist immer schön, sich mit dem Team auszutauschen.", time: "14:49", own: true },
-      { id: 21, sender: "Lisa Müller", content: "Absolut! So, ich muss jetzt weiter. Noch einen schönen Tag!", time: "14:50", own: false },
-      { id: 22, sender: "Du", content: "Dir auch! Viel Erfolg noch bei deinen weiteren Terminen.", time: "14:51", own: true },
-      { id: 23, sender: "Lisa Müller", content: "Danke! Alles klar, bis später!", time: "14:52", own: false }
-    ],
-    2: [
-      { id: 1, sender: "Team Lead Michael", content: "Hallo alle zusammen!", time: "13:30", own: false },
-      { id: 2, sender: "Du", content: "Hallo Michael!", time: "13:35", own: true },
-      { id: 3, sender: "Team Lead Michael", content: "Meeting um 15:00 Uhr", time: "13:45", own: false }
-    ],
-    3: [
-      { id: 1, sender: "Anna", content: "Hey Team! Wie geht's euch?", time: "11:45", own: false },
-      { id: 2, sender: "Du", content: "Alles bestens hier! 👍", time: "12:00", own: true },
-      { id: 3, sender: "Tom", content: "Bei mir auch, super Wetter heute!", time: "12:15", own: false },
-      { id: 4, sender: "Anna", content: "Neue Kampagne ist live!", time: "12:20", own: false, type: "system" }
-    ],
-    4: [
-      { id: 1, sender: "Lisa Hoffmann", content: "Hi! Hast du Zeit für einen kurzen Call?", time: "11:30", own: false },
-      { id: 2, sender: "Du", content: "Ja, gerne! Wann passt es dir?", time: "11:40", own: true },
-      { id: 3, sender: "Lisa Hoffmann", content: "In 10 Minuten?", time: "11:50", own: false },
-      { id: 4, sender: "Du", content: "Perfect! 👍", time: "11:52", own: true },
-      { id: 5, sender: "Lisa Hoffmann", content: "Bis morgen!", time: "11:55", own: false }
-    ],
-    5: [
-      { id: 1, sender: "Support Team", content: "Willkommen im Support Chat!", time: "09:00", own: false, type: "system" },
-      { id: 2, sender: "Du", content: "Hallo! Ich habe ein Problem mit der App.", time: "10:15", own: true },
-      { id: 3, sender: "Support", content: "Gerne helfen wir dir! Was ist das Problem?", time: "10:20", own: false },
-      { id: 4, sender: "Du", content: "Die Synchronisation funktioniert nicht richtig.", time: "10:25", own: true },
-      { id: 5, sender: "Support", content: "Problem wurde gelöst ✅", time: "10:30", own: false }
-    ]
-  });
+  // Get messages for the selected conversation from real data
+  const conversationMessages: Message[] = selectedChat && selectedChat.id
+    ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => ({
+        id: msg.id,
+        sender: msg.sender_name,
+        content: msg.message_text,
+        time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+        own: msg.sender_id === currentUserId,
+        edited: msg.edited,
+        reaction: undefined,
+        photo: msg.message_type === 'photo' && msg.file_url ? msg.file_url : undefined,
+        pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
+        pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
+        type: msg.message_type,
+        replyTo: msg.reply_to ? {
+          id: msg.reply_to.id,
+          sender: msg.reply_to.sender_name,
+          content: msg.reply_to.message_text,
+          photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+          pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+          pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
+        } : undefined,
+      }))
+    : [];
+
+  // For compatibility with existing code that expects allMessages[id]
+  const allMessages = selectedChat && selectedChat.id 
+    ? { [selectedChat.id]: conversationMessages }
+    : {};
 
   // Refs for scroll behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -693,65 +695,54 @@ export default function PromotorChatPage() {
   };
 
   // Handle message send
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) {
       e.preventDefault();
     }
     if (!messageInput.trim() || !selectedChat) return;
 
+    // Check if conversation is read-only
+    if (selectedChat.readOnly) {
+      console.log('Cannot send message: conversation is read-only');
+      return; // Silently prevent sending in read-only chats
+    }
+
     if (editingMessage) {
-      // Edit existing message
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
-          msg.id === editingMessage.id 
-            ? { ...msg, content: messageInput.trim(), edited: true }
-            : msg
-        )
-      }));
+      // TODO: Implement edit via Socket.IO in future
       setEditingMessage(null);
       setEditAnimation(null);
-      // Clean up edit keyframe
       const existingEditStyle = document.getElementById('edit-keyframes');
       if (existingEditStyle) {
         existingEditStyle.remove();
       }
     } else {
-      // Send new message
-      const newMessage: Message = {
-        id: Date.now(),
-        sender: 'Du',
-        content: messageInput.trim(),
-        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-        own: true,
-        ...(replyingTo && {
-          replyTo: {
-            id: replyingTo.id,
-            sender: replyingTo.sender,
-            content: replyingTo.content,
-            photo: replyingTo.photo,
-            pdf: replyingTo.pdf,
-            pdfName: replyingTo.pdfName
-          }
-        })
-      };
-
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-      }));
-
-      setReplyingTo(null);
-      setReplyAnimation(null);
-      
-      // Clean up keyframe
-      const existingStyle = document.getElementById('reply-keyframes');
-      if (existingStyle) {
-        existingStyle.remove();
+      // Send new message via Socket.IO
+      try {
+        await chatIntegration.sendMessage(
+          String(selectedChat.id),
+          messageInput.trim(),
+          replyingTo ? String(replyingTo.id) : null
+        );
+        
+        // Clear input and reply state
+        setMessageInput('');
+        setReplyingTo(null);
+        setReplyAnimation(null);
+        
+        // Clean up keyframe
+        const existingStyle = document.getElementById('reply-keyframes');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+        
+        // Scroll to bottom after a short delay to let new message render
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        // TODO: Show error notification to user
       }
     }
-
-    setMessageInput("");
+  };
     
     // Ensure scrolling happens after message is rendered
     setTimeout(() => {
