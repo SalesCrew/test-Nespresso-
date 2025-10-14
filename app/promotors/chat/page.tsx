@@ -1513,6 +1513,20 @@ export default function PromotorChatPage() {
                             onMouseDown={(e) => !isSelectMode && handleLongPressStart(e, message.id, message.own)}
                             onMouseUp={!isSelectMode ? handleLongPressEnd : undefined}
                             onMouseLeave={!isSelectMode ? handleLongPressEnd : undefined}
+                            onDoubleClick={(e) => {
+                              if (!isSelectMode && !message.own) {
+                                // Double-click on received messages to open context menu
+                                e.preventDefault();
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                setContextMenu({
+                                  show: true,
+                                  x: e.clientX,
+                                  y: rect.bottom + 5,
+                                  messageId: message.id,
+                                  isOwnMessage: message.own
+                                });
+                              }
+                            }}
                             onClick={() => {
                               if (isSelectMode) {
                                 const newSelected = new Set(selectedMessages);
