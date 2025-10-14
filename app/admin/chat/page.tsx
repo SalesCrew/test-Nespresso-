@@ -1263,10 +1263,10 @@ export default function ChatPage() {
                             undefined
                           );
                           
-                          // Select the chat
+                          // Select the chat (use promotor name for direct chats)
                           setSelectedChat({
                             id: newConversation.id,
-                            name: newConversation.name,
+                            name: newConversation.name || promotor.display_name,
                             lastMessage: '',
                             time: '',
                             unread: 0,
@@ -1387,6 +1387,9 @@ export default function ChatPage() {
                           // If only 1 contact selected, create direct chat immediately
                           if (groupCreationPopup.selectedContacts.length === 1) {
                             try {
+                              const selectedPromotorId = groupCreationPopup.selectedContacts[0];
+                              const selectedPromotor = promotorsList.find(p => p.user_id === selectedPromotorId);
+                              
                               const newConversation = await chatIntegration.createConversation(
                                 'direct',
                                 groupCreationPopup.selectedContacts,
@@ -1406,10 +1409,10 @@ export default function ChatPage() {
                                 readOnly: false 
                               });
                               
-                              // Select the new chat
+                              // Select the new chat (use promotor name for direct chats)
                               setSelectedChat({
                                 id: newConversation.id,
-                                name: newConversation.name,
+                                name: newConversation.name || selectedPromotor?.display_name || 'Direct Chat',
                                 lastMessage: '',
                                 time: '',
                                 unread: 0,
