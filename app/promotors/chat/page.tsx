@@ -132,7 +132,8 @@ export default function PromotorChatPage() {
       chatIntegration.fetchMessages(convId);
       chatIntegration.markAsRead(convId).catch(err => console.error('Error marking as read:', err));
     }
-  }, [selectedChat, chatIntegration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat]);
 
   const [messageInput, setMessageInput] = useState("");
   const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' }>({ show: false, selectedCategory: 'smileys', context: 'input' });
