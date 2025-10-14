@@ -2422,8 +2422,8 @@ export default function ChatPage() {
                         <div 
                           className="mt-2 mb-2 p-2 rounded border cursor-pointer"
                           style={{ 
-                            backgroundColor: 'rgba(255,255,255,0.08)',
-                            borderColor: 'rgba(255,255,255,0.20)' 
+                            backgroundColor: message.own ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.02)',
+                            borderColor: message.own ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.08)' 
                           }}
                           onClick={() => handleReplyClick(message.replyTo!.id)}
                         >
