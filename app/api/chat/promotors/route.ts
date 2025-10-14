@@ -35,13 +35,23 @@ export async function GET(request: NextRequest) {
 
     // Fetch all promotors
     console.log('[/api/chat/promotors] Fetching promotors...');
+    
+    // First, test without any filters to see if RLS is blocking
+    const { data: allProfiles, error: allError } = await supabase
+      .from('user_profiles')
+      .select('user_id, display_name, role')
+      .limit(5);
+    
+    console.log('[/api/chat/promotors] Test query (all profiles):', allProfiles?.length, 'Error:', allError);
+    
     const { data: promotors, error: promotorsError } = await supabase
       .from('user_profiles')
       .select('user_id, display_name')
       .eq('role', 'promotor')
       .order('display_name', { ascending: true });
 
-    console.log('[/api/chat/promotors] Promotors count:', promotors?.length, 'Error:', promotorsError);
+    console.log('[/api/chat/promotors] Promotors query result:', promotors?.length, 'Error:', promotorsError);
+    console.log('[/api/chat/promotors] First promotor:', promotors?.[0]);
 
     if (promotorsError) {
       console.error('[/api/chat/promotors] Error fetching promotors:', promotorsError);
