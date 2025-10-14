@@ -300,17 +300,32 @@ export default function PromotorChatPage() {
   };
 
   // Convert real conversations to Contact format (filter to only show admins and groups)
+  console.log('[Promotor Chat] Raw conversations:', chatIntegration.conversations.length);
+  console.log('[Promotor Chat] Current user ID:', currentUserId);
+  console.log('[Promotor Chat] First conversation:', chatIntegration.conversations[0]);
+  
   const contacts: Contact[] = chatIntegration.conversations
     .filter(conv => {
+      console.log('[Promotor Chat] Filtering conversation:', conv.id, 'type:', conv.type, 'participants:', conv.participants);
+      
       // Don't filter until we have the current user ID loaded
-      if (!currentUserId) return false;
+      if (!currentUserId) {
+        console.log('[Promotor Chat] No currentUserId yet, skipping conversation');
+        return false;
+      }
       
       // Show only groups and direct chats with admins (no other promotors)
-      if (conv.type === 'group') return true;
+      if (conv.type === 'group') {
+        console.log('[Promotor Chat] Group conversation, including');
+        return true;
+      }
       
       // For direct chats, check if other participant is admin
       const otherParticipant = conv.participants.find(p => p.user_id !== currentUserId);
-      return otherParticipant?.role && ['admin_staff', 'admin_of_admins'].includes(otherParticipant.role);
+      console.log('[Promotor Chat] Other participant:', otherParticipant);
+      const isAdminChat = otherParticipant?.role && ['admin_staff', 'admin_of_admins'].includes(otherParticipant.role);
+      console.log('[Promotor Chat] Is admin chat?', isAdminChat);
+      return isAdminChat;
     })
     .map(conv => {
       // For direct chats, use the other participant's name (since conv.name is null for direct chats)
@@ -318,6 +333,8 @@ export default function PromotorChatPage() {
       const displayName = conv.type === 'direct' && otherParticipant 
         ? otherParticipant.display_name 
         : (conv.name || 'Unknown');
+      
+      console.log('[Promotor Chat] Mapped conversation:', conv.id, 'to contact:', displayName);
       
       return {
         id: conv.id,
@@ -337,6 +354,8 @@ export default function PromotorChatPage() {
         readOnly: conv.is_read_only,
       };
     });
+  
+  console.log('[Promotor Chat] Final contacts count:', contacts.length);
 
 
   // Stub functions for features not yet integrated with Socket.IO
