@@ -100,7 +100,10 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
   const sendMessage = useCallback((
     conversationId: string,
     messageText: string,
-    replyToId?: string | null
+    replyToId?: string | null,
+    messageType: string = 'text',
+    fileUrl?: string | null,
+    fileName?: string | null
   ) => {
     return new Promise<Message>((resolve, reject) => {
       if (!socket) {
@@ -113,7 +116,9 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
         {
           conversationId,
           messageText,
-          messageType: 'text',
+          messageType,
+          fileUrl: fileUrl || null,
+          fileName: fileName || null,
           replyToId: replyToId || null,
         },
         (response: { success?: boolean; message?: Message; error?: string }) => {

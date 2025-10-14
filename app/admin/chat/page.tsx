@@ -3875,27 +3875,43 @@ export default function ChatPage() {
                     />
                     <button
                       onClick={async () => {
-                        if (selectedChat && photoEditor) {
-                          // Combine image with drawings, rotation and cropping (only if not in crop mode)
-                          const finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation, photoEditor.cropMode ? null : photoEditor.crop);
+                        if (selectedChat && photoEditor && currentUserId) {
+                          try {
+                            // Combine image with drawings, rotation and cropping (only if not in crop mode)
+                            const finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation, photoEditor.cropMode ? null : photoEditor.crop);
 
-                          const newMessage: Message = {
-                            id: Date.now(),
-                            sender: "You",
-                            content: photoEditor.caption,
-                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                            own: true,
-                            photo: finalImage
-                          };
+                            // Convert data URL to Blob and upload
+                            const { dataURLtoBlob, uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                            const imageBlob = dataURLtoBlob(finalImage);
+                            
+                            const uploadResult = await uploadChatFile(
+                              imageBlob,
+                              String(selectedChat.id),
+                              currentUserId,
+                              'photo'
+                            );
+                            
+                            if (!uploadResult) {
+                              console.error('Failed to upload photo');
+                              return;
+                            }
+                            
+                            // Send via Socket.IO with uploaded URL
+                            await chatIntegration.sendMessage(
+                              String(selectedChat.id),
+                              photoEditor.caption || '',
+                              null,
+                              'photo',
+                              uploadResult.url,
+                              uploadResult.fileName
+                            );
 
-                          setAllMessages(prev => ({
-                            ...prev,
-                            [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-                          }));
-
-                          setPhotoEditor(null);
-                          setColorPalette({ show: false, selectedColor: '' });
-                          setDrawingPaths([]);
+                            setPhotoEditor(null);
+                            setColorPalette({ show: false, selectedColor: '' });
+                            setDrawingPaths([]);
+                          } catch (error) {
+                            console.error('Error sending photo:', error);
+                          }
                         }
                       }}
                       className="p-2 rounded-full text-white"

@@ -3322,37 +3322,52 @@ export default function PromotorChatPage() {
                 />
                 <button
                   onClick={async () => {
-                    if (selectedChat && photoEditor) {
-                      let finalImage = photoEditor.image;
-                      
-                      // Apply drawings and rotation if any exist
-                      if (drawingPaths.length > 0 || photoEditor.rotation !== 0) {
-                        finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation);
+                    if (selectedChat && photoEditor && currentUserId) {
+                      try {
+                        let finalImage = photoEditor.image;
+                        
+                        // Apply drawings and rotation if any exist
+                        if (drawingPaths.length > 0 || photoEditor.rotation !== 0) {
+                          finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation);
+                        }
+                        
+                        // Convert data URL to Blob
+                        const { dataURLtoBlob, uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                        const imageBlob = dataURLtoBlob(finalImage);
+                        
+                        // Upload to Supabase Storage
+                        const uploadResult = await uploadChatFile(
+                          imageBlob,
+                          String(selectedChat.id),
+                          currentUserId,
+                          'photo'
+                        );
+                        
+                        if (!uploadResult) {
+                          console.error('Failed to upload photo');
+                          return;
+                        }
+                        
+                        // Send message via Socket.IO with uploaded file URL
+                        await chatIntegration.sendMessage(
+                          String(selectedChat.id),
+                          photoEditor.caption || '',
+                          null,
+                          'photo',
+                          uploadResult.url,
+                          uploadResult.fileName
+                        );
+                        
+                        setPhotoEditor(null);
+                        setDrawingPaths([]);
+                        setColorPalette({ show: false, selectedColor: '' });
+                        setEraserPalette({ show: false, selectedSize: 0 });
+                        
+                        // Scroll to bottom after message arrives
+                        setTimeout(() => scrollToBottom(), 100);
+                      } catch (error) {
+                        console.error('Error sending photo:', error);
                       }
-                      
-                      const newMessage: Message = {
-                        id: Date.now(),
-                        sender: 'Du',
-                        content: photoEditor.caption || '',
-                        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                        own: true,
-                        photo: finalImage
-                      };
-
-                      setAllMessages(prev => ({
-                        ...prev,
-                        [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-                      }));
-
-                      setPhotoEditor(null);
-                      setDrawingPaths([]);
-                      setColorPalette({ show: false, selectedColor: '' });
-                      setEraserPalette({ show: false, selectedSize: 0 });
-                      
-                      // Ensure scrolling happens after message is rendered
-                      setTimeout(() => {
-                        scrollToBottom();
-                      }, 50);
                     }
                   }}
                   className="p-2 rounded-full text-white flex-shrink-0"
@@ -3426,30 +3441,40 @@ export default function PromotorChatPage() {
                   className="flex-1 text-white bg-transparent outline-none placeholder-gray-300 py-1"
                 />
                 <button
-                  onClick={() => {
-                    if (selectedChat && pdfEditor) {
-                      const pdfUrl = URL.createObjectURL(pdfEditor.file);
-                      const newMessage: Message = {
-                        id: Date.now(),
-                        sender: 'Du',
-                        content: pdfEditor.caption || '',
-                        time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                        own: true,
-                        pdf: pdfUrl,
-                        pdfName: pdfEditor.file.name
-                      };
-
-                      setAllMessages(prev => ({
-                        ...prev,
-                        [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-                      }));
-
-                      setPdfEditor(null);
-                      
-                      // Ensure scrolling happens after message is rendered
-                      setTimeout(() => {
-                        scrollToBottom();
-                      }, 50);
+                  onClick={async () => {
+                    if (selectedChat && pdfEditor && currentUserId) {
+                      try {
+                        // Upload PDF to Supabase Storage
+                        const { uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                        const uploadResult = await uploadChatFile(
+                          pdfEditor.file,
+                          String(selectedChat.id),
+                          currentUserId,
+                          'pdf'
+                        );
+                        
+                        if (!uploadResult) {
+                          console.error('Failed to upload PDF');
+                          return;
+                        }
+                        
+                        // Send message via Socket.IO with uploaded file URL
+                        await chatIntegration.sendMessage(
+                          String(selectedChat.id),
+                          pdfEditor.caption || '',
+                          null,
+                          'pdf',
+                          uploadResult.url,
+                          uploadResult.fileName
+                        );
+                        
+                        setPdfEditor(null);
+                        
+                        // Scroll to bottom after message arrives
+                        setTimeout(() => scrollToBottom(), 100);
+                      } catch (error) {
+                        console.error('Error sending PDF:', error);
+                      }
                     }
                   }}
                   className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0"
