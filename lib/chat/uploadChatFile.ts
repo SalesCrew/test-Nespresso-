@@ -35,15 +35,20 @@ export async function uploadChatFile(
     
     console.log('[uploadChatFile] Upload successful:', uploadData);
     
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    // Get signed URL (valid for 1 year) since bucket is private
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from('chat-attachments')
-      .getPublicUrl(filePath);
+      .createSignedUrl(filePath, 31536000); // 1 year in seconds
     
-    console.log('[uploadChatFile] Public URL:', publicUrl);
+    if (signedUrlError || !signedUrlData) {
+      console.error('[uploadChatFile] Error creating signed URL:', signedUrlError);
+      return null;
+    }
+    
+    console.log('[uploadChatFile] Signed URL:', signedUrlData.signedUrl);
     
     return {
-      url: publicUrl,
+      url: signedUrlData.signedUrl,
       fileName: fileName,
     };
   } catch (error) {
