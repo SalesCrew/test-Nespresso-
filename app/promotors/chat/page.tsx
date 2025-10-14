@@ -1518,10 +1518,38 @@ export default function PromotorChatPage() {
                                 // Double-click any message to open context menu
                                 e.preventDefault();
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                
+                                // Calculate position to keep menu within screen bounds
+                                const menuWidth = 200; // Approximate menu width
+                                const menuHeight = 250; // Approximate menu height
+                                
+                                let x = e.clientX;
+                                let y = rect.bottom + 5;
+                                
+                                // Check right edge
+                                if (x + menuWidth > window.innerWidth) {
+                                  x = window.innerWidth - menuWidth - 10;
+                                }
+                                
+                                // Check left edge
+                                if (x < 10) {
+                                  x = 10;
+                                }
+                                
+                                // Check bottom edge
+                                if (y + menuHeight > window.innerHeight) {
+                                  y = rect.top - menuHeight - 5;
+                                }
+                                
+                                // Check top edge (if still offscreen, position below)
+                                if (y < 10) {
+                                  y = rect.bottom + 5;
+                                }
+                                
                                 setContextMenu({
                                   show: true,
-                                  x: e.clientX,
-                                  y: rect.bottom + 5,
+                                  x: x,
+                                  y: y,
                                   messageId: message.id,
                                   isOwnMessage: message.own
                                 });
