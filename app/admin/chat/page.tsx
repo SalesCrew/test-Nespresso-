@@ -56,6 +56,11 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   
+  // Main search input state
+  const [mainSearchQuery, setMainSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+  
   const [selectedChat, setSelectedChat] = useState<Contact | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);  
 
@@ -257,6 +262,20 @@ export default function ChatPage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [infoMenu.show]);
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showSearchDropdown && searchDropdownRef.current) {
+        if (!searchDropdownRef.current.contains(event.target as Node)) {
+          setShowSearchDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearchDropdown]);
 
   // Combine image with drawings, apply rotation and cropping
   const combineImageWithDrawings = async (
@@ -1205,13 +1224,85 @@ export default function ChatPage() {
           </div>
           
           {/* Search */}
-          <div className="relative">
+          <div className="relative" ref={searchDropdownRef}>
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder="Suche oder starte neuen Chat"
+              value={mainSearchQuery}
+              onChange={(e) => {
+                setMainSearchQuery(e.target.value);
+                setShowSearchDropdown(e.target.value.length > 0);
+              }}
+              onFocus={() => {
+                if (mainSearchQuery.length > 0) {
+                  setShowSearchDropdown(true);
+                }
+              }}
               className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none"
             />
+            
+            {/* Search Dropdown */}
+            {showSearchDropdown && mainSearchQuery.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-80 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                {promotorsList
+                  .filter(promotor => 
+                    promotor.display_name.toLowerCase().includes(mainSearchQuery.toLowerCase())
+                  )
+                  .map(promotor => (
+                    <div
+                      key={promotor.user_id}
+                      className="flex items-center p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={async () => {
+                        try {
+                          // Create or find existing direct chat with this promotor
+                          const newConversation = await chatIntegration.createConversation(
+                            'direct',
+                            [promotor.user_id],
+                            undefined,
+                            undefined
+                          );
+                          
+                          // Select the chat
+                          setSelectedChat({
+                            id: newConversation.id,
+                            name: newConversation.name,
+                            lastMessage: '',
+                            time: '',
+                            unread: 0,
+                            online: false,
+                            isGroup: false,
+                            readOnly: false,
+                          });
+                          
+                          // Clear search
+                          setMainSearchQuery('');
+                          setShowSearchDropdown(false);
+                        } catch (error) {
+                          console.error('Failed to create/open chat:', error);
+                        }
+                      }}
+                    >
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-medium mr-3">
+                        {promotor.display_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{promotor.display_name}</div>
+                        <div className="text-xs text-gray-500">Promotor</div>
+                      </div>
+                    </div>
+                  ))}
+                
+                {/* No results message */}
+                {promotorsList.filter(promotor => 
+                  promotor.display_name.toLowerCase().includes(mainSearchQuery.toLowerCase())
+                ).length === 0 && (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    Keine Promotors gefunden
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Group Creation Popup */}
