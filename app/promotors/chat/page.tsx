@@ -302,6 +302,9 @@ export default function PromotorChatPage() {
   // Convert real conversations to Contact format (filter to only show admins and groups)
   const contacts: Contact[] = chatIntegration.conversations
     .filter(conv => {
+      // Don't filter until we have the current user ID loaded
+      if (!currentUserId) return false;
+      
       // Show only groups and direct chats with admins (no other promotors)
       if (conv.type === 'group') return true;
       
