@@ -1514,8 +1514,8 @@ export default function PromotorChatPage() {
                             onMouseUp={!isSelectMode ? handleLongPressEnd : undefined}
                             onMouseLeave={!isSelectMode ? handleLongPressEnd : undefined}
                             onDoubleClick={(e) => {
-                              if (!isSelectMode && !message.own) {
-                                // Double-click on received messages to open context menu
+                              if (!isSelectMode) {
+                                // Double-click any message to open context menu
                                 e.preventDefault();
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                                 setContextMenu({
