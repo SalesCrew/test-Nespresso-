@@ -1616,7 +1616,8 @@ export default function PromotorChatPage() {
                                     maxHeight: '300px',
                                     minHeight: '120px',
                                     objectFit: 'cover',
-                                    aspectRatio: 'auto'
+                                    aspectRatio: 'auto',
+                                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)'
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
