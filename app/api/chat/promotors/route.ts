@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 // GET: Fetch all promotors for group creation (admin only)
 export async function GET(request: NextRequest) {
   try {
     console.log('[/api/chat/promotors] Starting request');
+    
+    // Use regular client for auth check
     const supabase = createSupabaseServerClient();
-    console.log('[/api/chat/promotors] Supabase client created');
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -33,18 +35,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Only admins can access this resource' }, { status: 403 });
     }
 
-    // Fetch all promotors
-    console.log('[/api/chat/promotors] Fetching promotors...');
+    // Use service client to fetch promotors (bypasses RLS)
+    console.log('[/api/chat/promotors] Fetching promotors with service client...');
+    const svc = createSupabaseServiceClient();
     
-    // First, test without any filters to see if RLS is blocking
-    const { data: allProfiles, error: allError } = await supabase
-      .from('user_profiles')
-      .select('user_id, display_name, role')
-      .limit(5);
-    
-    console.log('[/api/chat/promotors] Test query (all profiles):', allProfiles?.length, 'Error:', allError);
-    
-    const { data: promotors, error: promotorsError } = await supabase
+    const { data: promotors, error: promotorsError } = await svc
       .from('user_profiles')
       .select('user_id, display_name')
       .eq('role', 'promotor')
