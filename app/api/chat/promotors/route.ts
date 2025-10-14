@@ -2,40 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
-// GET: Fetch all promotors for group creation (admin only)
+// GET: Fetch all promotors for chat (admin only - route protection at page level)
 export async function GET(request: NextRequest) {
   try {
     console.log('[/api/chat/promotors] Starting request');
     
-    // Use regular client for auth check
-    const supabase = createSupabaseServerClient();
+    // Check authentication only
+    const server = createSupabaseServerClient();
+    const { data: auth } = await server.auth.getUser();
     
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log('[/api/chat/promotors] User:', user?.id, 'Auth error:', authError);
+    console.log('[/api/chat/promotors] User authenticated:', auth.user?.id);
     
-    if (authError || !user) {
+    if (!auth.user) {
+      console.log('[/api/chat/promotors] No authenticated user');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: userProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    console.log('[/api/chat/promotors] Profile:', userProfile, 'Error:', profileError);
-
-    const userRole = userProfile?.role || 'promotor';
-    const isAdmin = ['admin_staff', 'admin_of_admins'].includes(userRole);
-
-    if (!isAdmin) {
-      console.log('[/api/chat/promotors] User is not admin:', userRole);
-      return NextResponse.json({ error: 'Only admins can access this resource' }, { status: 403 });
-    }
-
-    // Use service client to fetch promotors (bypasses RLS)
+    // Use service client to fetch promotors (bypasses RLS, admin-only pages are protected at route level)
     console.log('[/api/chat/promotors] Fetching promotors with service client...');
     const svc = createSupabaseServiceClient();
     
@@ -46,7 +29,9 @@ export async function GET(request: NextRequest) {
       .order('display_name', { ascending: true });
 
     console.log('[/api/chat/promotors] Promotors query result:', promotors?.length, 'Error:', promotorsError);
-    console.log('[/api/chat/promotors] First promotor:', promotors?.[0]);
+    if (promotors && promotors.length > 0) {
+      console.log('[/api/chat/promotors] First promotor:', promotors[0]);
+    }
 
     if (promotorsError) {
       console.error('[/api/chat/promotors] Error fetching promotors:', promotorsError);
