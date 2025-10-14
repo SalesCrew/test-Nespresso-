@@ -369,27 +369,39 @@ export default function PromotorChatPage() {
 
   // Get messages for the selected conversation from real data
   const conversationMessages: Message[] = selectedChat && selectedChat.id
-    ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => ({
-        id: msg.id,
-        sender: msg.sender_name,
-        content: msg.message_text,
-        time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-        own: msg.sender_id === currentUserId,
-        edited: msg.edited,
-        reaction: undefined,
-        photo: msg.message_type === 'photo' && msg.file_url ? msg.file_url : undefined,
-        pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
-        pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
-        type: msg.message_type,
-        replyTo: msg.reply_to ? {
-          id: msg.reply_to.id,
-          sender: msg.reply_to.sender_name,
-          content: msg.reply_to.message_text,
-          photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
-          pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
-          pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
-        } : undefined,
-      }))
+    ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => {
+        // Debug photo messages
+        if (msg.message_type === 'photo') {
+          console.log('[Message Mapping] Photo message:', {
+            id: msg.id,
+            message_type: msg.message_type,
+            file_url: msg.file_url,
+            hasFileUrl: !!msg.file_url
+          });
+        }
+        
+        return {
+          id: msg.id,
+          sender: msg.sender_name,
+          content: msg.message_text,
+          time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+          own: msg.sender_id === currentUserId,
+          edited: msg.edited,
+          reaction: undefined,
+          photo: msg.message_type === 'photo' && msg.file_url ? msg.file_url : undefined,
+          pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
+          pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
+          type: msg.message_type,
+          replyTo: msg.reply_to ? {
+            id: msg.reply_to.id,
+            sender: msg.reply_to.sender_name,
+            content: msg.reply_to.message_text,
+            photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+            pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
+            pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
+          } : undefined,
+        };
+      })
     : [];
 
   // For compatibility with existing code that expects allMessages[id]
