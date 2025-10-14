@@ -412,6 +412,14 @@ export default function PromotorChatPage() {
     }
   }, [selectedChat]);
 
+  // Auto-scroll when new messages arrive
+  useEffect(() => {
+    if (selectedChat && conversationMessages.length > 0) {
+      // Small delay to ensure message is rendered
+      setTimeout(() => scrollToBottom(), 50);
+    }
+  }, [conversationMessages.length, selectedChat]);
+
   // Handle contact selection
   const handleContactSelect = (contact: Contact) => {
     setSelectedChat(contact);
