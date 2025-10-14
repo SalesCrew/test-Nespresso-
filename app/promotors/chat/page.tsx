@@ -309,23 +309,31 @@ export default function PromotorChatPage() {
       const otherParticipant = conv.participants.find(p => p.user_id !== currentUserId);
       return otherParticipant?.role && ['admin_staff', 'admin_of_admins'].includes(otherParticipant.role);
     })
-    .map(conv => ({
-      id: conv.id,
-      name: conv.name || 'Unknown',
-      lastMessage: conv.last_message?.text || '',
-      time: conv.last_message?.created_at 
-        ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-        : '',
-      unread: conv.unread_count,
-      online: false,
-      pinned: false,
-      markedUnread: false,
-      isGroup: conv.is_group,
-      profileImage: null,
-      description: conv.description || undefined,
-      members: conv.participants.map(p => p.user_id),
-      readOnly: conv.is_read_only,
-    }));
+    .map(conv => {
+      // For direct chats, use the other participant's name (since conv.name is null for direct chats)
+      const otherParticipant = conv.participants.find(p => p.user_id !== currentUserId);
+      const displayName = conv.type === 'direct' && otherParticipant 
+        ? otherParticipant.display_name 
+        : (conv.name || 'Unknown');
+      
+      return {
+        id: conv.id,
+        name: displayName,
+        lastMessage: conv.last_message?.text || '',
+        time: conv.last_message?.created_at 
+          ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          : '',
+        unread: conv.unread_count,
+        online: false,
+        pinned: false,
+        markedUnread: false,
+        isGroup: conv.is_group,
+        profileImage: null,
+        description: conv.description || undefined,
+        members: conv.participants.map(p => p.user_id),
+        readOnly: conv.is_read_only,
+      };
+    });
 
 
   // Stub functions for features not yet integrated with Socket.IO
