@@ -66,9 +66,10 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching all participants:', allParticipantsError);
     }
 
-    // Fetch user profiles for all participants
+    // Fetch user profiles for all participants (use service client to bypass RLS)
     const participantUserIds = [...new Set(allParticipants?.map(p => p.user_id) || [])];
-    const { data: userProfiles, error: profilesError } = await supabase
+    const svc = createSupabaseServiceClient();
+    const { data: userProfiles, error: profilesError } = await svc
       .from('user_profiles')
       .select('user_id, display_name, role')
       .in('user_id', participantUserIds);
