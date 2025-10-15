@@ -1838,52 +1838,54 @@ export default function PromotorChatPage() {
             </div>
 
             {/* Message Input */}
-            <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
-              <input 
-                type="text"
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Nachricht eingeben..." 
-                className={`w-full pl-12 pr-20 py-3 rounded-full outline-none text-gray-900 placeholder:text-gray-500 placeholder:text-sm transition-all duration-300 ${deleteDialog.show ? 'pointer-events-none' : ''}`}
-                style={{ 
-                  border: 'none', 
-                  boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
-                  WebkitAppearance: 'none', 
-                  MozAppearance: 'none', 
-                  appearance: 'none',
-                  background: 'linear-gradient(to right, rgba(250,250,250,0.95), rgba(240,240,240,0.95))',
-                  opacity: deleteDialog.show ? 0.3 : 0.85,
-                  filter: deleteDialog.show ? 'blur(2px) brightness(0.6)' : 'none'
-                }}
-              />
-              <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                <Paperclip 
-                  data-attachment-trigger
-                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAttachmentPopup(!attachmentPopup);
+            {!selectedChat?.readOnly && (
+              <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
+                <input 
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Nachricht eingeben..." 
+                  className={`w-full pl-12 pr-20 py-3 rounded-full outline-none text-gray-900 placeholder:text-gray-500 placeholder:text-sm transition-all duration-300 ${deleteDialog.show ? 'pointer-events-none' : ''}`}
+                  style={{ 
+                    border: 'none', 
+                    boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
+                    WebkitAppearance: 'none', 
+                    MozAppearance: 'none', 
+                    appearance: 'none',
+                    background: 'linear-gradient(to right, rgba(250,250,250,0.95), rgba(240,240,240,0.95))',
+                    opacity: deleteDialog.show ? 0.3 : 0.85,
+                    filter: deleteDialog.show ? 'blur(2px) brightness(0.6)' : 'none'
                   }}
                 />
-              </div>
-              <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                <Smile 
-                  data-emoji-trigger
-                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
-                  }}
-                />
-                <button 
-                  type="submit"
-                  className="h-8 w-8 rounded-full flex items-center justify-center"
-                  style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
-                >
-                  <Send className="h-3.5 w-3.5 text-white" />
-                </button>
-              </div>
-            </form>
+                <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
+                  <Paperclip 
+                    data-attachment-trigger
+                    className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAttachmentPopup(!attachmentPopup);
+                    }}
+                  />
+                </div>
+                <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
+                  <Smile 
+                    data-emoji-trigger
+                    className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
+                    }}
+                  />
+                  <button 
+                    type="submit"
+                    className="h-8 w-8 rounded-full flex items-center justify-center"
+                    style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
+                  >
+                    <Send className="h-3.5 w-3.5 text-white" />
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Emoji Picker */}
             {emojiPicker.show && (
