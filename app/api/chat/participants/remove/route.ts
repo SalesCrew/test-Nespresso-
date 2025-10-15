@@ -18,17 +18,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing conversationId or userId' }, { status: 400 });
     }
 
+    console.log('[Remove Participant] Request:', { conversationId, userId });
+
     const supabase = createSupabaseServiceClient();
 
     // Verify conversation exists and requester is admin or participant
     const { data: conversation, error: convError } = await supabase
       .from('chat_conversations')
-      .select('id, type, is_group')
+      .select('id, is_group')
       .eq('id', conversationId)
       .single();
 
+    console.log('[Remove Participant] Conversation lookup:', { conversation, convError });
+
     if (convError || !conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      console.error('[Remove Participant] Conversation not found:', convError);
+      return NextResponse.json({ error: 'Conversation not found', details: convError?.message }, { status: 404 });
     }
 
     if (!conversation.is_group) {
