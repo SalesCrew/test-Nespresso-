@@ -3949,7 +3949,6 @@ export default function ChatPage() {
                   height: '300px',
                   opacity: 0.9
                 }}
-                onClick={(e) => e.stopPropagation()}
               >
                 {/* PDF Display Area */}
                 <div className="flex-1 flex items-center justify-center p-3">
@@ -3990,25 +3989,37 @@ export default function ChatPage() {
                       className="flex-1 text-sm outline-none placeholder-gray-400"
                     />
                     <button
-                      onClick={() => {
-                        if (selectedChat && pdfEditor) {
-                          const pdfUrl = URL.createObjectURL(pdfEditor.file);
-                          const newMessage: Message = {
-                            id: Date.now(),
-                            sender: 'Du',
-                            content: pdfEditor.caption || '',
-                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                            own: true,
-                            pdf: pdfUrl,
-                            pdfName: pdfEditor.file.name
-                          };
-
-                          setAllMessages(prev => ({
-                            ...prev,
-                            [selectedChat.id]: [...(prev[selectedChat.id] || []), newMessage]
-                          }));
-
-                          setPdfEditor(null);
+                      onClick={async () => {
+                        if (selectedChat && pdfEditor && currentUserId) {
+                          try {
+                            // Upload PDF to Supabase Storage
+                            const { uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                            const uploadResult = await uploadChatFile(
+                              pdfEditor.file,
+                              String(selectedChat.id),
+                              currentUserId,
+                              'pdf'
+                            );
+                            
+                            if (!uploadResult) {
+                              console.error('Failed to upload PDF');
+                              return;
+                            }
+                            
+                            // Send message via Socket.IO with uploaded file URL
+                            await chatIntegration.sendMessage(
+                              String(selectedChat.id),
+                              pdfEditor.caption || '',
+                              null,
+                              'pdf',
+                              uploadResult.url,
+                              uploadResult.fileName
+                            );
+                            
+                            setPdfEditor(null);
+                          } catch (error) {
+                            console.error('Error sending PDF:', error);
+                          }
                         }
                       }}
                       className="p-2 rounded-full text-white"

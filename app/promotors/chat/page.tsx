@@ -3561,7 +3561,6 @@ export default function PromotorChatPage() {
           <div 
             data-pdf-editor
             className="fixed inset-0 bg-black z-50 flex flex-col"
-            onClick={(e) => e.stopPropagation()}
           >
             {/* Top Toolbar */}
             <div className="flex items-center justify-between p-4 pt-20">
