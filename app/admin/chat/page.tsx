@@ -1983,6 +1983,11 @@ export default function ChatPage() {
                               // Reload conversations to get updated participant list
                               chatIntegration.fetchConversations();
                               
+                              // Reload messages to show the system message
+                              if (selectedChat?.id) {
+                                chatIntegration.fetchMessages(String(selectedChat.id));
+                              }
+                              
                               console.log('Participant removed successfully');
                             } else {
                               const error = await response.json();
@@ -2272,6 +2277,11 @@ export default function ChatPage() {
                                   if (response.ok) {
                                     // Reload conversations to get updated participant list
                                     chatIntegration.fetchConversations();
+                                    
+                                    // Reload messages to show the system message
+                                    if (selectedChat?.id) {
+                                      chatIntegration.fetchMessages(String(selectedChat.id));
+                                    }
                                     
                                     console.log('Participants added successfully');
                                     
