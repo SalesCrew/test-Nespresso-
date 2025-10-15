@@ -3583,7 +3583,7 @@ export default function PromotorChatPage() {
             </div>
 
             {/* Bottom Caption Area */}
-            <div className="p-4 pb-8">
+            <div className="p-4" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
               <div className="flex items-center space-x-3 bg-gray-900 bg-opacity-80 rounded-full px-4 py-3">
                 <input
                   type="text"
@@ -3702,7 +3702,7 @@ export default function PromotorChatPage() {
             </div>
 
             {/* Bottom Caption Area */}
-            <div className="p-4 pb-8">
+            <div className="p-4" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
               <div className="flex items-center space-x-3 bg-gray-800 bg-opacity-50 rounded-full px-4 py-3">
                 <Smile 
                   data-emoji-trigger
