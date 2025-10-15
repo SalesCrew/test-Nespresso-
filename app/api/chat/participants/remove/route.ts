@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Verify conversation exists and requester is admin or participant
     const { data: conversation, error: convError } = await supabase
       .from('chat_conversations')
-      .select('id, is_group')
+      .select('id, type')
       .eq('id', conversationId)
       .single();
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Conversation not found', details: convError?.message }, { status: 404 });
     }
 
-    if (!conversation.is_group) {
+    if (conversation.type !== 'group') {
       return NextResponse.json({ error: 'Can only remove participants from group chats' }, { status: 400 });
     }
 
