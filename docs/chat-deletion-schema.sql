@@ -29,24 +29,28 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_deleted_for_all ON chat_messages(de
 ALTER TABLE chat_message_hidden ENABLE ROW LEVEL SECURITY;
 
 -- Users can insert their own hidden records
+DROP POLICY IF EXISTS "Users can hide messages for themselves" ON chat_message_hidden;
 CREATE POLICY "Users can hide messages for themselves"
     ON chat_message_hidden FOR INSERT
     TO authenticated
     WITH CHECK (user_id = auth.uid());
 
 -- Users can view their own hidden records
+DROP POLICY IF EXISTS "Users can view their own hidden messages" ON chat_message_hidden;
 CREATE POLICY "Users can view their own hidden messages"
     ON chat_message_hidden FOR SELECT
     TO authenticated
     USING (user_id = auth.uid());
 
 -- Users can delete their own hidden records (if they want to unhide)
+DROP POLICY IF EXISTS "Users can unhide messages" ON chat_message_hidden;
 CREATE POLICY "Users can unhide messages"
     ON chat_message_hidden FOR DELETE
     TO authenticated
     USING (user_id = auth.uid());
 
 -- Admins can view all hidden records
+DROP POLICY IF EXISTS "Admins can view all hidden messages" ON chat_message_hidden;
 CREATE POLICY "Admins can view all hidden messages"
     ON chat_message_hidden FOR SELECT
     TO authenticated

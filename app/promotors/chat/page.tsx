@@ -47,8 +47,14 @@ export default function PromotorChatPage() {
   // Initialize chat integration
   const chatIntegration = useChatIntegration();
   const { socket, isConnected } = useSocket();
+  const [adminsList, setAdminsList] = useState<Array<{ user_id: string; display_name: string }>>([]);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Main search input state
+  const [mainSearchQuery, setMainSearchQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
   
   const [selectedChat, setSelectedChat] = useState<Contact | null>(null);
 
@@ -123,6 +129,35 @@ export default function PromotorChatPage() {
     };
 
     fetchCurrentUser();
+  }, []);
+
+  // Fetch admins list
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const response = await fetch('/api/chat/admins');
+        if (response.ok) {
+          const data = await response.json();
+          setAdminsList(data.admins || []);
+        }
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+      }
+    };
+
+    fetchAdmins();
+  }, []);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Load messages when a conversation is selected
@@ -2506,13 +2541,86 @@ export default function PromotorChatPage() {
               </div>
               
               {/* Search */}
-              <div className="relative">
+              <div className="relative" ref={searchDropdownRef}>
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Suche oder starte neuen Chat"
                   className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none"
+                  value={mainSearchQuery}
+                  onChange={(e) => {
+                    setMainSearchQuery(e.target.value);
+                    setShowSearchDropdown(e.target.value.length > 0);
+                  }}
+                  onFocus={() => mainSearchQuery.length > 0 && setShowSearchDropdown(true)}
                 />
+                
+                {/* Search Dropdown for creating new chats */}
+                {showSearchDropdown && mainSearchQuery && (
+                  <div 
+                    className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto z-50"
+                  >
+                    {adminsList
+                      .filter(admin => 
+                        admin.display_name.toLowerCase().includes(mainSearchQuery.toLowerCase())
+                      )
+                      .map((admin) => (
+                        <div
+                          key={admin.user_id}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={async () => {
+                            try {
+                              // Create or get existing direct conversation
+                              const newConversation = await chatIntegration.createConversation(
+                                'direct',
+                                [admin.user_id]
+                              );
+                              
+                              // Fetch conversations to get the full details
+                              await chatIntegration.fetchConversations();
+                              
+                              // Set as selected chat
+                              setSelectedChat({
+                                id: newConversation.id,
+                                name: admin.display_name,
+                                lastMessage: '',
+                                time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                                unread: 0,
+                                online: false,
+                                isGroup: false,
+                                readOnly: false
+                              });
+                              
+                              setMainSearchQuery('');
+                              setShowSearchDropdown(false);
+                            } catch (error) {
+                              console.error('Failed to create conversation:', error);
+                            }
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
+                              style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
+                            >
+                              {admin.display_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{admin.display_name}</p>
+                              <p className="text-xs text-gray-500">Admin</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    {adminsList.filter(admin => 
+                      admin.display_name.toLowerCase().includes(mainSearchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                        Keine Admins gefunden
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
