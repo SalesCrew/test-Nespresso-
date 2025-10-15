@@ -22,11 +22,35 @@ export async function GET(request: NextRequest) {
     console.log('[/api/chat/promotors] Fetching promotors with service client...');
     const svc = createSupabaseServiceClient();
     
-    const { data: promotors, error: promotorsError } = await svc
+    // Fetch promotors with region from promotor_profiles
+    const { data: userProfiles, error: usersError } = await svc
       .from('user_profiles')
       .select('user_id, display_name')
-      .eq('role', 'promotor')
-      .order('display_name', { ascending: true });
+      .eq('role', 'promotor');
+
+    if (usersError) {
+      console.error('[/api/chat/promotors] Error fetching user profiles:', usersError);
+      return NextResponse.json({ error: 'Failed to fetch promotors', details: usersError.message }, { status: 500 });
+    }
+
+    const userIds = userProfiles?.map(u => u.user_id) || [];
+    
+    // Fetch regions from promotor_profiles
+    const { data: promotorProfiles } = await svc
+      .from('promotor_profiles')
+      .select('user_id, region')
+      .in('user_id', userIds);
+
+    // Merge user profiles with region data
+    const regionByUserId = new Map(promotorProfiles?.map(p => [p.user_id, p.region]) || []);
+    
+    const promotors = userProfiles?.map(u => ({
+      user_id: u.user_id,
+      display_name: u.display_name,
+      region: regionByUserId.get(u.user_id) || null
+    })).sort((a, b) => (a.display_name || '').localeCompare(b.display_name || ''));
+
+    const promotorsError = null;
 
     console.log('[/api/chat/promotors] Promotors query result:', promotors?.length, 'Error:', promotorsError);
     if (promotors && promotors.length > 0) {
