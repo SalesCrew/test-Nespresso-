@@ -1666,8 +1666,13 @@ export default function PromotorChatPage() {
                                         {message.replyTo.pdfName || message.replyTo.pdf}
                                       </p>
                                     </div>
-                                    <div className="w-10 h-10 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
-                                      <FileText className="w-4 h-4 text-white" />
+                                    <div 
+                                      className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0"
+                                      style={{ backgroundColor: message.own ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)' }}
+                                    >
+                                      <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-white" />
+                                      </div>
                                     </div>
                                   </div>
                                 ) : (
