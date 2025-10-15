@@ -1964,38 +1964,35 @@ export default function ChatPage() {
                       Abbrechen
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (kickMemberDialog.memberIndex !== null && selectedChat && selectedChat.members) {
-                          // Remove member from the group
-                          const updatedMembers = [...selectedChat.members];
-                          updatedMembers.splice(kickMemberDialog.memberIndex, 1);
+                          const userIdToRemove = selectedChat.members[kickMemberDialog.memberIndex];
                           
-                          // Update the selected chat
-                          const updatedChat = { ...selectedChat, members: updatedMembers };
-                          setSelectedChat(updatedChat);
-                          
-                          // Update the contacts list
-                          setContacts(prev => prev.map(contact => 
-                            contact.id === selectedChat.id 
-                              ? { ...contact, members: updatedMembers }
-                              : contact
-                          ));
-                          
-                          // Add system message about member being removed
-                          const currentMessages = allMessages[selectedChat.id] || [];
-                          const systemMessage = {
-                            id: currentMessages.length + 1,
-                            sender: "System",
-                            content: `${kickMemberDialog.memberName} wurde aus der Gruppe entfernt`,
-                            time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                            own: false,
-                            type: "system"
-                          };
-                          
-                          setAllMessages(prev => ({
-                            ...prev,
-                            [selectedChat.id]: [...currentMessages, systemMessage]
-                          }));
+                          try {
+                            // Call API to remove participant
+                            const response = await fetch('/api/chat/participants/remove', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                conversationId: selectedChat.id,
+                                userId: userIdToRemove,
+                              }),
+                            });
+
+                            if (response.ok) {
+                              // Reload conversations to get updated participant list
+                              chatIntegration.loadConversations();
+                              
+                              console.log('Participant removed successfully');
+                            } else {
+                              const error = await response.json();
+                              console.error('Failed to remove participant:', error);
+                              alert('Fehler beim Entfernen des Mitglieds');
+                            }
+                          } catch (error) {
+                            console.error('Error removing participant:', error);
+                            alert('Fehler beim Entfernen des Mitglieds');
+                          }
                         }
                         setKickMemberDialog({ show: false, memberName: '', memberIndex: null });
                       }}
@@ -2248,70 +2245,51 @@ export default function ChatPage() {
                             {selectedPromotors.length} Promotor{selectedPromotors.length !== 1 ? 'en' : ''} ausgewählt
                           </span>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               // Add selected promotors to group
-                              if (selectedChat && selectedChat.members && selectedPromotors.length > 0) {
-                                let updatedMembers = [...selectedChat.members];
-                                const addedNames: string[] = [];
-                                
-                                selectedPromotors.forEach((promotorName, index) => {
-                                  const newMemberId = Math.max(...contacts.map(c => c.id)) + index + 1;
-                                  updatedMembers.push(newMemberId);
-                                  
-                                  // Add new contact if not exists
-                                  const newContact = {
-                                    id: newMemberId,
-                                    name: promotorName,
-                                    lastMessage: "",
-                                    time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                                    unread: 0,
-                                    avatar: "",
-                                    online: true,
-                                    pinned: false,
-                                    markedUnread: false
-                                  };
-                                  
-                                  setContacts(prev => {
-                                    if (!prev.find(c => c.id === newMemberId)) {
-                                      return [...prev, newContact];
-                                    }
-                                    return prev;
+                              if (selectedChat && selectedPromotors.length > 0) {
+                                try {
+                                  // Map selected promotor names to user IDs
+                                  const userIdsToAdd = selectedPromotors
+                                    .map(name => promotorsList.find(p => p.display_name === name)?.user_id)
+                                    .filter((id): id is string => id !== undefined);
+
+                                  if (userIdsToAdd.length === 0) {
+                                    alert('Keine gültigen Promotoren ausgewählt');
+                                    return;
+                                  }
+
+                                  // Call API to add participants
+                                  const response = await fetch('/api/chat/participants/add', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      conversationId: selectedChat.id,
+                                      userIds: userIdsToAdd,
+                                    }),
                                   });
-                                  
-                                  addedNames.push(promotorName);
-                                });
-                                
-                                // Update the selected chat
-                                const updatedChat = { ...selectedChat, members: updatedMembers };
-                                setSelectedChat(updatedChat);
-                                
-                                // Update the contacts list
-                                setContacts(prev => prev.map(contact => 
-                                  contact.id === selectedChat.id 
-                                    ? { ...contact, members: updatedMembers }
-                                    : contact
-                                ));
-                                
-                                // Add system message
-                                const currentMessages = allMessages[selectedChat.id] || [];
-                                const systemMessage = {
-                                  id: currentMessages.length + 1,
-                                  sender: "System",
-                                  content: `${addedNames.join(', ')} ${addedNames.length === 1 ? 'wurde' : 'wurden'} zur Gruppe hinzugefügt`,
-                                  time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-                                  own: false,
-                                  type: "system"
-                                };
-                                
-                                setAllMessages(prev => ({
-                                  ...prev,
-                                  [selectedChat.id]: [...currentMessages, systemMessage]
-                                }));
-                                
-                                // Reset selection
-                                setSelectedPromotors([]);
+
+                                  if (response.ok) {
+                                    // Reload conversations to get updated participant list
+                                    chatIntegration.loadConversations();
+                                    
+                                    console.log('Participants added successfully');
+                                    
+                                    // Reset selection
+                                    setSelectedPromotors([]);
+                                    setShowPromotorSelection(false);
+                                  } else {
+                                    const error = await response.json();
+                                    console.error('Failed to add participants:', error);
+                                    alert('Fehler beim Hinzufügen der Promotoren');
+                                  }
+                                } catch (error) {
+                                  console.error('Error adding participants:', error);
+                                  alert('Fehler beim Hinzufügen der Promotoren');
+                                }
+                              } else {
+                                setShowPromotorSelection(false);
                               }
-                              setShowPromotorSelection(false);
                             }}
                             variant="ghost"
                             className="bg-white/40 text-gray-700 hover:bg-white/60 border border-gray-200/50 backdrop-blur-sm"
