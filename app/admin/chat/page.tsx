@@ -503,7 +503,7 @@ export default function ChatPage() {
 
     const filteredNames = availablePromotors
       .filter(promotor => 
-        (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+        (activeRegionFilter === "all" || (promotor.region && promotor.region === activeRegionFilter)) &&
         promotor.display_name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
       )
       .map(promotor => promotor.display_name);
@@ -2224,7 +2224,7 @@ export default function ChatPage() {
                           
                           return availablePromotors
                             .filter(promotor => 
-                              (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                              (activeRegionFilter === "all" || (promotor.region && promotor.region === activeRegionFilter)) &&
                               promotor.display_name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
                             )
                             .map((promotor) => {

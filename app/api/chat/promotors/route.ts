@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     
     const { data: promotors, error: promotorsError } = await svc
       .from('user_profiles')
-      .select('user_id, display_name, region')
+      .select('user_id, display_name')
       .eq('role', 'promotor')
       .order('display_name', { ascending: true });
 
