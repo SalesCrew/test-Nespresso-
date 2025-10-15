@@ -1515,13 +1515,12 @@ export default function PromotorChatPage() {
                   <div className="p-4 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     <div className="space-y-3">
                       {(selectedChat.memberNames || []).map((name, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-2 rounded-lg">
+                        <div key={index} className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                             <span className="text-white text-xs font-medium">{name.charAt(0)}</span>
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">{name}</p>
-                            <p className="text-xs text-gray-500">Online</p>
                           </div>
                         </div>
                       ))}
