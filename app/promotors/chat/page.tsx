@@ -3584,7 +3584,7 @@ export default function PromotorChatPage() {
 
             {/* Bottom Caption Area */}
             <div className="sticky bottom-0 p-4 pb-safe" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom) + 80px)' }}>
-              <div className="flex items-center space-x-3 bg-gray-900 bg-opacity-80 rounded-full px-4 py-3">
+              <div className="flex items-center space-x-3 rounded-full px-4 py-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
                 <input
                   type="text"
                   placeholder="Add a caption..."
@@ -3703,7 +3703,7 @@ export default function PromotorChatPage() {
 
             {/* Bottom Caption Area */}
             <div className="sticky bottom-0 p-4" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom) + 80px)' }}>
-              <div className="flex items-center space-x-3 bg-gray-800 bg-opacity-50 rounded-full px-4 py-3">
+              <div className="flex items-center space-x-3 rounded-full px-4 py-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)' }}>
                 <Smile 
                   data-emoji-trigger
                   className="w-6 h-6 text-gray-300 cursor-pointer hover:text-white transition-colors flex-shrink-0" 
