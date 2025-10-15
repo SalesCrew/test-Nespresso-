@@ -1981,7 +1981,7 @@ export default function ChatPage() {
 
                             if (response.ok) {
                               // Reload conversations to get updated participant list
-                              chatIntegration.loadConversations();
+                              chatIntegration.fetchConversations();
                               
                               console.log('Participant removed successfully');
                             } else {
@@ -2271,7 +2271,7 @@ export default function ChatPage() {
 
                                   if (response.ok) {
                                     // Reload conversations to get updated participant list
-                                    chatIntegration.loadConversations();
+                                    chatIntegration.fetchConversations();
                                     
                                     console.log('Participants added successfully');
                                     
