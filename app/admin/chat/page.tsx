@@ -24,6 +24,7 @@ interface Contact {
   profileImage?: string | null;
   description?: string;
   members?: (string | number)[];  // Support both types
+  memberNames?: string[];  // Store participant display names for groups
   readOnly?: boolean;
 }
 
@@ -386,19 +387,11 @@ export default function ChatPage() {
   const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
 
   // Helper functions for group members
-  const getMemberNames = (memberIds: number[] = []) => {
-    return memberIds.map(id => {
-      const contact = contacts.find((c: Contact) => c.id === id);
-      return contact ? contact.name : `User ${id}`;
-    });
-  };
-
-  const formatGroupMembers = (memberIds: number[] = []) => {
-    const names = getMemberNames(memberIds);
-    if (names.length <= 3) {
-      return names.join(', ');
+  const formatGroupMembers = (memberNames: string[] = []) => {
+    if (memberNames.length <= 3) {
+      return memberNames.join(', ');
     }
-    return `${names.slice(0, 3).join(', ')}...`;
+    return `${memberNames.slice(0, 3).join(', ')}...`;
   };
 
   // Region gradient helper
@@ -639,6 +632,7 @@ export default function ChatPage() {
       profileImage: null,
       description: conv.description || undefined,
       members: conv.participants.map(p => p.user_id),
+      memberNames: conv.participants.map(p => p.display_name),
       readOnly: conv.is_read_only,
     };
   });
@@ -1723,7 +1717,7 @@ export default function ChatPage() {
                         setShowParticipants(true);
                       }}
                     >
-                      {formatGroupMembers(selectedChat.members)}
+                      {formatGroupMembers(selectedChat.memberNames || [])}
                     </p>
                   ) : (
                     <p className="text-sm text-gray-500">{selectedChat.online ? 'Online' : 'Zuletzt online heute'}</p>

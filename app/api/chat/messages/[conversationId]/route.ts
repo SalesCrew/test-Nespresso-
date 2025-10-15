@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 // GET: Fetch message history for a conversation
 export async function GET(
@@ -64,9 +65,10 @@ export async function GET(
     // Filter out hidden messages for this user
     const visibleMessages = messages?.filter(m => !hiddenMessageIds.has(m.id)) || [];
 
-    // Fetch sender profiles for all messages
+    // Fetch sender profiles for all messages (use service client to bypass RLS)
     const senderIds = [...new Set(visibleMessages?.map(m => m.sender_id) || [])];
-    const { data: senderProfiles, error: profilesError } = await supabase
+    const svc = createSupabaseServiceClient();
+    const { data: senderProfiles, error: profilesError } = await svc
       .from('user_profiles')
       .select('user_id, display_name, role')
       .in('user_id', senderIds);
