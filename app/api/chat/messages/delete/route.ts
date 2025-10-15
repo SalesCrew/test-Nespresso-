@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           deleted_for_all: true,
           deleted_at: new Date().toISOString(),
           deleted_by: user.id,
-          message_text: 'Diese Nachricht wurde gelöscht',
+          message_text: 'Diese Nachricht wurde gelöscht...',
           file_url: null,
           file_name: null,
         })

@@ -1640,7 +1640,7 @@ export default function PromotorChatPage() {
                                     <p className={`text-xs font-medium ${message.own ? 'text-blue-100' : 'text-gray-600'} opacity-50`}>
                                       {message.replyTo.sender}
                                     </p>
-                                    <p className={`text-xs mt-1 ${message.own ? 'text-blue-50' : 'text-gray-700'} ${message.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                    <p className={`text-xs mt-1 ${message.own ? 'text-blue-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
                                        style={{ 
                                          wordBreak: 'break-word',
                                          overflow: 'hidden',
@@ -2064,7 +2064,7 @@ export default function PromotorChatPage() {
                           <p className={`text-xs font-medium ${replyingTo.own ? 'text-blue-100' : 'text-gray-600'} opacity-50`}>
                             {replyingTo.replyTo.sender}
                           </p>
-                          <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
+                          <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
                              style={{ 
                                hyphens: 'auto',
                                wordBreak: 'break-word',
@@ -2124,7 +2124,7 @@ export default function PromotorChatPage() {
                       {/* Text Content */}
                       {replyingTo.content && (
                         <p 
-                          className={`text-sm ${replyingTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}
+                          className={`text-sm ${replyingTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -2193,7 +2193,7 @@ export default function PromotorChatPage() {
                           <p className={`text-xs font-medium ${editingMessage.own ? 'text-blue-100' : 'text-gray-600'} opacity-50`}>
                             {editingMessage.replyTo.sender}
                           </p>
-                          <p className={`text-xs mt-1 ${editingMessage.own ? 'text-blue-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`} 
+                          <p className={`text-xs mt-1 ${editingMessage.own ? 'text-blue-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
                              style={{ 
                                hyphens: 'auto',
                                wordBreak: 'break-word',
@@ -2253,7 +2253,7 @@ export default function PromotorChatPage() {
                       {/* Text Content */}
                       {editingMessage.content && (
                         <p 
-                          className={`text-sm ${editingMessage.content === 'Nachricht gelöscht...' ? 'italic opacity-60' : ''}`}
+                          className={`text-sm ${editingMessage.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -2342,7 +2342,7 @@ export default function PromotorChatPage() {
                                 ...prev,
                                 [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
                                   deleteDialog.selectedMessageIds.includes(msg.id) && msg.own
-                                    ? { ...msg, content: 'Nachricht gelöscht...', edited: false }
+                                    ? { ...msg, content: 'Diese Nachricht wurde gelöscht...', edited: false }
                                     : msg
                                 )
                               }));

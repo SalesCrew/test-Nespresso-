@@ -113,7 +113,7 @@ BEGIN
         deleted_for_all = true,
         deleted_at = NOW(),
         deleted_by = user_id_input,
-        message_text = 'Diese Nachricht wurde gelöscht',
+        message_text = 'Diese Nachricht wurde gelöscht...',
         file_url = NULL,
         file_name = NULL
     WHERE id = message_id_input;

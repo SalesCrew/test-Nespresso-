@@ -259,7 +259,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
             ...prev,
             [conversationId]: prev[conversationId]?.map(msg => 
               msg.id === messageId 
-                ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
+                ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht...', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
                 : msg
             ) || [],
           }));
@@ -386,7 +386,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
           ...prev,
           [data.conversationId]: prev[data.conversationId]?.map(msg => 
             msg.id === data.messageId 
-              ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
+              ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht...', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
               : msg
           ) || [],
         }));
