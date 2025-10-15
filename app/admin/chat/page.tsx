@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,7 @@ interface Contact {
   id: string | number;  // Support both UUID strings and number IDs for compatibility
   name: string;
   lastMessage: string;
+  lastMessageKind?: 'text' | 'photo' | 'pdf';
   time: string;
   unread: number;
   online: boolean;
@@ -611,11 +612,14 @@ export default function ChatPage() {
   const contacts: Contact[] = chatIntegration.conversations.map(conv => {
     // Format last message based on type
     let lastMessageText = conv.last_message?.text || '';
+    let lastMessageKind: 'text' | 'photo' | 'pdf' | undefined = 'text';
     if (conv.last_message) {
       if (conv.last_message.type === 'photo') {
-        lastMessageText = '📷 Foto';
+        lastMessageText = 'Foto';
+        lastMessageKind = 'photo';
       } else if (conv.last_message.type === 'pdf') {
-        lastMessageText = '📄 PDF';
+        lastMessageText = 'PDF';
+        lastMessageKind = 'pdf';
       }
     }
     
@@ -623,6 +627,7 @@ export default function ChatPage() {
       id: conv.id,
       name: conv.name || 'Unknown',
       lastMessage: lastMessageText,
+      lastMessageKind,
       time: conv.last_message?.created_at 
         ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
         : '',
@@ -1655,7 +1660,15 @@ export default function ChatPage() {
                   </div>
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                  <p className="text-sm text-gray-600 truncate">{contact.lastMessage}</p>
+                  <p className="text-sm text-gray-600 truncate flex items-center gap-1">
+                    {contact.lastMessageKind === 'photo' && (
+                      <Camera className="h-4 w-4 text-gray-700" />
+                    )}
+                    {contact.lastMessageKind === 'pdf' && (
+                      <FileText className="h-4 w-4 text-gray-700" />
+                    )}
+                    {contact.lastMessage}
+                  </p>
                   {(contact.unread > 0 || contact.markedUnread) && (
                     <span 
                       className="text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
