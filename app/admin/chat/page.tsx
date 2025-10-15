@@ -608,23 +608,35 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Convert real conversations to Contact format
-  const contacts: Contact[] = chatIntegration.conversations.map(conv => ({
-    id: conv.id,
-    name: conv.name || 'Unknown',
-    lastMessage: conv.last_message?.text || '',
-    time: conv.last_message?.created_at 
-      ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-      : '',
-    unread: conv.unread_count,
-    online: false, // Can be enhanced with presence tracking
-    pinned: false,
-    markedUnread: false,
-    isGroup: conv.is_group,
-    profileImage: null,
-    description: conv.description || undefined,
-    members: conv.participants.map(p => p.user_id),
-    readOnly: conv.is_read_only,
-  }));
+  const contacts: Contact[] = chatIntegration.conversations.map(conv => {
+    // Format last message based on type
+    let lastMessageText = conv.last_message?.text || '';
+    if (conv.last_message) {
+      if (conv.last_message.type === 'photo') {
+        lastMessageText = '📷 Foto';
+      } else if (conv.last_message.type === 'pdf') {
+        lastMessageText = '📄 PDF';
+      }
+    }
+    
+    return {
+      id: conv.id,
+      name: conv.name || 'Unknown',
+      lastMessage: lastMessageText,
+      time: conv.last_message?.created_at 
+        ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+        : '',
+      unread: conv.unread_count,
+      online: false, // Can be enhanced with presence tracking
+      pinned: false,
+      markedUnread: false,
+      isGroup: conv.is_group,
+      profileImage: null,
+      description: conv.description || undefined,
+      members: conv.participants.map(p => p.user_id),
+      readOnly: conv.is_read_only,
+    };
+  });
 
   // Sort contacts to show pinned ones first
   const sortedContacts = [...contacts].sort((a, b) => {

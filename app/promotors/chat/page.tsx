@@ -371,10 +371,20 @@ export default function PromotorChatPage() {
       
       console.log('[Promotor Chat] Mapped conversation:', conv.id, 'to contact:', displayName);
       
+      // Format last message based on type
+      let lastMessageText = conv.last_message?.text || '';
+      if (conv.last_message) {
+        if (conv.last_message.type === 'photo') {
+          lastMessageText = '📷 Foto';
+        } else if (conv.last_message.type === 'pdf') {
+          lastMessageText = '📄 PDF';
+        }
+      }
+      
       return {
         id: conv.id,
         name: displayName,
-        lastMessage: conv.last_message?.text || '',
+        lastMessage: lastMessageText,
         time: conv.last_message?.created_at 
           ? new Date(conv.last_message.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
           : '',
