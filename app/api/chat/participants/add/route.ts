@@ -53,6 +53,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only admins can add participants' }, { status: 403 });
     }
 
+    // Fetch the names of added users first
+    const { data: addedUsers } = await supabase
+      .from('user_profiles')
+      .select('user_id, display_name')
+      .in('user_id', userIds);
+
     // Add participants
     const participants = userIds.map(userId => ({
       conversation_id: conversationId,
@@ -69,11 +75,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to add participants' }, { status: 500 });
     }
 
-    // Fetch the names of added users for the response
-    const { data: addedUsers } = await supabase
-      .from('user_profiles')
-      .select('user_id, display_name')
-      .in('user_id', userIds);
+    // Create system message for added users
+    const addedNames = addedUsers?.map(u => u.display_name).join(', ') || 'Unknown';
+    const messageText = addedUsers && addedUsers.length === 1
+      ? `${addedNames} wurde zur Gruppe hinzugefügt`
+      : `${addedNames} wurden zur Gruppe hinzugefügt`;
+
+    const { error: messageError } = await supabase
+      .from('chat_messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: auth.user.id,
+        message_text: messageText,
+        message_type: 'system',
+      });
+
+    if (messageError) {
+      console.error('Error creating system message:', messageError);
+      // Continue even if message creation fails
+    }
 
     return NextResponse.json({ 
       success: true,

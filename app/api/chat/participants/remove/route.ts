@@ -60,6 +60,23 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .single();
 
+    const userName = removedUser?.display_name || 'Unknown';
+
+    // Create system message BEFORE removing participant so they can see it
+    const { error: messageError } = await supabase
+      .from('chat_messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: auth.user.id,
+        message_text: `${userName} wurde aus der Gruppe entfernt`,
+        message_type: 'system',
+      });
+
+    if (messageError) {
+      console.error('Error creating system message:', messageError);
+      // Continue even if message creation fails
+    }
+
     // Remove participant
     const { error: deleteError } = await supabase
       .from('chat_participants')
