@@ -2451,6 +2451,18 @@ export default function ChatPage() {
                         }
                       }}
                     >
+                      {/* Sender Name (for group chats) */}
+                      {!message.own && selectedChat?.isGroup && (
+                        <p 
+                          className="text-xs font-semibold mb-1"
+                          style={{ 
+                            color: '#00897B'
+                          }}
+                        >
+                          {message.sender}
+                        </p>
+                      )}
+                      
                                               {message.replyTo && (
                         <div 
                           className="mt-2 mb-2 p-2 rounded border cursor-pointer"

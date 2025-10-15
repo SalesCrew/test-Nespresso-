@@ -1625,6 +1625,18 @@ export default function PromotorChatPage() {
                               }
                             }}
                           >
+                            {/* Sender Name (for group chats) */}
+                            {!message.own && selectedChat?.isGroup && (
+                              <p 
+                                className="text-xs font-semibold mb-1"
+                                style={{ 
+                                  color: '#00897B'
+                                }}
+                              >
+                                {message.sender}
+                              </p>
+                            )}
+                            
                             {/* Reply Display */}
                             {message.replyTo && (
                               <div 
