@@ -1720,9 +1720,9 @@ export default function PromotorChatPage() {
                             {/* PDF Display */}
                             {message.pdf && (
                               <div 
-                                className="mt-2 mb-2 rounded-lg p-3 flex items-center space-x-3 cursor-pointer transition-colors hover:bg-gray-100"
+                                className="mt-2 mb-2 rounded-lg p-3 flex items-center space-x-3 cursor-pointer transition-colors hover:bg-gray-200"
                                 style={{ 
-                                  backgroundColor: 'rgba(255,255,255,0.5)',
+                                  backgroundColor: message.own ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)',
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
