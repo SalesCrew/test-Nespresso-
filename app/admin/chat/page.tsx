@@ -1911,7 +1911,7 @@ export default function ChatPage() {
                   <div className="p-4 border-b border-gray-100">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-900">
-                        Gruppenteilnehmer ({getMemberNames(selectedChat.members).length})
+                        Gruppenteilnehmer ({selectedChat.memberNames?.length || 0})
                       </h3>
                       <button
                         onClick={() => setShowPromotorSelection(true)}
@@ -1925,7 +1925,7 @@ export default function ChatPage() {
                   {/* Participants List */}
                   <div className="p-4 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     <div className="space-y-3">
-                      {getMemberNames(selectedChat.members).map((name, index) => (
+                      {(selectedChat.memberNames || []).map((name, index) => (
                         <div key={index} className="flex items-center space-x-3 group hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
                             <span className="text-white text-xs font-medium">{name.charAt(0)}</span>
