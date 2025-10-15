@@ -19,6 +19,7 @@ interface Contact {
   profileImage?: string | null;
   description?: string;
   members?: (string | number)[];
+  memberNames?: string[];  // Store participant display names for groups
   readOnly?: boolean;  // Track if conversation is read-only
 }
 
@@ -265,6 +266,7 @@ export default function PromotorChatPage() {
     show: false,
     selectedTab: 'fotos'
   });
+  const [showParticipants, setShowParticipants] = useState(false);
 
   // Photo viewer functionality
   const [photoViewer, setPhotoViewer] = useState<{
@@ -401,6 +403,7 @@ export default function PromotorChatPage() {
         profileImage: null,
         description: conv.description || undefined,
         members: conv.participants.map(p => p.user_id),
+        memberNames: conv.participants.map(p => p.display_name),
         readOnly: conv.is_read_only,
       };
     });
@@ -735,13 +738,13 @@ export default function PromotorChatPage() {
         
         // Clear input and reply state
         setMessageInput('');
-        setReplyingTo(null);
-        setReplyAnimation(null);
-        
-        // Clean up keyframe
-        const existingStyle = document.getElementById('reply-keyframes');
-        if (existingStyle) {
-          existingStyle.remove();
+      setReplyingTo(null);
+      setReplyAnimation(null);
+      
+      // Clean up keyframe
+      const existingStyle = document.getElementById('reply-keyframes');
+      if (existingStyle) {
+        existingStyle.remove();
         }
         
         // Scroll to bottom after a short delay to let new message render
@@ -1235,6 +1238,22 @@ export default function PromotorChatPage() {
     return () => document.removeEventListener('mousedown', handleContactClickOutside);
   }, [contactContextMenu.show, ignoreClickOutside]);
 
+  // Close participants dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showParticipants) {
+        const target = event.target as Element;
+        const participantsContainer = target.closest('[data-participants]');
+        if (!participantsContainer) {
+          setShowParticipants(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showParticipants]);
+
   // Sort contacts: pinned first, then by time
   const sortedContacts = [...contacts].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
@@ -1299,9 +1318,23 @@ export default function PromotorChatPage() {
                 </div>
                 <div className="ml-3">
                   <h2 className="text-lg font-semibold text-gray-900">{selectedChat.name}</h2>
-                  <p className="text-sm text-gray-600">
-                    {selectedChat.online ? 'online' : 'zuletzt online'}
-                  </p>
+                  {selectedChat.isGroup ? (
+                    <p 
+                      className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowParticipants(true);
+                      }}
+                    >
+                      {selectedChat.memberNames && selectedChat.memberNames.length <= 3 
+                        ? selectedChat.memberNames.join(', ')
+                        : `${selectedChat.memberNames?.slice(0, 3).join(', ')}...`}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      {selectedChat.online ? 'online' : 'zuletzt online'}
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -1456,6 +1489,46 @@ export default function PromotorChatPage() {
                   )}
                 </div>
               </div>
+              
+              {/* Participants Dropdown */}
+              {showParticipants && selectedChat?.isGroup && (
+                <div 
+                  className="absolute top-full left-4 mt-2 rounded-lg shadow-lg border border-gray-200 z-50"
+                  data-participants
+                  style={{ 
+                    width: '320px',
+                    maxHeight: '400px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+                    animation: 'slideDownFromTop 0.3s ease-out'
+                  }}
+                >
+                  {/* Header */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-gray-900">
+                        Gruppenteilnehmer ({selectedChat.memberNames?.length || 0})
+                      </h3>
+                    </div>
+                  </div>
+                  
+                  {/* Participants List */}
+                  <div className="p-4 max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="space-y-3">
+                      {(selectedChat.memberNames || []).map((name, index) => (
+                        <div key={index} className="flex items-center space-x-3 p-2 rounded-lg">
+                          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                            <span className="text-white text-xs font-medium">{name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{name}</p>
+                            <p className="text-xs text-gray-500">Online</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Messages Area */}
@@ -1698,7 +1771,7 @@ export default function PromotorChatPage() {
                                       style={{ backgroundColor: message.own ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.04)' }}
                                     >
                                       <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center">
-                                        <FileText className="w-4 h-4 text-white" />
+                                      <FileText className="w-4 h-4 text-white" />
                                       </div>
                                     </div>
                                   </div>
@@ -1851,52 +1924,52 @@ export default function PromotorChatPage() {
 
             {/* Message Input */}
             {!selectedChat?.readOnly && (
-              <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
-                <input 
-                  type="text"
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Nachricht eingeben..." 
-                  className={`w-full pl-12 pr-20 py-3 rounded-full outline-none text-gray-900 placeholder:text-gray-500 placeholder:text-sm transition-all duration-300 ${deleteDialog.show ? 'pointer-events-none' : ''}`}
-                  style={{ 
-                    border: 'none', 
-                    boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
-                    WebkitAppearance: 'none', 
-                    MozAppearance: 'none', 
-                    appearance: 'none',
-                    background: 'linear-gradient(to right, rgba(250,250,250,0.95), rgba(240,240,240,0.95))',
-                    opacity: deleteDialog.show ? 0.3 : 0.85,
-                    filter: deleteDialog.show ? 'blur(2px) brightness(0.6)' : 'none'
+            <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
+              <input 
+                type="text"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Nachricht eingeben..." 
+                className={`w-full pl-12 pr-20 py-3 rounded-full outline-none text-gray-900 placeholder:text-gray-500 placeholder:text-sm transition-all duration-300 ${deleteDialog.show ? 'pointer-events-none' : ''}`}
+                style={{ 
+                  border: 'none', 
+                  boxShadow: '0 3px 8px rgba(0,0,0,0.18)', 
+                  WebkitAppearance: 'none', 
+                  MozAppearance: 'none', 
+                  appearance: 'none',
+                  background: 'linear-gradient(to right, rgba(250,250,250,0.95), rgba(240,240,240,0.95))',
+                  opacity: deleteDialog.show ? 0.3 : 0.85,
+                  filter: deleteDialog.show ? 'blur(2px) brightness(0.6)' : 'none'
+                }}
+              />
+              <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
+                <Paperclip 
+                  data-attachment-trigger
+                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAttachmentPopup(!attachmentPopup);
                   }}
                 />
-                <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                  <Paperclip 
-                    data-attachment-trigger
-                    className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setAttachmentPopup(!attachmentPopup);
-                    }}
-                  />
-                </div>
-                <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
-                  <Smile 
-                    data-emoji-trigger
-                    className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
-                    }}
-                  />
-                  <button 
-                    type="submit"
-                    className="h-8 w-8 rounded-full flex items-center justify-center"
-                    style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
-                  >
-                    <Send className="h-3.5 w-3.5 text-white" />
-                  </button>
-                </div>
-              </form>
+              </div>
+              <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2 transition-all duration-300 ${deleteDialog.show ? 'opacity-30 pointer-events-none' : ''}`}>
+                <Smile 
+                  data-emoji-trigger
+                  className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
+                  }}
+                />
+                <button 
+                  type="submit"
+                  className="h-8 w-8 rounded-full flex items-center justify-center"
+                  style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
+                >
+                  <Send className="h-3.5 w-3.5 text-white" />
+                </button>
+              </div>
+            </form>
             )}
 
             {/* Emoji Picker */}
@@ -3537,13 +3610,13 @@ export default function PromotorChatPage() {
                   onClick={async () => {
                     if (selectedChat && photoEditor && currentUserId) {
                       try {
-                        let finalImage = photoEditor.image;
-                        
-                        // Apply drawings and rotation if any exist
-                        if (drawingPaths.length > 0 || photoEditor.rotation !== 0) {
-                          finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation);
-                        }
-                        
+                      let finalImage = photoEditor.image;
+                      
+                      // Apply drawings and rotation if any exist
+                      if (drawingPaths.length > 0 || photoEditor.rotation !== 0) {
+                        finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation);
+                      }
+                      
                         // Convert data URL to Blob
                         const { dataURLtoBlob, uploadChatFile } = await import('@/lib/chat/uploadChatFile');
                         const imageBlob = dataURLtoBlob(finalImage);
@@ -3570,12 +3643,12 @@ export default function PromotorChatPage() {
                           uploadResult.url,
                           uploadResult.fileName
                         );
-                        
-                        setPhotoEditor(null);
-                        setDrawingPaths([]);
-                        setColorPalette({ show: false, selectedColor: '' });
-                        setEraserPalette({ show: false, selectedSize: 0 });
-                        
+
+                      setPhotoEditor(null);
+                      setDrawingPaths([]);
+                      setColorPalette({ show: false, selectedColor: '' });
+                      setEraserPalette({ show: false, selectedSize: 0 });
+                      
                         // Scroll to bottom after message arrives
                         setTimeout(() => scrollToBottom(), 100);
                       } catch (error) {
@@ -3679,9 +3752,9 @@ export default function PromotorChatPage() {
                           uploadResult.url,
                           uploadResult.fileName
                         );
-                        
-                        setPdfEditor(null);
-                        
+
+                      setPdfEditor(null);
+                      
                         // Scroll to bottom after message arrives
                         setTimeout(() => scrollToBottom(), 100);
                       } catch (error) {
