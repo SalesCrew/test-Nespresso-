@@ -920,12 +920,18 @@ export default function ChatPage() {
   };
 
   // Handle delete for me (remove message completely)
-  const handleDeleteForMe = () => {
+  const handleDeleteForMe = async () => {
     if (deleteDialog.messageId && selectedChat) {
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: (prev[selectedChat.id] || []).filter(msg => msg.id !== deleteDialog.messageId)
-      }));
+      try {
+        await chatIntegration.deleteMessage(
+          String(selectedChat.id),
+          String(deleteDialog.messageId),
+          false // deleteForEveryone = false
+        );
+      } catch (error) {
+        console.error('Failed to delete message for me:', error);
+        // TODO: Show error notification to user
+      }
       setDeleteDialog({ 
         show: false, 
         messageId: null, 
@@ -938,17 +944,19 @@ export default function ChatPage() {
     }
   };
 
-  // Handle delete for everyone (change content to "Nachricht gelöscht...")
-  const handleDeleteForEveryone = () => {
+  // Handle delete for everyone (change content to "Diese Nachricht wurde gelöscht")
+  const handleDeleteForEveryone = async () => {
     if (deleteDialog.messageId && selectedChat) {
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
-          msg.id === deleteDialog.messageId 
-            ? { ...msg, content: 'Nachricht gelöscht...', edited: false }
-            : msg
-        )
-      }));
+      try {
+        await chatIntegration.deleteMessage(
+          String(selectedChat.id),
+          String(deleteDialog.messageId),
+          true // deleteForEveryone = true
+        );
+      } catch (error) {
+        console.error('Failed to delete message for everyone:', error);
+        // TODO: Show error notification to user
+      }
       setDeleteDialog({ 
         show: false, 
         messageId: null, 

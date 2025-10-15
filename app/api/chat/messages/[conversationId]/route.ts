@@ -53,8 +53,19 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
     }
 
+    // Fetch hidden messages for this user
+    const { data: hiddenMessages } = await supabase
+      .from('chat_message_hidden')
+      .select('message_id')
+      .eq('user_id', user.id);
+
+    const hiddenMessageIds = new Set(hiddenMessages?.map(h => h.message_id) || []);
+
+    // Filter out hidden messages for this user
+    const visibleMessages = messages?.filter(m => !hiddenMessageIds.has(m.id)) || [];
+
     // Fetch sender profiles for all messages
-    const senderIds = [...new Set(messages?.map(m => m.sender_id) || [])];
+    const senderIds = [...new Set(visibleMessages?.map(m => m.sender_id) || [])];
     const { data: senderProfiles, error: profilesError } = await supabase
       .from('user_profiles')
       .select('user_id, display_name, role')
@@ -65,7 +76,7 @@ export async function GET(
     }
 
     // For messages with reply_to_id, fetch the replied-to messages
-    const replyToIds = messages
+    const replyToIds = visibleMessages
       ?.filter(m => m.reply_to_id)
       .map(m => m.reply_to_id)
       .filter((id): id is string => id !== null) || [];
@@ -80,7 +91,7 @@ export async function GET(
     }
 
     // Enrich messages with sender info and reply data
-    const enrichedMessages = messages?.map(message => {
+    const enrichedMessages = visibleMessages?.map(message => {
       const sender = senderProfiles?.find(p => p.user_id === message.sender_id);
       const replyTo = message.reply_to_id 
         ? repliedToMessages.find(r => r.id === message.reply_to_id)
@@ -112,7 +123,7 @@ export async function GET(
 
     return NextResponse.json({ 
       messages: enrichedMessages,
-      has_more: messages?.length === limit,
+      has_more: visibleMessages?.length === limit,
     });
   } catch (error) {
     console.error('Error in GET /api/chat/messages:', error);

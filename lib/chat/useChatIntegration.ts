@@ -21,6 +21,9 @@ interface Message {
     file_name?: string | null;
   } | null;
   edited: boolean;
+  deleted_for_all?: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -220,6 +223,64 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [socket, joinConversation, fetchConversations]);
 
+  // Delete a message
+  const deleteMessage = useCallback(async (
+    conversationId: string,
+    messageId: string,
+    deleteForEveryone: boolean
+  ) => {
+    try {
+      const response = await fetch('/api/chat/messages/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          messageId,
+          deleteForEveryone,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (deleteForEveryone && socket) {
+          // Emit socket event for delete-for-everyone to update all clients
+          socket.emit('delete_message', {
+            conversationId,
+            messageId,
+            deleteForEveryone: true,
+          });
+        }
+
+        // Update local messages state
+        if (deleteForEveryone) {
+          // Replace message with deleted placeholder
+          setMessages(prev => ({
+            ...prev,
+            [conversationId]: prev[conversationId]?.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
+                : msg
+            ) || [],
+          }));
+        } else {
+          // Remove message from local state (delete for me)
+          setMessages(prev => ({
+            ...prev,
+            [conversationId]: prev[conversationId]?.filter(msg => msg.id !== messageId) || [],
+          }));
+        }
+        
+        return data;
+      } else {
+        throw new Error('Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      throw error;
+    }
+  }, [socket]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -318,14 +379,30 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       }
     };
 
+    const handleMessageDeleted = (data: { conversationId: string; messageId: string; deleteForEveryone: boolean }) => {
+      if (data.deleteForEveryone) {
+        // Replace message with deleted placeholder
+        setMessages(prev => ({
+          ...prev,
+          [data.conversationId]: prev[data.conversationId]?.map(msg => 
+            msg.id === data.messageId 
+              ? { ...msg, message_text: 'Diese Nachricht wurde gelöscht', message_type: 'text', file_url: null, file_name: null, deleted_for_all: true }
+              : msg
+          ) || [],
+        }));
+      }
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stopped_typing', handleUserStoppedTyping);
+    socket.on('message_deleted', handleMessageDeleted);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stopped_typing', handleUserStoppedTyping);
+      socket.off('message_deleted', handleMessageDeleted);
     };
   }, [socket, options]);
 
@@ -350,6 +427,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     stopTyping,
     createConversation,
     joinConversation,
+    deleteMessage,
   };
 };
 
