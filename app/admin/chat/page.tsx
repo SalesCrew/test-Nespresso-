@@ -54,7 +54,7 @@ export default function ChatPage() {
   // Initialize chat integration
   const chatIntegration = useChatIntegration();
   const { socket, isConnected } = useSocket();
-  const [promotorsList, setPromotorsList] = useState<Array<{ user_id: string; display_name: string }>>([]);
+  const [promotorsList, setPromotorsList] = useState<Array<{ user_id: string; display_name: string; region?: string }>>([]);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   
@@ -497,12 +497,16 @@ export default function ChatPage() {
       { name: "Thomas Ozean", region: "tirol" }
     ];
 
-    const filteredNames = allPromotors
+    // Filter out promotors already in the group
+    const existingMemberIds = new Set(selectedChat?.members || []);
+    const availablePromotors = promotorsList.filter(p => !existingMemberIds.has(p.user_id));
+
+    const filteredNames = availablePromotors
       .filter(promotor => 
         (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-        promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+        promotor.display_name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
       )
-      .map(promotor => promotor.name);
+      .map(promotor => promotor.display_name);
     
     // Check if we should deselect (if all filtered items are currently selected and match last selection)
     const allFilteredSelected = filteredNames.every(name => selectedPromotors.includes(name));
@@ -2212,33 +2216,40 @@ export default function ChatPage() {
                           { name: "Daniel See", region: "salzburg" },
                           { name: "Sabine Meer", region: "oberoesterreich" },
                           { name: "Thomas Ozean", region: "tirol" }
-                        ]
-                        .filter(promotor => 
-                          (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
-                          promotor.name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
-                        )
-                        .map((promotor) => {
-                          const isSelected = selectedPromotors.includes(promotor.name);
-                          return (
-                            <button
-                              key={promotor.name}
-                              onClick={() => {
-                                if (isSelected) {
-                                  setSelectedPromotors(prev => prev.filter(name => name !== promotor.name));
-                                } else {
-                                  setSelectedPromotors(prev => [...prev, promotor.name]);
-                                }
-                              }}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full h-10 flex items-center justify-center border ${
-                                isSelected
-                                  ? "bg-white/80 text-gray-900 shadow-md border-gray-300 backdrop-blur-sm"
-                                  : `${getRegionGradient(promotor.region)} ${getRegionBorder(promotor.region)} text-gray-700 hover:bg-gray-200/80`
-                              }`}
-                            >
-                              {promotor.name}
-                            </button>
-                          );
-                        })}
+                        ].filter(() => false) /* Replaced with real data below */}
+                        {(() => {
+                          // Filter out promotors already in the group
+                          const existingMemberIds = new Set(selectedChat?.members || []);
+                          const availablePromotors = promotorsList.filter(p => !existingMemberIds.has(p.user_id));
+                          
+                          return availablePromotors
+                            .filter(promotor => 
+                              (activeRegionFilter === "all" || promotor.region === activeRegionFilter) &&
+                              promotor.display_name.toLowerCase().includes(promotorSelectionSearch.toLowerCase())
+                            )
+                            .map((promotor) => {
+                              const isSelected = selectedPromotors.includes(promotor.display_name);
+                              return (
+                                <button
+                                  key={promotor.user_id}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setSelectedPromotors(prev => prev.filter(name => name !== promotor.display_name));
+                                    } else {
+                                      setSelectedPromotors(prev => [...prev, promotor.display_name]);
+                                    }
+                                  }}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full h-10 flex items-center justify-center border ${
+                                    isSelected
+                                      ? "bg-white/80 text-gray-900 shadow-md border-gray-300 backdrop-blur-sm"
+                                      : `${getRegionGradient(promotor.region || '')} ${getRegionBorder(promotor.region || '')} text-gray-700 hover:bg-gray-200/80`
+                                  }`}
+                                >
+                                  {promotor.display_name}
+                                </button>
+                              );
+                            });
+                        })()}
                       </div>
                     </div>
                     
