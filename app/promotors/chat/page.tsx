@@ -3273,7 +3273,12 @@ export default function PromotorChatPage() {
             )}
 
             {/* Photo Display */}
-            <div className={`flex-1 flex items-center justify-center px-4 relative ${photoEditor.rotation % 180 === 90 ? 'flex-col' : ''}`}>
+            <div 
+              className={`flex-1 flex items-center justify-center px-4 relative ${photoEditor.rotation % 180 === 90 ? 'flex-col' : ''}`}
+              style={{
+                touchAction: (colorPalette.selectedColor || eraserPalette.selectedSize) ? 'none' : 'auto'
+              }}
+            >
               <div className="relative">
                 <div 
                   className="relative bg-transparent"
