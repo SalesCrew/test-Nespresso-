@@ -2701,7 +2701,7 @@ export default function ChatPage() {
                       {/* Reaction Emoji */}
                       {message.reaction && (
                         <div 
-                          className={`absolute ${message.own ? 'left-2' : 'right-2'} bg-white rounded-full border border-gray-200 shadow-sm`}
+                          className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm`}
                           style={{
                             bottom: '-13px',
                             transform: 'translate(0, 0)',
