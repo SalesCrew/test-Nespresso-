@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -75,6 +75,7 @@ export default function ChatPage() {
   const [attachmentPopup, setAttachmentPopup] = useState(false);
   const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null>(null);
   const [pdfEditor, setPdfEditor] = useState<{ show: boolean; file: File; caption: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const [colorPalette, setColorPalette] = useState<{ show: boolean; selectedColor: string }>({ show: false, selectedColor: '' });
   const [eraserPalette, setEraserPalette] = useState<{ show: boolean; selectedSize: number }>({ show: false, selectedSize: 0 });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -4005,6 +4006,14 @@ export default function ChatPage() {
                           />
                         ))}
                       </svg>
+                      
+                      {/* Upload Progress Overlay */}
+                      {uploadProgress.show && (
+                        <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-50">
+                          <Loader2 className="h-8 w-8 text-white animate-spin mb-3" />
+                          <p className="text-white text-sm font-medium">{uploadProgress.message}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -4034,9 +4043,13 @@ export default function ChatPage() {
                       onClick={async () => {
                         if (selectedChat && photoEditor && currentUserId) {
                           try {
+                            setUploadProgress({ show: true, message: 'Bild wird vorbereitet...' });
+                            
                             // Combine image with drawings, rotation and cropping (only if not in crop mode)
                             const finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation, photoEditor.cropMode ? null : photoEditor.crop);
 
+                            setUploadProgress({ show: true, message: 'Bild wird hochgeladen...' });
+                            
                             // Convert data URL to Blob and upload
                             const { dataURLtoBlob, uploadChatFile } = await import('@/lib/chat/uploadChatFile');
                             const imageBlob = dataURLtoBlob(finalImage);
@@ -4050,8 +4063,11 @@ export default function ChatPage() {
                             
                             if (!uploadResult) {
                               console.error('Failed to upload photo');
+                              setUploadProgress({ show: false, message: '' });
                               return;
                             }
+                            
+                            setUploadProgress({ show: true, message: 'Bild wird gesendet...' });
                             
                             // Send via Socket.IO with uploaded URL
                             await chatIntegration.sendMessage(
@@ -4066,12 +4082,15 @@ export default function ChatPage() {
                             setPhotoEditor(null);
                             setColorPalette({ show: false, selectedColor: '' });
                             setDrawingPaths([]);
+                            setUploadProgress({ show: false, message: '' });
                           } catch (error) {
                             console.error('Error sending photo:', error);
+                            setUploadProgress({ show: false, message: '' });
                           }
                         }
                       }}
-                      className="p-2 rounded-full text-white"
+                      disabled={uploadProgress.show}
+                      className="p-2 rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
                     >
                       <Send className="w-4 h-4" />
@@ -4094,7 +4113,7 @@ export default function ChatPage() {
                 }}
               >
                 {/* PDF Display Area */}
-                <div className="flex-1 flex items-center justify-center p-3">
+                <div className="flex-1 flex items-center justify-center p-3 relative">
                   <div className="flex flex-col items-center text-center">
                     {/* PDF Icon */}
                     <FileText className="w-8 h-8 text-black mb-2" />
@@ -4107,6 +4126,14 @@ export default function ChatPage() {
                       {(pdfEditor.file.size / (1024 * 1024)).toFixed(1)} MB, PDF-Dokument
                     </div>
                   </div>
+                  
+                  {/* Upload Progress Overlay */}
+                  {uploadProgress.show && (
+                    <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex flex-col items-center justify-center rounded-lg z-50">
+                      <Loader2 className="h-8 w-8 text-white animate-spin mb-3" />
+                      <p className="text-white text-sm font-medium">{uploadProgress.message}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Caption Input */}
@@ -4135,8 +4162,13 @@ export default function ChatPage() {
                       onClick={async () => {
                         if (selectedChat && pdfEditor && currentUserId) {
                           try {
+                            setUploadProgress({ show: true, message: 'PDF wird vorbereitet...' });
+                            
                             // Upload PDF to Supabase Storage
                             const { uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                            
+                            setUploadProgress({ show: true, message: 'PDF wird hochgeladen...' });
+                            
                             const uploadResult = await uploadChatFile(
                               pdfEditor.file,
                               String(selectedChat.id),
@@ -4146,8 +4178,11 @@ export default function ChatPage() {
                             
                             if (!uploadResult) {
                               console.error('Failed to upload PDF');
+                              setUploadProgress({ show: false, message: '' });
                               return;
                             }
+                            
+                            setUploadProgress({ show: true, message: 'PDF wird gesendet...' });
                             
                             // Send message via Socket.IO with uploaded file URL
                             await chatIntegration.sendMessage(
@@ -4160,12 +4195,15 @@ export default function ChatPage() {
                             );
                             
                             setPdfEditor(null);
+                            setUploadProgress({ show: false, message: '' });
                           } catch (error) {
                             console.error('Error sending PDF:', error);
+                            setUploadProgress({ show: false, message: '' });
                           }
                         }
                       }}
-                      className="p-2 rounded-full text-white"
+                      disabled={uploadProgress.show}
+                      className="p-2 rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)'}}
                     >
                       <Send className="w-4 h-4" />
