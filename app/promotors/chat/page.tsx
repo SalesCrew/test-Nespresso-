@@ -268,6 +268,7 @@ export default function PromotorChatPage() {
   });
   const [showParticipants, setShowParticipants] = useState(false);
   const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
+  const readOnlyTooltipRef = useRef<HTMLDivElement>(null);
 
   // Photo viewer functionality
   const [photoViewer, setPhotoViewer] = useState<{
@@ -420,6 +421,18 @@ export default function PromotorChatPage() {
     });
   
   console.log('[Promotor Chat] Final contacts count:', contacts.length);
+
+  useEffect(() => {
+    if (!showReadOnlyTooltip) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (readOnlyTooltipRef.current && !readOnlyTooltipRef.current.contains(target)) {
+        setShowReadOnlyTooltip(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showReadOnlyTooltip]);
 
 
   // Stub functions for features not yet integrated with Socket.IO
@@ -1342,9 +1355,9 @@ export default function PromotorChatPage() {
                         : `${selectedChat.memberNames?.slice(0, 2).join(', ')}...`}
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-600">
-                      {selectedChat.online ? 'online' : 'zuletzt online'}
-                    </p>
+                  <p className="text-sm text-gray-600">
+                    {selectedChat.online ? 'online' : 'zuletzt online'}
+                  </p>
                   )}
                 </div>
               </div>
@@ -1354,6 +1367,7 @@ export default function PromotorChatPage() {
                   <div 
                     className="relative"
                     onClick={() => setShowReadOnlyTooltip(prev => !prev)}
+                    ref={readOnlyTooltipRef}
                   >
                     <Lock className="h-5 w-5 text-gray-600" aria-label="Nur Admins dürfen schreiben" />
                     {showReadOnlyTooltip && (

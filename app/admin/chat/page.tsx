@@ -388,6 +388,19 @@ export default function ChatPage() {
   const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
   const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
+  const readOnlyTooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showReadOnlyTooltip) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (readOnlyTooltipRef.current && !readOnlyTooltipRef.current.contains(target)) {
+        setShowReadOnlyTooltip(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showReadOnlyTooltip]);
 
   // Helper functions for group members
   const formatGroupMembers = (memberNames: string[] = []) => {
@@ -1784,6 +1797,7 @@ export default function ChatPage() {
                   <div 
                     className="relative"
                     onClick={() => setShowReadOnlyTooltip(prev => !prev)}
+                    ref={readOnlyTooltipRef}
                   >
                     <Lock 
                       className="h-5 w-5 text-gray-600" 
