@@ -1374,8 +1374,8 @@ export default function PromotorChatPage() {
                       <div 
                         className="absolute top-8 right-0 z-50 w-64 rounded-lg shadow-lg border border-gray-200 bg-white p-3"
                       >
-                        <p className="text-sm font-medium text-gray-900">Nur Admins dürfen schreiben</p>
-                        <p className="text-xs text-gray-600 mt-1">Dies ist eine reine Ankündigungsgruppe. Admins können schreiben, Promotors lesen nur.</p>
+                        <p className="text-sm font-medium text-gray-900">Nur <span className="text-blue-600">Admins</span> dürfen schreiben</p>
+                        <p className="text-xs text-gray-600 mt-1">Dies ist eine reine <span className="text-blue-600">Ankündigungsgruppe</span>. <span className="text-blue-600">Admins</span> können schreiben, <span className="text-blue-600">Promotors</span> lesen nur.</p>
                       </div>
                     )}
                   </div>
