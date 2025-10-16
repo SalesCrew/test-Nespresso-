@@ -1628,7 +1628,7 @@ export default function PromotorChatPage() {
                                 : 'bg-white text-gray-800 border border-gray-200'
                             }`}
                             style={{
-                              ...(message.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {opacity: 0.8}),
+                              ...(message.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {}),
                               boxShadow: flashingMessageId === message.id
                                 ? '0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.8)'
                                 : message.own
@@ -2187,7 +2187,7 @@ export default function PromotorChatPage() {
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                       style={{
-                        ...(replyingTo.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {opacity: 0.8}),
+                        ...(replyingTo.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {}),
                         boxShadow: replyingTo.own 
                           ? '0 2px 6px rgba(30, 64, 175, 0.6)' 
                           : '0 2px 6px rgba(0,0,0,0.12)'
@@ -2316,7 +2316,7 @@ export default function PromotorChatPage() {
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                       style={{
-                        ...(editingMessage.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {opacity: 0.8}),
+                        ...(editingMessage.own ? {background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'} : {}),
                         boxShadow: editingMessage.own 
                           ? '0 2px 6px rgba(30, 64, 175, 0.6)' 
                           : '0 2px 6px rgba(0,0,0,0.12)'
