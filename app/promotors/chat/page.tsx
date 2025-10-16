@@ -2799,22 +2799,22 @@ export default function PromotorChatPage() {
                   ))}
                 </>
               ) : sortedContacts.map((contact, index) => (
-                <div
-                  key={contact.id}
-                  onClick={() => {
-                    if (longPressTriggered) {
-                      return; // Don't open chat if long press was triggered
-                    }
-                    setSelectedChat(contact);
-                  }}
-                  onTouchStart={(e) => handleContactLongPressStart(e, contact.id)}
-                  onTouchEnd={handleContactLongPressEnd}
-                  onTouchCancel={handleContactLongPressEnd}
-                  onMouseDown={(e) => handleContactLongPressStart(e, contact.id)}
-                  onMouseUp={handleContactLongPressEnd}
-                  onMouseLeave={handleContactLongPressEnd}
-                  className={`flex items-center p-3 m-2 cursor-pointer rounded-lg relative z-10 transition-colors duration-200 hover:bg-gray-100`}
-                >
+                <div key={contact.id}>
+                  <div
+                    onClick={() => {
+                      if (longPressTriggered) {
+                        return; // Don't open chat if long press was triggered
+                      }
+                      setSelectedChat(contact);
+                    }}
+                    onTouchStart={(e) => handleContactLongPressStart(e, contact.id)}
+                    onTouchEnd={handleContactLongPressEnd}
+                    onTouchCancel={handleContactLongPressEnd}
+                    onMouseDown={(e) => handleContactLongPressStart(e, contact.id)}
+                    onMouseUp={handleContactLongPressEnd}
+                    onMouseLeave={handleContactLongPressEnd}
+                    className={`flex items-center p-3 m-2 cursor-pointer rounded-lg relative z-10 transition-colors duration-200 hover:bg-gray-100`}
+                  >
                   {/* Avatar */}
                   <div className="relative">
                     <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
@@ -2864,6 +2864,14 @@ export default function PromotorChatPage() {
                       )}
                     </div>
                   </div>
+                  </div>
+                  
+                  {/* Divider line */}
+                  {index < sortedContacts.length - 1 && (
+                    <div className="ml-16 mr-2">
+                      <div className="border-b border-gray-200" style={{ opacity: 0.3 }}></div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
