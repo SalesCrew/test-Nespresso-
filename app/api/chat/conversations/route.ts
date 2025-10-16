@@ -141,10 +141,15 @@ export async function GET(request: NextRequest) {
         // For direct chats, find the other participant
         let conversationName = conv.name;
         let isGroup = conv.type === 'group';
+        let profilePictureUrl = conv.profile_picture_url;
 
         if (conv.type === 'direct' && !conversationName) {
           const otherParticipant = participantDetails.find(p => p.user_id !== user.id);
           conversationName = otherParticipant?.display_name || 'Unknown User';
+          // Use other participant's profile picture for direct chats
+          if (!profilePictureUrl) {
+            profilePictureUrl = otherParticipant?.profile_picture_url || null;
+          }
         }
 
         return {
@@ -156,7 +161,7 @@ export async function GET(request: NextRequest) {
           created_by: conv.created_by,
           created_at: conv.created_at,
           updated_at: conv.updated_at,
-          profile_picture_url: conv.profile_picture_url || null,
+          profile_picture_url: profilePictureUrl,
           participants: participantDetails,
           last_message: lastMessage ? {
             text: lastMessage.message_text,
