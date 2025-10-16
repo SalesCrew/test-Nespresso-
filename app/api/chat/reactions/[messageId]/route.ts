@@ -109,7 +109,7 @@ export async function POST(
       totalReactions: reactions?.length || 0,
     });
   } catch (error) {
-    console.error('Error in POST /api/chat/messages/[messageId]/react:', error);
+    console.error('Error in POST /api/chat/reactions/[messageId]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -183,7 +183,7 @@ export async function DELETE(
       totalReactions: reactions?.length || 0,
     });
   } catch (error) {
-    console.error('Error in DELETE /api/chat/messages/[messageId]/react:', error);
+    console.error('Error in DELETE /api/chat/reactions/[messageId]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
