@@ -2649,7 +2649,13 @@ export default function PromotorChatPage() {
                 </div>
 
                 {/* Thumbnail footer */}
-                <div className="h-20 bg-black bg-opacity-50 flex items-center justify-center px-4">
+                <div 
+                  className="bg-black bg-opacity-50 flex items-center justify-center px-4"
+                  style={{ 
+                    height: '80px',
+                    paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)'
+                  }}
+                >
                   <div className="flex gap-2 overflow-x-auto max-w-full">
                     {photoViewer.photos.map((photo, index) => (
                       <button
