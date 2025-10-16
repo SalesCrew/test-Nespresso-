@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ export default function ChatPage() {
   // Initialize chat integration
   const chatIntegration = useChatIntegration();
   const { socket, isConnected } = useSocket();
+  const searchParams = useSearchParams();
   const [promotorsList, setPromotorsList] = useState<Array<{ user_id: string; display_name: string; region?: string }>>([]);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -695,6 +697,19 @@ export default function ChatPage() {
     const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
     return timeB - timeA;
   });
+
+  // Handle ?open=conversationId query parameter
+  useEffect(() => {
+    const openParam = searchParams.get('open');
+    if (openParam && contacts.length > 0) {
+      const contactToOpen = contacts.find(c => c.id.toString() === openParam);
+      if (contactToOpen && (!selectedChat || selectedChat.id !== contactToOpen.id)) {
+        setSelectedChat(contactToOpen);
+        chatIntegration.fetchMessages(openParam);
+        chatIntegration.markAsRead(openParam);
+      }
+    }
+  }, [searchParams, contacts, selectedChat, chatIntegration]);
 
     // Handle sending messages
   const handleSendMessage = async (e: React.FormEvent) => {

@@ -41,11 +41,13 @@ interface Conversation {
   created_by: string;
   created_at: string;
   updated_at: string;
+  profile_picture_url?: string | null;
   participants: Array<{
     user_id: string;
     display_name: string;
     role: string;
     last_read_at: string;
+    profile_picture_url?: string | null;
   }>;
   last_message: {
     text: string;

@@ -279,4 +279,30 @@
   .animate-slide-from-right {
     animation: slide-from-right 0.3s ease-out;
   }
+
+  @keyframes admin-toast-slide-in {
+    from {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes admin-toast-slide-out {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+  }
+
+  .admin-toast-card {
+    animation: admin-toast-slide-in 180ms ease-out;
+  }
 }
