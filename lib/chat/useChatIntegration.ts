@@ -24,6 +24,10 @@ interface Message {
   deleted_for_all?: boolean;
   deleted_at?: string | null;
   deleted_by?: string | null;
+  reactions_summary?: Array<{ emoji: string; count: number }>;
+  my_reaction?: string | null;
+  top_reaction?: { emoji: string; count: number } | null;
+  total_reactions?: number;
   created_at: string;
   updated_at: string;
 }
@@ -283,6 +287,104 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [socket]);
 
+  // React to a message
+  const reactToMessage = useCallback(async (
+    conversationId: string,
+    messageId: string,
+    emoji: string
+  ) => {
+    try {
+      const response = await fetch(`/api/chat/messages/${messageId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state with new reaction summary
+        setMessages(prev => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] || []).map(msg =>
+            msg.id === messageId
+              ? {
+                  ...msg,
+                  reactions_summary: data.reactionsSummary,
+                  my_reaction: data.myReaction,
+                  top_reaction: data.topReaction,
+                  total_reactions: data.totalReactions,
+                }
+              : msg
+          ),
+        }));
+
+        // Emit socket event for real-time updates
+        if (socket) {
+          socket.emit('react_to_message', {
+            conversationId,
+            messageId,
+            emoji,
+          });
+        }
+
+        return data;
+      } else {
+        throw new Error('Failed to add reaction');
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      throw error;
+    }
+  }, [socket]);
+
+  // Remove reaction from a message
+  const removeReaction = useCallback(async (
+    conversationId: string,
+    messageId: string
+  ) => {
+    try {
+      const response = await fetch(`/api/chat/messages/${messageId}/react`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state
+        setMessages(prev => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] || []).map(msg =>
+            msg.id === messageId
+              ? {
+                  ...msg,
+                  reactions_summary: data.reactionsSummary,
+                  my_reaction: null,
+                  top_reaction: data.topReaction,
+                  total_reactions: data.totalReactions,
+                }
+              : msg
+          ),
+        }));
+
+        // Emit socket event for real-time updates
+        if (socket) {
+          socket.emit('remove_reaction', {
+            conversationId,
+            messageId,
+          });
+        }
+
+        return data;
+      } else {
+        throw new Error('Failed to remove reaction');
+      }
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+      throw error;
+    }
+  }, [socket]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -395,16 +497,42 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       }
     };
 
+    const handleReactionUpdated = (data: { 
+      conversationId: string; 
+      messageId: string; 
+      reactionsSummary: Array<{ emoji: string; count: number }>;
+      topReaction: { emoji: string; count: number } | null;
+      totalReactions: number;
+    }) => {
+      console.log('[Socket.IO] Reaction updated:', data);
+      
+      setMessages(prev => ({
+        ...prev,
+        [data.conversationId]: (prev[data.conversationId] || []).map(msg =>
+          msg.id === data.messageId
+            ? {
+                ...msg,
+                reactions_summary: data.reactionsSummary,
+                top_reaction: data.topReaction,
+                total_reactions: data.totalReactions,
+              }
+            : msg
+        ),
+      }));
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stopped_typing', handleUserStoppedTyping);
     socket.on('message_deleted', handleMessageDeleted);
+    socket.on('reaction_updated', handleReactionUpdated);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stopped_typing', handleUserStoppedTyping);
       socket.off('message_deleted', handleMessageDeleted);
+      socket.off('reaction_updated', handleReactionUpdated);
     };
   }, [socket, options]);
 
@@ -430,6 +558,8 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     createConversation,
     joinConversation,
     deleteMessage,
+    reactToMessage,
+    removeReaction,
   };
 };
 

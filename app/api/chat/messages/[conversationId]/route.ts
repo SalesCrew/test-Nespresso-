@@ -77,6 +77,50 @@ export async function GET(
       console.error('Error fetching sender profiles:', profilesError);
     }
 
+    // Fetch reactions for all visible messages
+    const messageIds = visibleMessages?.map(m => m.id) || [];
+    const { data: allReactions, error: reactionsError } = await svc
+      .from('chat_message_reactions')
+      .select('message_id, emoji, user_id')
+      .in('message_id', messageIds);
+
+    if (reactionsError) {
+      console.error('Error fetching reactions:', reactionsError);
+    }
+
+    // Build reaction summaries per message
+    const reactionsByMessage = new Map<string, Array<{ emoji: string; count: number }>>();
+    const myReactionsByMessage = new Map<string, string>();
+    const topReactionsByMessage = new Map<string, { emoji: string; count: number }>();
+
+    messageIds.forEach(msgId => {
+      const msgReactions = allReactions?.filter(r => r.message_id === msgId) || [];
+      const emojiCounts = new Map<string, number>();
+      
+      msgReactions.forEach(r => {
+        emojiCounts.set(r.emoji, (emojiCounts.get(r.emoji) || 0) + 1);
+        if (r.user_id === user.id) {
+          myReactionsByMessage.set(msgId, r.emoji);
+        }
+      });
+
+      const summary: Array<{ emoji: string; count: number }> = [];
+      emojiCounts.forEach((count, emoji) => {
+        summary.push({ emoji, count });
+      });
+
+      // Sort by count desc, then emoji asc
+      summary.sort((a, b) => {
+        if (a.count !== b.count) return b.count - a.count;
+        return a.emoji.localeCompare(b.emoji);
+      });
+
+      if (summary.length > 0) {
+        reactionsByMessage.set(msgId, summary);
+        topReactionsByMessage.set(msgId, { emoji: summary[0].emoji, count: summary[0].count });
+      }
+    });
+
     // For messages with reply_to_id, fetch the replied-to messages
     const replyToIds = visibleMessages
       ?.filter(m => m.reply_to_id)
@@ -117,6 +161,10 @@ export async function GET(
         sender_name: sender?.display_name || 'Unknown',
         sender_role: sender?.role || 'promotor',
         reply_to: replyToEnriched,
+        reactions_summary: reactionsByMessage.get(message.id) || [],
+        my_reaction: myReactionsByMessage.get(message.id) || null,
+        top_reaction: topReactionsByMessage.get(message.id) || null,
+        total_reactions: reactionsByMessage.get(message.id)?.reduce((sum, r) => sum + r.count, 0) || 0,
       };
     }) || [];
 
