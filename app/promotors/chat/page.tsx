@@ -1289,20 +1289,6 @@ export default function PromotorChatPage() {
 
   return (
     <div className="fixed inset-0 bg-gray-50/30 z-10" style={{ margin: '0 !important', padding: '0 !important' }}>
-      <style jsx>{`
-        @keyframes slideUpFromBottom {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
-
-
       {/* Main Content */}
       <div className="absolute inset-0 flex bg-gray-50">
         
@@ -3990,6 +3976,16 @@ export default function PromotorChatPage() {
         @keyframes skeleton-fade {
           0% { opacity: 0.4; }
           100% { opacity: 0.8; }
+        }
+        @keyframes slideUpFromBottom {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
         }
       `}</style>
     </div>

@@ -3240,11 +3240,6 @@ export default function ChatPage() {
                       msOverflowStyle: 'none'
                     }}
                   >
-                    <style jsx>{`
-                      div::-webkit-scrollbar {
-                        display: none;
-                      }
-                    `}</style>
                     <div className="grid grid-cols-8 gap-1" style={{ height: 'fit-content' }}>
                       {emojiCategories[emojiPicker.selectedCategory as keyof typeof emojiCategories]?.emojis.map((emoji, index) => (
                         <button
