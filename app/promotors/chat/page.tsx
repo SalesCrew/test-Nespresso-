@@ -387,6 +387,11 @@ export default function PromotorChatPage() {
         }
       }
       
+      // Get profile picture for direct chats (from the other participant)
+      const profilePicture = !conv.is_group && otherParticipant 
+        ? otherParticipant.profile_picture_url || null
+        : null;
+      
       return {
         id: conv.id,
         name: displayName,
@@ -400,7 +405,7 @@ export default function PromotorChatPage() {
         pinned: false,
         markedUnread: false,
         isGroup: conv.is_group,
-        profileImage: null,
+        profileImage: profilePicture,
         description: conv.description || undefined,
         members: conv.participants.map(p => p.user_id),
         memberNames: conv.participants.map(p => p.display_name),

@@ -620,6 +620,13 @@ export default function ChatPage() {
       }
     }
     
+    // Get profile picture for direct chats (from the other participant who is a promotor)
+    let profilePicture = null;
+    if (!conv.is_group && conv.participants) {
+      const otherParticipant = conv.participants.find((p: any) => p.user_id !== chatIntegration.currentUserId);
+      profilePicture = otherParticipant?.profile_picture_url || null;
+    }
+    
     return {
       id: conv.id,
       name: conv.name || 'Unknown',
@@ -633,7 +640,7 @@ export default function ChatPage() {
       pinned: false,
       markedUnread: false,
       isGroup: conv.is_group,
-      profileImage: null,
+      profileImage: profilePicture,
       description: conv.description || undefined,
       members: conv.participants.map(p => p.user_id),
       memberNames: conv.participants.map(p => p.display_name),

@@ -78,6 +78,20 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching user profiles:', profilesError);
     }
 
+    // Fetch profile pictures from promotor_profiles for promotor users
+    const promotorUserIds = userProfiles?.filter(p => p.role === 'promotor').map(p => p.user_id) || [];
+    const { data: promotorProfiles } = promotorUserIds.length > 0
+      ? await svc
+          .from('promotor_profiles')
+          .select('user_id, profile_picture_url')
+          .in('user_id', promotorUserIds)
+      : { data: [] };
+
+    // Create a map of user_id to profile_picture_url
+    const profilePictureMap = new Map(
+      (promotorProfiles || []).map((p: any) => [p.user_id, p.profile_picture_url])
+    );
+
     // Fetch last message for each conversation
     const { data: lastMessages, error: lastMessagesError } = await supabase
       .from('chat_messages')
@@ -98,11 +112,13 @@ export async function GET(request: NextRequest) {
         // Get participant details with profiles
         const participantDetails = convParticipants.map(p => {
           const profile = userProfiles?.find(up => up.user_id === p.user_id);
+          const profilePicture = profilePictureMap.get(p.user_id);
           return {
             user_id: p.user_id,
             display_name: profile?.display_name || 'Unknown',
             role: profile?.role || 'promotor',
             last_read_at: p.last_read_at,
+            profile_picture_url: profilePicture || null,
           };
         });
 
