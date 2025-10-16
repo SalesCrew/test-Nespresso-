@@ -3966,20 +3966,26 @@ export default function PromotorChatPage() {
             
             {/* Upload Progress Box */}
             {uploadProgress.show && (
-              <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[60] w-80 max-w-[90vw]">
-                <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
-                  <p className="text-sm font-medium text-gray-900 mb-3">{uploadProgress.message}</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                    <div 
-                      className="h-2.5 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${uploadProgress.progress}%`,
-                        background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'
-                      }}
-                    ></div>
+              <>
+                {/* Dark backdrop */}
+                <div className="fixed inset-0 bg-black bg-opacity-40 z-[59]"></div>
+                
+                {/* Progress box */}
+                <div className="fixed bottom-40 left-1/2 transform -translate-x-1/2 z-[60] w-80 max-w-[90vw]">
+                  <div className="rounded-lg shadow-xl border border-gray-200 p-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }}>
+                    <p className="text-sm font-medium text-gray-900 mb-3">{uploadProgress.message}</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                      <div 
+                        className="h-2.5 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${uploadProgress.progress}%`,
+                          background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         )}
