@@ -294,7 +294,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     emoji: string
   ) => {
     try {
-      const response = await fetch(`/api/chat/messages/${messageId}/react`, {
+      const response = await fetch(`/api/chat/reactions/${messageId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ emoji }),
@@ -344,7 +344,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     messageId: string
   ) => {
     try {
-      const response = await fetch(`/api/chat/messages/${messageId}/react`, {
+      const response = await fetch(`/api/chat/reactions/${messageId}`, {
         method: 'DELETE',
       });
 
