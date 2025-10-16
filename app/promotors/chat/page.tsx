@@ -31,6 +31,10 @@ interface Message {
   own: boolean;
   edited?: boolean;
   reaction?: string;
+  reactionsSummary?: Array<{ emoji: string; count: number }>;
+  myReaction?: string | null;
+  topReaction?: { emoji: string; count: number } | null;
+  totalReactions?: number;
   photo?: string;
   pdf?: string;
   pdfName?: string;
@@ -464,7 +468,11 @@ export default function PromotorChatPage() {
           time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
           own: msg.sender_id === currentUserId,
           edited: msg.edited,
-          reaction: undefined,
+          reaction: msg.my_reaction || undefined,
+          reactionsSummary: msg.reactions_summary || [],
+          myReaction: msg.my_reaction || null,
+          topReaction: msg.top_reaction || null,
+          totalReactions: msg.total_reactions || 0,
           photo: msg.message_type === 'photo' && msg.file_url ? msg.file_url : undefined,
           pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
           pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
