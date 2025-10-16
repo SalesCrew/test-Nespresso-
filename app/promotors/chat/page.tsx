@@ -21,6 +21,7 @@ interface Contact {
   members?: (string | number)[];
   memberNames?: string[];  // Store participant display names for groups
   readOnly?: boolean;  // Track if conversation is read-only
+  lastMessageTime?: string;  // For sorting by most recent
 }
 
 interface Message {
@@ -428,6 +429,7 @@ export default function PromotorChatPage() {
         members: conv.participants.map(p => p.user_id),
         memberNames: conv.participants.map(p => p.display_name),
         readOnly: conv.is_read_only,
+        lastMessageTime: conv.last_message?.created_at || conv.updated_at,
       };
     });
   
@@ -1296,11 +1298,15 @@ export default function PromotorChatPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showParticipants]);
 
-  // Sort contacts: pinned first, then by time
+  // Sort contacts: pinned first, then by most recent message
   const sortedContacts = [...contacts].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (!a.pinned && b.pinned) return 1;
-    return 0;
+    
+    // Sort by last message time (most recent first)
+    const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+    const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+    return timeB - timeA;
   });
 
 
