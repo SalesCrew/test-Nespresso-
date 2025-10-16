@@ -1584,6 +1584,22 @@ export default function PromotorChatPage() {
                 backgroundSize: '20px 20px'
               }}
             >
+              {chatIntegration.loading ? (
+                // Message Loading Skeleton
+                <div className="space-y-4">
+                  {[...Array(6)].map((_, index) => (
+                    <div 
+                      key={`msg-skeleton-${index}`} 
+                      className={`flex ${index % 3 === 0 ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-xs ${index % 3 === 0 ? 'bg-blue-100' : 'bg-white border border-gray-200'} rounded-lg p-3`}>
+                        <div className="h-4 bg-gray-200 rounded w-48 mb-2 animate-skeleton-fade"></div>
+                        <div className="h-4 bg-gray-200 rounded w-32 animate-skeleton-fade"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <div className="space-y-4">
                 {selectedChat && allMessages[selectedChat.id]?.map((message, index) => {
                   // Create fake dates for demonstration - different dates based on message groups
@@ -1960,6 +1976,7 @@ export default function PromotorChatPage() {
                 })}
                 <div ref={messagesEndRef} />
               </div>
+              )}
             </div>
 
             {/* Message Input */}
@@ -2779,7 +2796,23 @@ export default function PromotorChatPage() {
 
             {/* Contacts List - Scrollable */}
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-              {sortedContacts.map((contact, index) => (
+              {chatIntegration.loading ? (
+                // Loading Skeletons
+                <>
+                  {[...Array(8)].map((_, index) => (
+                    <div key={`skeleton-${index}`} className="flex items-center p-3 m-2">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                      <div className="ml-3 flex-1">
+                        <div className="h-4 bg-gray-200 rounded mb-2 w-2/3 animate-skeleton-fade"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2 animate-skeleton-fade"></div>
+                      </div>
+                      <div className="ml-auto">
+                        <div className="h-3 bg-gray-100 rounded w-12 animate-skeleton-fade"></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : sortedContacts.map((contact, index) => (
                 <div
                   key={contact.id}
                   onClick={() => {
@@ -3949,6 +3982,16 @@ export default function PromotorChatPage() {
         )}
 
       </div>
+
+      <style jsx global>{`
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
+        }
+      `}</style>
     </div>
   );
 }
