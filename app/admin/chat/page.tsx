@@ -1783,8 +1783,7 @@ export default function ChatPage() {
                 {selectedChat.isGroup && selectedChat.readOnly && (
                   <div 
                     className="relative"
-                    onMouseEnter={() => setShowReadOnlyTooltip(true)}
-                    onMouseLeave={() => setShowReadOnlyTooltip(false)}
+                    onClick={() => setShowReadOnlyTooltip(prev => !prev)}
                   >
                     <Lock 
                       className="h-5 w-5 text-gray-600" 
