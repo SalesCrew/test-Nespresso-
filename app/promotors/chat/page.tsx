@@ -273,6 +273,12 @@ export default function PromotorChatPage() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
   const readOnlyTooltipRef = useRef<HTMLDivElement>(null);
+  const [reactionDetails, setReactionDetails] = useState<{ 
+    show: boolean; 
+    messageId: string | number | null; 
+    reactions: Record<string, Array<{ user_id: string; display_name: string }>>; 
+    selectedEmoji: string | null;
+  }>({ show: false, messageId: null, reactions: {}, selectedEmoji: null });
 
   // Photo viewer functionality
   const [photoViewer, setPhotoViewer] = useState<{
@@ -1931,6 +1937,24 @@ export default function PromotorChatPage() {
                                   transform: 'translate(0, 0)',
                                   zIndex: 10
                                 }}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    const response = await fetch(`/api/chat/reactions/${message.id}/users`);
+                                    if (response.ok) {
+                                      const data = await response.json();
+                                      const firstEmoji = Object.keys(data.reactions)[0] || null;
+                                      setReactionDetails({
+                                        show: true,
+                                        messageId: message.id,
+                                        reactions: data.reactions,
+                                        selectedEmoji: firstEmoji,
+                                      });
+                                    }
+                                  } catch (error) {
+                                    console.error('Failed to fetch reaction details:', error);
+                                  }
+                                }}
                               >
                                 <span className="text-sm px-1.5 py-0.5 block leading-none">
                                   {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
@@ -3014,6 +3038,87 @@ export default function PromotorChatPage() {
                   >
                     Abbrechen
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Reaction Details Popup */}
+            {reactionDetails.show && (
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center"
+                onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
+              >
+                <div 
+                  className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header with emoji tabs */}
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-900">Reaktionen</h3>
+                      <button 
+                        onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    
+                    {/* Emoji filter tabs */}
+                    <div className="flex items-center space-x-2 overflow-x-auto">
+                      <button
+                        onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: null }))}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                          reactionDetails.selectedEmoji === null
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        Alle {Object.values(reactionDetails.reactions).reduce((sum, users) => sum + users.length, 0)}
+                      </button>
+                      {Object.entries(reactionDetails.reactions).map(([emoji, users]) => (
+                        <button
+                          key={emoji}
+                          onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: emoji }))}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                            reactionDetails.selectedEmoji === emoji
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {emoji} {users.length}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* User list */}
+                  <div className="p-4 max-h-80 overflow-y-auto">
+                    <div className="space-y-3">
+                      {(() => {
+                        const usersToShow = reactionDetails.selectedEmoji
+                          ? reactionDetails.reactions[reactionDetails.selectedEmoji] || []
+                          : Object.values(reactionDetails.reactions).flat();
+                        
+                        return usersToShow.map((user, index) => (
+                          <div key={index} className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                              <span className="text-white font-medium text-sm">{user.display_name.charAt(0)}</span>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{user.display_name}</p>
+                            </div>
+                            {reactionDetails.selectedEmoji === null && (() => {
+                              const userEmoji = Object.entries(reactionDetails.reactions).find(([_, users]) => 
+                                users.some(u => u.user_id === user.user_id)
+                              )?.[0];
+                              return userEmoji ? <span className="text-lg">{userEmoji}</span> : null;
+                            })()}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
