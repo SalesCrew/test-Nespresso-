@@ -2422,7 +2422,7 @@ export default function ChatPage() {
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                       style={{
-                        ...(message.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {opacity: 0.8}),
+                        ...(message.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}),
                         boxShadow: flashingMessageId === message.id 
                           ? '0 0 20px rgba(34, 197, 94, 0.8), 0 0 40px rgba(34, 197, 94, 0.8)'
                           : message.own 
@@ -2852,7 +2852,7 @@ export default function ChatPage() {
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                       style={{
-                        ...(replyingTo.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {opacity: 0.8}),
+                        ...(replyingTo.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}),
                         boxShadow: replyingTo.own 
                           ? '0 2px 6px rgba(16, 95, 45, 0.6)' 
                           : '0 2px 6px rgba(0,0,0,0.12)'
@@ -2981,7 +2981,7 @@ export default function ChatPage() {
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}
                       style={{
-                        ...(editingMessage.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {opacity: 0.8}),
+                        ...(editingMessage.own ? {background: 'linear-gradient(135deg, #22C55E, #105F2D)'} : {}),
                         boxShadow: editingMessage.own 
                           ? '0 2px 6px rgba(16, 95, 45, 0.6)' 
                           : '0 2px 6px rgba(0,0,0,0.12)'
