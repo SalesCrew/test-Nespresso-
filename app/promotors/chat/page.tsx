@@ -182,6 +182,7 @@ export default function PromotorChatPage() {
   const [attachmentPopup, setAttachmentPopup] = useState(false);
   const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; cropMode: boolean; crop: { x: number; y: number; width: number; height: number } | null } | null>(null);
   const [pdfEditor, setPdfEditor] = useState<{ show: boolean; file: File; caption: string } | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{ show: boolean; message: string; progress: number }>({ show: false, message: '', progress: 0 });
   const [colorPalette, setColorPalette] = useState<{ show: boolean; selectedColor: string }>({ show: false, selectedColor: '' });
   const [eraserPalette, setEraserPalette] = useState<{ show: boolean; selectedSize: number }>({ show: false, selectedSize: 0 });
   const [isDrawing, setIsDrawing] = useState(false);
@@ -3899,12 +3900,16 @@ export default function PromotorChatPage() {
                   onClick={async () => {
                     if (selectedChat && photoEditor && currentUserId) {
                       try {
+                      setUploadProgress({ show: true, message: 'Bild wird vorbereitet...', progress: 0 });
+                      
                       let finalImage = photoEditor.image;
                       
                       // Apply drawings and rotation if any exist
                       if (drawingPaths.length > 0 || photoEditor.rotation !== 0) {
                         finalImage = await combineImageWithDrawings(photoEditor.image, drawingPaths, photoEditor.rotation);
                       }
+                      
+                      setUploadProgress({ show: true, message: 'Bild wird hochgeladen...', progress: 33 });
                       
                         // Convert data URL to Blob
                         const { dataURLtoBlob, uploadChatFile } = await import('@/lib/chat/uploadChatFile');
@@ -3920,8 +3925,11 @@ export default function PromotorChatPage() {
                         
                         if (!uploadResult) {
                           console.error('Failed to upload photo');
+                          setUploadProgress({ show: false, message: '', progress: 0 });
                           return;
                         }
+                        
+                        setUploadProgress({ show: true, message: 'Bild wird gesendet...', progress: 66 });
                         
                         // Send message via Socket.IO with uploaded file URL
                         await chatIntegration.sendMessage(
@@ -3937,21 +3945,42 @@ export default function PromotorChatPage() {
                       setDrawingPaths([]);
                       setColorPalette({ show: false, selectedColor: '' });
                       setEraserPalette({ show: false, selectedSize: 0 });
+                      setUploadProgress({ show: false, message: '', progress: 0 });
                       
                         // Scroll to bottom after message arrives
                         setTimeout(() => scrollToBottom(), 100);
                       } catch (error) {
                         console.error('Error sending photo:', error);
+                        setUploadProgress({ show: false, message: '', progress: 0 });
                       }
                     }
                   }}
-                  className="p-2 rounded-full text-white flex-shrink-0"
+                  disabled={uploadProgress.show}
+                  className="p-2 rounded-full text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
+            
+            {/* Upload Progress Box */}
+            {uploadProgress.show && (
+              <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[60] w-80 max-w-[90vw]">
+                <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+                  <p className="text-sm font-medium text-gray-900 mb-3">{uploadProgress.message}</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                    <div 
+                      className="h-2.5 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${uploadProgress.progress}%`,
+                        background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -4018,8 +4047,13 @@ export default function PromotorChatPage() {
                   onClick={async () => {
                     if (selectedChat && pdfEditor && currentUserId) {
                       try {
+                        setUploadProgress({ show: true, message: 'PDF wird vorbereitet...', progress: 0 });
+                        
                         // Upload PDF to Supabase Storage
                         const { uploadChatFile } = await import('@/lib/chat/uploadChatFile');
+                        
+                        setUploadProgress({ show: true, message: 'PDF wird hochgeladen...', progress: 33 });
+                        
                         const uploadResult = await uploadChatFile(
                           pdfEditor.file,
                           String(selectedChat.id),
@@ -4029,8 +4063,11 @@ export default function PromotorChatPage() {
                         
                         if (!uploadResult) {
                           console.error('Failed to upload PDF');
+                          setUploadProgress({ show: false, message: '', progress: 0 });
                           return;
                         }
+                        
+                        setUploadProgress({ show: true, message: 'PDF wird gesendet...', progress: 66 });
                         
                         // Send message via Socket.IO with uploaded file URL
                         await chatIntegration.sendMessage(
@@ -4043,15 +4080,18 @@ export default function PromotorChatPage() {
                         );
 
                       setPdfEditor(null);
+                      setUploadProgress({ show: false, message: '', progress: 0 });
                       
                         // Scroll to bottom after message arrives
                         setTimeout(() => scrollToBottom(), 100);
                       } catch (error) {
                         console.error('Error sending PDF:', error);
+                        setUploadProgress({ show: false, message: '', progress: 0 });
                       }
                     }
                   }}
-                  className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0"
+                  disabled={uploadProgress.show}
+                  className="w-10 h-10 rounded-full text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{background: 'linear-gradient(135deg, #3B82F6, #1E40AF)'}}
                 >
                   <Send className="w-5 h-5" />
