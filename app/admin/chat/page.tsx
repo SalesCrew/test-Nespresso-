@@ -1750,13 +1750,16 @@ export default function ChatPage() {
                   <h2 className="text-lg font-semibold text-gray-900">{selectedChat.name}</h2>
                   {selectedChat.isGroup ? (
                     <p 
-                      className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                      className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 transition-colors break-words max-w-[55vw]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowParticipants(true);
                       }}
                     >
-                      {formatGroupMembers(selectedChat.memberNames || [])}
+                      {(() => {
+                        const names = selectedChat.memberNames || [];
+                        return names.length <= 3 ? names.join(', ') : `${names.slice(0, 2).join(', ')}...`;
+                      })()}
                     </p>
                   ) : (
                     <p className="text-sm text-gray-500">{selectedChat.online ? 'Online' : 'Zuletzt online heute'}</p>

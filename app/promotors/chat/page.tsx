@@ -1330,7 +1330,7 @@ export default function PromotorChatPage() {
                   <h2 className="text-lg font-semibold text-gray-900">{selectedChat.name}</h2>
                   {selectedChat.isGroup ? (
                     <p 
-                      className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
+                      className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 transition-colors break-words max-w-[55vw]"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowParticipants(true);
@@ -1338,7 +1338,7 @@ export default function PromotorChatPage() {
                     >
                       {selectedChat.memberNames && selectedChat.memberNames.length <= 3 
                         ? selectedChat.memberNames.join(', ')
-                        : `${selectedChat.memberNames?.slice(0, 3).join(', ')}...`}
+                        : `${selectedChat.memberNames?.slice(0, 2).join(', ')}...`}
                     </p>
                   ) : (
                     <p className="text-sm text-gray-600">
@@ -1349,6 +1349,9 @@ export default function PromotorChatPage() {
               </div>
               
               <div className="flex items-center space-x-2">
+                {selectedChat.isGroup && selectedChat.readOnly && (
+                  <Lock className="h-5 w-5 text-gray-600" aria-label="Nur Admins dürfen schreiben" />
+                )}
                 {isSelectMode && (
                   <>
                     <Copy 
