@@ -1956,7 +1956,7 @@ export default function PromotorChatPage() {
                                   }
                                 }}
                               >
-                                <span className="text-sm px-1.5 py-0.5 block leading-none">
+                                <span className="text-sm px-1.5 py-0.5 block leading-none text-gray-900">
                                   {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
                                 </span>
                               </div>
