@@ -3303,6 +3303,101 @@ export default function PromotorChatPage() {
                       `url("data:image/svg+xml,%3csvg width='${eraserPalette.selectedSize}' height='${eraserPalette.selectedSize}' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='${eraserPalette.selectedSize/2}' cy='${eraserPalette.selectedSize/2}' r='${eraserPalette.selectedSize/2-1}' fill='none' stroke='%23666' stroke-width='1'/%3e%3c/svg%3e") ${eraserPalette.selectedSize/2} ${eraserPalette.selectedSize/2}, auto` : 
                       'crosshair'
                   }}
+                  onTouchStart={(e) => {
+                    if (!colorPalette.selectedColor && !eraserPalette.selectedSize) return;
+                    e.preventDefault();
+                    saveToHistory();
+                    setIsDrawing(true);
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    
+                    if (colorPalette.selectedColor) {
+                      setDrawingPaths(prev => [...prev, { color: colorPalette.selectedColor, points: [{ x, y }] }]);
+                    } else if (eraserPalette.selectedSize) {
+                      const eraserRadius = eraserPalette.selectedSize / 2;
+                      setDrawingPaths(prev => {
+                        const newPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }> = [];
+                        prev.forEach(path => {
+                          const segments: Array<Array<{ x: number; y: number }>> = [];
+                          let currentSegment: Array<{ x: number; y: number }> = [];
+                          
+                          path.points.forEach(point => {
+                            const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+                            if (distance > eraserRadius) {
+                              currentSegment.push(point);
+                            } else {
+                              if (currentSegment.length > 1) {
+                                segments.push([...currentSegment]);
+                              }
+                              currentSegment = [];
+                            }
+                          });
+                          
+                          if (currentSegment.length > 1) {
+                            segments.push(currentSegment);
+                          }
+                          
+                          segments.forEach(segment => {
+                            if (segment.length > 1) {
+                              newPaths.push({ ...path, points: segment });
+                            }
+                          });
+                        });
+                        return newPaths;
+                      });
+                    }
+                  }}
+                  onTouchMove={(e) => {
+                    if (!isDrawing) return;
+                    e.preventDefault();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const touch = e.touches[0];
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+                    
+                    if (colorPalette.selectedColor) {
+                      setDrawingPaths(prev => {
+                        const newPaths = [...prev];
+                        newPaths[newPaths.length - 1].points.push({ x, y });
+                        return newPaths;
+                      });
+                    } else if (eraserPalette.selectedSize) {
+                      const eraserRadius = eraserPalette.selectedSize / 2;
+                      setDrawingPaths(prev => {
+                        const newPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }> = [];
+                        prev.forEach(path => {
+                          const segments: Array<Array<{ x: number; y: number }>> = [];
+                          let currentSegment: Array<{ x: number; y: number }> = [];
+                          
+                          path.points.forEach(point => {
+                            const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+                            if (distance > eraserRadius) {
+                              currentSegment.push(point);
+                            } else {
+                              if (currentSegment.length > 1) {
+                                segments.push([...currentSegment]);
+                              }
+                              currentSegment = [];
+                            }
+                          });
+                          
+                          if (currentSegment.length > 1) {
+                            segments.push(currentSegment);
+                          }
+                          
+                          segments.forEach(segment => {
+                            if (segment.length > 1) {
+                              newPaths.push({ ...path, points: segment });
+                            }
+                          });
+                        });
+                        return newPaths;
+                      });
+                    }
+                  }}
+                  onTouchEnd={() => setIsDrawing(false)}
                   onMouseDown={(e) => {
                     if (!colorPalette.selectedColor && !eraserPalette.selectedSize) return;
                     saveToHistory();
