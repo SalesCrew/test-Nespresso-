@@ -26,42 +26,57 @@ Since this is a public bucket, you need to set policies:
 #### Policy 1: Allow authenticated users to read
 - **Policy name**: `Allow authenticated users to read group pictures`
 - **Allowed operation**: `SELECT`
-- **Policy definition**:
+- **Policy definition** (copy-paste):
 ```sql
-(auth.role() = 'authenticated')
+(bucket_id = 'group-chat-pictures') AND (auth.role() = 'authenticated')
 ```
 - Click **Review** → **Save policy**
 
 #### Policy 2: Allow admins to upload
 - **Policy name**: `Allow admins to upload group pictures`
 - **Allowed operation**: `INSERT`
-- **Policy definition**:
+- **Policy definition** (copy-paste):
 ```sql
-(auth.uid() IN ( SELECT user_profiles.user_id
-   FROM user_profiles
-  WHERE (user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text]))))
+(bucket_id = 'group-chat-pictures')
+AND (
+  auth.uid() IN (
+    SELECT user_profiles.user_id
+    FROM user_profiles
+    WHERE user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text])
+  )
+)
 ```
 - Click **Review** → **Save policy**
 
 #### Policy 3: Allow admins to update
 - **Policy name**: `Allow admins to update group pictures`
 - **Allowed operation**: `UPDATE`
-- **Policy definition**:
+- **Policy definition** (copy-paste):
 ```sql
-(auth.uid() IN ( SELECT user_profiles.user_id
-   FROM user_profiles
-  WHERE (user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text]))))
+(bucket_id = 'group-chat-pictures')
+AND (
+  auth.uid() IN (
+    SELECT user_profiles.user_id
+    FROM user_profiles
+    WHERE user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text])
+  )
+)
 ```
 - Click **Review** → **Save policy**
 
 #### Policy 4: Allow admins to delete
 - **Policy name**: `Allow admins to delete group pictures`
 - **Allowed operation**: `DELETE`
-- **Policy definition**:
+- **Policy definition** (copy-paste):
 ```sql
-(auth.uid() IN ( SELECT user_profiles.user_id
-   FROM user_profiles
-  WHERE (user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text]))))
+(bucket_id = 'group-chat-pictures')
+AND (
+  auth.uid() IN (
+    SELECT user_profiles.user_id
+    FROM user_profiles
+    WHERE user_profiles.role = ANY (ARRAY['admin_staff'::text, 'admin_of_admins'::text])
+  )
+)
 ```
 - Click **Review** → **Save policy**
 
