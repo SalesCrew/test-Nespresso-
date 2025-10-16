@@ -156,6 +156,7 @@ export async function GET(request: NextRequest) {
           created_by: conv.created_by,
           created_at: conv.created_at,
           updated_at: conv.updated_at,
+          profile_picture_url: conv.profile_picture_url || null,
           participants: participantDetails,
           last_message: lastMessage ? {
             text: lastMessage.message_text,
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
     const supabase = createSupabaseServiceClient();
 
     const body = await request.json();
-    const { type, name, description, participantIds } = body;
+    const { type, name, description, participantIds, profilePictureUrl } = body;
 
     // Validate input
     if (!type || !['direct', 'group'].includes(type)) {
@@ -256,6 +257,7 @@ export async function POST(request: NextRequest) {
         description: description || null,
         is_read_only: type === 'group', // Groups are always read-only for promotors
         created_by: auth.user.id,
+        profile_picture_url: profilePictureUrl || null,
       })
       .select()
       .single();

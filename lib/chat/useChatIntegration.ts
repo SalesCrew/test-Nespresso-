@@ -188,7 +188,8 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     type: 'direct' | 'group',
     participantIds: string[],
     name?: string,
-    description?: string
+    description?: string,
+    profilePictureUrl?: string
   ) => {
     try {
       const response = await fetch('/api/chat/conversations', {
@@ -199,6 +200,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
           name,
           description,
           participantIds,
+          profilePictureUrl,
         }),
       });
 

@@ -387,10 +387,15 @@ export default function PromotorChatPage() {
         }
       }
       
-      // Get profile picture for direct chats (from the other participant)
-      const profilePicture = !conv.is_group && otherParticipant 
-        ? otherParticipant.profile_picture_url || null
-        : null;
+      // Get profile picture
+      let profilePicture = null;
+      if (conv.is_group) {
+        // For groups, use the group's profile picture
+        profilePicture = conv.profile_picture_url || null;
+      } else if (otherParticipant) {
+        // For direct chats, use the other participant's profile picture
+        profilePicture = otherParticipant.profile_picture_url || null;
+      }
       
       return {
         id: conv.id,

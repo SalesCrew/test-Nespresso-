@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import AdminNavigation from "@/components/AdminNavigation";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
 import { useSocket } from "@/lib/socket/SocketContext";
+import { uploadGroupPicture } from "@/lib/chat/uploadGroupPicture";
 
 interface Contact {
   id: string | number;  // Support both UUID strings and number IDs for compatibility
@@ -374,14 +375,16 @@ export default function ChatPage() {
   const [contactContextMenu, setContactContextMenu] = useState<{ show: boolean; x: number; y: number; contactId: number | null }>({
     show: false, x: 0, y: 0, contactId: null
   });
-  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: string[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null; readOnly: boolean }>({
-    show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false
+  const [groupCreationPopup, setGroupCreationPopup] = useState<{ show: boolean; selectedContacts: string[]; searchQuery: string; step: number; groupName: string; groupDescription: string; profileImage: string | null; profileImageFile: File | null; readOnly: boolean }>({
+    show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false
   });
   const [showParticipants, setShowParticipants] = useState(false);
   const [kickMemberDialog, setKickMemberDialog] = useState<{ show: boolean; memberName: string; memberIndex: number | null }>({ show: false, memberName: '', memberIndex: null });
   const [showPromotorSelection, setShowPromotorSelection] = useState(false);
   const [selectedPromotors, setSelectedPromotors] = useState<string[]>([]);
   const [activeRegionFilter, setActiveRegionFilter] = useState<string>("all");
+  const [groupPictureEdit, setGroupPictureEdit] = useState<{ show: boolean; conversationId: string | number | null }>({ show: false, conversationId: null });
+  const groupPictureInputRef = useRef<HTMLInputElement>(null);
   const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
   const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
@@ -620,9 +623,13 @@ export default function ChatPage() {
       }
     }
     
-    // Get profile picture for direct chats (from the other participant who is a promotor)
+    // Get profile picture
     let profilePicture = null;
-    if (!conv.is_group && conv.participants) {
+    if (conv.is_group) {
+      // For groups, use the group's profile picture
+      profilePicture = conv.profile_picture_url || null;
+    } else if (conv.participants) {
+      // For direct chats, use the other participant's profile picture
       const otherParticipant = conv.participants.find((p: any) => p.user_id !== chatIntegration.currentUserId);
       profilePicture = otherParticipant?.profile_picture_url || null;
     }
@@ -1086,7 +1093,7 @@ export default function ChatPage() {
         setEmojiPicker(prev => ({ ...prev, show: false }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
-        setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
+        setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
       }
     };
 
@@ -1146,7 +1153,7 @@ export default function ChatPage() {
           setEmojiPicker(prev => ({ ...prev, show: false }));
         }
         if (groupCreationPopup.show) {
-          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, readOnly: false });
+          setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
         }
         if (showPromotorSelection) {
           setShowPromotorSelection(false);
@@ -1531,7 +1538,8 @@ export default function ChatPage() {
                               reader.onload = (event) => {
                                 setGroupCreationPopup(prev => ({ 
                                   ...prev, 
-                                  profileImage: event.target?.result as string 
+                                  profileImage: event.target?.result as string,
+                                  profileImageFile: file
                                 }));
                               };
                               reader.readAsDataURL(file);
@@ -1566,12 +1574,24 @@ export default function ChatPage() {
                         if (!groupCreationPopup.groupName.trim()) return;
                         
                         try {
+                          // Upload profile picture if one was selected
+                          let profilePictureUrl: string | undefined = undefined;
+                          if (groupCreationPopup.profileImageFile) {
+                            try {
+                              profilePictureUrl = await uploadGroupPicture(groupCreationPopup.profileImageFile);
+                            } catch (uploadError) {
+                              console.error('Failed to upload group picture:', uploadError);
+                              // Continue without profile picture if upload fails
+                            }
+                          }
+
                           // Create new group conversation via API
                           const newConversation = await chatIntegration.createConversation(
                             'group',
                             groupCreationPopup.selectedContacts, // These are user_id strings
                             groupCreationPopup.groupName,
-                            groupCreationPopup.groupDescription || undefined
+                            groupCreationPopup.groupDescription || undefined,
+                            profilePictureUrl
                           );
                           
                           // Close popup and reset state
@@ -1583,6 +1603,7 @@ export default function ChatPage() {
                             groupName: '', 
                             groupDescription: '', 
                             profileImage: null, 
+                            profileImageFile: null,
                             readOnly: false 
                           });
                           
@@ -1703,7 +1724,14 @@ export default function ChatPage() {
             >
               <div className="flex items-center">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                  <div 
+                    className={`w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden ${selectedChat.isGroup ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                    onClick={() => {
+                      if (selectedChat.isGroup) {
+                        groupPictureInputRef.current?.click();
+                      }
+                    }}
+                  >
                     {selectedChat.profileImage ? (
                       <img 
                         src={selectedChat.profileImage} 
@@ -4361,7 +4389,46 @@ export default function ChatPage() {
        </div>
      )}
 
+      {/* Hidden file input for editing group picture */}
+      <input
+        ref={groupPictureInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file && selectedChat?.isGroup) {
+            try {
+              // Upload the new picture
+              const newPictureUrl = await uploadGroupPicture(file, selectedChat.id);
+              
+              // Update via API
+              const response = await fetch(`/api/chat/conversations/${selectedChat.id}/picture`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profilePictureUrl: newPictureUrl }),
+              });
 
-   </div>
-   );
- } 
+              if (response.ok) {
+                // Refresh conversations to get updated picture
+                await chatIntegration.fetchConversations();
+                
+                // Update selected chat state
+                setSelectedChat(prev => prev ? { ...prev, profileImage: newPictureUrl } : null);
+              } else {
+                console.error('Failed to update group picture');
+              }
+            } catch (error) {
+              console.error('Error updating group picture:', error);
+            }
+          }
+          // Reset input
+          if (e.target) {
+            e.target.value = '';
+          }
+        }}
+      />
+
+  </div>
+  );
+}
