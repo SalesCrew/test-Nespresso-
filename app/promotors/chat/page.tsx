@@ -267,6 +267,7 @@ export default function PromotorChatPage() {
     selectedTab: 'fotos'
   });
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showReadOnlyTooltip, setShowReadOnlyTooltip] = useState(false);
 
   // Photo viewer functionality
   const [photoViewer, setPhotoViewer] = useState<{
@@ -1350,7 +1351,21 @@ export default function PromotorChatPage() {
               
               <div className="flex items-center space-x-2">
                 {selectedChat.isGroup && selectedChat.readOnly && (
-                  <Lock className="h-5 w-5 text-gray-600" aria-label="Nur Admins dürfen schreiben" />
+                  <div 
+                    className="relative"
+                    onMouseEnter={() => setShowReadOnlyTooltip(true)}
+                    onMouseLeave={() => setShowReadOnlyTooltip(false)}
+                  >
+                    <Lock className="h-5 w-5 text-gray-600" aria-label="Nur Admins dürfen schreiben" />
+                    {showReadOnlyTooltip && (
+                      <div 
+                        className="absolute top-8 right-0 z-50 w-64 rounded-lg shadow-lg border border-gray-200 bg-white p-3"
+                      >
+                        <p className="text-sm font-medium text-gray-900">Nur Admins dürfen schreiben</p>
+                        <p className="text-xs text-gray-600 mt-1">Dies ist eine reine Ankündigungsgruppe. Admins können schreiben, Promotors lesen nur.</p>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {isSelectMode && (
                   <>
