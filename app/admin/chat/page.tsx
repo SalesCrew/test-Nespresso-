@@ -2699,9 +2699,9 @@ export default function ChatPage() {
                       </p>
                       
                       {/* Reaction Emoji */}
-                      {message.reaction && (
+                      {message.topReaction && (
                         <div 
-                          className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm`}
+                          className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm cursor-pointer hover:scale-110 transition-transform`}
                           style={{
                             bottom: '-13px',
                             transform: 'translate(0, 0)',
@@ -2709,7 +2709,7 @@ export default function ChatPage() {
                           }}
                         >
                           <span className="text-sm px-1.5 py-0.5 block leading-none">
-                            {message.reaction}
+                            {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
                           </span>
                         </div>
                       )}
