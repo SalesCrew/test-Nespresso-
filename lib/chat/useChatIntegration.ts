@@ -70,6 +70,23 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState<Record<string, Set<string>>>({});
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/me');
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserId(data.user_id || '');
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   // Fetch conversations on mount
   const fetchConversations = useCallback(async () => {
@@ -403,6 +420,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       setConversations(prev => {
         const updated = prev.map(conv => {
           if (conv.id === message.conversation_id) {
+            const isOwnMessage = message.sender_id === currentUserId;
             return {
               ...conv,
               last_message: {
@@ -414,7 +432,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
               },
               updated_at: message.created_at,
               // Increment unread count if message is not from current user
-              // (Note: This would need user ID check in actual implementation)
+              unread_count: isOwnMessage ? conv.unread_count : (conv.unread_count + 1),
             };
           }
           return conv;
@@ -549,6 +567,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     loading,
     typingUsers,
     isConnected,
+    currentUserId,
     fetchConversations,
     fetchMessages,
     sendMessage,
