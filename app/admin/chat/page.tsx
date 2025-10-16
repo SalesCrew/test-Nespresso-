@@ -927,17 +927,20 @@ export default function ChatPage() {
       });
     } else if (action.startsWith('react-') && contextMenu.messageId && selectedChat) {
       const emoji = action.split('react-')[1];
-      setAllMessages(prev => ({
-        ...prev,
-        [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
-          msg.id === contextMenu.messageId 
-            ? { 
-                ...msg, 
-                reaction: msg.reaction === emoji ? undefined : emoji // Toggle reaction
-              }
-            : msg
-        )
-      }));
+      const message = allMessages[selectedChat.id]?.find(msg => msg.id === contextMenu.messageId);
+      
+      if (message) {
+        // Check if user already reacted with this emoji - if so, remove it; otherwise add/switch
+        if (message.reaction === emoji) {
+          // Remove reaction
+          chatIntegration.removeReaction(String(selectedChat.id), String(contextMenu.messageId))
+            .catch(err => console.error('Failed to remove reaction:', err));
+        } else {
+          // Add or switch reaction
+          chatIntegration.reactToMessage(String(selectedChat.id), String(contextMenu.messageId), emoji)
+            .catch(err => console.error('Failed to add reaction:', err));
+        }
+      }
     } else {
       console.log(`${action} message ${contextMenu.messageId}`);
     }
