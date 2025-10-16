@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET(
   request: NextRequest,
@@ -46,8 +47,7 @@ export async function GET(
         user_id,
         user_profiles!inner (
           display_name,
-          role,
-          profile_picture_url
+          role
         )
       `)
       .eq('conversation_id', conversationId);
@@ -56,12 +56,30 @@ export async function GET(
       console.error('Error fetching participants:', participantsError);
     }
 
+    // Fetch profile pictures from promotor_profiles for promotor users
+    const svc = createSupabaseServiceClient();
+    const promotorUserIds = (participants || [])
+      .filter((p: any) => p.user_profiles?.role === 'promotor')
+      .map((p: any) => p.user_id);
+    
+    const { data: promotorProfiles } = promotorUserIds.length > 0
+      ? await svc
+          .from('promotor_profiles')
+          .select('user_id, profile_picture_url')
+          .in('user_id', promotorUserIds)
+      : { data: [] };
+
+    // Create a map of user_id to profile_picture_url
+    const profilePictureMap = new Map(
+      (promotorProfiles || []).map((p: any) => [p.user_id, p.profile_picture_url])
+    );
+
     // Map participants
     const mappedParticipants = (participants || []).map((p: any) => ({
       user_id: p.user_id,
       display_name: p.user_profiles?.display_name || 'Unknown',
       role: p.user_profiles?.role || 'promotor',
-      profile_picture_url: p.user_profiles?.profile_picture_url || null,
+      profile_picture_url: profilePictureMap.get(p.user_id) || null,
     }));
 
     // For direct chats, get the other participant's profile picture
