@@ -89,24 +89,39 @@ export function useAdminMessageToasts(currentUserId: string) {
 
   // Listen to socket messages
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('[Toast] No socket available');
+      return;
+    }
+
+    console.log('[Toast] Setting up new_message listener, pathname:', pathname, 'userId:', currentUserId);
 
     const handleNewMessage = async (message: SocketMessage) => {
+      console.log('[Toast] Received new_message event:', message);
+      console.log('[Toast] Current pathname:', pathname);
+      console.log('[Toast] Current userId:', currentUserId);
+      console.log('[Toast] Message sender:', message.sender_id);
+
       // Don't show toasts on chat page
       if (pathname === '/admin/chat') {
+        console.log('[Toast] Skipping - user is on chat page');
         return;
       }
 
       // Don't show toasts for own messages
       if (message.sender_id === currentUserId) {
+        console.log('[Toast] Skipping - own message');
         return;
       }
+
+      console.log('[Toast] Showing notification for message');
 
       // Get conversation from cache
       let conversation = conversationCacheRef.current.get(message.conversation_id);
       
       // If not in cache, fetch it
       if (!conversation) {
+        console.log('[Toast] Conversation not in cache, fetching:', message.conversation_id);
         await fetchSingleConversation(message.conversation_id);
         conversation = conversationCacheRef.current.get(message.conversation_id);
       }
@@ -152,6 +167,7 @@ export function useAdminMessageToasts(currentUserId: string) {
         timestamp: new Date(message.created_at),
       };
 
+      console.log('[Toast] Pushing notification:', notification);
       push(notification);
     };
 
