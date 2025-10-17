@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2 } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -638,6 +638,19 @@ export default function ChatPage() {
     ? { [selectedChat.id]: conversationMessages }
     : {};
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const evaluateScrollPosition = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 8;
+    setShowScrollToBottom(!atBottom);
+  }, []);
 
   // Convert real conversations to Contact format
   const contacts: Contact[] = chatIntegration.conversations.map(conv => {
@@ -2434,6 +2447,8 @@ export default function ChatPage() {
 
             {/* Messages Area */}
             <div 
+              ref={messagesContainerRef}
+              onScroll={evaluateScrollPosition}
               className="flex-1 overflow-y-auto pt-4 px-4 pb-20 [&::-webkit-scrollbar]:hidden"
               style={{
                 boxShadow: 'inset 20px 0 30px -20px rgba(0,0,0,0.15)',
@@ -3222,6 +3237,18 @@ export default function ChatPage() {
 
             {/* Message Input */}
             <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
+              {/* Scroll to bottom button */}
+              <button
+                type="button"
+                onClick={scrollToBottom}
+                className={`absolute left-1/2 -translate-x-1/2 -top-10 h-9 w-9 rounded-full flex items-center justify-center transition-opacity ${
+                  showScrollToBottom ? 'opacity-70' : 'opacity-0 pointer-events-none'
+                }`}
+                style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+                aria-label="Scroll to bottom"
+              >
+                <ChevronDown className="h-5 w-5 text-white" />
+              </button>
               <input 
                 type="text"
                 value={messageInput}

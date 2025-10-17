@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera } from "lucide-react";
+import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera, ChevronDown } from "lucide-react";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
 import { useSocket } from "@/lib/socket/SocketContext";
 
@@ -505,11 +505,21 @@ export default function PromotorChatPage() {
 
   // Refs for scroll behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom of messages
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const evaluateScrollPosition = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 8;
+    setShowScrollToBottom(!atBottom);
   };
 
   useEffect(() => {
@@ -1583,6 +1593,8 @@ export default function PromotorChatPage() {
 
             {/* Messages Area */}
             <div 
+              ref={messagesContainerRef}
+              onScroll={evaluateScrollPosition}
               className="flex-1 overflow-y-auto pt-4 px-4 pb-24 [&::-webkit-scrollbar]:hidden"
               style={{
                 boxShadow: 'inset 20px 0 30px -20px rgba(0,0,0,0.15)',
@@ -2010,6 +2022,18 @@ export default function PromotorChatPage() {
             {/* Message Input */}
             {!selectedChat?.readOnly && (
             <form className={`absolute bottom-4 left-4 right-4 ${deleteDialog.show ? 'z-30' : 'z-50'}`} onSubmit={handleSendMessage} style={{ background: 'none' }}>
+              {/* Scroll to bottom button */}
+              <button
+                type="button"
+                onClick={scrollToBottom}
+                className={`absolute left-1/2 -translate-x-1/2 -top-10 h-9 w-9 rounded-full flex items-center justify-center transition-opacity ${
+                  showScrollToBottom ? 'opacity-70' : 'opacity-0 pointer-events-none'
+                }`}
+                style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
+                aria-label="Scroll to bottom"
+              >
+                <ChevronDown className="h-5 w-5 text-white" />
+              </button>
               <input 
                 type="text"
                 value={messageInput}
