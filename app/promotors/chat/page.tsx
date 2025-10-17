@@ -1959,7 +1959,9 @@ export default function PromotorChatPage() {
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   try {
-                                    const response = await fetch(`/api/chat/reactions/${message.id}/users`);
+                                    const response = await fetch(`/api/chat/reactions/${String(message.id)}/users`, {
+                                      credentials: 'include'
+                                    });
                                     if (response.ok) {
                                       const data = await response.json();
                                       const firstEmoji = Object.keys(data.reactions)[0] || null;
@@ -1969,6 +1971,8 @@ export default function PromotorChatPage() {
                                         reactions: data.reactions,
                                         selectedEmoji: firstEmoji,
                                       });
+                                    } else {
+                                      console.error('Failed to fetch reaction details:', response.status);
                                     }
                                   } catch (error) {
                                     console.error('Failed to fetch reaction details:', error);
