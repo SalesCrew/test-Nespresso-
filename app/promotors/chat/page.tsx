@@ -1946,60 +1946,45 @@ export default function PromotorChatPage() {
                                 {message.time}
                               </span>
                             </div>
-                            
-                            {/* Reaction Emoji */}
-                            {message.topReaction && (
-                              <div 
-                                className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm cursor-pointer hover:scale-110 transition-transform`}
-                                style={{
-                                  bottom: '-13px',
-                                  transform: 'translate(0, 0)',
-                                  zIndex: 10
-                                }}
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  try {
-                                    const response = await fetch(`/api/chat/reactions/${String(message.id)}/users`, {
-                                      credentials: 'include'
-                                    });
-                                    if (response.ok) {
-                                      const data = await response.json();
-                                      const firstEmoji = Object.keys(data.reactions)[0] || null;
-                                      setReactionDetails({
-                                        show: true,
-                                        messageId: message.id,
-                                        reactions: data.reactions,
-                                        selectedEmoji: firstEmoji,
-                                      });
-                                    } else {
-                                      console.error('Failed to fetch reaction details:', response.status);
-                                    }
-                                  } catch (error) {
-                                    console.error('Failed to fetch reaction details:', error);
-                                  }
-                                }}
-                                onDoubleClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                }}
-                              >
-                                <span 
-                                  className="text-sm px-1.5 py-0.5 block leading-none text-gray-900"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                  }}
-                                  onDoubleClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                  }}
-                                >
-                                  {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
-                                </span>
-                              </div>
-                            )}
                           </div>
+                          
+                          {/* Reaction Emoji */}
+                          {message.topReaction && (
+                            <div 
+                              className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+                              style={{
+                                bottom: '-13px',
+                                transform: 'translate(0, 0)',
+                                zIndex: 10
+                              }}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const response = await fetch(`/api/chat/reactions/${String(message.id)}/users`, {
+                                    credentials: 'include'
+                                  });
+                                  if (response.ok) {
+                                    const data = await response.json();
+                                    const firstEmoji = Object.keys(data.reactions)[0] || null;
+                                    setReactionDetails({
+                                      show: true,
+                                      messageId: message.id,
+                                      reactions: data.reactions,
+                                      selectedEmoji: firstEmoji,
+                                    });
+                                  } else {
+                                    console.error('Failed to fetch reaction details:', response.status);
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to fetch reaction details:', error);
+                                }
+                              }}
+                            >
+                              <span className="text-sm px-1.5 py-0.5 block leading-none text-gray-900">
+                                {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
+                              </span>
+                            </div>
+                          )}
                           
                           {/* Checkbox for own messages (right side) */}
                           {isSelectMode && message.own && (
