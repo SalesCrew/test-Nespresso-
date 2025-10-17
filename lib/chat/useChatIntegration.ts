@@ -431,7 +431,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       }));
 
       // API call
-      const response = await fetch(`/api/chat/messages/${messageId}`, {
+      const response = await fetch(`/api/chat/messages/edit/${messageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message_text: newText }),

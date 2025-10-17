@@ -175,7 +175,7 @@ export async function PUT(
       message: completeMessage,
     });
   } catch (error) {
-    console.error('Error in PUT /api/chat/messages/[messageId]:', error);
+    console.error('Error in PUT /api/chat/messages/edit/[messageId]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
