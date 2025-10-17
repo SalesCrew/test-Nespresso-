@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { MessageNotification, useNotificationCenter } from '@/lib/notifications/NotificationCenterContext';
+import { useSocket } from '@/lib/socket/SocketContext';
 
 interface AdminMessageToastProps {
   notification: MessageNotification;
@@ -12,6 +13,7 @@ interface AdminMessageToastProps {
 
 export default function AdminMessageToast({ notification, onClose }: AdminMessageToastProps) {
   const router = useRouter();
+  const { socket } = useSocket();
   const { pin, unpin } = useNotificationCenter();
   const [isReplyMode, setIsReplyMode] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -48,29 +50,21 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
   };
 
   const handleSendReply = async () => {
-    if (!replyText.trim() || isSending) return;
+    if (!replyText.trim() || isSending || !socket) return;
 
     try {
       setIsSending(true);
       setError(null);
 
-      const response = await fetch('/api/chat/messages/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversation_id: notification.conversationId,
-          text: replyText.trim(),
-          reply_to_id: notification.messageId,
-        }),
+      // Send via Socket.IO for real-time delivery
+      socket.emit('send_message', {
+        conversationId: notification.conversationId,
+        text: replyText.trim(),
+        replyToId: notification.messageId,
       });
 
-      if (response.ok) {
-        // Success - close toast
-        onClose();
-      } else {
-        setError('Fehler beim Senden');
-        setIsSending(false);
-      }
+      // Success - close toast immediately (optimistic)
+      onClose();
     } catch (err) {
       console.error('Error sending reply:', err);
       setError('Fehler beim Senden');
