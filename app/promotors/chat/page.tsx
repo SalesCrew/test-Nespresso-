@@ -1700,7 +1700,6 @@ export default function PromotorChatPage() {
                             </div>
                           )}
 
-                          <div className="relative">
                           <div
                             className={`relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                               message.own
@@ -1725,6 +1724,11 @@ export default function PromotorChatPage() {
                             onMouseLeave={!isSelectMode ? handleLongPressEnd : undefined}
                             onDoubleClick={(e) => {
                               if (!isSelectMode) {
+                                // Check if click is on reaction pill - if so, don't open context menu
+                                const target = e.target as HTMLElement;
+                                if (target.closest('[data-reaction-pill]')) {
+                                  return;
+                                }
                                 // Double-click any message to open context menu
                                 e.preventDefault();
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -1947,11 +1951,11 @@ export default function PromotorChatPage() {
                                 {message.time}
                               </span>
                             </div>
-                          </div>
                           
                           {/* Reaction Emoji */}
                           {message.topReaction && (
                             <div 
+                              data-reaction-pill
                               className={`absolute ${message.own ? 'right-2' : 'left-2'} bg-white rounded-full border border-gray-200 shadow-sm cursor-pointer hover:scale-110 transition-transform`}
                               style={{
                                 bottom: '-13px',
