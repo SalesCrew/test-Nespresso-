@@ -1700,6 +1700,7 @@ export default function PromotorChatPage() {
                             </div>
                           )}
 
+                          <div className="relative">
                           <div
                             className={`relative max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                               message.own
@@ -1985,6 +1986,7 @@ export default function PromotorChatPage() {
                               </span>
                             </div>
                           )}
+                          </div>
                           
                           {/* Checkbox for own messages (right side) */}
                           {isSelectMode && message.own && (
