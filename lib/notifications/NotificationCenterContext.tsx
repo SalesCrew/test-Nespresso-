@@ -11,12 +11,15 @@ export interface MessageNotification {
   preview: string;
   avatarUrl?: string | null;
   timestamp: Date;
+  sticky?: boolean;
 }
 
 interface NotificationCenterContextType {
   notifications: MessageNotification[];
   push: (notification: MessageNotification) => void;
   remove: (id: string) => void;
+  pin: (id: string) => void;
+  unpin: (id: string) => void;
 }
 
 const NotificationCenterContext = createContext<NotificationCenterContextType | undefined>(undefined);
@@ -39,6 +42,31 @@ export function NotificationCenterProvider({ children }: { children: React.React
     }
   }, []);
 
+  const pin = useCallback((id: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, sticky: true } : n)
+    );
+    
+    // Cancel auto-dismiss timer for pinned notification
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
+  }, []);
+
+  const unpin = useCallback((id: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, sticky: false } : n)
+    );
+    
+    // Restart auto-dismiss timer
+    const timer = setTimeout(() => {
+      remove(id);
+    }, AUTO_DISMISS_MS);
+    timersRef.current.set(id, timer);
+  }, [remove]);
+
   const push = useCallback((notification: MessageNotification) => {
     console.log('[NotificationCenter] Push called with:', notification);
     setNotifications(prev => {
@@ -51,32 +79,47 @@ export function NotificationCenterProvider({ children }: { children: React.React
 
       let updated = [notification, ...prev];
 
-      // Keep only MAX_VISIBLE
+      // Keep only MAX_VISIBLE, but prefer removing non-sticky toasts
       if (updated.length > MAX_VISIBLE) {
-        const removed = updated.slice(MAX_VISIBLE);
-        removed.forEach(n => {
-          const timer = timersRef.current.get(n.id);
+        // Find first non-sticky toast to replace
+        const nonStickyIndex = updated.slice(MAX_VISIBLE).findIndex(n => !n.sticky);
+        if (nonStickyIndex >= 0) {
+          const indexToRemove = MAX_VISIBLE + nonStickyIndex;
+          const removed = updated[indexToRemove];
+          const timer = timersRef.current.get(removed.id);
           if (timer) {
             clearTimeout(timer);
-            timersRef.current.delete(n.id);
+            timersRef.current.delete(removed.id);
           }
-        });
-        updated = updated.slice(0, MAX_VISIBLE);
+          updated.splice(indexToRemove, 1);
+        } else {
+          // All sticky, remove oldest
+          const removed = updated.pop();
+          if (removed) {
+            const timer = timersRef.current.get(removed.id);
+            if (timer) {
+              clearTimeout(timer);
+              timersRef.current.delete(removed.id);
+            }
+          }
+        }
       }
 
       console.log('[NotificationCenter] Updated notifications:', updated);
       return updated;
     });
 
-    // Set auto-dismiss timer
-    const timer = setTimeout(() => {
-      remove(notification.id);
-    }, AUTO_DISMISS_MS);
-    timersRef.current.set(notification.id, timer);
+    // Set auto-dismiss timer (unless already sticky)
+    if (!notification.sticky) {
+      const timer = setTimeout(() => {
+        remove(notification.id);
+      }, AUTO_DISMISS_MS);
+      timersRef.current.set(notification.id, timer);
+    }
   }, [remove]);
 
   return (
-    <NotificationCenterContext.Provider value={{ notifications, push, remove }}>
+    <NotificationCenterContext.Provider value={{ notifications, push, remove, pin, unpin }}>
       {children}
     </NotificationCenterContext.Provider>
   );
