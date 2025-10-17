@@ -510,6 +510,7 @@ export default function PromotorChatPage() {
 
   // Scroll to bottom of messages
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const scrollButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -519,7 +520,23 @@ export default function PromotorChatPage() {
     const el = messagesContainerRef.current;
     if (!el) return;
     const atBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 8;
-    setShowScrollToBottom(!atBottom);
+    
+    if (!atBottom) {
+      // Not at bottom - start 3-second delay before showing button
+      if (!scrollButtonTimerRef.current) {
+        scrollButtonTimerRef.current = setTimeout(() => {
+          setShowScrollToBottom(true);
+          scrollButtonTimerRef.current = null;
+        }, 3000);
+      }
+    } else {
+      // At bottom - cancel timer and hide button
+      if (scrollButtonTimerRef.current) {
+        clearTimeout(scrollButtonTimerRef.current);
+        scrollButtonTimerRef.current = null;
+      }
+      setShowScrollToBottom(false);
+    }
   };
 
   useEffect(() => {
