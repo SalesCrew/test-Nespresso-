@@ -56,18 +56,29 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
       setIsSending(true);
       setError(null);
 
-      // Send via Socket.IO for real-time delivery
-      socket.emit('send_message', {
-        conversationId: notification.conversationId,
-        messageText: replyText.trim(),
-        messageType: 'text',
-        fileUrl: null,
-        fileName: null,
-        replyToId: notification.messageId,
-      });
-
-      // Success - close toast immediately (optimistic)
-      onClose();
+      // Send via Socket.IO for real-time delivery with acknowledgement callback
+      socket.emit(
+        'send_message',
+        {
+          conversationId: notification.conversationId,
+          messageText: replyText.trim(),
+          messageType: 'text',
+          fileUrl: null,
+          fileName: null,
+          replyToId: notification.messageId,
+        },
+        (response: { success?: boolean; message?: any; error?: string }) => {
+          if (response.success) {
+            // Success - close toast
+            onClose();
+          } else {
+            // Handle server error
+            console.error('Error sending reply:', response.error);
+            setError(response.error || 'Fehler beim Senden');
+            setIsSending(false);
+          }
+        }
+      );
     } catch (err) {
       console.error('Error sending reply:', err);
       setError('Fehler beim Senden');
