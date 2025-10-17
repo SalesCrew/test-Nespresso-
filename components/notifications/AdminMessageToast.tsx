@@ -180,6 +180,7 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
                 antworten
               </button>
             )}
+          </div>
         </div>
       </div>
 
