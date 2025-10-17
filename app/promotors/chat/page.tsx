@@ -1958,6 +1958,7 @@ export default function PromotorChatPage() {
                                 }}
                                 onClick={async (e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   try {
                                     const response = await fetch(`/api/chat/reactions/${String(message.id)}/users`, {
                                       credentials: 'include'
@@ -1978,8 +1979,22 @@ export default function PromotorChatPage() {
                                     console.error('Failed to fetch reaction details:', error);
                                   }
                                 }}
+                                onDoubleClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                }}
                               >
-                                <span className="text-sm px-1.5 py-0.5 block leading-none text-gray-900">
+                                <span 
+                                  className="text-sm px-1.5 py-0.5 block leading-none text-gray-900"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                  }}
+                                >
                                   {message.topReaction.emoji} {message.totalReactions && message.totalReactions > 1 ? message.totalReactions : ''}
                                 </span>
                               </div>
