@@ -730,14 +730,46 @@ export default function ChatPage() {
     if (!messageInput.trim() || !selectedChat) return;
 
     if (editingMessage) {
-      // TODO: Implement edit via Socket.IO in future
-      // For now, keep local edit functionality
-      setEditingMessage(null);
-      setEditAnimation(null);
-      const existingEditStyle = document.getElementById('edit-keyframes');
-      if (existingEditStyle) {
-        existingEditStyle.remove();
+      // Edit existing message
+      try {
+        // Don't allow empty edits
+        if (!messageInput.trim()) {
+          return;
+        }
+
+        // No changes made, just cancel
+        if (messageInput.trim() === editingMessage.content) {
+          setEditingMessage(null);
+          setEditAnimation(null);
+          setMessageInput("");
+          const existingEditStyle = document.getElementById('edit-keyframes');
+          if (existingEditStyle) {
+            existingEditStyle.remove();
+          }
+          return;
+        }
+
+        await chatIntegration.editMessage(
+          String(selectedChat.id),
+          String(editingMessage.id),
+          messageInput.trim()
+        );
+        
+        // Clear edit state
+        setEditingMessage(null);
+        setEditAnimation(null);
+        setMessageInput("");
+        
+        // Remove animation styles
+        const existingEditStyle = document.getElementById('edit-keyframes');
+        if (existingEditStyle) {
+          existingEditStyle.remove();
+        }
+      } catch (error) {
+        console.error('Failed to edit message:', error);
+        // Optionally show error notification to user
       }
+      return;
     } else {
       // Send new message via Socket.IO
       try {

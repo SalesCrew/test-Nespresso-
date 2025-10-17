@@ -404,6 +404,85 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [socket]);
 
+  // Edit a message
+  const editMessage = useCallback(async (
+    conversationId: string,
+    messageId: string,
+    newText: string
+  ) => {
+    try {
+      // Store original message for rollback
+      const originalMessages = messages[conversationId];
+      const originalMessage = originalMessages?.find(msg => msg.id === messageId);
+      
+      // Optimistic update
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: (prev[conversationId] || []).map(msg =>
+          msg.id === messageId
+            ? { 
+                ...msg, 
+                message_text: newText, 
+                edited: true, 
+                updated_at: new Date().toISOString() 
+              }
+            : msg
+        ),
+      }));
+
+      // API call
+      const response = await fetch(`/api/chat/messages/${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_text: newText }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update with server response
+        setMessages(prev => ({
+          ...prev,
+          [conversationId]: (prev[conversationId] || []).map(msg =>
+            msg.id === messageId 
+              ? {
+                  ...msg,
+                  message_text: data.message.message_text,
+                  edited: data.message.edited,
+                  updated_at: data.message.updated_at,
+                }
+              : msg
+          ),
+        }));
+
+        // Emit socket event for real-time updates
+        if (socket) {
+          socket.emit('edit_message', {
+            conversationId,
+            messageId,
+            newText,
+          });
+        }
+
+        return data;
+      } else {
+        // Revert optimistic update on error
+        if (originalMessage) {
+          setMessages(prev => ({
+            ...prev,
+            [conversationId]: (prev[conversationId] || []).map(msg =>
+              msg.id === messageId ? originalMessage : msg
+            ),
+          }));
+        }
+        throw new Error('Failed to edit message');
+      }
+    } catch (error) {
+      console.error('Error editing message:', error);
+      throw error;
+    }
+  }, [socket, messages]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -503,6 +582,28 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       }
     };
 
+    const handleMessageEdited = (payload: {
+      conversationId: string;
+      messageId: string;
+      message_text: string;
+      edited: boolean;
+      updated_at: string;
+    }) => {
+      setMessages(prev => ({
+        ...prev,
+        [payload.conversationId]: (prev[payload.conversationId] || []).map(msg =>
+          msg.id === payload.messageId
+            ? {
+                ...msg,
+                message_text: payload.message_text,
+                edited: true,
+                updated_at: payload.updated_at,
+              }
+            : msg
+        ),
+      }));
+    };
+
     const handleMessageDeleted = (data: { conversationId: string; messageId: string; deleteForEveryone: boolean }) => {
       if (data.deleteForEveryone) {
         // Replace message with deleted placeholder
@@ -545,6 +646,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stopped_typing', handleUserStoppedTyping);
     socket.on('message_deleted', handleMessageDeleted);
+    socket.on('message_edited', handleMessageEdited);
     socket.on('reaction_updated', handleReactionUpdated);
 
     return () => {
@@ -552,6 +654,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stopped_typing', handleUserStoppedTyping);
       socket.off('message_deleted', handleMessageDeleted);
+      socket.off('message_edited', handleMessageEdited);
       socket.off('reaction_updated', handleReactionUpdated);
     };
   }, [socket, options]);
@@ -579,6 +682,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     createConversation,
     joinConversation,
     deleteMessage,
+    editMessage,
     reactToMessage,
     removeReaction,
   };
