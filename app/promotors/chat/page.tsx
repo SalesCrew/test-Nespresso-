@@ -2886,16 +2886,18 @@ export default function PromotorChatPage() {
                         <span className="text-xs text-gray-500">{contact.time}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-sm text-gray-600 truncate flex items-center gap-1">
-                        {contact.lastMessageKind === 'photo' && (
-                          <Camera className="h-4 w-4 text-gray-700" />
-                        )}
-                        {contact.lastMessageKind === 'pdf' && (
-                          <FileText className="h-4 w-4 text-gray-700" />
-                        )}
-                        {contact.lastMessage}
-                      </p>
+                    <div className="flex items-center mt-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-600 truncate pr-2 flex items-center gap-1">
+                          {contact.lastMessageKind === 'photo' && (
+                            <Camera className="h-4 w-4 text-gray-700" />
+                          )}
+                          {contact.lastMessageKind === 'pdf' && (
+                            <FileText className="h-4 w-4 text-gray-700" />
+                          )}
+                          {contact.lastMessage}
+                        </p>
+                      </div>
                       {(contact.unread > 0 || contact.markedUnread) && (
                         <span 
                           className="text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
