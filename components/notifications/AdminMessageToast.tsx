@@ -59,7 +59,10 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
       // Send via Socket.IO for real-time delivery
       socket.emit('send_message', {
         conversationId: notification.conversationId,
-        text: replyText.trim(),
+        messageText: replyText.trim(),
+        messageType: 'text',
+        fileUrl: null,
+        fileName: null,
         replyToId: notification.messageId,
       });
 
