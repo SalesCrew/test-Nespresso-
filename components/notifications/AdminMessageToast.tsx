@@ -187,10 +187,10 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
       {/* Reply Input Area */}
       {isReplyMode && (
         <div 
-          className="px-3 pb-3 pt-0 transition-all"
+          className="px-3 pb-3 pt-2 transition-all"
           style={{
             maxHeight: isReplyMode ? '80px' : '0px',
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function AdminMessageToast({ notification, onClose }: AdminMessag
               onKeyDown={handleKeyDown}
               placeholder="Nachricht eingeben..."
               disabled={isSending}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none"
               onClick={(e) => e.stopPropagation()}
             />
             <button
