@@ -5,6 +5,9 @@ export async function GET(req: Request) {
   try {
     const svc = createSupabaseServiceClient()
     
+    // NOTE: harmless comment to trigger a new deploy on Vercel
+    // This does not affect runtime behavior.
+
     // Fetch invitation history
     const { data: history, error } = await svc
       .from('invitation_history')
