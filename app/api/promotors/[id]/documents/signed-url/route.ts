@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const userId = params.id;

@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
-    const server = createSupabaseServerClient();
+    const server = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await server.auth.getUser();
 
     if (authError || !user) {
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const server = createSupabaseServerClient();
+    const server = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await server.auth.getUser();
 
     if (authError || !user) {

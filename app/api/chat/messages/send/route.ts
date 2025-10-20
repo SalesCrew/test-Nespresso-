@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 // POST: Send a message (for quick replies from toasts)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {

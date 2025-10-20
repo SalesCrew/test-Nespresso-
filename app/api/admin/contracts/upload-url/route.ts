@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/supabase/queries';
 
 export async function POST(req: NextRequest) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const { ok } = await requireAdmin();

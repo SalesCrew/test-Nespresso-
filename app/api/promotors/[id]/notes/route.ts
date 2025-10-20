@@ -7,7 +7,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   
   if (!auth.user) {
@@ -41,7 +41,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   
   if (!auth.user) {

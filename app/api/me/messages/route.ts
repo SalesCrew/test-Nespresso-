@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function GET() {
   try {
-    const server = createSupabaseServerClient();
+    const server = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await server.auth.getUser();
 
     console.log('Auth check - user:', user?.id, 'error:', authError?.message);

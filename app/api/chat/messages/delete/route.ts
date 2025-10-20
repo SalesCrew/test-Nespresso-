@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 // DELETE: Handle message deletion (for me or for everyone)
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

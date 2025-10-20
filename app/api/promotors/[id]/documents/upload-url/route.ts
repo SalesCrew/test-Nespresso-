@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 const ALLOWED_TYPES = new Set(['passport','fuehrerschein','citizenship','arbeitserlaubnis','strafregister','additional']);
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const userId = params.id;

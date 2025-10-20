@@ -36,7 +36,7 @@ const applicationSchema = z.object({
 
 export async function GET() {
   // Temporary: allow any authenticated user to list, even if no profile is provisioned yet
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const svc = createSupabaseServiceClient();
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const server = createSupabaseServerClient();
+  const server = await createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const svc = createSupabaseServiceClient();

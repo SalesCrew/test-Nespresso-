@@ -8,7 +8,7 @@ export async function PUT(
   { params }: { params: { messageId: string } }
 ) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
