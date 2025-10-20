@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 export async function GET() {
   console.log('🔍 KPI-FEEDBACK GET: Request started');
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: { user } } = await server.auth.getUser();
     
     if (!user) {
@@ -96,7 +96,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: { user } } = await server.auth.getUser();
     
     if (!user) {

@@ -6,7 +6,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 export async function GET(request: NextRequest) {
   try {
     console.log('[/api/chat/conversations] Starting request');
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     console.log('[/api/chat/conversations] Supabase client created');
     
     // Get authenticated user
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication only (admin pages are protected at route level)
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: auth } = await server.auth.getUser();
     
     if (!auth.user) {

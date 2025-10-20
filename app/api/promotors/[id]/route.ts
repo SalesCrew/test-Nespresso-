@@ -9,7 +9,7 @@ function isSelfOrAdmin(requestingUserId: string, targetUserId: string, isAdmin: 
 }
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const server = await createSupabaseServerClient();
+  const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const server = await createSupabaseServerClient();
+  const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   

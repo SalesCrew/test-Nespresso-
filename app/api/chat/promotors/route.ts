@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     console.log('[/api/chat/promotors] Starting request');
     
     // Check authentication only
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: auth } = await server.auth.getUser();
     
     console.log('[/api/chat/promotors] User authenticated:', auth.user?.id);

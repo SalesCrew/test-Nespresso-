@@ -4,7 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { recomputeOnboarding } from '@/lib/onboarding/recompute';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const server = await createSupabaseServerClient();
+  const server = createSupabaseServerClient();
   const { data: auth } = await server.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   if (auth.user.id !== params.id) return NextResponse.json({ error: 'forbidden' }, { status: 403 });

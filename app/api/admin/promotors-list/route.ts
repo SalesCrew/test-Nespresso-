@@ -4,7 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function GET() {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: { user } } = await server.auth.getUser();
     
     if (!user) {

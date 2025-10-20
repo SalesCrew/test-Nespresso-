@@ -4,7 +4,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: auth } = await server.auth.getUser();
     
     if (!auth.user) {
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 // Confirm upload completion and save to database
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const { data: auth } = await server.auth.getUser();
     
     if (!auth.user) {

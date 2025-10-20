@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const service = createSupabaseServiceClient();
     
     // Check if user is authenticated
@@ -113,7 +113,7 @@ export async function GET() {
 // Update assignment tracking (start/stop times, status)
 export async function PATCH(request: Request) {
   try {
-    const server = await createSupabaseServerClient();
+    const server = createSupabaseServerClient();
     const service = createSupabaseServiceClient();
     
     // Check authentication

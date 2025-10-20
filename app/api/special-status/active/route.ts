@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from '@/lib/supabase/service';
 // GET: Get user's active special status
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 // DELETE: End active special status
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

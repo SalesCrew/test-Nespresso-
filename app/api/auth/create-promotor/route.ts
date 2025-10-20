@@ -12,7 +12,7 @@ const payloadSchema = z.object({
 
 export async function POST(req: NextRequest) {
   // Require an authenticated session but not strict admin during early provisioning
-  const server = await createSupabaseServerClient();
+  const server = createSupabaseServerClient();
   const { data: session } = await server.auth.getUser();
   if (!session.user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
