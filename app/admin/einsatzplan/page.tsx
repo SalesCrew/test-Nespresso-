@@ -1525,8 +1525,8 @@ export default function EinsatzplanPage() {
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    // Market filter - check if item.market matches the selected market
-    const marketMatch = !marketFilter || (item.market && item.market === marketFilter);
+    // Market filter
+    const marketMatch = !marketFilter || item.market === marketFilter;
     
     // Eye filter - hide all non-"Offen" items when active, based on UI status (dropdown value)
     const verplantMatch = !hideVerplant || item.status === 'Offen';
