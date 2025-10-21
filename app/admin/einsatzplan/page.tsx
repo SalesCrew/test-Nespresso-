@@ -1525,8 +1525,8 @@ export default function EinsatzplanPage() {
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
-    // Market filter
-    const marketMatch = !marketFilter || item.market === marketFilter;
+    // Market filter - trim whitespace for comparison
+    const marketMatch = !marketFilter || (item.market || '').trim() === marketFilter.trim();
     
     // Eye filter - hide all non-"Offen" items when active, based on UI status (dropdown value)
     const verplantMatch = !hideVerplant || item.status === 'Offen';
@@ -3874,9 +3874,9 @@ Import EP
                   } catch (error) {
                     console.error('Error saving assignment:', error);
                   }
-                  // Update the einsatzplan data
+                  // Update the einsatzplan data - preserve market field
                   setEinsatzplanData(prev => prev.map(item => 
-                    item.id === editingEinsatz.id ? editingEinsatz : item
+                    item.id === editingEinsatz.id ? { ...item, ...editingEinsatz } : item
                   ));
                   setShowDetailModal(false);
                   setSelectedEinsatz(null);
