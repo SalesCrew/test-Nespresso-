@@ -42,6 +42,8 @@ interface Conversation {
   created_at: string;
   updated_at: string;
   profile_picture_url?: string | null;
+  is_pinned?: boolean;
+  pinned_at?: string | null;
   participants: Array<{
     user_id: string;
     display_name: string;
@@ -483,6 +485,84 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [socket, messages]);
 
+  // Pin a conversation
+  const pinConversation = useCallback(async (conversationId: string) => {
+    try {
+      // Optimistic update
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversationId
+            ? { ...conv, is_pinned: true, pinned_at: new Date().toISOString() }
+            : conv
+        ).sort((a, b) => {
+          // Sort: pinned first, then by pinned_at, then by updated_at
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          if (a.is_pinned && b.is_pinned) {
+            const aTime = new Date(a.pinned_at || 0).getTime();
+            const bTime = new Date(b.pinned_at || 0).getTime();
+            if (aTime !== bTime) return bTime - aTime;
+          }
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        })
+      );
+
+      const response = await fetch(`/api/chat/conversations/${conversationId}/pin`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await fetchConversations();
+        throw new Error('Failed to pin conversation');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error pinning conversation:', error);
+      throw error;
+    }
+  }, [fetchConversations]);
+
+  // Unpin a conversation
+  const unpinConversation = useCallback(async (conversationId: string) => {
+    try {
+      // Optimistic update
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversationId
+            ? { ...conv, is_pinned: false, pinned_at: null }
+            : conv
+        ).sort((a, b) => {
+          // Sort: pinned first, then by pinned_at, then by updated_at
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          if (a.is_pinned && b.is_pinned) {
+            const aTime = new Date(a.pinned_at || 0).getTime();
+            const bTime = new Date(b.pinned_at || 0).getTime();
+            if (aTime !== bTime) return bTime - aTime;
+          }
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        })
+      );
+
+      const response = await fetch(`/api/chat/conversations/${conversationId}/unpin`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await fetchConversations();
+        throw new Error('Failed to unpin conversation');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error unpinning conversation:', error);
+      throw error;
+    }
+  }, [fetchConversations]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -685,6 +765,8 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     editMessage,
     reactToMessage,
     removeReaction,
+    pinConversation,
+    unpinConversation,
   };
 };
 

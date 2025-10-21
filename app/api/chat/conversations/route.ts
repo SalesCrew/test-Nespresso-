@@ -44,11 +44,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ conversations: [] });
     }
 
-    // Fetch conversation details
+    // Fetch conversation details (including pin data)
     const { data: conversations, error: conversationsError } = await supabase
       .from('chat_conversations')
-      .select('*')
+      .select('id, type, name, description, is_read_only, created_by, created_at, updated_at, profile_picture_url, is_pinned, pinned_at')
       .in('id', conversationIds)
+      .order('is_pinned', { ascending: false })
+      .order('pinned_at', { ascending: false, nullsFirst: false })
       .order('updated_at', { ascending: false });
 
     if (conversationsError) {
@@ -162,6 +164,8 @@ export async function GET(request: NextRequest) {
           created_at: conv.created_at,
           updated_at: conv.updated_at,
           profile_picture_url: profilePictureUrl,
+          is_pinned: conv.is_pinned || false,
+          pinned_at: conv.pinned_at || null,
           participants: participantDetails,
           last_message: lastMessage ? {
             text: lastMessage.message_text,

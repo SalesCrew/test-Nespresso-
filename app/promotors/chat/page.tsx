@@ -421,7 +421,7 @@ export default function PromotorChatPage() {
           : '',
         unread: conv.unread_count,
         online: false,
-        pinned: false,
+        pinned: conv.is_pinned || false,
         markedUnread: false,
         isGroup: conv.is_group,
         profileImage: profilePicture,
@@ -3040,13 +3040,19 @@ export default function PromotorChatPage() {
                     <hr className="border-gray-100 opacity-50" />
                     <button
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      onClick={() => {
+                      onClick={async () => {
                         if (contactContextMenu.contactId) {
-                          setContacts((prev: Contact[]) => prev.map((contact: Contact) => 
-                            contact.id === contactContextMenu.contactId 
-                              ? { ...contact, pinned: !contact.pinned }
-                              : contact
-                          ));
+                          const conversationId = String(contactContextMenu.contactId);
+                          const isPinned = currentContact?.pinned;
+                          try {
+                            if (isPinned) {
+                              await chatIntegration.unpinConversation(conversationId);
+                            } else {
+                              await chatIntegration.pinConversation(conversationId);
+                            }
+                          } catch (error) {
+                            console.error('Error toggling pin:', error);
+                          }
                         }
                         closeContactContextMenu();
                       }}
