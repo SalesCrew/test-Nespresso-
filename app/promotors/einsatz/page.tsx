@@ -3571,7 +3571,7 @@ const loadProcessState = async () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  <h3 className="text-lg font-semibold">Notiz</h3>
+                  <h3 className="text-lg font-semibold">Wichtige Einsatz Info!</h3>
                 </div>
                 <button
                   onClick={handleCloseNotePopup}
