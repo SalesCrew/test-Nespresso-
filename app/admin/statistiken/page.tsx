@@ -3105,8 +3105,17 @@ Liebe Grüße, dein Nespresso Team`;
                   </div>
                   <div className="relative">
                     {kpiHistoryLoading ? (
-                      <div className="flex justify-center py-8">
-                        <CgSpinner className="h-8 w-8 animate-spin text-gray-400" />
+                      <div className="overflow-y-auto scrollbar-hide space-y-2 max-h-52 px-1">
+                        {[...Array(5)].map((_, index) => (
+                          <div key={`skeleton-${index}`} className="flex items-center bg-gray-50 border border-gray-200 rounded p-2">
+                            <div className="h-3 bg-gray-200 rounded w-20 animate-skeleton-fade"></div>
+                            <div className="flex items-center space-x-4 ml-auto">
+                              <div className="h-4 bg-gray-200 rounded w-8 animate-skeleton-fade"></div>
+                              <div className="h-4 bg-gray-200 rounded w-12 animate-skeleton-fade"></div>
+                              <div className="h-4 bg-gray-200 rounded w-12 animate-skeleton-fade"></div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ) : kpiHistory.length === 0 ? (
                       <div className="text-center py-8 text-gray-500 text-sm">
@@ -3159,32 +3168,56 @@ Liebe Grüße, dein Nespresso Team`;
                 {/* Performance Averages */}
                 <div className="mt-auto">
                   <h4 className="text-center font-medium text-gray-700 mb-4">Performance Averages</h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    {/* All Time */}
-                    <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
-                      <h5 className="font-medium text-gray-600 mb-3 text-center">All Time</h5>
-                      <hr className="border-gray-300 mb-3" />
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className={`font-medium ${getAverageColor('mcet', calculateKPIAverages("alltime").mcet)}`}>
-                            {calculateKPIAverages("alltime").mcet}
-                          </span>
+                  {kpiHistoryLoading ? (
+                    <div className="grid grid-cols-3 gap-4">
+                      {[...Array(3)].map((_, idx) => (
+                        <div key={`avg-skeleton-${idx}`} className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
+                          <div className="h-4 bg-gray-200 rounded w-20 mx-auto mb-3 animate-skeleton-fade"></div>
+                          <hr className="border-gray-300 mb-3" />
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-200 rounded w-8 animate-skeleton-fade"></div>
+                            </div>
+                            <div className="flex justify-between">
+                              <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-200 rounded w-10 animate-skeleton-fade"></div>
+                            </div>
+                            <div className="flex justify-between">
+                              <div className="h-3 bg-gray-200 rounded w-20 animate-skeleton-fade"></div>
+                              <div className="h-3 bg-gray-200 rounded w-10 animate-skeleton-fade"></div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Avg TMA:</span>
-                          <span className={`font-medium ${getAverageColor('tma', calculateKPIAverages("alltime").tma)}`}>
-                            {calculateKPIAverages("alltime").tma}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Avg VL Share:</span>
-                          <span className={`font-medium ${getAverageColor('vlShare', calculateKPIAverages("alltime").vlShare)}`}>
-                            {calculateKPIAverages("alltime").vlShare}
-                          </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* All Time */}
+                      <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
+                        <h5 className="font-medium text-gray-600 mb-3 text-center">All Time</h5>
+                        <hr className="border-gray-300 mb-3" />
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Avg MC/ET:</span>
+                            <span className={`font-medium ${getAverageColor('mcet', calculateKPIAverages("alltime").mcet)}`}>
+                              {calculateKPIAverages("alltime").mcet}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Avg TMA:</span>
+                            <span className={`font-medium ${getAverageColor('tma', calculateKPIAverages("alltime").tma)}`}>
+                              {calculateKPIAverages("alltime").tma}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Avg VL Share:</span>
+                            <span className={`font-medium ${getAverageColor('vlShare', calculateKPIAverages("alltime").vlShare)}`}>
+                              {calculateKPIAverages("alltime").vlShare}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     {/* Last 30 Days */}
                     <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
@@ -3238,6 +3271,7 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -3247,6 +3281,17 @@ Liebe Grüße, dein Nespresso Team`;
 
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
+
+      {/* Skeleton Animation CSS */}
+      <style jsx>{`
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
+        }
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+      `}</style>
     </div>
   );
 } 
