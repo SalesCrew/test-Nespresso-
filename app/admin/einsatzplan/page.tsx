@@ -154,6 +154,9 @@ export default function EinsatzplanPage() {
   const [promotorFilterSearch, setPromotorFilterSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [marketFilter, setMarketFilter] = useState("");
+  const [showMarketDropdown, setShowMarketDropdown] = useState(false);
+  const [marketsList, setMarketsList] = useState<string[]>([]);
 
   const [showImportModal, setShowImportModal] = useState(false);
   const [importType, setImportType] = useState<'roh' | 'intern'>('roh');
@@ -1522,6 +1525,9 @@ export default function EinsatzplanPage() {
     // Status filter
     const statusMatch = !statusFilter || item.status === statusFilter;
     
+    // Market filter - check if item.market matches the selected market
+    const marketMatch = !marketFilter || (item.market && item.market === marketFilter);
+    
     // Eye filter - hide all non-"Offen" items when active, based on UI status (dropdown value)
     const verplantMatch = !hideVerplant || item.status === 'Offen';
     
@@ -1565,12 +1571,12 @@ export default function EinsatzplanPage() {
       }
     }
     
-    return regionMatch && plzMatch && promotorMatch && statusMatch && verplantMatch && dateMatch;
+    return regionMatch && plzMatch && promotorMatch && statusMatch && marketMatch && verplantMatch && dateMatch;
   }).sort((a, b) => {
     // Sort by date (nearest to farthest)
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
-  }, [einsatzplanData, regionFilter, plzFilter, promotorFilter, statusFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
+  }, [einsatzplanData, regionFilter, plzFilter, promotorFilter, statusFilter, marketFilter, hideVerplant, dateFilter, selectedWeeks, selectedDates, dateRange]);
 
   // Load invite counts and details for the currently filtered list
   useEffect(() => {
@@ -1686,6 +1692,7 @@ export default function EinsatzplanPage() {
           promotions: [{ id: r.id }],
           notes: r.notes || '',
           special_status: r.special_status || null,
+          market: r.metadata?.market || r.title || '',
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
@@ -1710,6 +1717,16 @@ export default function EinsatzplanPage() {
       
       setEinsatzplanData(mapped);
       console.log('🟢 State updated with', mapped.length, 'assignments');
+      
+      // Extract unique markets from assignments
+      const markets = new Set<string>();
+      rows.forEach((r: any) => {
+        const market = r.metadata?.market || r.title || '';
+        if (market && market.trim()) {
+          markets.add(market.trim());
+        }
+      });
+      setMarketsList(Array.from(markets).sort());
     } catch (e: any) {
       console.error('🔴 loadAssignments error:', e);
       alert(e?.message || 'Fehler beim Laden der Einsätze');
@@ -2005,6 +2022,54 @@ Import EP
                                     }`}
                                   >
                                     {status}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Market Filter Pill */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowMarketDropdown(!showMarketDropdown)}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                              marketFilter
+                                ? 'text-gray-700 scale-110' 
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {marketFilter ? (marketFilter.length > 20 ? marketFilter.substring(0, 20) + '...' : marketFilter) : 'Market'}
+                          </button>
+                          
+                          {showMarketDropdown && (
+                            <div 
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-80 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                            >
+                              <div className="p-2">
+                                <button
+                                  onClick={() => {
+                                    setMarketFilter("");
+                                    setShowMarketDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                  Alle Markets
+                                </button>
+                                {marketsList.map((market) => (
+                                  <button
+                                    key={market}
+                                    onClick={() => {
+                                      setMarketFilter(market);
+                                      setShowMarketDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                      marketFilter === market
+                                        ? 'bg-gray-100 text-gray-700'
+                                        : 'hover:bg-purple-100/50 text-gray-600'
+                                    }`}
+                                  >
+                                    {market}
                                   </button>
                                 ))}
                               </div>
