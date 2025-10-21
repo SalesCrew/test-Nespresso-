@@ -80,10 +80,24 @@ export default function AdminTooltipAuto({ delayMs = 2000 }: AdminTooltipAutoPro
     }
 
     const onMouseOut = (e: MouseEvent) => {
+      const fromEl = e.target as HTMLElement | null
       const toEl = e.relatedTarget as HTMLElement | null
       if (!targetRef.current) return hide()
-      if (toEl && targetRef.current.contains(toEl)) return
-      hide()
+      
+      // Don't hide if moving within the same button or its children
+      if (fromEl && targetRef.current.contains(fromEl) && toEl && targetRef.current.contains(toEl)) {
+        return
+      }
+      
+      // Don't hide if the target element still contains the mouse
+      if (toEl && targetRef.current.contains(toEl)) {
+        return
+      }
+      
+      // Hide if we left the button entirely
+      if (!toEl || !targetRef.current.contains(toEl)) {
+        hide()
+      }
     }
 
     const onScrollOrClick = () => hide()
