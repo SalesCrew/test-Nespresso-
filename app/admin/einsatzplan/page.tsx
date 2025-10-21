@@ -1692,7 +1692,7 @@ export default function EinsatzplanPage() {
           promotions: [{ id: r.id }],
           notes: r.notes || '',
           special_status: r.special_status || null,
-          market: r.metadata?.market || r.title || '',
+          market: r.location_text || '',
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
@@ -1718,10 +1718,10 @@ export default function EinsatzplanPage() {
       setEinsatzplanData(mapped);
       console.log('🟢 State updated with', mapped.length, 'assignments');
       
-      // Extract unique markets from assignments
+      // Extract unique markets from assignments (using location_text)
       const markets = new Set<string>();
       rows.forEach((r: any) => {
-        const market = r.metadata?.market || r.title || '';
+        const market = r.location_text || '';
         if (market && market.trim()) {
           markets.add(market.trim());
         }
