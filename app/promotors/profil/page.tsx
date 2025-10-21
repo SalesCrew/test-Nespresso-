@@ -55,6 +55,67 @@ const skeletonStyles = `
   }
 `;
 
+// Typing animation component for document names
+function TypingDocumentName({ documentName }: { documentName: string }) {
+  const [displayText, setDisplayText] = useState('');
+  const [isTypingReview, setIsTypingReview] = useState(false);
+  const [phase, setPhase] = useState<'typing-name' | 'showing-name' | 'typing-review' | 'showing-review'>('typing-name');
+  
+  const reviewText = 'Admins prüfen das Dokument';
+  
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    if (phase === 'typing-name') {
+      // Type out the document name character by character
+      if (displayText.length < documentName.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(documentName.slice(0, displayText.length + 1));
+        }, 80);
+      } else {
+        // Finished typing name, show it for 2 seconds
+        timeout = setTimeout(() => {
+          setPhase('showing-name');
+        }, 100);
+      }
+    } else if (phase === 'showing-name') {
+      // Show the full name for 2 seconds
+      timeout = setTimeout(() => {
+        setDisplayText('');
+        setPhase('typing-review');
+        setIsTypingReview(true);
+      }, 2000);
+    } else if (phase === 'typing-review') {
+      // Type out the review text character by character
+      if (displayText.length < reviewText.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(reviewText.slice(0, displayText.length + 1));
+        }, 80);
+      } else {
+        // Finished typing review text, show it for 2 seconds
+        timeout = setTimeout(() => {
+          setPhase('showing-review');
+        }, 100);
+      }
+    } else if (phase === 'showing-review') {
+      // Show the review text for 2 seconds
+      timeout = setTimeout(() => {
+        setDisplayText('');
+        setPhase('typing-name');
+        setIsTypingReview(false);
+      }, 2000);
+    }
+    
+    return () => clearTimeout(timeout);
+  }, [displayText, phase, documentName]);
+  
+  return (
+    <span className="text-xs text-gray-500">
+      {displayText}
+    </span>
+  );
+}
+
 export default function ProfilPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "stats">("overview")
   const [isEditingContact, setIsEditingContact] = useState(false)
@@ -1226,17 +1287,15 @@ export default function ProfilPage() {
               {visibleDocuments.map((document) => (
                 <div key={document.id} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{document.name}</span>
-                    {document.status === "pending" && (
-                      <span className="text-[10px] text-gray-400 opacity-30">
-                        Daten werden geprüft
-                        <span className="inline-block animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}>.</span>
-                        <span className="inline-block animate-bounce" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}>.</span>
-                        <span className="inline-block animate-bounce" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}>.</span>
-                      </span>
-                    )}
-                    {!document.required && document.status !== "pending" && (
-                      <span className="text-xs text-gray-400 italic">(optional)</span>
+                    {document.status === "pending" ? (
+                      <TypingDocumentName documentName={document.name} />
+                    ) : (
+                      <>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">{document.name}</span>
+                        {!document.required && (
+                          <span className="text-xs text-gray-400 italic">(optional)</span>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
