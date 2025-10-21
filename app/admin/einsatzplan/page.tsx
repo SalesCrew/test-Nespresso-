@@ -2039,7 +2039,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            {marketFilter ? (marketFilter.length > 20 ? marketFilter.substring(0, 20) + '...' : marketFilter) : 'Market'}
+                            {marketFilter ? (marketFilter.length > 15 ? marketFilter.substring(0, 15) + '...' : marketFilter) : 'Market'}
                           </button>
                           
                           {showMarketDropdown && (
