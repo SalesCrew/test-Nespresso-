@@ -84,6 +84,9 @@ export default function PromotorenPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [onboardingFilters, setOnboardingFilters] = useState<string[]>([]);
+  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const tooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
   
 
 
@@ -2098,13 +2101,29 @@ Dein Nespresso Team`;
                   return (
                     <button
                       key={config.key}
-                      data-tooltip={config.tooltip}
                       onClick={() => {
                         setOnboardingFilters(prev => 
                           prev.includes(config.key)
                             ? prev.filter(k => k !== config.key)
                             : [...prev, config.key]
                         );
+                      }}
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltipPosition({
+                          x: rect.left + rect.width / 2,
+                          y: rect.top - 8
+                        });
+                        tooltipTimerRef.current = setTimeout(() => {
+                          setHoveredTooltip(config.tooltip);
+                        }, 2000);
+                      }}
+                      onMouseLeave={() => {
+                        if (tooltipTimerRef.current) {
+                          clearTimeout(tooltipTimerRef.current);
+                          tooltipTimerRef.current = null;
+                        }
+                        setHoveredTooltip(null);
                       }}
                       style={{
                         boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
@@ -4553,6 +4572,23 @@ Dein Nespresso Team`;
         )}
 
         <AdminEddieAssistant />
+
+        {/* Tooltip for onboarding filters */}
+        {hoveredTooltip && (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+              transform: 'translate(-50%, -100%)',
+              zIndex: 9999,
+              pointerEvents: 'none'
+            }}
+            className="px-2 py-1 rounded-md bg-black/85 text-white text-xs shadow-lg"
+          >
+            {hoveredTooltip}
+          </div>
+        )}
       </div>
     </>
   );
