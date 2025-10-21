@@ -2843,8 +2843,8 @@ Dein Nespresso Team`;
                                 {[
                                   "Pass",
                                   "Führerschein", 
-                                  "Staatsbürgerschaftsnachweis",
                                   "Strafregister",
+                                  "Staatsbürgerschaftsnachweis",
                                   "Arbeitserlaubnis",
                                   "Zusätzliche Dokumente"
                                 ].map((docName, index) => {
