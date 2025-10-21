@@ -911,7 +911,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
             
             {/* Review Page 1: Personal & Contact Info */}
             {reviewPage === 1 && (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {/* Personal Info */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-3">
@@ -1153,7 +1153,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
 
             {/* Review Page 2: Work Preferences */}
             {reviewPage === 2 && (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {/* Spontaneity */}
                 <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-teal-100 dark:border-teal-800">
                   <div className="flex items-center justify-between mb-3">
@@ -1273,7 +1273,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
 
             {/* Review Page 3: Final Summary */}
             {reviewPage === 3 && (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6 border border-green-100 dark:border-green-800 text-center">
                   <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
                   <h3 className="font-semibold text-lg text-green-900 dark:text-green-100 mb-2">Bereit zum Absenden?</h3>
@@ -1295,27 +1295,6 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 </div>
               </div>
             )}
-
-            {/* Navigation buttons for review pages */}
-            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-              {reviewPage > 1 && (
-                <Button
-                  variant="outline"
-                  onClick={() => setReviewPage(reviewPage - 1)}
-                  className="flex-1"
-                >
-                  Zurück
-                </Button>
-              )}
-              {reviewPage < 3 && (
-                <Button
-                  onClick={() => setReviewPage(reviewPage + 1)}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                >
-                  Weiter
-                </Button>
-              )}
-            </div>
           </div>
         )
 
@@ -1400,7 +1379,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
             <CardContent className="space-y-6">
               {renderStep()}
               
-              {/* Normal navigation (hide on review step 13 as it has its own navigation) */}
+              {/* Normal navigation (for steps 1-12) */}
               {currentStep !== 13 && (
                 <div className="flex gap-3 pt-4">
                   {currentStep > 1 && (
@@ -1422,15 +1401,45 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 </div>
               )}
 
-              {/* Review step navigation (page 3 has submit button) */}
+              {/* Review step navigation - Pages 1 & 2 */}
+              {currentStep === 13 && reviewPage < 3 && (
+                <div className="flex gap-3 pt-4">
+                  {reviewPage > 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setReviewPage(reviewPage - 1)}
+                      className="flex-1"
+                    >
+                      Zurück
+                    </Button>
+                  )}
+                  {reviewPage === 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentStep(12)}
+                      className="flex-1"
+                    >
+                      Zurück zu Schritt 12
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => setReviewPage(reviewPage + 1)}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  >
+                    Weiter
+                  </Button>
+                </div>
+              )}
+
+              {/* Review step navigation - Page 3 (final) */}
               {currentStep === 13 && reviewPage === 3 && (
                 <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentStep(12)}
+                    onClick={() => setReviewPage(2)}
                     className="flex-1"
                   >
-                    Zurück zu Schritt 12
+                    Zurück
                   </Button>
                   <Button
                     onClick={handleNext}
