@@ -1112,6 +1112,26 @@ Liebe Grüße, dein Nespresso Team`;
     return ((currentValue - previousValue) / previousValue) * 100;
   };
 
+  // Get color for average values
+  const getAverageColor = (metric: 'mcet' | 'tma' | 'vlShare', value: string) => {
+    if (value === "N/A") return "text-gray-400";
+    const numValue = parseFloat(value);
+    
+    if (metric === 'mcet') {
+      if (numValue >= 4.0) return "text-green-600";
+      if (numValue >= 3.5) return "text-orange-500";
+      return "text-red-600";
+    } else if (metric === 'tma') {
+      if (numValue >= 70) return "text-green-600";
+      if (numValue >= 60) return "text-orange-500";
+      return "text-red-600";
+    } else { // vlShare
+      if (numValue >= 10) return "text-green-600";
+      if (numValue >= 5) return "text-orange-500";
+      return "text-red-600";
+    }
+  };
+
   const calculate6MonthsWaveChanges = () => {
     if (historyCards.length === 0) {
       return {
@@ -3096,11 +3116,6 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="overflow-y-auto scrollbar-hide space-y-2 max-h-52 px-1">
                         {/* Historical KPI Entries as Rows (newest first) */}
                         {kpiHistory.map((entry, index) => {
-                          const previousEntry = kpiHistory[index + 1];
-                          const mcetChange = previousEntry ? calculateKPIChange(entry.mc_et, previousEntry.mc_et) : null;
-                          const tmaChange = previousEntry ? calculateKPIChange(entry.tma, previousEntry.tma) : null;
-                          const vlChange = previousEntry ? calculateKPIChange(entry.vl_value, previousEntry.vl_value) : null;
-                          
                           const entryDate = new Date(entry.created_at);
                           const monthYear = entryDate.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
 
@@ -3108,47 +3123,20 @@ Liebe Grüße, dein Nespresso Team`;
                             <div key={entry.id} className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
                               <div className="text-xs text-gray-600 w-20">{monthYear}</div>
                               <div className="flex items-center space-x-4 ml-auto">
-                                <div className="flex flex-col items-center">
-                                  <div className={`text-sm font-medium w-8 text-center ${
-                                    entry.mc_et >= 4.0 ? 'text-green-600' : entry.mc_et >= 3.5 ? 'text-orange-500' : 'text-red-600'
-                                  }`}>
-                                    {entry.mc_et.toFixed(1)}
-                                  </div>
-                                  {mcetChange !== null && (
-                                    <div className={`text-[10px] font-medium ${
-                                      mcetChange >= 0 ? 'text-green-600' : 'text-red-600'
-                                    }`}>
-                                      {mcetChange >= 0 ? '+' : ''}{mcetChange.toFixed(0)}%
-                                    </div>
-                                  )}
+                                <div className={`text-sm font-medium w-8 text-center ${
+                                  entry.mc_et >= 4.0 ? 'text-green-600' : entry.mc_et >= 3.5 ? '' : 'text-red-600'
+                                }`} style={entry.mc_et >= 3.5 && entry.mc_et < 4.0 ? {color: "#FD7E14"} : {}}>
+                                  {entry.mc_et.toFixed(1)}
                                 </div>
-                                <div className="flex flex-col items-center">
-                                  <div className={`text-sm font-medium w-12 text-center ${
-                                    entry.tma >= 70 ? 'text-green-600' : entry.tma >= 60 ? 'text-orange-500' : 'text-red-600'
-                                  }`}>
-                                    {entry.tma.toFixed(0)}%
-                                  </div>
-                                  {tmaChange !== null && (
-                                    <div className={`text-[10px] font-medium ${
-                                      tmaChange >= 0 ? 'text-green-600' : 'text-red-600'
-                                    }`}>
-                                      {tmaChange >= 0 ? '+' : ''}{tmaChange.toFixed(0)}%
-                                    </div>
-                                  )}
+                                <div className={`text-sm font-medium w-12 text-center ${
+                                  entry.tma >= 70 ? 'text-green-600' : entry.tma >= 60 ? '' : 'text-red-600'
+                                }`} style={entry.tma >= 60 && entry.tma < 70 ? {color: "#FD7E14"} : {}}>
+                                  {entry.tma.toFixed(0)}%
                                 </div>
-                                <div className="flex flex-col items-center">
-                                  <div className={`text-sm font-medium w-12 text-center ${
-                                    entry.vl_value >= 10 ? 'text-green-600' : entry.vl_value >= 5 ? 'text-orange-500' : 'text-red-600'
-                                  }`}>
-                                    {entry.vl_value.toFixed(0)}%
-                                  </div>
-                                  {vlChange !== null && (
-                                    <div className={`text-[10px] font-medium ${
-                                      vlChange >= 0 ? 'text-green-600' : 'text-red-600'
-                                    }`}>
-                                      {vlChange >= 0 ? '+' : ''}{vlChange.toFixed(0)}%
-                                    </div>
-                                  )}
+                                <div className={`text-sm font-medium w-12 text-center ${
+                                  entry.vl_value >= 10 ? 'text-green-600' : entry.vl_value >= 5 ? '' : 'text-red-600'
+                                }`} style={entry.vl_value >= 5 && entry.vl_value < 10 ? {color: "#FD7E14"} : {}}>
+                                  {entry.vl_value.toFixed(0)}%
                                 </div>
                               </div>
                             </div>
@@ -3179,19 +3167,19 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className={`font-medium ${calculateKPIAverages("alltime").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('mcet', calculateKPIAverages("alltime").mcet)}`}>
                             {calculateKPIAverages("alltime").mcet}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className={`font-medium ${calculateKPIAverages("alltime").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('tma', calculateKPIAverages("alltime").tma)}`}>
                             {calculateKPIAverages("alltime").tma}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className={`font-medium ${calculateKPIAverages("alltime").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('vlShare', calculateKPIAverages("alltime").vlShare)}`}>
                             {calculateKPIAverages("alltime").vlShare}
                           </span>
                         </div>
@@ -3205,19 +3193,19 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className={`font-medium ${calculateKPIAverages("30days").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('mcet', calculateKPIAverages("30days").mcet)}`}>
                             {calculateKPIAverages("30days").mcet}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className={`font-medium ${calculateKPIAverages("30days").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('tma', calculateKPIAverages("30days").tma)}`}>
                             {calculateKPIAverages("30days").tma}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className={`font-medium ${calculateKPIAverages("30days").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('vlShare', calculateKPIAverages("30days").vlShare)}`}>
                             {calculateKPIAverages("30days").vlShare}
                           </span>
                         </div>
@@ -3231,19 +3219,19 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className={`font-medium ${calculateKPIAverages("6months").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('mcet', calculateKPIAverages("6months").mcet)}`}>
                             {calculateKPIAverages("6months").mcet}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className={`font-medium ${calculateKPIAverages("6months").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('tma', calculateKPIAverages("6months").tma)}`}>
                             {calculateKPIAverages("6months").tma}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className={`font-medium ${calculateKPIAverages("6months").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                          <span className={`font-medium ${getAverageColor('vlShare', calculateKPIAverages("6months").vlShare)}`}>
                             {calculateKPIAverages("6months").vlShare}
                           </span>
                         </div>
