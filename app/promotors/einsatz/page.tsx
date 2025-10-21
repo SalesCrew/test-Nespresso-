@@ -1984,7 +1984,7 @@ const loadProcessState = async () => {
                   }}
                 >
                   <FileText className="h-3.5 w-3.5 mr-1" /> 
-                  <span className="text-xs font-medium">Notiz</span>
+                  <span className="text-xs font-medium">Wichtige Einsatz Info!</span>
                 </div>
               )}
             </div>
