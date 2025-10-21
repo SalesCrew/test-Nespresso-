@@ -17,20 +17,6 @@ export default function AdminTooltipAuto({ delayMs = 2000 }: AdminTooltipAutoPro
   const targetRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    const isClickable = (el: HTMLElement | null) => {
-      if (!el) return false
-      const role = el.getAttribute("role")
-      const tag = el.tagName.toLowerCase()
-      const hasOnclick = (el as any).onclick || el.getAttribute("onClick")
-      return (
-        tag === "button" ||
-        el.hasAttribute("data-tooltip") ||
-        role === "button" ||
-        hasOnclick ||
-        el.closest("button,[role=button]") !== null
-      )
-    }
-
     const getTooltipText = (el: HTMLElement | null): string => {
       if (!el) return ""
       const explicit = el.getAttribute("data-tooltip") || el.getAttribute("title") || el.getAttribute("aria-label")
@@ -72,29 +58,26 @@ export default function AdminTooltipAuto({ delayMs = 2000 }: AdminTooltipAutoPro
     }
 
     const onMouseOver = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement) || null
-      const clickable = (el && isClickable(el)) ? el : (el?.closest("button,[role=button],[data-tooltip]") as HTMLElement | null)
-      if (clickable) {
-        showAfterDelay(clickable)
+      const target = e.target as HTMLElement
+      if (!target) return
+      
+      // Find the closest element with tooltip attributes
+      const tooltipEl = target.closest("[data-tooltip],[title],[aria-label]") as HTMLElement | null
+      
+      if (tooltipEl) {
+        showAfterDelay(tooltipEl)
       }
     }
 
     const onMouseOut = (e: MouseEvent) => {
-      const fromEl = e.target as HTMLElement | null
       const toEl = e.relatedTarget as HTMLElement | null
-      if (!targetRef.current) return hide()
       
-      // Don't hide if moving within the same button or its children
-      if (fromEl && targetRef.current.contains(fromEl) && toEl && targetRef.current.contains(toEl)) {
+      if (!targetRef.current) {
+        hide()
         return
       }
       
-      // Don't hide if the target element still contains the mouse
-      if (toEl && targetRef.current.contains(toEl)) {
-        return
-      }
-      
-      // Hide if we left the button entirely
+      // Hide if we left the element entirely (mouse is no longer over it or its children)
       if (!toEl || !targetRef.current.contains(toEl)) {
         hide()
       }
