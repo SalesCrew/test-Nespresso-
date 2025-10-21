@@ -1153,9 +1153,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               </div>
             )}
 
-              {/* Review Page 2: Work Preferences */}
-              {reviewPage === 2 && (
-                <div className="space-y-3 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Review Page 2: Work Preferences */}
+            {reviewPage === 2 && (
+              <div className="space-y-3 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {/* Spontaneity */}
                 <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-teal-100 dark:border-teal-800">
                   <div className="flex items-center justify-between mb-3">
@@ -1273,9 +1273,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               </div>
             )}
 
-              {/* Review Page 3: Final Summary */}
-              {reviewPage === 3 && (
-                <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Review Page 3: Final Summary */}
+            {reviewPage === 3 && (
+              <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6 border border-green-100 dark:border-green-800 text-center">
                   <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
                   <h3 className="font-semibold text-lg text-green-900 dark:text-green-100 mb-2">Bereit zum Absenden?</h3>
