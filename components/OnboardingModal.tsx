@@ -1227,7 +1227,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                     <div className="flex flex-wrap gap-1">
                       {formData.workingDays.map((day) => (
                         <Badge key={day} variant="secondary" className="text-xs bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-100">
-                          {day === 'mo' ? 'Mo' : day === 'di' ? 'Di' : day === 'mi' ? 'Mi' : day === 'do' ? 'Do' : day === 'fr' ? 'Fr' : day === 'sa' ? 'Sa' : 'So'}
+                          {day}
                         </Badge>
                       ))}
                     </div>
