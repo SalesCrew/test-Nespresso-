@@ -18,7 +18,8 @@ import {
   Target,
   Calendar,
   Timer,
-  X
+  X,
+  CheckCircle2
 } from "lucide-react"
 
 interface OnboardingModalProps {
@@ -35,6 +36,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const [reviewPage, setReviewPage] = useState(1) // For review step pagination
+  const [editingSection, setEditingSection] = useState<string | null>(null) // Track which section is being edited
   const [formData, setFormData] = useState({
     // Step 1: Personal Info
     firstName: "",
@@ -134,7 +137,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const [citizenshipConfirmed, setCitizenshipConfirmed] = useState(false)
   const [countryOpen, setCountryOpen] = useState(false)
 
-  const totalSteps = 12
+  const totalSteps = 13
   const progress = (currentStep / totalSteps) * 100
 
   const isNonSchengenCountry = (citizenship: string) => {
@@ -160,16 +163,34 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       return
     }
     
+    // If editing a section from review page, return to review page (step 13)
+    if (editingSection && currentStep < 13) {
+      setEditingSection(null);
+      setCurrentStep(13);
+      return;
+    }
+    
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
+      // Reset review page to 1 when entering step 13
+      if (currentStep === 12) {
+        setReviewPage(1);
+      }
     } else {
-      // Submit the form data
+      // Submit the form data (only from step 13)
       onComplete(formData);
       setIsCompleted(true);
     }
   }
 
   const handleBack = () => {
+    // If editing a section from review page, return to review page without saving
+    if (editingSection && currentStep < 13) {
+      setEditingSection(null);
+      setCurrentStep(13);
+      return;
+    }
+    
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
     }
@@ -228,6 +249,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
         return formData.workingDays.length > 0
       case 12:
         return formData.hoursPerWeek
+      case 13:
+        return true // Review step is always valid (all data already validated)
       default:
         return true
     }
@@ -878,6 +901,424 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           </div>
         )
 
+      case 13:
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center mb-6">
+              <FileText className="h-6 w-6 text-blue-500 mr-3" />
+              <h2 className="text-xl font-semibold">Daten überprüfen</h2>
+            </div>
+            
+            {/* Review Page 1: Personal & Contact Info */}
+            {reviewPage === 1 && (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {/* Personal Info */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">Persönliche Daten</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('personal');
+                        setCurrentStep(1);
+                      }}
+                      className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.title ? `${formData.title} ` : ''}{formData.firstName} {formData.lastName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Geschlecht:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{formData.gender}{formData.pronouns ? ` (${formData.pronouns})` : ''}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 border border-green-100 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-green-900 dark:text-green-100">Adresse</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('address');
+                        setCurrentStep(3);
+                      }}
+                      className="h-7 px-2 text-xs text-green-600 hover:text-green-700 hover:bg-green-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Straße:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.address}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">PLZ/Ort:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.postalCode} {formData.city}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 border border-purple-100 dark:border-purple-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">Kontakt</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('contact');
+                        setCurrentStep(4);
+                      }}
+                      className="h-7 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Telefon:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.phone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">E-Mail:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 text-xs">{formData.email}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Registration Data */}
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-lg p-4 border border-orange-100 dark:border-orange-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-orange-900 dark:text-orange-100">Registrierungsdaten</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('registration');
+                        setCurrentStep(5);
+                      }}
+                      className="h-7 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Sozialversicherung:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.socialSecurityNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Geburtsdatum:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.birthDate}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Staatsbürgerschaft:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.citizenship}</span>
+                    </div>
+                    {formData.workPermit !== null && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Arbeitserlaubnis:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{formData.workPermit ? 'Ja' : 'Nein'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Page Indicator */}
+                <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                </div>
+              </div>
+            )}
+
+            {/* Review Page 2: Car, Body, Education */}
+            {reviewPage === 2 && (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {/* Car Info */}
+                <div className="bg-gradient-to-r from-cyan-50 to-sky-50 dark:from-cyan-900/20 dark:to-sky-900/20 rounded-lg p-4 border border-cyan-100 dark:border-cyan-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-cyan-900 dark:text-cyan-100">Auto & Führerschein</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('car');
+                        setCurrentStep(6);
+                      }}
+                      className="h-7 px-2 text-xs text-cyan-600 hover:text-cyan-700 hover:bg-cyan-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Führerschein:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.drivingLicense ? 'Ja' : 'Nein'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Auto verfügbar:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.carAvailable ? 'Ja' : 'Nein'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Bereit zu fahren:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.willingToDrive ? 'Ja' : 'Nein'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Body & Clothing */}
+                <div className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-lg p-4 border border-rose-100 dark:border-rose-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-rose-900 dark:text-rose-100">Körper & Kleidung</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('body');
+                        setCurrentStep(7);
+                      }}
+                      className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Kleidergröße:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.clothingSize}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Größe:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.height} cm</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Education */}
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg p-4 border border-yellow-100 dark:border-yellow-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-yellow-900 dark:text-yellow-100">Bildung & Beruf</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('education');
+                        setCurrentStep(8);
+                      }}
+                      className="h-7 px-2 text-xs text-yellow-600 hover:text-yellow-700 hover:bg-yellow-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Ausbildung:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.education}</span>
+                    </div>
+                    {formData.qualifications && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Qualifikationen:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 text-xs">{formData.qualifications}</span>
+                      </div>
+                    )}
+                    {formData.currentJob && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Aktueller Job:</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 text-xs">{formData.currentJob}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Page Indicator */}
+                <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
+                </div>
+              </div>
+            )}
+
+            {/* Review Page 2: Work Preferences */}
+            {reviewPage === 2 && (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {/* Spontaneity */}
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-teal-100 dark:border-teal-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-teal-900 dark:text-teal-100">Spontanität</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('spontaneity');
+                        setCurrentStep(9);
+                      }}
+                      className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Spontanität:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{formData.spontaneity}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Region */}
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-indigo-100 dark:border-indigo-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-indigo-900 dark:text-indigo-100">Region</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('region');
+                        setCurrentStep(10);
+                      }}
+                      className="h-7 px-2 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Bevorzugte Region:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {formData.preferredRegion === 'wien-noe-bgl' ? 'Wien, NÖ & BGL' :
+                         formData.preferredRegion === 'st' ? 'Steiermark' :
+                         formData.preferredRegion === 's' ? 'Salzburg' :
+                         formData.preferredRegion === 'ooe' ? 'Oberösterreich' :
+                         formData.preferredRegion === 't' ? 'Tirol' :
+                         formData.preferredRegion === 'v' ? 'Vorarlberg' :
+                         formData.preferredRegion === 'k' ? 'Kärnten' :
+                         formData.preferredRegion}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Working Days */}
+                <div className="bg-gradient-to-r from-lime-50 to-green-50 dark:from-lime-900/20 dark:to-green-900/20 rounded-lg p-4 border border-lime-100 dark:border-lime-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-lime-900 dark:text-lime-100">Arbeitstage</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('workingDays');
+                        setCurrentStep(11);
+                      }}
+                      className="h-7 px-2 text-xs text-lime-600 hover:text-lime-700 hover:bg-lime-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex flex-wrap gap-1">
+                      {formData.workingDays.map((day) => (
+                        <Badge key={day} variant="secondary" className="text-xs bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-100">
+                          {day === 'mo' ? 'Mo' : day === 'di' ? 'Di' : day === 'mi' ? 'Mi' : day === 'do' ? 'Do' : day === 'fr' ? 'Fr' : day === 'sa' ? 'Sa' : 'So'}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hours */}
+                <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-violet-100 dark:border-violet-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-violet-900 dark:text-violet-100">Stundenwunsch</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('hours');
+                        setCurrentStep(12);
+                      }}
+                      className="h-7 px-2 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Stunden/Woche:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.hoursPerWeek}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Page Indicator */}
+                <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                </div>
+              </div>
+            )}
+
+            {/* Review Page 3: Final Summary */}
+            {reviewPage === 3 && (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6 border border-green-100 dark:border-green-800 text-center">
+                  <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg text-green-900 dark:text-green-100 mb-2">Bereit zum Absenden?</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Bitte überprüfe deine Angaben noch einmal. Du kannst jeden Bereich durch Klicken auf "Bearbeiten" anpassen.
+                  </p>
+                  <div className="flex flex-col gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <p>✓ Alle Pflichtfelder ausgefüllt</p>
+                    <p>✓ Daten werden verschlüsselt übertragen</p>
+                    <p>✓ Das Team meldet sich zeitnah bei dir</p>
+                  </div>
+                </div>
+
+                {/* Page Indicator */}
+                <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation buttons for review pages */}
+            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+              {reviewPage > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setReviewPage(reviewPage - 1)}
+                  className="flex-1"
+                >
+                  Zurück
+                </Button>
+              )}
+              {reviewPage < 3 && (
+                <Button
+                  onClick={() => setReviewPage(reviewPage + 1)}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                >
+                  Weiter
+                </Button>
+              )}
+            </div>
+          </div>
+        )
+
       default:
         return null
     }
@@ -959,24 +1400,46 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
             <CardContent className="space-y-6">
               {renderStep()}
               
-              <div className="flex gap-3 pt-4">
-                {currentStep > 1 && (
+              {/* Normal navigation (hide on review step 13 as it has its own navigation) */}
+              {currentStep !== 13 && (
+                <div className="flex gap-3 pt-4">
+                  {currentStep > 1 && (
+                    <Button
+                      variant="outline"
+                      onClick={handleBack}
+                      className="flex-1"
+                    >
+                      Zurück
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleNext}
+                    disabled={!canProceed()}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  >
+                    {currentStep === 12 ? "Zur Überprüfung" : "Weiter"}
+                  </Button>
+                </div>
+              )}
+
+              {/* Review step navigation (page 3 has submit button) */}
+              {currentStep === 13 && reviewPage === 3 && (
+                <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={handleBack}
+                    onClick={() => setCurrentStep(12)}
                     className="flex-1"
                   >
-                    Zurück
+                    Zurück zu Schritt 12
                   </Button>
-                )}
-                <Button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                >
-                  {currentStep === totalSteps ? "Abschließen" : "Weiter"}
-                </Button>
-              </div>
+                  <Button
+                    onClick={handleNext}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  >
+                    Absenden
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </>
         )}
