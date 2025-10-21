@@ -84,9 +84,6 @@ export default function PromotorenPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [onboardingFilters, setOnboardingFilters] = useState<string[]>([]);
-  const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const tooltipTimerRef = useRef<NodeJS.Timeout | null>(null);
   
 
 
@@ -2099,50 +2096,35 @@ Dein Nespresso Team`;
                   const IconComponent = config.icon;
                   const isActive = onboardingFilters.includes(config.key);
                   return (
-                    <button
-                      key={config.key}
-                      onClick={() => {
-                        setOnboardingFilters(prev => 
-                          prev.includes(config.key)
-                            ? prev.filter(k => k !== config.key)
-                            : [...prev, config.key]
-                        );
-                      }}
-                      onMouseEnter={(e) => {
-                        console.log('Mouse ENTER on button:', config.tooltip);
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setTooltipPosition({
-                          x: rect.left + rect.width / 2,
-                          y: rect.top - 8
-                        });
-                        tooltipTimerRef.current = setTimeout(() => {
-                          console.log('SHOWING tooltip:', config.tooltip);
-                          setHoveredTooltip(config.tooltip);
-                        }, 2000);
-                      }}
-                      onMouseLeave={(e) => {
-                        console.log('Mouse LEAVE from button:', config.tooltip);
-                        if (tooltipTimerRef.current) {
-                          clearTimeout(tooltipTimerRef.current);
-                          tooltipTimerRef.current = null;
-                        }
-                        setHoveredTooltip(null);
-                      }}
-                      style={{
-                        boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                      className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
-                        isActive
-                          ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
-                          : 'bg-gray-200 hover:bg-gray-300'
-                      }`}
-                    >
-                      <IconComponent 
-                        className={`h-3.5 w-3.5 ${
-                          isActive ? 'text-white' : 'text-gray-400'
+                    <div className="relative group">
+                      <button
+                        key={config.key}
+                        onClick={() => {
+                          setOnboardingFilters(prev => 
+                            prev.includes(config.key)
+                              ? prev.filter(k => k !== config.key)
+                              : [...prev, config.key]
+                          );
+                        }}
+                        style={{
+                          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                        className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
+                            : 'bg-gray-200 hover:bg-gray-300'
                         }`}
-                      />
-                    </button>
+                      >
+                        <IconComponent 
+                          className={`h-3.5 w-3.5 ${
+                            isActive ? 'text-white' : 'text-gray-400'
+                          }`}
+                        />
+                      </button>
+                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black/85 text-white text-xs rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none delay-[2000ms]">
+                        {config.tooltip}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -4575,23 +4557,6 @@ Dein Nespresso Team`;
         )}
 
         <AdminEddieAssistant />
-
-        {/* Tooltip for onboarding filters */}
-        {hoveredTooltip && (
-          <div
-            style={{
-              position: 'fixed',
-              left: tooltipPosition.x,
-              top: tooltipPosition.y,
-              transform: 'translate(-50%, -100%)',
-              zIndex: 9999,
-              pointerEvents: 'none'
-            }}
-            className="px-2 py-1 rounded-md bg-black/85 text-white text-xs shadow-lg"
-          >
-            {hoveredTooltip}
-          </div>
-        )}
       </div>
     </>
   );
