@@ -59,6 +59,65 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
+function TooltipButton({ tooltip, isActive, onClick, children }: { tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const handleMouseEnter = () => {
+      timeoutRef.current = setTimeout(() => {
+        setShowTooltip(true);
+      }, 2000);
+    };
+
+    const handleMouseLeave = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      setShowTooltip(false);
+    };
+
+    button.addEventListener('mouseenter', handleMouseEnter);
+    button.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      button.removeEventListener('mouseenter', handleMouseEnter);
+      button.removeEventListener('mouseleave', handleMouseLeave);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={onClick}
+        style={{
+          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
+        }}
+        className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
+          isActive
+            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
+            : 'bg-gray-200 hover:bg-gray-300'
+        }`}
+      >
+        {children}
+      </button>
+      {showTooltip && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black/85 text-white text-xs rounded-md whitespace-nowrap pointer-events-none z-50">
+          {tooltip}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function PromotorenPage() {
   const router = useRouter();
@@ -2096,35 +2155,24 @@ Dein Nespresso Team`;
                   const IconComponent = config.icon;
                   const isActive = onboardingFilters.includes(config.key);
                   return (
-                    <div className="relative group">
-                      <button
-                        key={config.key}
-                        onClick={() => {
-                          setOnboardingFilters(prev => 
-                            prev.includes(config.key)
-                              ? prev.filter(k => k !== config.key)
-                              : [...prev, config.key]
-                          );
-                        }}
-                        style={{
-                          boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
-                        }}
-                        className={`flex items-center justify-center rounded px-2 py-1 transition-all duration-200 ${
-                          isActive
-                            ? 'bg-gradient-to-r from-green-500/60 to-green-800/60'
-                            : 'bg-gray-200 hover:bg-gray-300'
+                    <TooltipButton
+                      key={config.key}
+                      tooltip={config.tooltip}
+                      isActive={isActive}
+                      onClick={() => {
+                        setOnboardingFilters(prev => 
+                          prev.includes(config.key)
+                            ? prev.filter(k => k !== config.key)
+                            : [...prev, config.key]
+                        );
+                      }}
+                    >
+                      <IconComponent 
+                        className={`h-3.5 w-3.5 ${
+                          isActive ? 'text-white' : 'text-gray-400'
                         }`}
-                      >
-                        <IconComponent 
-                          className={`h-3.5 w-3.5 ${
-                            isActive ? 'text-white' : 'text-gray-400'
-                          }`}
-                        />
-                      </button>
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-black/85 text-white text-xs rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none delay-[2000ms]">
-                        {config.tooltip}
-                      </div>
-                    </div>
+                      />
+                    </TooltipButton>
                   );
                 })}
               </div>
