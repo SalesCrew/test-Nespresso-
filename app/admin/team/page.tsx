@@ -2088,16 +2088,17 @@ Dein Nespresso Team`;
               {/* Onboarding Filter Button */}
               <div className="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg">
                 {[
-                  { key: 'profile_basics', icon: User },
-                  { key: 'documents', icon: FileText },
-                  { key: 'dienstvertrag', icon: FileSignature },
-                  { key: 'bank_details', icon: CreditCard },
+                  { key: 'profile_basics', icon: User, tooltip: 'Profildaten' },
+                  { key: 'documents', icon: FileText, tooltip: 'Dokumente' },
+                  { key: 'dienstvertrag', icon: FileSignature, tooltip: 'Dienstvertrag' },
+                  { key: 'bank_details', icon: CreditCard, tooltip: 'Bankdaten' },
                 ].map((config) => {
                   const IconComponent = config.icon;
                   const isActive = onboardingFilters.includes(config.key);
                   return (
                     <button
                       key={config.key}
+                      data-tooltip={config.tooltip}
                       onClick={() => {
                         setOnboardingFilters(prev => 
                           prev.includes(config.key)
