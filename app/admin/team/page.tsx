@@ -2168,7 +2168,7 @@ Dein Nespresso Team`;
                       }}
                     >
                       <IconComponent 
-                        className={`h-3.5 w-3.5 ${
+                        className={`h-3.5 w-3.5 pointer-events-none ${
                           isActive ? 'text-white' : 'text-gray-400'
                         }`}
                       />
