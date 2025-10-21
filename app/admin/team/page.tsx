@@ -2108,28 +2108,25 @@ Dein Nespresso Team`;
                             : [...prev, config.key]
                         );
                       }}
-                      onMouseOver={(e) => {
-                        e.stopPropagation();
-                        if (!tooltipTimerRef.current) {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setTooltipPosition({
-                            x: rect.left + rect.width / 2,
-                            y: rect.top - 8
-                          });
-                          tooltipTimerRef.current = setTimeout(() => {
-                            setHoveredTooltip(config.tooltip);
-                          }, 2000);
-                        }
+                      onMouseEnter={(e) => {
+                        console.log('Mouse ENTER on button:', config.tooltip);
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setTooltipPosition({
+                          x: rect.left + rect.width / 2,
+                          y: rect.top - 8
+                        });
+                        tooltipTimerRef.current = setTimeout(() => {
+                          console.log('SHOWING tooltip:', config.tooltip);
+                          setHoveredTooltip(config.tooltip);
+                        }, 2000);
                       }}
-                      onMouseOut={(e) => {
-                        const relatedTarget = e.relatedTarget as HTMLElement;
-                        if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
-                          if (tooltipTimerRef.current) {
-                            clearTimeout(tooltipTimerRef.current);
-                            tooltipTimerRef.current = null;
-                          }
-                          setHoveredTooltip(null);
+                      onMouseLeave={(e) => {
+                        console.log('Mouse LEAVE from button:', config.tooltip);
+                        if (tooltipTimerRef.current) {
+                          clearTimeout(tooltipTimerRef.current);
+                          tooltipTimerRef.current = null;
                         }
+                        setHoveredTooltip(null);
                       }}
                       style={{
                         boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
