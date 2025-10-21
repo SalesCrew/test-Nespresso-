@@ -69,6 +69,8 @@ export default function StatistikenPage() {
   const [showPromoterFilterDropdown, setShowPromoterFilterDropdown] = useState(false);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [chartTimeFilter, setChartTimeFilter] = useState<"3months" | "6months" | "1year" | "all">("all");
+  const [kpiHistory, setKpiHistory] = useState<any[]>([]);
+  const [kpiHistoryLoading, setKpiHistoryLoading] = useState(false);
 
   // Unique promoter names that actually appear in history
   const historyPromoterNames = useMemo(() => {
@@ -239,9 +241,32 @@ export default function StatistikenPage() {
   }
 
   // Handle KPI container click to open stats modal
-  const handleKPIClick = (card: CardData) => {
+  const handleKPIClick = async (card: CardData) => {
     setSelectedCard(card);
     setShowStatsModal(true);
+    
+    // Fetch KPI history for this promotor
+    const promotorId = matchedPromoterIds[card.id];
+    if (promotorId) {
+      setKpiHistoryLoading(true);
+      try {
+        const res = await fetch(`/api/admin/promotor-kpi-history/${promotorId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setKpiHistory(data.feedback || []);
+        } else {
+          console.error('Failed to fetch KPI history');
+          setKpiHistory([]);
+        }
+      } catch (e) {
+        console.error('Error fetching KPI history:', e);
+        setKpiHistory([]);
+      } finally {
+        setKpiHistoryLoading(false);
+      }
+    } else {
+      setKpiHistory([]);
+    }
   };
 
   // Excel processing function
@@ -1043,6 +1068,48 @@ Liebe Grüße, dein Nespresso Team`;
       tma: tmaChange,
       vlShare: vlShareChange
     };
+  };
+
+  // Calculate KPI averages for modal
+  const calculateKPIAverages = (timeframe: "alltime" | "30days" | "6months") => {
+    if (kpiHistory.length === 0) {
+      return { mcet: "N/A", tma: "N/A", vlShare: "N/A" };
+    }
+
+    let relevantData = kpiHistory;
+    const now = new Date();
+
+    if (timeframe === "30days") {
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+      relevantData = kpiHistory.filter(item => 
+        new Date(item.created_at) >= thirtyDaysAgo
+      );
+    } else if (timeframe === "6months") {
+      const sixMonthsAgo = new Date(now.getTime() - (180 * 24 * 60 * 60 * 1000));
+      relevantData = kpiHistory.filter(item => 
+        new Date(item.created_at) >= sixMonthsAgo
+      );
+    }
+
+    if (relevantData.length === 0) {
+      return { mcet: "N/A", tma: "N/A", vlShare: "N/A" };
+    }
+
+    const avgMcet = relevantData.reduce((sum, item) => sum + (item.mc_et || 0), 0) / relevantData.length;
+    const avgTma = relevantData.reduce((sum, item) => sum + (item.tma || 0), 0) / relevantData.length;
+    const avgVlShare = relevantData.reduce((sum, item) => sum + (item.vl_value || 0), 0) / relevantData.length;
+
+    return {
+      mcet: avgMcet.toFixed(1),
+      tma: avgTma.toFixed(0) + "%",
+      vlShare: avgVlShare.toFixed(0) + "%"
+    };
+  };
+
+  // Calculate percentage change between consecutive KPI entries
+  const calculateKPIChange = (currentValue: number, previousValue: number) => {
+    if (!previousValue || previousValue === 0) return null;
+    return ((currentValue - previousValue) / previousValue) * 100;
   };
 
   const calculate6MonthsWaveChanges = () => {
@@ -3017,88 +3084,85 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="w-12 h-px bg-gray-300"></div>
                   </div>
                   <div className="relative">
-                    <div className="overflow-y-auto scrollbar-hide space-y-2 max-h-52 px-1">
-                    {/* Historical KPI Entries as Rows */}
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
+                    {kpiHistoryLoading ? (
+                      <div className="flex justify-center py-8">
+                        <CgSpinner className="h-8 w-8 animate-spin text-gray-400" />
+                      </div>
+                    ) : kpiHistory.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500 text-sm">
+                        No historical data available
+                      </div>
+                    ) : (
+                      <div className="overflow-y-auto scrollbar-hide space-y-2 max-h-52 px-1">
+                        {/* Historical KPI Entries as Rows (newest first) */}
+                        {kpiHistory.map((entry, index) => {
+                          const previousEntry = kpiHistory[index + 1];
+                          const mcetChange = previousEntry ? calculateKPIChange(entry.mc_et, previousEntry.mc_et) : null;
+                          const tmaChange = previousEntry ? calculateKPIChange(entry.tma, previousEntry.tma) : null;
+                          const vlChange = previousEntry ? calculateKPIChange(entry.vl_value, previousEntry.vl_value) : null;
+                          
+                          const entryDate = new Date(entry.created_at);
+                          const monthYear = entryDate.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+
+                          return (
+                            <div key={entry.id} className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
+                              <div className="text-xs text-gray-600 w-20">{monthYear}</div>
+                              <div className="flex items-center space-x-4 ml-auto">
+                                <div className="flex flex-col items-center">
+                                  <div className={`text-sm font-medium w-8 text-center ${
+                                    entry.mc_et >= 4.0 ? 'text-green-600' : entry.mc_et >= 3.5 ? 'text-orange-500' : 'text-red-600'
+                                  }`}>
+                                    {entry.mc_et.toFixed(1)}
+                                  </div>
+                                  {mcetChange !== null && (
+                                    <div className={`text-[10px] font-medium ${
+                                      mcetChange >= 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                      {mcetChange >= 0 ? '+' : ''}{mcetChange.toFixed(0)}%
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <div className={`text-sm font-medium w-12 text-center ${
+                                    entry.tma >= 70 ? 'text-green-600' : entry.tma >= 60 ? 'text-orange-500' : 'text-red-600'
+                                  }`}>
+                                    {entry.tma.toFixed(0)}%
+                                  </div>
+                                  {tmaChange !== null && (
+                                    <div className={`text-[10px] font-medium ${
+                                      tmaChange >= 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                      {tmaChange >= 0 ? '+' : ''}{tmaChange.toFixed(0)}%
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex flex-col items-center">
+                                  <div className={`text-sm font-medium w-12 text-center ${
+                                    entry.vl_value >= 10 ? 'text-green-600' : entry.vl_value >= 5 ? 'text-orange-500' : 'text-red-600'
+                                  }`}>
+                                    {entry.vl_value.toFixed(0)}%
+                                  </div>
+                                  {vlChange !== null && (
+                                    <div className={`text-[10px] font-medium ${
+                                      vlChange >= 0 ? 'text-green-600' : 'text-red-600'
+                                    }`}>
+                                      {vlChange >= 0 ? '+' : ''}{vlChange.toFixed(0)}%
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer hidden">
                       <div className="text-xs text-gray-600 w-20">Mai 2024</div>
                       <div className="flex items-center space-x-4 ml-auto">
                         <div className="text-sm font-medium text-green-600 w-8 text-center">4.8</div>
                         <div className="text-sm font-medium text-red-600 w-12 text-center">62%</div>
                         <div className="text-sm font-medium text-green-600 w-12 text-center">12%</div>
                       </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Apr 2024</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-green-600 w-8 text-center">4.2</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>68%</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>8%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Mär 2024</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-red-600 w-8 text-center">3.8</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">78%</div>
-                        <div className="text-sm font-medium text-red-600 w-12 text-center">4%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Feb 2024</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium w-8 text-center" style={{color: "#FD7E14"}}>4.1</div>
-                        <div className="text-sm font-medium text-red-600 w-12 text-center">61%</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">15%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Jan 2024</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-green-600 w-8 text-center">4.6</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">76%</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>7%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Dez 2023</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-red-600 w-8 text-center">3.9</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>67%</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">11%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Nov 2023</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-green-600 w-8 text-center">4.3</div>
-                        <div className="text-sm font-medium text-red-600 w-12 text-center">63%</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">13%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Okt 2023</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium w-8 text-center" style={{color: "#FD7E14"}}>4.0</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">72%</div>
-                        <div className="text-sm font-medium text-red-600 w-12 text-center">5%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Sep 2023</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-green-600 w-8 text-center">4.5</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>69%</div>
-                        <div className="text-sm font-medium w-12 text-center" style={{color: "#FD7E14"}}>9%</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded p-2 transition-transform duration-300 hover:scale-[1.003] cursor-pointer">
-                      <div className="text-xs text-gray-600 w-20">Aug 2023</div>
-                      <div className="flex items-center space-x-4 ml-auto">
-                        <div className="text-sm font-medium text-red-600 w-8 text-center">3.7</div>
-                        <div className="text-sm font-medium text-red-600 w-12 text-center">59%</div>
-                        <div className="text-sm font-medium text-green-600 w-12 text-center">14%</div>
-                      </div>
-                    </div>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                   </div>
@@ -3115,15 +3179,21 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("alltime").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("alltime").mcet}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("alltime").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("alltime").tma}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("alltime").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("alltime").vlShare}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3135,15 +3205,21 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("30days").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("30days").mcet}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("30days").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("30days").tma}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("30days").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("30days").vlShare}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -3155,15 +3231,21 @@ Liebe Grüße, dein Nespresso Team`;
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg MC/ET:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("6months").mcet === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("6months").mcet}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg TMA:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("6months").tma === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("6months").tma}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg VL Share:</span>
-                          <span className="text-gray-400">N/A</span>
+                          <span className={`font-medium ${calculateKPIAverages("6months").vlShare === "N/A" ? "text-gray-400" : "text-gray-700"}`}>
+                            {calculateKPIAverages("6months").vlShare}
+                          </span>
                         </div>
                       </div>
                     </div>
