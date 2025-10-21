@@ -44,6 +44,7 @@ interface Conversation {
   profile_picture_url?: string | null;
   is_pinned?: boolean;
   pinned_at?: string | null;
+  marked_unread?: boolean;
   participants: Array<{
     user_id: string;
     display_name: string;
@@ -563,6 +564,64 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [fetchConversations]);
 
+  // Mark a conversation as unread
+  const markConversationUnread = useCallback(async (conversationId: string) => {
+    try {
+      // Optimistic update
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversationId
+            ? { ...conv, marked_unread: true }
+            : conv
+        )
+      );
+
+      const response = await fetch(`/api/chat/conversations/${conversationId}/mark-unread`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await fetchConversations();
+        throw new Error('Failed to mark conversation as unread');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error marking conversation as unread:', error);
+      throw error;
+    }
+  }, [fetchConversations]);
+
+  // Mark a conversation as read (clear manual unread flag and unread count)
+  const markConversationRead = useCallback(async (conversationId: string) => {
+    try {
+      // Optimistic update
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversationId
+            ? { ...conv, marked_unread: false, unread_count: 0 }
+            : conv
+        )
+      );
+
+      const response = await fetch(`/api/chat/conversations/${conversationId}/mark-read`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await fetchConversations();
+        throw new Error('Failed to mark conversation as read');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+      throw error;
+    }
+  }, [fetchConversations]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -767,6 +826,8 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     removeReaction,
     pinConversation,
     unpinConversation,
+    markConversationUnread,
+    markConversationRead,
   };
 };
 

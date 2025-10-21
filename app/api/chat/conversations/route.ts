@@ -58,10 +58,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
     }
 
-    // Fetch participants for all conversations
+    // Fetch participants for all conversations (including marked_unread status)
     const { data: allParticipants, error: allParticipantsError } = await supabase
       .from('chat_participants')
-      .select('conversation_id, user_id, last_read_at')
+      .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at')
       .in('conversation_id', conversationIds);
 
     if (allParticipantsError) {
@@ -124,9 +124,10 @@ export async function GET(request: NextRequest) {
           };
         });
 
-        // Get current user's last_read_at
+        // Get current user's last_read_at and marked_unread status
         const currentUserParticipant = convParticipants.find(p => p.user_id === user.id);
         const lastReadAt = currentUserParticipant?.last_read_at || new Date(0).toISOString();
+        const markedUnread = currentUserParticipant?.marked_unread || false;
 
         // Count unread messages
         const { count: unreadCount } = await supabase
@@ -166,6 +167,7 @@ export async function GET(request: NextRequest) {
           profile_picture_url: profilePictureUrl,
           is_pinned: conv.is_pinned || false,
           pinned_at: conv.pinned_at || null,
+          marked_unread: markedUnread,
           participants: participantDetails,
           last_message: lastMessage ? {
             text: lastMessage.message_text,

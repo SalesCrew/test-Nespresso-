@@ -422,7 +422,7 @@ export default function PromotorChatPage() {
         unread: conv.unread_count,
         online: false,
         pinned: conv.is_pinned || false,
-        markedUnread: false,
+        markedUnread: conv.marked_unread || false,
         isGroup: conv.is_group,
         profileImage: profilePicture,
         description: conv.description || undefined,
@@ -3023,13 +3023,19 @@ export default function PromotorChatPage() {
                   <div>
                     <button
                       className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      onClick={() => {
+                      onClick={async () => {
                         if (contactContextMenu.contactId) {
-                          setContacts((prev: Contact[]) => prev.map((contact: Contact) => 
-                            contact.id === contactContextMenu.contactId 
-                              ? { ...contact, markedUnread: !contact.markedUnread }
-                              : contact
-                          ));
+                          const conversationId = String(contactContextMenu.contactId);
+                          const isMarkedUnread = currentContact?.markedUnread;
+                          try {
+                            if (isMarkedUnread) {
+                              await chatIntegration.markConversationRead(conversationId);
+                            } else {
+                              await chatIntegration.markConversationUnread(conversationId);
+                            }
+                          } catch (error) {
+                            console.error('Error toggling marked unread:', error);
+                          }
                         }
                         closeContactContextMenu();
                       }}
