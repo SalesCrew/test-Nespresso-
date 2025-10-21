@@ -1037,8 +1037,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 {/* Page Indicator */}
                 <div className="flex justify-center gap-2 pt-4">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(4)}></div>
                 </div>
               </div>
             ) : reviewPage === 2 ? (
@@ -1141,8 +1142,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
 
                 {/* Page Indicator */}
                 <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(4)}></div>
                 </div>
