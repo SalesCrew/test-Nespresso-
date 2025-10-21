@@ -1528,16 +1528,6 @@ export default function EinsatzplanPage() {
     // Market filter - trim whitespace for comparison
     const marketMatch = !marketFilter || (item.market || '').trim() === marketFilter.trim();
     
-    // Debug logging for market filter
-    if (marketFilter && item.id) {
-      console.log(`Market filter check:`, {
-        assignmentId: item.id,
-        itemMarket: item.market,
-        filterMarket: marketFilter,
-        match: marketMatch
-      });
-    }
-    
     // Eye filter - hide all non-"Offen" items when active, based on UI status (dropdown value)
     const verplantMatch = !hideVerplant || item.status === 'Offen';
     
@@ -2488,7 +2478,7 @@ Import EP
                       </div>
                     ) : (
                       /* List View */
-                      <div key={`list-${selectedWeeks.join('-')}-${dateRange.start}-${dateRange.end}-${dateFilter}-${hideVerplant}`} className="space-y-2 px-4 -mx-4">
+                      <div key={`list-${selectedWeeks.join('-')}-${dateRange.start}-${dateRange.end}-${dateFilter}-${marketFilter}-${hideVerplant}`} className="space-y-2 px-4 -mx-4">
                         {filteredEinsatzplan.map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
