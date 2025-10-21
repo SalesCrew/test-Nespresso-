@@ -4,6 +4,7 @@ import { SocketProvider } from "@/lib/socket/SocketContext";
 import { NotificationCenterProvider } from "@/lib/notifications/NotificationCenterContext";
 import AdminNotificationStack from "@/components/notifications/AdminNotificationStack";
 import AdminToastListener from "@/components/notifications/AdminToastListener";
+import AdminTooltipAuto from "@/components/ux/AdminTooltipAuto";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       <div className="min-h-screen bg-gray-50/30">
         <SocketProvider>
           <NotificationCenterProvider>
+            <AdminTooltipAuto delayMs={2000} />
             <AdminToastListener currentUserId={user.id} />
             <AdminNotificationStack />
             {children}
@@ -38,6 +40,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       <div className="min-h-screen bg-gray-50/30">
         <SocketProvider>
           <NotificationCenterProvider>
+            <AdminTooltipAuto delayMs={2000} />
             <AdminToastListener currentUserId={user.id} />
             <AdminNotificationStack />
             {children}
