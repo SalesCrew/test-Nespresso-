@@ -2388,7 +2388,7 @@ Dein Nespresso Team`;
                   {/* Onboarding Progress as Icons */}
                   <div className="pt-1">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-medium text-gray-600">Onboarding</p>
+                      <p className="text-xs font-medium text-gray-600">Onboarding status:</p>
                       <span className="text-xs text-gray-500 font-medium">{promotor.onboardingProgress}%</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -3172,7 +3172,7 @@ Dein Nespresso Team`;
                             <CardContent className="p-4">
                               <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
                                 <CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
-                                Onboarding Status
+                                Onboarding status:
                               </h3>
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between">
