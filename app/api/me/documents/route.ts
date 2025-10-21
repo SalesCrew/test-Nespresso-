@@ -46,8 +46,10 @@ export async function GET() {
     // Define all possible documents with their requirements (matching onboarding logic)
     const documentTypes = [
       { type: 'passport', name: 'Pass', required: true },
-      { type: 'arbeitserlaubnis', name: 'Arbeitserlaubnis', required: needsWorkPermit },
       { type: 'fuehrerschein', name: 'Führerschein', required: hasDrivingLicense },
+      { type: 'strafregister', name: 'Strafregister Erscheinung', required: true },
+      { type: 'citizenship', name: 'Staatsbürgerschaftsnachweis', required: false },
+      { type: 'arbeitserlaubnis', name: 'Arbeitserlaubnis', required: needsWorkPermit },
       { type: 'additional', name: 'Zusätzliche Dokumente', required: false }
     ];
 
