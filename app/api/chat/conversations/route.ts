@@ -58,10 +58,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
     }
 
-    // Fetch participants for all conversations (including marked_unread status)
+    // Fetch participants for all conversations (including marked_unread status and cleared_at)
     const { data: allParticipants, error: allParticipantsError } = await supabase
       .from('chat_participants')
-      .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at')
+      .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at, cleared_at')
       .in('conversation_id', conversationIds);
 
     if (allParticipantsError) {
@@ -124,21 +124,26 @@ export async function GET(request: NextRequest) {
           };
         });
 
-        // Get current user's last_read_at and marked_unread status
+        // Get current user's last_read_at, marked_unread status, and cleared_at
         const currentUserParticipant = convParticipants.find(p => p.user_id === user.id);
         const lastReadAt = currentUserParticipant?.last_read_at || new Date(0).toISOString();
         const markedUnread = currentUserParticipant?.marked_unread || false;
+        const clearedAt = currentUserParticipant?.cleared_at || '1970-01-01T00:00:00.000Z';
 
-        // Count unread messages
+        // Count unread messages (only those created after both last_read_at AND cleared_at)
         const { count: unreadCount } = await supabase
           .from('chat_messages')
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', conv.id)
           .neq('sender_id', user.id) // Don't count own messages
-          .gt('created_at', lastReadAt);
+          .gt('created_at', lastReadAt)
+          .gt('created_at', clearedAt);
 
-        // Get last message for this conversation
-        const lastMessage = lastMessages?.find(m => m.conversation_id === conv.id);
+        // Get last message for this conversation (only messages after cleared_at)
+        const lastMessage = lastMessages?.find(m => 
+          m.conversation_id === conv.id && 
+          new Date(m.created_at) > new Date(clearedAt)
+        );
         const lastMessageSender = userProfiles?.find(up => up.user_id === lastMessage?.sender_id);
 
         // For direct chats, find the other participant

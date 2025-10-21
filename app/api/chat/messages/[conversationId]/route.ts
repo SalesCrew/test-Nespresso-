@@ -22,10 +22,10 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '50');
     const before = searchParams.get('before'); // Cursor for pagination (message created_at)
 
-    // Verify user is a participant in this conversation
+    // Verify user is a participant in this conversation and get cleared_at timestamp
     const { data: participant, error: participantError } = await supabase
       .from('chat_participants')
-      .select('conversation_id')
+      .select('conversation_id, cleared_at')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .single();
@@ -34,11 +34,14 @@ export async function GET(
       return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 });
     }
 
-    // Build query for messages
+    const clearedAt = participant.cleared_at || '1970-01-01T00:00:00.000Z';
+
+    // Build query for messages (filter out messages created before cleared_at)
     let query = supabase
       .from('chat_messages')
       .select('*')
       .eq('conversation_id', conversationId)
+      .gt('created_at', clearedAt)
       .order('created_at', { ascending: false })
       .limit(limit);
 

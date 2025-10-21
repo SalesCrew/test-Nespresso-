@@ -622,6 +622,46 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     }
   }, [fetchConversations]);
 
+  // Clear conversation for current user (hide all messages created before now)
+  const clearConversationForMe = useCallback(async (conversationId: string) => {
+    try {
+      // Optimistic update: clear messages and reset unread/marked_unread
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: [],
+      }));
+
+      setConversations(prev =>
+        prev.map(conv =>
+          conv.id === conversationId
+            ? { 
+                ...conv, 
+                unread_count: 0, 
+                marked_unread: false,
+                last_message: null,
+              }
+            : conv
+        )
+      );
+
+      const response = await fetch(`/api/chat/conversations/${conversationId}/clear-for-me`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        // Revert on error
+        await fetchConversations();
+        await fetchMessages(conversationId);
+        throw new Error('Failed to clear conversation');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error clearing conversation:', error);
+      throw error;
+    }
+  }, [fetchConversations, fetchMessages]);
+
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -828,6 +868,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     unpinConversation,
     markConversationUnread,
     markConversationRead,
+    clearConversationForMe,
   };
 };
 

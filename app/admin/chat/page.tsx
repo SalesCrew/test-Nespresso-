@@ -4573,37 +4573,34 @@ export default function ChatPage() {
            </p>
            
            <div className="space-y-3">
-             <button
-               onClick={() => {
-                 if (clearChatDialog.contactId) {
-                   setAllMessages(prev => ({
-                     ...prev,
-                     [clearChatDialog.contactId!]: []
-                   }));
-                   setContacts(prev => prev.map(contact => 
-                     contact.id === clearChatDialog.contactId 
-                       ? { ...contact, lastMessage: "" }
-                       : contact
-                   ));
-                 }
-                 setClearChatDialog({ show: false, contactId: null });
-               }}
-               className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
-               style={{
-                 borderColor: 'rgba(250, 12, 12, 0.85)'
-               }}
-               onMouseEnter={(e) => {
-                 e.currentTarget.style.backgroundColor = 'rgba(250, 12, 12, 0.05)';
-               }}
-               onMouseLeave={(e) => {
-                 e.currentTarget.style.backgroundColor = 'transparent';
-               }}
-             >
-               <div className="font-medium">Chat leeren</div>
-               <div className="text-xs text-gray-500">
-                 Alle Nachrichten werden gelöscht
-               </div>
-             </button>
+            <button
+              onClick={async () => {
+                if (clearChatDialog.contactId) {
+                  const conversationId = String(clearChatDialog.contactId);
+                  try {
+                    await chatIntegration.clearConversationForMe(conversationId);
+                  } catch (error) {
+                    console.error('Error clearing chat:', error);
+                  }
+                }
+                setClearChatDialog({ show: false, contactId: null });
+              }}
+              className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
+              style={{
+                borderColor: 'rgba(250, 12, 12, 0.85)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(250, 12, 12, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <div className="font-medium">Chat leeren</div>
+              <div className="text-xs text-gray-500">
+                Alle Nachrichten werden gelöscht
+              </div>
+            </button>
            </div>
            
            <button
