@@ -141,6 +141,7 @@ export default function PromotorenPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [regionFilter, setRegionFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [marketFilter, setMarketFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [onboardingFilters, setOnboardingFilters] = useState<string[]>([]);
   
@@ -221,6 +222,11 @@ export default function PromotorenPage() {
   const [ibanCopied, setIbanCopied] = useState<Record<number, boolean>>({});
   const [accountHolderCopied, setAccountHolderCopied] = useState<Record<number, boolean>>({});
   const [bicCopied, setBicCopied] = useState<Record<number, boolean>>({});
+  
+  // Market filter states
+  const [marketDropdownOpen, setMarketDropdownOpen] = useState(false);
+  const [availableMarkets, setAvailableMarkets] = useState<string[]>([]);
+  const marketDropdownRef = useRef<HTMLDivElement>(null);
 
   // Status confirmation modal state
   const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
@@ -758,6 +764,7 @@ Dein Nespresso Team`;
   const [promotors, setPromotors] = useState<any[]>([]);
   const [promotorsLoading, setPromotorsLoading] = useState(true); // Start loading immediately
   const [promotorsError, setPromotorsError] = useState(false);
+  const [promotorMarkets, setPromotorMarkets] = useState<Record<string, string[]>>({});
 
   // Load promotors from backend
   const loadPromotors = async () => {
@@ -886,6 +893,50 @@ Dein Nespresso Team`;
       setPromotorsLoading(false);
     }
   };
+
+  // Fetch markets from assignments for each promotor
+  useEffect(() => {
+    const fetchMarkets = async () => {
+      if (!promotors.length) return;
+      
+      try {
+        // Fetch all assignments to extract unique markets
+        const res = await fetch('/api/assignments');
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const assignments = data.assignments || [];
+        
+        // Extract unique markets from assignment metadata or title
+        const marketsSet = new Set<string>();
+        const promotorMarketsMap: Record<string, string[]> = {};
+        
+        assignments.forEach((assignment: any) => {
+          const market = assignment.metadata?.market || assignment.title || '';
+          if (market && market.trim()) {
+            marketsSet.add(market.trim());
+            
+            // Associate market with promotor (lead_user_id)
+            if (assignment.lead_user_id) {
+              if (!promotorMarketsMap[assignment.lead_user_id]) {
+                promotorMarketsMap[assignment.lead_user_id] = [];
+              }
+              if (!promotorMarketsMap[assignment.lead_user_id].includes(market.trim())) {
+                promotorMarketsMap[assignment.lead_user_id].push(market.trim());
+              }
+            }
+          }
+        });
+        
+        setAvailableMarkets(Array.from(marketsSet).sort());
+        setPromotorMarkets(promotorMarketsMap);
+      } catch (error) {
+        console.error('Failed to fetch markets:', error);
+      }
+    };
+    
+    fetchMarkets();
+  }, [promotors]);
 
   // Link promotor -> stammdaten when both lists are available
   useEffect(() => {
@@ -1075,6 +1126,7 @@ Dein Nespresso Team`;
                          promotor.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRegion = regionFilter === "all" || promotor.region === regionFilter;
     const matchesStatus = statusFilter === "all" || promotor.status === statusFilter;
+    const matchesMarket = marketFilter === "all" || (promotorMarkets[promotor.id] && promotorMarkets[promotor.id].includes(marketFilter));
     
     // Onboarding filter: if any filters are active, check if promotor has all selected steps completed
     const matchesOnboarding = onboardingFilters.length === 0 || (() => {
@@ -1085,7 +1137,7 @@ Dein Nespresso Team`;
       });
     })();
     
-    return matchesSearch && matchesRegion && matchesStatus && matchesOnboarding;
+    return matchesSearch && matchesRegion && matchesStatus && matchesMarket && matchesOnboarding;
   }).sort((a, b) => {
     // Sort by status: active first, newjoiner second, inactive last
     if (a.status === 'active' && b.status !== 'active') return -1;
@@ -1630,6 +1682,9 @@ Dein Nespresso Team`;
       }
       if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
         setStatusDropdownOpen(false);
+      }
+      if (marketDropdownRef.current && !marketDropdownRef.current.contains(event.target as Node)) {
+        setMarketDropdownOpen(false);
       }
       
       // Close magic touch dropdown
@@ -2289,6 +2344,53 @@ Dein Nespresso Team`;
                       >
                         Inaktiv
                       </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Market Filter Dropdown */}
+              <div className="relative" ref={marketDropdownRef}>
+                <button
+                  onClick={() => setMarketDropdownOpen(!marketDropdownOpen)}
+                  className="flex items-center justify-between min-w-[160px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
+                >
+                  <span className="truncate">{marketFilter === "all" ? "Alle Märkte" : marketFilter}</span>
+                  <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 flex-shrink-0 ml-2 ${marketDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {marketDropdownOpen && (
+                  <div className="absolute top-full mt-1 w-full min-w-[280px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setMarketFilter("all");
+                          setMarketDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                          marketFilter === "all" 
+                            ? "bg-gray-50 text-gray-900" 
+                            : "text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        Alle Märkte
+                      </button>
+                      {availableMarkets.map((market) => (
+                        <button
+                          key={market}
+                          onClick={() => {
+                            setMarketFilter(market);
+                            setMarketDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                            marketFilter === market 
+                              ? "bg-gray-50 text-gray-900" 
+                              : "text-gray-600 hover:bg-purple-100/50"
+                          }`}
+                        >
+                          <span className="truncate block">{market}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
