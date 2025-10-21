@@ -2108,22 +2108,28 @@ Dein Nespresso Team`;
                             : [...prev, config.key]
                         );
                       }}
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setTooltipPosition({
-                          x: rect.left + rect.width / 2,
-                          y: rect.top - 8
-                        });
-                        tooltipTimerRef.current = setTimeout(() => {
-                          setHoveredTooltip(config.tooltip);
-                        }, 2000);
-                      }}
-                      onMouseLeave={() => {
-                        if (tooltipTimerRef.current) {
-                          clearTimeout(tooltipTimerRef.current);
-                          tooltipTimerRef.current = null;
+                      onMouseOver={(e) => {
+                        e.stopPropagation();
+                        if (!tooltipTimerRef.current) {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTooltipPosition({
+                            x: rect.left + rect.width / 2,
+                            y: rect.top - 8
+                          });
+                          tooltipTimerRef.current = setTimeout(() => {
+                            setHoveredTooltip(config.tooltip);
+                          }, 2000);
                         }
-                        setHoveredTooltip(null);
+                      }}
+                      onMouseOut={(e) => {
+                        const relatedTarget = e.relatedTarget as HTMLElement;
+                        if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+                          if (tooltipTimerRef.current) {
+                            clearTimeout(tooltipTimerRef.current);
+                            tooltipTimerRef.current = null;
+                          }
+                          setHoveredTooltip(null);
+                        }
                       }}
                       style={{
                         boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.1)'
