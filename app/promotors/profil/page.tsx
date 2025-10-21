@@ -110,7 +110,7 @@ function TypingDocumentName({ documentName }: { documentName: string }) {
   }, [displayText, phase, documentName]);
   
   return (
-    <span className="text-xs text-gray-500">
+    <span className="text-sm text-gray-600 dark:text-gray-300">
       {displayText}
     </span>
   );
