@@ -1144,6 +1144,125 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(4)}></div>
+                </div>
+              </div>
+            ) : reviewPage === 3 ? (
+              <div className="space-y-3 h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {/* Spontaneity */}
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-teal-100 dark:border-teal-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-teal-900 dark:text-teal-100">Spontanität</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('spontaneity');
+                        setCurrentStep(9);
+                      }}
+                      className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Spontanität:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{formData.spontaneity}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Region */}
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-indigo-100 dark:border-indigo-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-indigo-900 dark:text-indigo-100">Region</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('region');
+                        setCurrentStep(10);
+                      }}
+                      className="h-7 px-2 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Bevorzugte Region:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {formData.preferredRegion === 'wien-noe-bgl' ? 'Wien, NÖ & BGL' :
+                         formData.preferredRegion === 'st' ? 'Steiermark' :
+                         formData.preferredRegion === 's' ? 'Salzburg' :
+                         formData.preferredRegion === 'ooe' ? 'Oberösterreich' :
+                         formData.preferredRegion === 't' ? 'Tirol' :
+                         formData.preferredRegion === 'v' ? 'Vorarlberg' :
+                         formData.preferredRegion === 'k' ? 'Kärnten' :
+                         formData.preferredRegion}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Working Days */}
+                <div className="bg-gradient-to-r from-lime-50 to-green-50 dark:from-lime-900/20 dark:to-green-900/20 rounded-lg p-4 border border-lime-100 dark:border-lime-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-lime-900 dark:text-lime-100">Arbeitstage</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('workingDays');
+                        setCurrentStep(11);
+                      }}
+                      className="h-7 px-2 text-xs text-lime-600 hover:text-lime-700 hover:bg-lime-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex flex-wrap gap-1">
+                      {formData.workingDays.map((day) => (
+                        <Badge key={day} variant="secondary" className="text-xs bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-100">
+                          {day === 'mo' ? 'Mo' : day === 'di' ? 'Di' : day === 'mi' ? 'Mi' : day === 'do' ? 'Do' : day === 'fr' ? 'Fr' : day === 'sa' ? 'Sa' : 'So'}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hours */}
+                <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-violet-100 dark:border-violet-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-violet-900 dark:text-violet-100">Stundenwunsch</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSection('hours');
+                        setCurrentStep(12);
+                      }}
+                      className="h-7 px-2 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-100"
+                    >
+                      Bearbeiten
+                    </Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Stunden/Woche:</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.hoursPerWeek}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Page Indicator */}
+                <div className="flex justify-center gap-2 pt-4">
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(4)}></div>
                 </div>
               </div>
             ) : (
@@ -1165,11 +1284,11 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 <div className="flex justify-center gap-2 pt-4">
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(2)}></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 </div>
               </div>
-            )
-            }
+            )}
           </div>
         )
 
@@ -1276,8 +1395,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               </div>
               )}
 
-              {/* Review step navigation - Pages 1 & 2 */}
-              {currentStep === 13 && reviewPage < 3 && (
+              {/* Review step navigation - Pages 1-3 */}
+              {currentStep === 13 && reviewPage < 4 && (
                 <div className="flex gap-3 pt-4">
                   {reviewPage > 1 && (
                     <Button
@@ -1306,12 +1425,12 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                 </div>
               )}
 
-              {/* Review step navigation - Page 3 (final) */}
-              {currentStep === 13 && reviewPage === 3 && (
+              {/* Review step navigation - Page 4 (final) */}
+              {currentStep === 13 && reviewPage === 4 && (
                 <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setReviewPage(2)}
+                    onClick={() => setReviewPage(3)}
                     className="flex-1"
                   >
                     Zurück
