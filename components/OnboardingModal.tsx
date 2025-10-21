@@ -909,11 +909,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               <h2 className="text-xl font-semibold">Daten überprüfen</h2>
             </div>
             
-            {/* Fixed height container for all review pages */}
-            <div className="h-[400px] relative">
-              {/* Review Page 1: Personal & Contact Info */}
-              {reviewPage === 1 && (
-                <div className="space-y-3 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Page 1 Content */}
+            {reviewPage === 1 ? (
+              <div className="space-y-3 h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {/* Personal Info */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-3">
@@ -1043,11 +1041,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   <div className="w-2 h-2 rounded-full bg-gray-300"></div>
                 </div>
               </div>
-            )}
-
-            {/* Review Page 2: Car, Body, Education */}
-            {reviewPage === 2 && (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            ) : reviewPage === 2 ? (
+              <div className="space-y-3 h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {/* Car Info */}
                 <div className="bg-gradient-to-r from-cyan-50 to-sky-50 dark:from-cyan-900/20 dark:to-sky-900/20 rounded-lg p-4 border border-cyan-100 dark:border-cyan-800">
                   <div className="flex items-center justify-between mb-3">
@@ -1151,131 +1146,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(3)}></div>
                 </div>
               </div>
-            )}
-
-            {/* Review Page 2: Work Preferences */}
-            {reviewPage === 2 && (
-              <div className="space-y-3 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {/* Spontaneity */}
-                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-4 border border-teal-100 dark:border-teal-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-teal-900 dark:text-teal-100">Spontanität</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingSection('spontaneity');
-                        setCurrentStep(9);
-                      }}
-                      className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-100"
-                    >
-                      Bearbeiten
-                    </Button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Spontanität:</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">{formData.spontaneity}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Region */}
-                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-indigo-100 dark:border-indigo-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-indigo-900 dark:text-indigo-100">Region</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingSection('region');
-                        setCurrentStep(10);
-                      }}
-                      className="h-7 px-2 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100"
-                    >
-                      Bearbeiten
-                    </Button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Bevorzugte Region:</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {formData.preferredRegion === 'wien-noe-bgl' ? 'Wien, NÖ & BGL' :
-                         formData.preferredRegion === 'st' ? 'Steiermark' :
-                         formData.preferredRegion === 's' ? 'Salzburg' :
-                         formData.preferredRegion === 'ooe' ? 'Oberösterreich' :
-                         formData.preferredRegion === 't' ? 'Tirol' :
-                         formData.preferredRegion === 'v' ? 'Vorarlberg' :
-                         formData.preferredRegion === 'k' ? 'Kärnten' :
-                         formData.preferredRegion}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Working Days */}
-                <div className="bg-gradient-to-r from-lime-50 to-green-50 dark:from-lime-900/20 dark:to-green-900/20 rounded-lg p-4 border border-lime-100 dark:border-lime-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-lime-900 dark:text-lime-100">Arbeitstage</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingSection('workingDays');
-                        setCurrentStep(11);
-                      }}
-                      className="h-7 px-2 text-xs text-lime-600 hover:text-lime-700 hover:bg-lime-100"
-                    >
-                      Bearbeiten
-                    </Button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex flex-wrap gap-1">
-                      {formData.workingDays.map((day) => (
-                        <Badge key={day} variant="secondary" className="text-xs bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-100">
-                          {day === 'mo' ? 'Mo' : day === 'di' ? 'Di' : day === 'mi' ? 'Mi' : day === 'do' ? 'Do' : day === 'fr' ? 'Fr' : day === 'sa' ? 'Sa' : 'So'}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hours */}
-                <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-violet-100 dark:border-violet-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-violet-900 dark:text-violet-100">Stundenwunsch</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingSection('hours');
-                        setCurrentStep(12);
-                      }}
-                      className="h-7 px-2 text-xs text-violet-600 hover:text-violet-700 hover:bg-violet-100"
-                    >
-                      Bearbeiten
-                    </Button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Stunden/Woche:</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{formData.hoursPerWeek}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Page Indicator */}
-                <div className="flex justify-center gap-2 pt-4">
-                  <div className="w-2 h-2 rounded-full bg-gray-300 cursor-pointer hover:bg-gray-400" onClick={() => setReviewPage(1)}></div>
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                </div>
-              </div>
-            )}
-
-            {/* Review Page 3: Final Summary */}
-            {reviewPage === 3 && (
-              <div className="space-y-4 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            ) : (
+              <div className="space-y-4 h-[400px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-6 border border-green-100 dark:border-green-800 text-center">
                   <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
                   <h3 className="font-semibold text-lg text-green-900 dark:text-green-100 mb-2">Bereit zum Absenden?</h3>
@@ -1296,8 +1168,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                 </div>
               </div>
-            )}
-            </div>
+            )
+            }
           </div>
         )
 
@@ -1384,24 +1256,24 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               
               {/* Normal navigation (for steps 1-12) */}
               {currentStep !== 13 && (
-                <div className="flex gap-3 pt-4">
-                  {currentStep > 1 && (
-                    <Button
-                      variant="outline"
-                      onClick={handleBack}
-                      className="flex-1"
-                    >
-                      Zurück
-                    </Button>
-                  )}
+              <div className="flex gap-3 pt-4">
+                {currentStep > 1 && (
                   <Button
-                    onClick={handleNext}
-                    disabled={!canProceed()}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                    variant="outline"
+                    onClick={handleBack}
+                    className="flex-1"
                   >
-                    {currentStep === 12 ? "Zur Überprüfung" : "Weiter"}
+                    Zurück
                   </Button>
-                </div>
+                )}
+                <Button
+                  onClick={handleNext}
+                  disabled={!canProceed()}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                >
+                    {currentStep === 12 ? "Zur Überprüfung" : "Weiter"}
+                </Button>
+              </div>
               )}
 
               {/* Review step navigation - Pages 1 & 2 */}
