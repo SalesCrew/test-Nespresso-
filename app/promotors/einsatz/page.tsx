@@ -103,6 +103,8 @@ export default function EinsatzPage() {
   // Notes popup state
   const [showNotesPopup, setShowNotesPopup] = useState(false);
   const [currentAssignmentNote, setCurrentAssignmentNote] = useState<string>('');
+  const [currentNoteAssignmentId, setCurrentNoteAssignmentId] = useState<string | null>(null);
+  const [hasCheckedAutoOpenNote, setHasCheckedAutoOpenNote] = useState(false);
 
   // Load promotor note for current assignment
   const loadPromotorNote = async (assignmentId: string) => {
@@ -112,13 +114,61 @@ export default function EinsatzPage() {
         const data = await response.json();
         if (data.note) {
           setCurrentAssignmentNote(data.note.note);
+          setCurrentNoteAssignmentId(assignmentId);
         } else {
           setCurrentAssignmentNote('');
+          setCurrentNoteAssignmentId(null);
         }
       }
     } catch (error) {
       console.error('Error loading promotor note:', error);
       setCurrentAssignmentNote('');
+      setCurrentNoteAssignmentId(null);
+    }
+  };
+
+  // Check for unread notes on today's assignments and auto-open
+  const checkAndAutoOpenUnreadNote = async () => {
+    if (hasCheckedAutoOpenNote) return; // Only check once per session
+    
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const response = await fetch(`/api/promotors/assignments/notes/unread?date=${today}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const unreadNotes = data.unreadNotes || [];
+        
+        if (unreadNotes.length > 0) {
+          // Auto-open the first unread note
+          const firstNote = unreadNotes[0];
+          setCurrentAssignmentNote(firstNote.note);
+          setCurrentNoteAssignmentId(firstNote.assignment_id);
+          setShowNotesPopup(true);
+        }
+      }
+      
+      setHasCheckedAutoOpenNote(true);
+    } catch (error) {
+      console.error('Error checking unread notes:', error);
+      setHasCheckedAutoOpenNote(true);
+    }
+  };
+
+  // Mark note as read when closing
+  const handleCloseNotePopup = async () => {
+    setShowNotesPopup(false);
+    
+    if (currentNoteAssignmentId) {
+      try {
+        await fetch(`/api/assignments/promotor-notes/mark-read`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assignment_id: currentNoteAssignmentId })
+        });
+      } catch (error) {
+        console.error('Error marking note as read:', error);
+      }
     }
   };
 
@@ -479,6 +529,11 @@ const loadProcessState = async () => {
     loadBuddyTags();
     loadNextAssignment();
     checkActiveSpecialStatus();
+    
+    // Check for unread notes after a short delay to ensure assignments are loaded
+    setTimeout(() => {
+      checkAndAutoOpenUnreadNote();
+    }, 1000);
     
     // Refresh next assignment every 60s to reflect instant changes
     const iv = setInterval(loadNextAssignment, 60000);
@@ -3508,7 +3563,7 @@ const loadProcessState = async () => {
         <>
           <div 
             className="fixed inset-0 bg-black/30 z-50"
-            onClick={() => setShowNotesPopup(false)}
+            onClick={handleCloseNotePopup}
           ></div>
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl z-[60] w-[85vw] max-w-[400px] max-h-[500px] overflow-hidden">
             {/* Header */}
@@ -3519,7 +3574,7 @@ const loadProcessState = async () => {
                   <h3 className="text-lg font-semibold">Notiz</h3>
                 </div>
                 <button
-                  onClick={() => setShowNotesPopup(false)}
+                  onClick={handleCloseNotePopup}
                   className="p-1 hover:bg-white/20 rounded transition-colors"
                 >
                   <X className="h-4 w-4" />
