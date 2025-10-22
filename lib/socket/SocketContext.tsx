@@ -33,7 +33,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Create Socket.IO connection
-      const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000', {
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+      console.log('[Socket.IO] Connecting to:', socketUrl);
+      console.log('[Socket.IO] Env var value:', process.env.NEXT_PUBLIC_SOCKET_URL);
+      
+      const socketInstance = io(socketUrl, {
         auth: {
           token: session.access_token,
         },
