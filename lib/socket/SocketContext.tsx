@@ -49,6 +49,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           token: session.access_token,
         },
         autoConnect: true,
+        transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+        withCredentials: true, // Include credentials for CORS
       });
 
       socketInstance.on('connect', () => {
@@ -97,6 +99,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             auth: {
               token: session.access_token,
             },
+            transports: ['websocket', 'polling'],
+            withCredentials: true,
           });
 
           newSocket.on('connect', () => {
