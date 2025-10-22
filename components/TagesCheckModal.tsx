@@ -43,7 +43,11 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
   const formatTime = (isoString: string) => {
     try {
       const date = new Date(isoString)
-      return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      return date.toLocaleTimeString('de-DE', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'UTC'
+      })
     } catch {
       return ''
     }
