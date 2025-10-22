@@ -125,12 +125,12 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
 
             {/* Greeting */}
             <h2 className="text-2xl font-bold mb-4 animate-fade-in">
-              {getGreeting()}
+              Guten Morgen!
             </h2>
 
             {/* Assignment Info */}
             <div className="mb-6 space-y-2 animate-fade-in-delay">
-              <p className="text-white/90 font-medium">Heute geht's los:</p>
+              <p className="text-white/90 font-medium">Heute wird großartig!</p>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                 <p className="font-semibold text-lg mb-1">📍 {assignment.title}</p>
                 <p className="text-white/80 text-sm">{assignment.location_text}</p>
