@@ -968,6 +968,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       const data = await response.json();
       
       if (response.ok && data.assignments) {
+        // Fetch daily check-in status for all assignments
+        const today = new Date().toISOString().split('T')[0];
+        const checkinResponse = await fetch(`/api/admin/daily-checkin-status?date=${today}`);
+        const checkinData = await checkinResponse.json();
+        const checkinMap = new Map((checkinData.checkins || []).map((c: any) => [c.assignment_id, c]));
+        
         // Transform the data to match the expected format
         const transformedData = data.assignments.map((a: any) => ({
           id: a.assignment_id,
@@ -993,7 +999,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
           minutes_early_end: a.minutes_early_end,
           foto_maschine_url: a.foto_maschine_url,
           foto_kapsellade_url: a.foto_kapsellade_url,
-          foto_pos_gesamt_url: a.foto_pos_gesamt_url
+          foto_pos_gesamt_url: a.foto_pos_gesamt_url,
+          hasCheckedIn: checkinMap.has(a.assignment_id)
         }));
         setTodaysEinsaetze(transformedData);
       } else {
@@ -1497,9 +1504,14 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
-                                  <h4 className="text-sm font-medium text-gray-900">
-                                    {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
-                                  </h4>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="text-sm font-medium text-gray-900">
+                                      {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
+                                    </h4>
+                                    <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>
+                                      TC
+                                    </span>
+                                  </div>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
