@@ -375,6 +375,82 @@ export default function EinsatzplanPage() {
   const [applicationsList, setApplicationsList] = useState<any[]>([]);
   // Flash effect for promotor field
   const [promotorFieldFlash, setPromotorFieldFlash] = useState(false);
+  
+  // Detail modal tab state (Übersicht vs Details)
+  const [detailModalTab, setDetailModalTab] = useState<'overview' | 'details'>('overview');
+  
+  // Tracking data for overview tab
+  const [assignmentTrackingData, setAssignmentTrackingData] = useState<any>(null);
+  
+  // Photo lightbox state
+  const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
+
+  // Load tracking data for overview tab
+  useEffect(() => {
+    const loadTrackingData = async () => {
+      if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'overview') return;
+      
+      try {
+        // Fetch tracking data from the same endpoint as dashboard
+        const response = await fetch('/api/assignments/today');
+        const data = await response.json();
+        
+        if (response.ok && data.assignments) {
+          // Find the tracking data for this specific assignment
+          const trackingForAssignment = data.assignments.find((a: any) => a.assignment_id === editingEinsatz.id);
+          
+          if (trackingForAssignment) {
+            // Transform to match the expected format
+            setAssignmentTrackingData({
+              id: trackingForAssignment.assignment_id,
+              market: trackingForAssignment.title || 'N/A',
+              address: trackingForAssignment.location_text || '',
+              plz: trackingForAssignment.postal_code || '',
+              city: trackingForAssignment.city || '',
+              promotor: trackingForAssignment.promotor_name || editingEinsatz.promotor || 'N/A',
+              buddyName: trackingForAssignment.buddy_name,
+              planStart: trackingForAssignment.planned_start ? trackingForAssignment.planned_start.substring(11, 16) : editingEinsatz.planStart,
+              planEnd: trackingForAssignment.planned_end ? trackingForAssignment.planned_end.substring(11, 16) : editingEinsatz.planEnd,
+              actualStart: trackingForAssignment.actual_start_time ? trackingForAssignment.actual_start_time.substring(11, 16) : null,
+              actualEnd: trackingForAssignment.actual_end_time ? trackingForAssignment.actual_end_time.substring(11, 16) : null,
+              status: trackingForAssignment.display_status || editingEinsatz.status,
+              tracking_status: trackingForAssignment.tracking_status,
+              notes: trackingForAssignment.notes || editingEinsatz.notes,
+              early_start_reason: trackingForAssignment.early_start_reason,
+              minutes_early_start: trackingForAssignment.minutes_early_start,
+              early_end_reason: trackingForAssignment.early_end_reason,
+              minutes_early_end: trackingForAssignment.minutes_early_end,
+              foto_maschine_url: trackingForAssignment.foto_maschine_url,
+              foto_kapsellade_url: trackingForAssignment.foto_kapsellade_url,
+              foto_pos_gesamt_url: trackingForAssignment.foto_pos_gesamt_url,
+            });
+          } else {
+            // No tracking data yet, create basic structure from editingEinsatz
+            setAssignmentTrackingData({
+              id: editingEinsatz.id,
+              market: editingEinsatz.market || 'N/A',
+              address: editingEinsatz.address || '',
+              plz: editingEinsatz.plz || '',
+              city: editingEinsatz.city || '',
+              promotor: editingEinsatz.promotor || 'N/A',
+              buddyName: editingEinsatz.buddy_name,
+              planStart: editingEinsatz.planStart,
+              planEnd: editingEinsatz.planEnd,
+              actualStart: null,
+              actualEnd: null,
+              status: editingEinsatz.status,
+              notes: editingEinsatz.notes,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading tracking data:', error);
+      }
+    };
+    
+    loadTrackingData();
+  }, [showDetailModal, editingEinsatz?.id, detailModalTab]);
 
   useEffect(() => {
     const loadApplications = async () => {
@@ -1075,6 +1151,27 @@ export default function EinsatzplanPage() {
   };
 
   // PLZ to region mapping based on Austrian postal codes
+  // Helper function to get tracking status color (for overview tab - same as dashboard)
+  const getTrackingStatusColor = (einsatz: any) => {
+    // Red for special statuses (krankenstand, urlaub, zeitausgleich, notfall)
+    if (['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status)) {
+      return 'red';
+    }
+    
+    // Green for started or completed
+    if (einsatz.status === 'gestartet' || einsatz.status === 'beendet' || einsatz.actualStart) {
+      return 'green';
+    }
+    
+    // Orange for verspätet
+    if (einsatz.status === 'verspätet') {
+      return 'orange';
+    }
+    
+    // Default gray for pending
+    return 'gray';
+  };
+
   const getRegionFromPLZ = (plz: string): string => {
     const plzNum = parseInt(plz);
     if (isNaN(plzNum)) return '';
@@ -2516,6 +2613,7 @@ Import EP
                                 };
 
                                 setEditingEinsatz(editingData);
+                                setDetailModalTab('overview'); // Reset to overview tab when opening
                                 setShowDetailModal(true);
                                 
                                 // Load promotor note for this assignment
@@ -3435,6 +3533,7 @@ Import EP
                   setShowDetailModal(false);
                   setSelectedEinsatz(null);
                   setEditingEinsatz(null);
+                  setDetailModalTab('overview');
                 }}
                 className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               >
@@ -3442,12 +3541,266 @@ Import EP
               </button>
             </div>
 
+            {/* Tab Menu */}
+            <div className="px-6 pt-4">
+              <div className="relative flex space-x-0.5 bg-gray-50 rounded-lg p-0.5">
+                {/* Sliding background */}
+                <div 
+                  className="absolute top-0.5 bottom-0.5 bg-white shadow-sm border border-gray-200 rounded-md transition-all duration-300 ease-in-out"
+                  style={{
+                    left: detailModalTab === 'overview' ? '2px' : '50%',
+                    width: 'calc(50% - 1px)'
+                  }}
+                />
+                <button
+                  onClick={() => setDetailModalTab('overview')}
+                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    detailModalTab === 'overview'
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Übersicht
+                </button>
+                <button
+                  onClick={() => setDetailModalTab('details')}
+                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    detailModalTab === 'details'
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Details
+                </button>
+              </div>
+            </div>
+
             {/* Modal Content */}
             <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-              <div className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Information</h4>
+              {detailModalTab === 'overview' && assignmentTrackingData ? (
+                // OVERVIEW TAB - Same UI as dashboard's "Heutige Einsätze" detail view
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Location</h4>
+                      <p className="text-sm text-gray-600">{assignmentTrackingData.address}</p>
+                      <p className="text-sm text-gray-600">{assignmentTrackingData.plz} {assignmentTrackingData.city}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Geplante Zeiten</h4>
+                      <p className="text-sm text-gray-600">{assignmentTrackingData.planStart} - {assignmentTrackingData.planEnd}</p>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Status</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        getTrackingStatusColor(assignmentTrackingData) === 'green' ? 'bg-green-400' :
+                        getTrackingStatusColor(assignmentTrackingData) === 'orange' ? 'bg-orange-400' :
+                        getTrackingStatusColor(assignmentTrackingData) === 'red' ? 'bg-red-400' :
+                        'bg-gray-300'
+                      }`}></div>
+                      <span className="text-sm text-gray-600">
+                        {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(assignmentTrackingData.status) 
+                          ? assignmentTrackingData.status 
+                          : getTrackingStatusColor(assignmentTrackingData) === 'green' 
+                          ? 'gestartet' 
+                          : getTrackingStatusColor(assignmentTrackingData) === 'orange' 
+                          ? 'verspätet' 
+                          : 'pending'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actual Times */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Tatsächliche Zeiten</h4>
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Start:</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {assignmentTrackingData.actualStart || '--:--'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Ende:</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {assignmentTrackingData.actualEnd || '--:--'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Early Start Reasoning */}
+                  {assignmentTrackingData.early_start_reason && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Früher Start</h4>
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Minuten zu früh:</span>
+                          <span className="text-sm font-medium text-orange-700">
+                            {assignmentTrackingData.minutes_early_start} Min
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
+                          <p className="text-sm text-gray-900 bg-white rounded p-2 border">
+                            {assignmentTrackingData.early_start_reason}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Early End Reasoning */}
+                  {assignmentTrackingData.early_end_reason && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Früher Schluss</h4>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Minuten zu früh beendet:</span>
+                          <span className="text-sm font-medium text-blue-700">
+                            {assignmentTrackingData.minutes_early_end} Min
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
+                          <p className="text-sm text-gray-900 bg-white rounded p-2 border">
+                            {assignmentTrackingData.early_end_reason}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Buddy Information */}
+                  {assignmentTrackingData.buddyName && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Buddy Tag</h4>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <p className="text-sm text-gray-900">{assignmentTrackingData.buddyName}</p>
+                        <p className="text-xs text-gray-500">Buddy für diesen Einsatz</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Photos Section */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
+                    {(assignmentTrackingData.foto_maschine_url || assignmentTrackingData.foto_kapsellade_url || assignmentTrackingData.foto_pos_gesamt_url) ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        {/* Foto Maschine */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-700">Foto Maschine</span>
+                            {assignmentTrackingData.foto_maschine_url ? (
+                              <span className="text-xs text-green-600">✓</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                            )}
+                          </div>
+                          {assignmentTrackingData.foto_maschine_url ? (
+                            <img 
+                              src={assignmentTrackingData.foto_maschine_url} 
+                              alt="Foto Maschine" 
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => {
+                                setSelectedPhoto({ url: assignmentTrackingData.foto_maschine_url, title: "Foto Maschine" });
+                                setShowPhotoLightbox(true);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Foto Kapsellade */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-700">Foto Kapsellade</span>
+                            {assignmentTrackingData.foto_kapsellade_url ? (
+                              <span className="text-xs text-green-600">✓</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                            )}
+                          </div>
+                          {assignmentTrackingData.foto_kapsellade_url ? (
+                            <img 
+                              src={assignmentTrackingData.foto_kapsellade_url} 
+                              alt="Foto Kapsellade" 
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => {
+                                setSelectedPhoto({ url: assignmentTrackingData.foto_kapsellade_url, title: "Foto Kapsellade" });
+                                setShowPhotoLightbox(true);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Foto POS gesamt */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-700">Foto POS gesamt</span>
+                            {assignmentTrackingData.foto_pos_gesamt_url ? (
+                              <span className="text-xs text-green-600">✓</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                            )}
+                          </div>
+                          {assignmentTrackingData.foto_pos_gesamt_url ? (
+                            <img 
+                              src={assignmentTrackingData.foto_pos_gesamt_url} 
+                              alt="Foto POS gesamt" 
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => {
+                                setSelectedPhoto({ url: assignmentTrackingData.foto_pos_gesamt_url, title: "Foto POS gesamt" });
+                                setShowPhotoLightbox(true);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                              <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                        <div className="space-y-2">
+                          <div className="text-gray-400 mx-auto w-12 h-12 flex items-center justify-center">
+                            📸
+                          </div>
+                          <p className="text-sm text-gray-500">Keine Fotos verfügbar</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  {assignmentTrackingData.notes && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Notizen</h4>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm text-gray-900">{assignmentTrackingData.notes}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // DETAILS TAB - Current editing UI
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Information</h4>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -3825,7 +4178,8 @@ Import EP
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
@@ -3835,11 +4189,13 @@ Import EP
                   setShowDetailModal(false);
                   setSelectedEinsatz(null);
                   setEditingEinsatz(null);
+                  setDetailModalTab('overview');
                 }}
                 className="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Abbrechen
               </button>
+              {detailModalTab === 'details' && (
               <button
                 onClick={async () => {
                   try {
@@ -3881,6 +4237,7 @@ Import EP
                   setShowDetailModal(false);
                   setSelectedEinsatz(null);
                   setEditingEinsatz(null);
+                  setDetailModalTab('overview');
                 }}
                 className="px-6 py-2 text-sm text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 style={{
@@ -3892,6 +4249,33 @@ Import EP
               >
                 Speichern
               </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Lightbox Modal */}
+      {showPhotoLightbox && selectedPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4"
+          onClick={() => setShowPhotoLightbox(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <button
+              onClick={() => setShowPhotoLightbox(false)}
+              className="absolute top-4 right-4 z-[70] p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img 
+              src={selectedPhoto.url} 
+              alt={selectedPhoto.title}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg">
+              <p className="text-sm font-medium">{selectedPhoto.title}</p>
             </div>
           </div>
         </div>
