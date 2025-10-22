@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     // Get today's date in YYYY-MM-DD format (local time)
     const today = new Date().toISOString().split('T')[0];
 
-    // Fetch all assignments where the user is a participant (lead or buddy) for today
+    // Fetch all assignments where the user is a participant (lead or buddy)
     const { data: participants, error: participantsError } = await svc
       .from('assignment_participants')
       .select(`
@@ -25,9 +25,8 @@ export async function GET(req: Request) {
           id,
           title,
           location_text,
-          start_time,
-          start_date,
-          end_date
+          start_ts,
+          end_ts
         )
       `)
       .eq('user_id', user.id)
@@ -42,8 +41,16 @@ export async function GET(req: Request) {
     const todayAssignments = (participants || [])
       .filter(p => p.assignments)
       .map(p => p.assignments as any)
-      .filter(a => a && (a.start_date === today || a.end_date === today || 
-        (a.start_date && a.end_date && a.start_date <= today && a.end_date >= today)));
+      .filter(a => {
+        if (!a || !a.start_ts) return false;
+        
+        const startDate = new Date(a.start_ts).toISOString().split('T')[0];
+        const endDate = a.end_ts ? new Date(a.end_ts).toISOString().split('T')[0] : startDate;
+        
+        // Check if today falls within the assignment period
+        return startDate === today || endDate === today || 
+          (startDate <= today && endDate >= today);
+      });
 
     if (todayAssignments.length === 0) {
       return NextResponse.json({ needsCheckin: false });
@@ -72,7 +79,7 @@ export async function GET(req: Request) {
             id: assignment.id,
             title: assignment.title,
             location_text: assignment.location_text,
-            start_time: assignment.start_time
+            start_time: assignment.start_ts
           }
         });
       }

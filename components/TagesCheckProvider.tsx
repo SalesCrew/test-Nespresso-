@@ -24,8 +24,13 @@ export default function TagesCheckProvider() {
       const res = await fetch('/api/promotors/assignments/daily-checkin/pending')
       const data = await res.json()
 
+      console.log('Tages-Check response:', data)
+
       if (data.needsCheckin && data.assignment) {
+        console.log('Opening Tages-Check modal for assignment:', data.assignment)
         setAssignment(data.assignment)
+      } else {
+        console.log('No Tages-Check needed today')
       }
     } catch (error) {
       console.error('Failed to check for daily check-in:', error)
