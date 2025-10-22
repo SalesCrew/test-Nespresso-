@@ -115,11 +115,11 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
             {/* Animated Icon */}
             <div className="mb-6 flex justify-center">
               <div className="relative">
-                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center animate-pulse-slow backdrop-blur-sm">
+                <div className="w-20 h-20 bg-white/40 rounded-full flex items-center justify-center animate-pulse-slow backdrop-blur-sm">
                   <span className="text-5xl animate-bounce-subtle">🌞</span>
                 </div>
                 {/* Glow effect */}
-                <div className="absolute inset-0 w-20 h-20 bg-yellow-300/30 rounded-full blur-xl animate-pulse-slow" />
+                <div className="absolute inset-0 w-20 h-20 bg-yellow-200/50 rounded-full blur-xl animate-pulse-slow" />
               </div>
             </div>
 
@@ -208,7 +208,7 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
 
         @keyframes pulse-slow {
           0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
+          50% { transform: scale(1.05); opacity: 0.95; }
         }
         .animate-pulse-slow {
           animation: pulse-slow 2s ease-in-out infinite;
