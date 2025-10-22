@@ -386,10 +386,10 @@ export default function EinsatzplanPage() {
   const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
 
-  // Load tracking data for overview tab
+  // Load tracking data for Details tab (tracking overview)
   useEffect(() => {
     const loadTrackingData = async () => {
-      if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'overview') return;
+      if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'details') return;
       
       try {
         // Fetch tracking data from the same endpoint as dashboard
@@ -3548,20 +3548,10 @@ Import EP
                 <div 
                   className="absolute top-0.5 bottom-0.5 bg-white shadow-sm border border-gray-200 rounded-md transition-all duration-300 ease-in-out"
                   style={{
-                    left: detailModalTab === 'overview' ? '2px' : '50%',
+                    left: detailModalTab === 'details' ? '2px' : '50%',
                     width: 'calc(50% - 1px)'
                   }}
                 />
-                <button
-                  onClick={() => setDetailModalTab('overview')}
-                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    detailModalTab === 'overview'
-                      ? 'text-gray-900'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  Übersicht
-                </button>
                 <button
                   onClick={() => setDetailModalTab('details')}
                   className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
@@ -3572,13 +3562,23 @@ Import EP
                 >
                   Details
                 </button>
+                <button
+                  onClick={() => setDetailModalTab('overview')}
+                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    detailModalTab === 'overview'
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Übersicht
+                </button>
               </div>
             </div>
 
             {/* Modal Content */}
             <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-              {detailModalTab === 'overview' && assignmentTrackingData ? (
-                // OVERVIEW TAB - Same UI as dashboard's "Heutige Einsätze" detail view
+              {detailModalTab === 'details' && assignmentTrackingData ? (
+                // DETAILS TAB - Tracking overview (same as dashboard's "Heutige Einsätze")
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div className="grid grid-cols-2 gap-4">
@@ -3796,7 +3796,7 @@ Import EP
                   )}
                 </div>
               ) : (
-                // DETAILS TAB - Current editing UI
+                // ÜBERSICHT TAB - Current editing UI (original)
                 <div className="space-y-6">
                   {/* Basic Information */}
                   <div className="space-y-4">
@@ -4195,7 +4195,7 @@ Import EP
               >
                 Abbrechen
               </button>
-              {detailModalTab === 'details' && (
+              {detailModalTab === 'overview' && (
               <button
                 onClick={async () => {
                   try {
