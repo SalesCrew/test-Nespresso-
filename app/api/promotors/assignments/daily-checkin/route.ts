@@ -21,20 +21,21 @@ export async function POST(req: Request) {
     const svc = createSupabaseServiceClient();
 
     // Verify user is a participant in this assignment
-    const { data: participant, error: participantError } = await svc
+    const { data: participants, error: participantError } = await svc
       .from('assignment_participants')
-      .select('id')
+      .select('id, role')
       .eq('assignment_id', assignment_id)
-      .eq('user_id', user.id)
-      .or('role.eq.lead,role.eq.buddy')
-      .maybeSingle();
+      .eq('user_id', user.id);
 
     if (participantError) {
       console.error('Error verifying assignment participant:', participantError);
       return NextResponse.json({ error: participantError.message }, { status: 500 });
     }
 
-    if (!participant) {
+    const isParticipant = participants && participants.length > 0 && 
+      participants.some(p => p.role === 'lead' || p.role === 'buddy');
+
+    if (!isParticipant) {
       return NextResponse.json({ error: 'Not authorized for this assignment' }, { status: 403 });
     }
 
@@ -46,9 +47,6 @@ export async function POST(req: Request) {
         user_id: user.id,
         checkin_date,
         checked_in_at: new Date().toISOString()
-      }, {
-        onConflict: 'assignment_id,user_id,checkin_date',
-        ignoreDuplicates: false
       })
       .select();
 
