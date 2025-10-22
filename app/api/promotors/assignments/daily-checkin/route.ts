@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // Verify user is a participant in this assignment
     const { data: participants, error: participantError } = await svc
       .from('assignment_participants')
-      .select('id, role')
+      .select('role')
       .eq('assignment_id', assignment_id)
       .eq('user_id', user.id);
 

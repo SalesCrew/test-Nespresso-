@@ -21,6 +21,7 @@ export async function GET(req: Request) {
       .from('assignment_participants')
       .select(`
         assignment_id,
+        role,
         assignments (
           id,
           title,
@@ -29,16 +30,16 @@ export async function GET(req: Request) {
           end_ts
         )
       `)
-      .eq('user_id', user.id)
-      .or('role.eq.lead,role.eq.buddy');
+      .eq('user_id', user.id);
 
     if (participantsError) {
       console.error('Error fetching assignment participants:', participantsError);
       return NextResponse.json({ error: participantsError.message }, { status: 500 });
     }
 
-    // Filter assignments that are happening today
+    // Filter to only lead/buddy roles and get their assignments
     const todayAssignments = (participants || [])
+      .filter(p => p.role === 'lead' || p.role === 'buddy')
       .filter(p => p.assignments)
       .map(p => p.assignments as any)
       .filter(a => {
