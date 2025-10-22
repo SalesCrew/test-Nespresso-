@@ -56,6 +56,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       socketInstance.on('connect_error', (error) => {
         console.error('Socket.IO connection error:', error);
+        console.error('This is likely a CORS issue. Check Railway ALLOWED_ORIGIN env var.');
+        console.error('It should be set to: https://test-nespresso-seven.vercel.app or *');
         setIsConnected(false);
       });
 
