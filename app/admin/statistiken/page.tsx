@@ -1112,6 +1112,25 @@ Liebe Grüße, dein Nespresso Team`;
     return ((currentValue - previousValue) / previousValue) * 100;
   };
 
+  // Calculate change from current KPIs to most recent historical entry
+  const calculateCurrentVsHistory = () => {
+    if (!selectedCard || kpiHistory.length === 0) {
+      return { mcet: null, tma: null, vlShare: null };
+    }
+
+    const mostRecent = kpiHistory[0]; // First entry (newest)
+    
+    const mcetChange = calculateKPIChange(selectedCard.mcet, mostRecent.mc_et);
+    const tmaChange = calculateKPIChange(selectedCard.tma, mostRecent.tma);
+    const vlChange = calculateKPIChange(selectedCard.vlShare, mostRecent.vl_value);
+
+    return {
+      mcet: mcetChange,
+      tma: tmaChange,
+      vlShare: vlChange
+    };
+  };
+
   // Get color for average values
   const getAverageColor = (metric: 'mcet' | 'tma' | 'vlShare', value: string) => {
     if (value === "N/A") return "text-gray-400";
@@ -3036,16 +3055,16 @@ Liebe Grüße, dein Nespresso Team`;
                       >
                         {selectedCard.mcet.toFixed(1)}
                       </div>
-                      {calculateWaveChanges().mcet !== null ? (
+                      {calculateCurrentVsHistory().mcet !== null ? (
                         <div className={`inline-block px-1 py-0 rounded text-[10px] font-medium bg-gray-100 mt-0.5 ${
-                          calculateWaveChanges().mcet! >= 0 
+                          calculateCurrentVsHistory().mcet! >= 0 
                             ? 'text-green-600' 
                             : 'text-red-600'
                         }`}>
-                          {calculateWaveChanges().mcet! >= 0 ? '+' : ''}{calculateWaveChanges().mcet!.toFixed(0)}%
+                          {calculateCurrentVsHistory().mcet! >= 0 ? '+' : ''}{calculateCurrentVsHistory().mcet!.toFixed(0)}%
                         </div>
                       ) : (
-                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">0.0%</div>
+                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">N/A</div>
                       )}
                     </div>
                     <div className="text-center">
@@ -3059,16 +3078,16 @@ Liebe Grüße, dein Nespresso Team`;
                       >
                         {selectedCard.tma.toFixed(0)}%
                       </div>
-                      {calculateWaveChanges().tma !== null ? (
+                      {calculateCurrentVsHistory().tma !== null ? (
                         <div className={`inline-block px-1 py-0 rounded text-[10px] font-medium bg-gray-100 mt-0.5 ${
-                          calculateWaveChanges().tma! >= 0 
+                          calculateCurrentVsHistory().tma! >= 0 
                             ? 'text-green-600' 
                             : 'text-red-600'
                         }`}>
-                          {calculateWaveChanges().tma! >= 0 ? '+' : ''}{calculateWaveChanges().tma!.toFixed(0)}%
+                          {calculateCurrentVsHistory().tma! >= 0 ? '+' : ''}{calculateCurrentVsHistory().tma!.toFixed(0)}%
                         </div>
                       ) : (
-                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">0.0%</div>
+                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">N/A</div>
                       )}
                     </div>
                     <div className="text-center">
@@ -3082,16 +3101,16 @@ Liebe Grüße, dein Nespresso Team`;
                       >
                         {selectedCard.vlShare.toFixed(0)}%
                       </div>
-                      {calculateWaveChanges().vlShare !== null ? (
+                      {calculateCurrentVsHistory().vlShare !== null ? (
                         <div className={`inline-block px-1 py-0 rounded text-[10px] font-medium bg-gray-100 mt-0.5 ${
-                          calculateWaveChanges().vlShare! >= 0 
+                          calculateCurrentVsHistory().vlShare! >= 0 
                             ? 'text-green-600' 
                             : 'text-red-600'
                         }`}>
-                          {calculateWaveChanges().vlShare! >= 0 ? '+' : ''}{calculateWaveChanges().vlShare!.toFixed(0)}%
+                          {calculateCurrentVsHistory().vlShare! >= 0 ? '+' : ''}{calculateCurrentVsHistory().vlShare!.toFixed(0)}%
                         </div>
                       ) : (
-                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">0.0%</div>
+                        <div className="inline-block px-1 py-0.5 bg-gray-200 rounded text-[10px] text-gray-400 mt-0.5">N/A</div>
                       )}
                     </div>
                   </div>
