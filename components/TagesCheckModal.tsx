@@ -112,7 +112,7 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
             <div className="mb-6 flex justify-center">
               <div className="relative">
                 <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center animate-pulse-slow backdrop-blur-sm">
-                  <span className="text-5xl animate-bounce-subtle">☀️</span>
+                  <span className="text-5xl animate-bounce-subtle">🌞</span>
                 </div>
                 {/* Glow effect */}
                 <div className="absolute inset-0 w-20 h-20 bg-yellow-300/30 rounded-full blur-xl animate-pulse-slow" />
