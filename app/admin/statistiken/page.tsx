@@ -3171,7 +3171,7 @@ Liebe Grüße, dein Nespresso Team`;
                   {kpiHistoryLoading ? (
                     <div className="grid grid-cols-3 gap-4">
                       {[...Array(3)].map((_, idx) => (
-                        <div key={`avg-skeleton-${idx}`} className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
+                        <div key={`avg-skeleton-${idx}`} className="bg-gray-50/70 border border-gray-300 rounded px-3 py-3">
                           <div className="h-4 bg-gray-200 rounded w-20 mx-auto mb-3 animate-skeleton-fade"></div>
                           <hr className="border-gray-300 mb-3" />
                           <div className="space-y-2">
@@ -3194,8 +3194,8 @@ Liebe Grüße, dein Nespresso Team`;
                   ) : (
                     <div className="grid grid-cols-3 gap-4">
                       {/* All Time */}
-                      <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
-                        <h5 className="font-medium text-gray-600 mb-3 text-center">All Time</h5>
+                      <div className="bg-gray-50/70 border border-gray-300 rounded px-3 py-3">
+                        <h5 className="font-medium text-gray-600 mb-2 text-center text-sm">All Time</h5>
                         <hr className="border-gray-300 mb-3" />
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
@@ -3220,8 +3220,8 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
 
                     {/* Last 30 Days */}
-                    <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
-                      <h5 className="font-medium text-gray-600 mb-3 text-center">Last 30 Days</h5>
+                    <div className="bg-gray-50/70 border border-gray-300 rounded px-3 py-3">
+                      <h5 className="font-medium text-gray-600 mb-2 text-center text-sm">Last 30 Days</h5>
                       <hr className="border-gray-300 mb-3" />
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
@@ -3246,8 +3246,8 @@ Liebe Grüße, dein Nespresso Team`;
                     </div>
 
                     {/* Last 6 Months */}
-                    <div className="bg-gray-100 border border-gray-200 rounded px-3 py-3 shadow">
-                      <h5 className="font-medium text-gray-600 mb-3 text-center">Last 6 Months</h5>
+                    <div className="bg-gray-50/70 border border-gray-300 rounded px-3 py-3">
+                      <h5 className="font-medium text-gray-600 mb-2 text-center text-sm">Last 6 Months</h5>
                       <hr className="border-gray-300 mb-3" />
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
