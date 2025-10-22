@@ -838,12 +838,10 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     };
   }, [socket, options]);
 
-  // Fetch conversations on mount
+  // Fetch conversations on mount (don't wait for Socket.IO connection)
   useEffect(() => {
-    if (isConnected) {
-      fetchConversations();
-    }
-  }, [isConnected, fetchConversations]);
+    fetchConversations();
+  }, [fetchConversations]);
 
   return {
     conversations,
