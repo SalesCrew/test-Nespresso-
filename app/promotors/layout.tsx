@@ -2,6 +2,7 @@ import SiteLayout from "../SiteLayout";
 import { getCurrentUserAndProfile } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
 import { SocketProvider } from "@/lib/socket/SocketContext";
+import TagesCheckProvider from "@/components/TagesCheckProvider";
 
 interface PromotorLayoutProps {
   children: React.ReactNode;
@@ -26,7 +27,10 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
   if (profile.role === "promotor") {
     return (
       <SiteLayout>
-        <SocketProvider>{children}</SocketProvider>
+        <SocketProvider>
+          <TagesCheckProvider />
+          {children}
+        </SocketProvider>
       </SiteLayout>
     );
   }
