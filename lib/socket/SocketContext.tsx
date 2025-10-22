@@ -39,8 +39,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       // Create Socket.IO connection
-      // Remove trailing slash from URL (Socket.IO doesn't handle them)
-      const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL as string).replace(/\/$/, '');
+      const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL || '').replace(/\/$/, '');
+      
+      if (!socketUrl) {
+        console.error('[Socket.IO] NEXT_PUBLIC_SOCKET_URL is not set! Cannot connect.');
+        return;
+      }
+      
       console.log('[Socket.IO] Connecting to:', socketUrl);
       console.log('[Socket.IO] With token:', session.access_token.substring(0, 30) + '...');
       
@@ -93,8 +98,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         
         if (session?.access_token && event === 'TOKEN_REFRESHED') {
-          // Remove trailing slash from URL (Socket.IO doesn't handle them)
-          const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL as string).replace(/\/$/, '');
+          const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL || '').replace(/\/$/, '');
+          
+          if (!socketUrl) {
+            console.error('[Socket.IO] NEXT_PUBLIC_SOCKET_URL is not set! Cannot reconnect.');
+            return;
+          }
+          
           const newSocket = io(socketUrl, {
             auth: {
               token: session.access_token,
