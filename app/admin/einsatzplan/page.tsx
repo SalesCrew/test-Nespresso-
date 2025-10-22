@@ -3548,20 +3548,10 @@ Import EP
                 <div 
                   className="absolute top-0.5 bottom-0.5 bg-white shadow-sm border border-gray-200 rounded-md transition-all duration-300 ease-in-out"
                   style={{
-                    left: detailModalTab === 'details' ? '2px' : '50%',
+                    left: detailModalTab === 'overview' ? '2px' : '50%',
                     width: 'calc(50% - 1px)'
                   }}
                 />
-                <button
-                  onClick={() => setDetailModalTab('details')}
-                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    detailModalTab === 'details'
-                      ? 'text-gray-900'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  Details
-                </button>
                 <button
                   onClick={() => setDetailModalTab('overview')}
                   className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
@@ -3571,6 +3561,16 @@ Import EP
                   }`}
                 >
                   Übersicht
+                </button>
+                <button
+                  onClick={() => setDetailModalTab('details')}
+                  className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    detailModalTab === 'details'
+                      ? 'text-gray-900'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Details
                 </button>
               </div>
             </div>
