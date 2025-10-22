@@ -144,7 +144,6 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const STORAGE_KEY = 'werde.promotor.onboarding.session.v1'
   const STORAGE_VERSION = 1
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const [showResumePrompt, setShowResumePrompt] = useState(false)
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false)
 
   // Load from sessionStorage on mount
@@ -163,22 +162,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           return
         }
 
-        // Check if there's meaningful data to resume
-        const hasData = parsed.currentStep > 1 || 
-          Object.keys(parsed.formData || {}).some(key => {
-            const val = parsed.formData[key]
-            return val !== '' && val !== null && val !== undefined && 
-              (Array.isArray(val) ? val.length > 0 : true)
-          })
-
-        if (hasData) {
-          setShowResumePrompt(true)
-          // Auto-resume after 3.5s if no interaction (mobile-friendly)
-          setTimeout(() => {
-            setShowResumePrompt(false)
-            resumeFromStorage(parsed)
-          }, 3500)
-        }
+        // Silently restore saved state
+        resumeFromStorage(parsed)
       }
     } catch (e) {
       console.error('Failed to load onboarding session:', e)
@@ -234,7 +219,6 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   // Start fresh
   const startFresh = () => {
     clearStorage()
-    setShowResumePrompt(false)
     setCurrentStep(1)
     setReviewPage(1)
     setFormData({
@@ -271,15 +255,15 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
 
   // Auto-save on formData, currentStep, or reviewPage changes
   useEffect(() => {
-    if (hasLoadedFromStorage && !showResumePrompt) {
+    if (hasLoadedFromStorage) {
       saveToStorage()
     }
-  }, [formData, currentStep, reviewPage, hasLoadedFromStorage, showResumePrompt])
+  }, [formData, currentStep, reviewPage, hasLoadedFromStorage])
 
   // Save on visibility change (mobile background)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && hasLoadedFromStorage && !showResumePrompt) {
+      if (document.visibilityState === 'hidden' && hasLoadedFromStorage) {
         // Immediate save when going to background
         try {
           const data = {
@@ -298,7 +282,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [currentStep, reviewPage, formData, hasLoadedFromStorage, showResumePrompt])
+  }, [currentStep, reviewPage, formData, hasLoadedFromStorage])
 
   const isNonSchengenCountry = (citizenship: string) => {
     const schengenCountries = [
@@ -1475,51 +1459,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           onClick={(e) => e.stopPropagation()}
         >
 
-        {showResumePrompt ? (
-          /* Resume Prompt */
-          <div className="p-8 text-center">
-            <div className="mb-6">
-              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                <Clock className="w-8 h-8 text-white" />
-              </div>
-            </div>
-            
-            <div className="space-y-4 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                Fortfahren, wo du aufgehört hast?
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Wir haben deine bisherigen Eingaben gefunden.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={startFresh}
-                variant="outline"
-                className="flex-1"
-              >
-                Neu starten
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowResumePrompt(false)
-                  const saved = sessionStorage.getItem(STORAGE_KEY)
-                  if (saved) {
-                    resumeFromStorage(JSON.parse(saved))
-                  }
-                }}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-              >
-                Weiter
-              </Button>
-            </div>
-
-            <p className="text-xs text-gray-400 mt-4">
-              Wird in 3 Sekunden automatisch fortgesetzt...
-            </p>
-          </div>
-        ) : isCompleted ? (
+        {isCompleted ? (
           /* Completion Animation */
           <div className="p-8 text-center">
             <div className="mb-6">
@@ -1651,7 +1591,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
               )}
 
               {/* Neu beginnen link - subtle footer */}
-              {currentStep > 1 && currentStep < 13 && !showResumePrompt && (
+              {currentStep > 1 && currentStep < 13 && (
                 <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
                   <button
                     onClick={startFresh}
