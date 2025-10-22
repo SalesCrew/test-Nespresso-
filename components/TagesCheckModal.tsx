@@ -67,6 +67,11 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
     try {
       const today = new Date().toISOString().split('T')[0]
       
+      console.log('[TagesCheck] Submitting check-in:', {
+        assignment_id: assignment.id,
+        checkin_date: today
+      })
+      
       const response = await fetch('/api/promotors/assignments/daily-checkin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,9 +81,16 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
         })
       })
 
+      console.log('[TagesCheck] Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error('Check-in failed')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('[TagesCheck] Server error:', errorData)
+        throw new Error(errorData.error || `Server error: ${response.status}`)
       }
+
+      const result = await response.json()
+      console.log('[TagesCheck] Success:', result)
 
       // Wait for animations to complete
       setTimeout(() => {
@@ -88,11 +100,11 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
         }, 300)
       }, 2000)
 
-    } catch (error) {
-      console.error('Tages-Check error:', error)
+    } catch (error: any) {
+      console.error('[TagesCheck] Error:', error)
       setIsSubmitting(false)
       setStage('initial')
-      alert('Check-in fehlgeschlagen. Bitte versuche es erneut.')
+      alert(`Check-in fehlgeschlagen: ${error.message || 'Bitte versuche es erneut.'}`)
     }
   }
 
