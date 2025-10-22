@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -140,6 +140,166 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const totalSteps = 13
   const progress = (currentStep / totalSteps) * 100
 
+  // SessionStorage persistence
+  const STORAGE_KEY = 'werde.promotor.onboarding.session.v1'
+  const STORAGE_VERSION = 1
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [showResumePrompt, setShowResumePrompt] = useState(false)
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false)
+
+  // Load from sessionStorage on mount
+  useEffect(() => {
+    if (hasLoadedFromStorage) return
+
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        
+        // Version check
+        if (parsed.version !== STORAGE_VERSION) {
+          sessionStorage.removeItem(STORAGE_KEY)
+          setHasLoadedFromStorage(true)
+          return
+        }
+
+        // Check if there's meaningful data to resume
+        const hasData = parsed.currentStep > 1 || 
+          Object.keys(parsed.formData || {}).some(key => {
+            const val = parsed.formData[key]
+            return val !== '' && val !== null && val !== undefined && 
+              (Array.isArray(val) ? val.length > 0 : true)
+          })
+
+        if (hasData) {
+          setShowResumePrompt(true)
+          // Auto-resume after 3.5s if no interaction (mobile-friendly)
+          setTimeout(() => {
+            setShowResumePrompt(false)
+            resumeFromStorage(parsed)
+          }, 3500)
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load onboarding session:', e)
+    }
+    
+    setHasLoadedFromStorage(true)
+  }, [hasLoadedFromStorage])
+
+  // Save to sessionStorage (debounced)
+  const saveToStorage = () => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        const data = {
+          version: STORAGE_VERSION,
+          updatedAt: new Date().toISOString(),
+          currentStep,
+          reviewPage,
+          formData,
+        }
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+      } catch (e) {
+        console.error('Failed to save onboarding session:', e)
+      }
+    }, 400)
+  }
+
+  // Resume from saved state
+  const resumeFromStorage = (parsed: any) => {
+    if (parsed.formData) setFormData(parsed.formData)
+    if (parsed.currentStep) setCurrentStep(parsed.currentStep)
+    if (parsed.reviewPage) setReviewPage(parsed.reviewPage)
+    
+    // Restore citizenship input state if present
+    if (parsed.formData?.citizenship) {
+      setCitizenshipInput(parsed.formData.citizenship)
+      setCitizenshipConfirmed(true)
+    }
+  }
+
+  // Clear storage
+  const clearStorage = () => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY)
+    } catch (e) {
+      console.error('Failed to clear onboarding session:', e)
+    }
+  }
+
+  // Start fresh
+  const startFresh = () => {
+    clearStorage()
+    setShowResumePrompt(false)
+    setCurrentStep(1)
+    setReviewPage(1)
+    setFormData({
+      firstName: "",
+      lastName: "",
+      title: "",
+      gender: "",
+      pronouns: "",
+      address: "",
+      postalCode: "",
+      city: "",
+      phone: "",
+      email: "",
+      socialSecurityNumber: "",
+      birthDate: "",
+      citizenship: "",
+      workPermit: null as boolean | null,
+      drivingLicense: null as boolean | null,
+      carAvailable: null as boolean | null,
+      willingToDrive: null as boolean | null,
+      clothingSize: "",
+      height: "",
+      education: "",
+      qualifications: "",
+      currentJob: "",
+      spontaneity: "",
+      preferredRegion: "",
+      workingDays: [] as string[],
+      hoursPerWeek: ""
+    })
+    setCitizenshipInput("")
+    setCitizenshipConfirmed(false)
+  }
+
+  // Auto-save on formData, currentStep, or reviewPage changes
+  useEffect(() => {
+    if (hasLoadedFromStorage && !showResumePrompt) {
+      saveToStorage()
+    }
+  }, [formData, currentStep, reviewPage, hasLoadedFromStorage, showResumePrompt])
+
+  // Save on visibility change (mobile background)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && hasLoadedFromStorage && !showResumePrompt) {
+        // Immediate save when going to background
+        try {
+          const data = {
+            version: STORAGE_VERSION,
+            updatedAt: new Date().toISOString(),
+            currentStep,
+            reviewPage,
+            formData,
+          }
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+        } catch (e) {
+          console.error('Failed to save on visibility change:', e)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [currentStep, reviewPage, formData, hasLoadedFromStorage, showResumePrompt])
+
   const isNonSchengenCountry = (citizenship: string) => {
     const schengenCountries = [
       "österreich", "deutschland", "schweiz", "italien", "frankreich", 
@@ -178,6 +338,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
       }
     } else {
       // Submit the form data (only from step 13)
+      clearStorage(); // Clear session storage on successful submit
       onComplete(formData);
       setIsCompleted(true);
     }
@@ -1314,7 +1475,51 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
           onClick={(e) => e.stopPropagation()}
         >
 
-        {isCompleted ? (
+        {showResumePrompt ? (
+          /* Resume Prompt */
+          <div className="p-8 text-center">
+            <div className="mb-6">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                <Clock className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Fortfahren, wo du aufgehört hast?
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Wir haben deine bisherigen Eingaben gefunden.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={startFresh}
+                variant="outline"
+                className="flex-1"
+              >
+                Neu starten
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowResumePrompt(false)
+                  const saved = sessionStorage.getItem(STORAGE_KEY)
+                  if (saved) {
+                    resumeFromStorage(JSON.parse(saved))
+                  }
+                }}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              >
+                Weiter
+              </Button>
+            </div>
+
+            <p className="text-xs text-gray-400 mt-4">
+              Wird in 3 Sekunden automatisch fortgesetzt...
+            </p>
+          </div>
+        ) : isCompleted ? (
           /* Completion Animation */
           <div className="p-8 text-center">
             <div className="mb-6">
@@ -1442,6 +1647,18 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   >
                     Absenden
                   </Button>
+                </div>
+              )}
+
+              {/* Neu beginnen link - subtle footer */}
+              {currentStep > 1 && currentStep < 13 && !showResumePrompt && (
+                <div className="pt-4 mt-4 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    onClick={startFresh}
+                    className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors underline"
+                  >
+                    Neu beginnen
+                  </button>
                 </div>
               )}
             </CardContent>
