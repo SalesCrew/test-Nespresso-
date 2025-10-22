@@ -358,25 +358,20 @@ export default function PromotorChatPage() {
   
   const contacts: Contact[] = chatIntegration.conversations
     .filter(conv => {
-      console.log('[Promotor Chat] Filtering conversation:', conv.id, 'type:', conv.type, 'participants:', conv.participants);
-      
       // Show only groups and direct chats with admins (no other promotors)
       if (conv.type === 'group') {
-        console.log('[Promotor Chat] Group conversation, including');
         return true;
       }
       
       // For direct chats, check if other participant is admin
-      // If currentUserId not loaded yet, include all conversations temporarily (they'll re-filter when ID loads)
-      if (!currentUserId) {
-        console.log('[Promotor Chat] No currentUserId yet, including conversation temporarily');
+      // Skip filtering if currentUserId not properly loaded yet
+      if (!currentUserId || currentUserId.trim() === '') {
+        // Show all direct chats temporarily until user ID loads
         return true;
       }
       
       const otherParticipant = conv.participants.find(p => p.user_id !== currentUserId);
-      console.log('[Promotor Chat] Other participant:', otherParticipant);
       const isAdminChat = otherParticipant?.role && ['admin_staff', 'admin_of_admins'].includes(otherParticipant.role);
-      console.log('[Promotor Chat] Is admin chat?', isAdminChat);
       return isAdminChat;
     })
     .map(conv => {

@@ -27,9 +27,8 @@ export async function GET(request: NextRequest) {
     const userRole = userProfile?.role || 'promotor';
     const isAdmin = ['admin_staff', 'admin_of_admins'].includes(userRole);
 
-    // Fetch conversations where user is a participant (use service client to bypass RLS)
-    const svcForParticipants = createSupabaseServiceClient();
-    const { data: participantData, error: participantError } = await svcForParticipants
+    // Fetch conversations where user is a participant
+    const { data: participantData, error: participantError } = await supabase
       .from('chat_participants')
       .select('conversation_id')
       .eq('user_id', user.id);
@@ -45,8 +44,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ conversations: [] });
     }
 
-    // Fetch conversation details (including pin data) - use service client to bypass RLS
-    const { data: conversations, error: conversationsError } = await svcForParticipants
+    // Fetch conversation details (including pin data)
+    const { data: conversations, error: conversationsError } = await supabase
       .from('chat_conversations')
       .select('id, type, name, description, is_read_only, created_by, created_at, updated_at, profile_picture_url, is_pinned, pinned_at')
       .in('id', conversationIds)
@@ -60,7 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch participants for all conversations (including marked_unread status and cleared_at)
-    const { data: allParticipants, error: allParticipantsError } = await svcForParticipants
+    const { data: allParticipants, error: allParticipantsError } = await supabase
       .from('chat_participants')
       .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at, cleared_at')
       .in('conversation_id', conversationIds);
