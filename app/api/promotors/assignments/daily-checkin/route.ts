@@ -8,13 +8,17 @@ export async function POST(req: Request) {
     const { data: { user } } = await server.auth.getUser();
 
     if (!user) {
+      console.error('[Daily Check-in] No user found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
     const { assignment_id, checkin_date } = body;
 
+    console.log('[Daily Check-in] Request:', { assignment_id, checkin_date, user_id: user.id });
+
     if (!assignment_id || !checkin_date) {
+      console.error('[Daily Check-in] Missing params:', { assignment_id, checkin_date });
       return NextResponse.json({ error: 'Missing assignment_id or checkin_date' }, { status: 400 });
     }
 
@@ -27,8 +31,10 @@ export async function POST(req: Request) {
       .eq('assignment_id', assignment_id)
       .eq('user_id', user.id);
 
+    console.log('[Daily Check-in] Participants check:', { participants, participantError });
+
     if (participantError) {
-      console.error('Error verifying assignment participant:', participantError);
+      console.error('[Daily Check-in] Error verifying participant:', participantError);
       return NextResponse.json({ error: participantError.message }, { status: 500 });
     }
 
@@ -36,8 +42,11 @@ export async function POST(req: Request) {
       participants.some(p => p.role === 'lead' || p.role === 'buddy');
 
     if (!isParticipant) {
+      console.error('[Daily Check-in] User not a participant');
       return NextResponse.json({ error: 'Not authorized for this assignment' }, { status: 403 });
     }
+
+    console.log('[Daily Check-in] Attempting upsert...');
 
     // Upsert the check-in record (idempotent - safe to call multiple times)
     const { data, error } = await svc
@@ -50,11 +59,14 @@ export async function POST(req: Request) {
       })
       .select();
 
+    console.log('[Daily Check-in] Upsert result:', { data, error });
+
     if (error) {
-      console.error('Error recording daily check-in:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('[Daily Check-in] Error recording check-in:', error);
+      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
+    console.log('[Daily Check-in] Success!');
     return NextResponse.json({ success: true, data });
 
   } catch (e: any) {
