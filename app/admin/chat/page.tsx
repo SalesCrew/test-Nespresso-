@@ -1322,7 +1322,7 @@ export default function ChatPage() {
       // Convert number ID to string for API call (if needed)
       const convId = String(selectedChat.id);
       chatIntegration.fetchMessages(convId);
-      chatIntegration.markAsRead(convId).catch(err => console.error('Error marking as read:', err));
+      chatIntegration.markConversationRead(convId).catch(err => console.error('Error marking as read:', err));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChat]);
