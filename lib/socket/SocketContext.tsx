@@ -93,8 +93,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         
         if (session?.access_token && event === 'TOKEN_REFRESHED') {
-          // Hardcoded Railway URL since env var not working in Vercel build
-          const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL as string;
+          // Remove trailing slash from URL (Socket.IO doesn't handle them)
+          const socketUrl = (process.env.NEXT_PUBLIC_SOCKET_URL as string).replace(/\/$/, '');
           const newSocket = io(socketUrl, {
             auth: {
               token: session.access_token,
