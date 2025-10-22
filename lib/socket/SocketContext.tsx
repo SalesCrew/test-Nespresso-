@@ -40,7 +40,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       // Create Socket.IO connection
       // Hardcoded Railway URL since env var not working in Vercel build
-      const socketUrl = 'https://socketio-server-production-55e5.up.railway.app';
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL as string;
       console.log('[Socket.IO] Connecting to:', socketUrl);
       console.log('[Socket.IO] With token:', session.access_token.substring(0, 30) + '...');
       
@@ -94,7 +94,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
         if (session?.access_token && event === 'TOKEN_REFRESHED') {
           // Hardcoded Railway URL since env var not working in Vercel build
-          const socketUrl = 'https://socketio-server-production-55e5.up.railway.app';
+          const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL as string;
           const newSocket = io(socketUrl, {
             auth: {
               token: session.access_token,
