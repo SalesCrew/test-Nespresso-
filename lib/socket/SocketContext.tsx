@@ -27,6 +27,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Get current session
       const { data: { session } } = await supabase.auth.getSession();
       
+      console.log('[Socket.IO] Session check:', {
+        hasSession: !!session,
+        hasToken: !!session?.access_token,
+        tokenPreview: session?.access_token?.substring(0, 20)
+      });
+      
       if (!session?.access_token) {
         console.log('No session token available for Socket.IO connection');
         return;
@@ -36,6 +42,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Hardcoded Railway URL since env var not working in Vercel build
       const socketUrl = 'https://socketio-server-production-55e5.up.railway.app';
       console.log('[Socket.IO] Connecting to:', socketUrl);
+      console.log('[Socket.IO] With token:', session.access_token.substring(0, 30) + '...');
       
       const socketInstance = io(socketUrl, {
         auth: {
