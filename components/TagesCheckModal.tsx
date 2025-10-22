@@ -144,7 +144,8 @@ export default function TagesCheckModal({ assignment, onComplete }: TagesCheckMo
             <Button
               onClick={handleCheckIn}
               disabled={isSubmitting}
-              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 border-white/30"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 border-white/30 will-change-transform backface-hidden"
+              style={{ WebkitFontSmoothing: 'antialiased' } as React.CSSProperties}
             >
               🎯 Tages-Check! ✓
             </Button>
