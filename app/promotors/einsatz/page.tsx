@@ -2496,7 +2496,7 @@ const loadProcessState = async () => {
                     </div>
                   ) : (
                     <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                      Kein Ersatztermin, bitte drücke auf Verstanden
+                      Einige Termine wurden nicht angenommen. Zurzeit gibt es noch keinen Ersatztermin. Die Admins melden sich mit neuen, sobald es welche gibt!
                     </div>
                   )}
                 </>
