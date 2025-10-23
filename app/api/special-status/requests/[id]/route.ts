@@ -58,10 +58,19 @@ export async function PATCH(
         .eq('id', params.id);
 
       // 2. Create/update active special status with end_date if provided
+      // First, deactivate any existing active status for this user
+      await service
+        .from('active_special_status')
+        .update({ is_active: false })
+        .eq('user_id', requestData.user_id)
+        .eq('is_active', true);
+      
+      // Then, insert new active status
       const activeStatusData: any = {
         user_id: requestData.user_id,
         status_type: requestData.request_type,
-        is_active: true
+        is_active: true,
+        started_at: new Date().toISOString()
       };
       
       if (end_date) {
@@ -70,7 +79,7 @@ export async function PATCH(
       
       await service
         .from('active_special_status')
-        .upsert(activeStatusData);
+        .insert(activeStatusData);
 
       // 3. Update today's assignments for this user
       const { data: todaysAssignments } = await service
