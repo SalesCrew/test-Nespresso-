@@ -103,6 +103,23 @@ export default function EinsatzPage() {
   // Notes popup state
   const [showNotesPopup, setShowNotesPopup] = useState(false);
   const [currentAssignmentNote, setCurrentAssignmentNote] = useState<string>('');
+
+  // Helper: parse an ISO timestamp string as LOCAL time (ignore timezone offsets)
+  // This avoids mismatches where DB stores UTC and UI should show Europe/Vienna local time
+  const parseLocalFromISO = (iso: string): Date => {
+    try {
+      const year = Number(iso.slice(0, 4));
+      const month = Number(iso.slice(5, 7)) - 1; // 0-based
+      const day = Number(iso.slice(8, 10));
+      const hour = Number(iso.slice(11, 13));
+      const minute = Number(iso.slice(14, 16));
+      const second = Number(iso.slice(17, 19)) || 0;
+      return new Date(year, month, day, hour, minute, second);
+    } catch {
+      // Fallback to native parsing if unexpected format
+      return new Date(iso);
+    }
+  };
   const [currentNoteAssignmentId, setCurrentNoteAssignmentId] = useState<string | null>(null);
   const [hasCheckedAutoOpenNote, setHasCheckedAutoOpenNote] = useState(false);
 
@@ -1176,8 +1193,8 @@ const loadProcessState = async () => {
   useEffect(() => {
     if (einsatzStatus === "started" && nextAssignment?.end_ts) {
       const now = new Date();
-      // Use the actual end_ts from the assignment
-      const endDate = new Date(nextAssignment.end_ts);
+      // Parse end_ts as local time to avoid timezone offsets
+      const endDate = parseLocalFromISO(nextAssignment.end_ts);
       assignmentEndDateRef.current = new Date(endDate); // Store the actual end date for this assignment
 
       let initialRemaining = Math.floor((endDate.getTime() - now.getTime()) / 1000);
