@@ -974,6 +974,20 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
         const checkinData = await checkinResponse.json();
         const checkinMap = new Map((checkinData.checkins || []).map((c: any) => [c.assignment_id, c]));
         
+        // Fetch outside-break records for all assignments
+        const assignmentIds = data.assignments.map((a: any) => a.assignment_id).filter(Boolean);
+        const outsideBreakPromises = assignmentIds.map(async (id: string) => {
+          try {
+            const res = await fetch(`/api/admin/assignments/${id}/outside-breaks`, { cache: 'no-store' });
+            const json = await res.json().catch(() => ({ items: [] }));
+            return { id, hasBreak: Array.isArray(json.items) && json.items.length > 0 };
+          } catch {
+            return { id, hasBreak: false };
+          }
+        });
+        const outsideBreakResults = await Promise.all(outsideBreakPromises);
+        const outsideBreakMap = new Map(outsideBreakResults.map(r => [r.id, r.hasBreak]));
+        
         // Transform the data to match the expected format
         const transformedData = data.assignments.map((a: any) => ({
           id: a.assignment_id,
@@ -1000,7 +1014,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
           foto_maschine_url: a.foto_maschine_url,
           foto_kapsellade_url: a.foto_kapsellade_url,
           foto_pos_gesamt_url: a.foto_pos_gesamt_url,
-          hasCheckedIn: checkinMap.has(a.assignment_id)
+          hasCheckedIn: checkinMap.has(a.assignment_id),
+          hasOutsideBreak: outsideBreakMap.get(a.assignment_id) || false
         }));
         setTodaysEinsaetze(transformedData);
       } else {
@@ -1555,9 +1570,9 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     </div>
 
                                     {/* Abweichende Pause aligned with the status dot */}
-                                    <div className="flex items-center justify-end gap-2 text-[10px] text-gray-400/70">
-                                      <span>Abweichende&nbsp;Pause</span>
-                                      <span className={`inline-block w-2 h-2 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
+                                    <div className="flex items-center justify-end gap-2 text-[10px]">
+                                      <span className={`${einsatz.hasOutsideBreak ? 'text-green-400/60' : 'text-gray-300/60'}`}>Abweichende&nbsp;Pause</span>
+                                      <span className={`inline-block w-2 h-2 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400/60' : 'bg-gray-300/60'}`}></span>
                                     </div>
                                   </div>
                                 </div>
