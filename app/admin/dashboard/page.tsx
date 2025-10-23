@@ -2707,17 +2707,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       {/* Assignment Release Modal (for Krankenstand approval) */}
       {showReleaseAssignmentsModal && releaseModalData && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-5xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
-            <CardHeader 
-              className="pb-4 border-b border-gray-200"
-              style={{
-                background: 'linear-gradient(135deg, #ffffff 0%, rgba(239, 68, 68, 0.02) 100%)'
-              }}
-            >
+          <Card className="w-full max-w-4xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
+            <CardHeader className="pb-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <CalendarX className="h-5 w-5 text-red-600" />
+                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                    <CalendarX className="h-4 w-4 text-red-600" />
                   </div>
                   <div>
                     <CardTitle className="text-lg font-semibold text-gray-900">
@@ -2793,7 +2788,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {upcomingAssignments.map((assignment) => {
                       const isSelected = selectedAssignmentIds.has(assignment.id);
                       const assignmentDate = new Date(assignment.start_ts);
@@ -2802,7 +2797,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                       const tomorrow = new Date(today);
                       tomorrow.setDate(tomorrow.getDate() + 1);
                       
-                      let dateBadgeColor = 'bg-gray-100 text-gray-700';
+                      let dateBadgeColor = 'bg-gray-100 text-gray-600';
                       let dateBadgeLabel = assignmentDate.toLocaleDateString('de-DE', { 
                         weekday: 'short', day: '2-digit', month: '2-digit' 
                       });
@@ -2827,13 +2822,13 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             }
                             setSelectedAssignmentIds(newSelected);
                           }}
-                          className={`p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                          className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
                             isSelected
-                              ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                              ? 'border-blue-500 bg-blue-50/30'
                               : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
                           }`}
                         >
-                          <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <Badge className={`text-xs ${dateBadgeColor} border-0`}>
@@ -2847,10 +2842,10 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   {assignment.user_role === 'lead' ? 'Lead' : 'Buddy'}
                                 </Badge>
                               </div>
-                              <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                              <h4 className="text-sm font-medium text-gray-900 mb-1">
                                 {assignment.title || 'Promotion'}
                               </h4>
-                              <p className="text-xs text-gray-500 mb-2">
+                              <p className="text-xs text-gray-500">
                                 {new Date(assignment.start_ts).toLocaleTimeString('de-DE', { 
                                   hour: '2-digit', minute: '2-digit' 
                                 })} - {new Date(assignment.end_ts).toLocaleTimeString('de-DE', { 
@@ -2858,101 +2853,87 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                 })}
                               </p>
                             </div>
-                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                               isSelected
                                 ? 'bg-blue-500 border-blue-500'
                                 : 'border-gray-300 bg-white'
                             }`}>
                               {isSelected && (
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
+                                <Check className="h-3 w-3 text-white" strokeWidth={3} />
                               )}
                             </div>
                           </div>
 
-                          <div className="space-y-1.5 text-xs">
-                            <div className="flex items-center text-gray-600">
-                              <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                              <span className="truncate">{assignment.location_text}</span>
-                            </div>
-                            <div className="flex items-center text-gray-600">
-                              <span className="font-medium mr-1">PLZ:</span>
-                              {assignment.postal_code} {assignment.city}
-                            </div>
+                          <div className="space-y-1 text-xs text-gray-600 pt-2 border-t border-gray-100">
+                            <div className="truncate">{assignment.location_text}</div>
+                            <div>{assignment.postal_code} {assignment.city}</div>
                             
                             {assignment.user_role === 'buddy' && assignment.promotor && (
-                              <div className="flex items-center text-gray-600">
-                                <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                                <span>Lead: {assignment.promotor}</span>
-                              </div>
+                              <div className="text-gray-500 pt-1">Lead: {assignment.promotor}</div>
                             )}
                             
                             {assignment.user_role === 'lead' && assignment.buddy_name && (
-                              <div className="flex items-center text-gray-600">
-                                <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
-                                <span>Buddy: {assignment.buddy_name}</span>
-                              </div>
+                              <div className="text-gray-500 pt-1">Buddy: {assignment.buddy_name}</div>
                             )}
                           </div>
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* Selection Summary */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => {
-                          if (selectedAssignmentIds.size === upcomingAssignments.length) {
-                            setSelectedAssignmentIds(new Set());
-                          } else {
-                            setSelectedAssignmentIds(new Set(upcomingAssignments.map(a => a.id)));
-                          }
-                        }}
-                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        {selectedAssignmentIds.size === upcomingAssignments.length ? 'Alle abwählen' : 'Alle auswählen'}
-                      </button>
-                      <span className="text-sm text-gray-600">
-                        {selectedAssignmentIds.size} von {upcomingAssignments.length} ausgewählt
-                      </span>
-                    </div>
-                  </div>
                 </>
               )}
             </CardContent>
 
             {!upcomingAssignmentsLoading && upcomingAssignments.length > 0 && (
-              <div className="border-t border-gray-200 p-4 bg-gray-50">
-                <div className="flex items-center justify-end space-x-3">
-                  <Button
-                    variant="ghost"
+              <div className="border-t border-gray-200 p-4 bg-white">
+                <div className="flex items-center justify-between">
+                  <button
                     onClick={() => {
-                      setShowReleaseAssignmentsModal(false);
-                      setReleaseModalData(null);
-                      setSelectedAssignmentIds(new Set());
-                      setUpcomingAssignments([]);
+                      if (selectedAssignmentIds.size === upcomingAssignments.length) {
+                        setSelectedAssignmentIds(new Set());
+                      } else {
+                        setSelectedAssignmentIds(new Set(upcomingAssignments.map(a => a.id)));
+                      }
                     }}
-                    disabled={releasingAssignments}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                   >
-                    Abbrechen
-                  </Button>
-                  <Button
-                    onClick={handleReleaseAssignments}
-                    disabled={selectedAssignmentIds.size === 0 || releasingAssignments}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    {releasingAssignments ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Freigeben...
-                      </>
-                    ) : (
-                      `${selectedAssignmentIds.size} Einsätze freigeben`
-                    )}
-                  </Button>
+                    {selectedAssignmentIds.size === upcomingAssignments.length ? 'Alle abwählen' : 'Alle auswählen'}
+                  </button>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-sm text-gray-500">
+                      {selectedAssignmentIds.size} von {upcomingAssignments.length} ausgewählt
+                    </span>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowReleaseAssignmentsModal(false);
+                        setReleaseModalData(null);
+                        setSelectedAssignmentIds(new Set());
+                        setUpcomingAssignments([]);
+                      }}
+                      disabled={releasingAssignments}
+                      className="text-gray-600"
+                    >
+                      Abbrechen
+                    </Button>
+                    <button
+                      onClick={handleReleaseAssignments}
+                      disabled={selectedAssignmentIds.size === 0 || releasingAssignments}
+                      className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: selectedAssignmentIds.size === 0 ? '#9CA3AF' : 'linear-gradient(135deg, #DC2626, #B91C1C)'
+                      }}
+                    >
+                      {releasingAssignments ? (
+                        <span className="flex items-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Freigeben...
+                        </span>
+                      ) : (
+                        `${selectedAssignmentIds.size} Einsätze freigeben`
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
