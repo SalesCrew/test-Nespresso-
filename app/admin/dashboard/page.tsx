@@ -1530,7 +1530,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             key={einsatz.id} 
                             className={`p-4 rounded-lg transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               statusColor === 'gold'
-                                ? 'bg-gradient-to-r from-[#EFB54E]/5 via-[#FFED96]/5 via-[#FCD94C]/5 via-[#F9F793]/5 to-[#EFB94D]/5 border border-[#EFB54E]/30'
+                                ? 'border border-[#EFB54E]/30'
                                 : statusColor === 'green' 
                                 ? 'bg-gradient-to-r from-white to-green-50/35 border border-gray-100 hover:border-gray-200' 
                                 : statusColor === 'orange'
@@ -1539,6 +1539,11 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                 ? 'bg-gradient-to-r from-white to-red-50/35 border border-gray-100 hover:border-gray-200'
                                 : 'bg-white border border-gray-100 hover:border-gray-200'
                             }`}
+                            style={statusColor === 'gold' ? {
+                              background: 'linear-gradient(to right, #EFB54E, #FFED96, #FCD94C, #F9F793, #EFB94D)',
+                              backgroundBlendMode: 'multiply',
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                            } : {}}
                             onClick={() => {
                               setSelectedAssignmentDetail(einsatz);
                               setShowAssignmentDetailModal(true);
