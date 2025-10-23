@@ -3621,7 +3621,23 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
       {/* Assignment Detail Modal */}
-      {showAssignmentDetailModal && selectedAssignmentDetail && (
+      {showAssignmentDetailModal && selectedAssignmentDetail && (() => {
+        // Fetch outside-break timestamp for this assignment
+        const [outsideBreakTimestamp, setOutsideBreakTimestamp] = React.useState<string | null>(null);
+        React.useEffect(() => {
+          if (selectedAssignmentDetail?.id) {
+            fetch(`/api/admin/assignments/${selectedAssignmentDetail.id}/outside-breaks`, { cache: 'no-store' })
+              .then(res => res.json())
+              .then(data => {
+                if (Array.isArray(data.items) && data.items.length > 0) {
+                  setOutsideBreakTimestamp(data.items[0].reported_at);
+                }
+              })
+              .catch(() => {});
+          }
+        }, [selectedAssignmentDetail?.id]);
+        
+        return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
             <CardHeader className="pb-4 border-b border-gray-200">
@@ -3661,25 +3677,46 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                   </div>
                 </div>
 
-                {/* Status */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-900">Status</h4>
-                  <div className="flex items-center space-x-2">
-                    <div className={`w-3 h-3 rounded-full ${
-                      getStatusColor(selectedAssignmentDetail) === 'green' ? 'bg-green-400' :
-                      getStatusColor(selectedAssignmentDetail) === 'orange' ? 'bg-orange-400' :
-                      getStatusColor(selectedAssignmentDetail) === 'red' ? 'bg-red-400' :
-                      'bg-gray-300'
-                    }`}></div>
-                    <span className="text-sm text-gray-600">
-                      {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(selectedAssignmentDetail.status) 
-                        ? selectedAssignmentDetail.status 
-                        : getStatusColor(selectedAssignmentDetail) === 'green' 
-                        ? 'gestartet' 
-                        : getStatusColor(selectedAssignmentDetail) === 'orange' 
-                        ? 'verspätet' 
-                        : 'pending'}
-                    </span>
+                {/* Status and Indicators */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Status</h4>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        getStatusColor(selectedAssignmentDetail) === 'green' ? 'bg-green-400' :
+                        getStatusColor(selectedAssignmentDetail) === 'orange' ? 'bg-orange-400' :
+                        getStatusColor(selectedAssignmentDetail) === 'red' ? 'bg-red-400' :
+                        'bg-gray-300'
+                      }`}></div>
+                      <span className="text-sm text-gray-600">
+                        {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(selectedAssignmentDetail.status) 
+                          ? selectedAssignmentDetail.status 
+                          : getStatusColor(selectedAssignmentDetail) === 'green' 
+                          ? 'gestartet' 
+                          : getStatusColor(selectedAssignmentDetail) === 'orange' 
+                          ? 'verspätet' 
+                          : 'pending'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-900">Indikatoren</h4>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs font-bold ${selectedAssignmentDetail.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>TC</span>
+                        <span className="text-xs text-gray-500">{selectedAssignmentDetail.hasCheckedIn ? 'Erledigt' : 'Ausstehend'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${selectedAssignmentDetail.hasOutsideBreak ? 'bg-green-400/60' : 'bg-gray-300/60'}`}></div>
+                        <span className={`text-xs ${selectedAssignmentDetail.hasOutsideBreak ? 'text-green-400/60' : 'text-gray-300/60'}`}>Abweichende Pause</span>
+                        {outsideBreakTimestamp && (
+                          <span className="text-xs text-gray-500">
+                            {new Date(outsideBreakTimestamp).toLocaleString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })} Uhr
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
