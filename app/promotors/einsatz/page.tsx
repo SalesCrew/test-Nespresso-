@@ -1964,16 +1964,18 @@ const loadProcessState = async () => {
                 <div className="mt-4 h-14 bg-gray-100 rounded-full animate-skeleton-fade"></div>
               </div>
             ) : !displayedAssignment ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-4">
-                  <Calendar className="h-8 w-8 text-gray-400" />
+              <div className="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800">
+                <div className="flex flex-col items-center justify-center py-4">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4">
+                    <Calendar className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                    Kein Einsatz für heute geplant
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 text-center max-w-xs">
+                    Dein nächster Einsatz wird hier angezeigt, sobald er verfügbar ist.
+                  </p>
                 </div>
-                <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Kein Einsatz für heute geplant
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-xs">
-                  Dein nächster Einsatz wird hier angezeigt, sobald er verfügbar ist.
-                </p>
               </div>
             ) : (
             <>
@@ -2118,14 +2120,8 @@ const loadProcessState = async () => {
             )}
             {/* If not for today, maybe show a placeholder or different info if needed, for now it's blank if no swipe */}
             {!isAssignmentForToday && (
-                 <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 text-center">
-                    <div className="flex items-center justify-center mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-white" />
-                      </div>
-                    </div>
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Dieser Einsatz ist für einen zukünftigen Tag geplant.</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">Du kannst die Details bereits einsehen.</p>
+                 <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Dieser Einsatz ist für einen zukünftigen Tag geplant.</p>
                  </div>
             )}
           </CardContent>
