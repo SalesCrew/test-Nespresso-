@@ -1069,8 +1069,13 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       return 'red';
     }
     
-    // Green for started or completed
-    if (einsatz.status === 'gestartet' || einsatz.status === 'beendet' || einsatz.actualStart) {
+    // Gold for beendet (finished)
+    if (einsatz.status === 'beendet') {
+      return 'gold';
+    }
+    
+    // Green for started
+    if (einsatz.status === 'gestartet' || einsatz.actualStart) {
       return 'green';
     }
     
@@ -1523,14 +1528,16 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm cursor-pointer ${
-                              statusColor === 'green' 
-                                ? 'bg-gradient-to-r from-white to-green-50/35' 
+                            className={`p-4 rounded-lg transition-all duration-200 hover:shadow-sm cursor-pointer ${
+                              statusColor === 'gold'
+                                ? 'bg-gradient-to-r from-[#EFB54E]/10 via-[#FFED96]/10 via-[#FCD94C]/10 via-[#F9F793]/10 to-[#EFB94D]/10 border border-[#EFB54E]'
+                                : statusColor === 'green' 
+                                ? 'bg-gradient-to-r from-white to-green-50/35 border border-gray-100 hover:border-gray-200' 
                                 : statusColor === 'orange'
-                                ? 'bg-gradient-to-r from-white to-orange-50/35'
+                                ? 'bg-gradient-to-r from-white to-orange-50/35 border border-gray-100 hover:border-gray-200'
                                 : statusColor === 'red'
-                                ? 'bg-gradient-to-r from-white to-red-50/35'
-                                : 'bg-white'
+                                ? 'bg-gradient-to-r from-white to-red-50/35 border border-gray-100 hover:border-gray-200'
+                                : 'bg-white border border-gray-100 hover:border-gray-200'
                             }`}
                             onClick={() => {
                               setSelectedAssignmentDetail(einsatz);
@@ -1580,6 +1587,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <div className="flex items-center justify-end gap-2">
                                       {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                         <span className="text-red-600 font-medium">{einsatz.status}</span>
+                                      ) : statusColor === 'gold' ? (
+                                        <span className="font-medium bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent">beendet</span>
                                       ) : statusColor === 'green' ? (
                                         <span className="text-green-600 font-medium">gestartet</span>
                                       ) : statusColor === 'orange' ? (
@@ -1587,7 +1596,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                       ) : (
                                         <span className="text-gray-400">—</span>
                                       )}
-                                      <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'green' ? 'bg-green-400' : statusColor === 'orange' ? 'bg-orange-400' : statusColor === 'red' ? 'bg-red-400' : 'bg-gray-300'}`}></span>
+                                      <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'gold' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D]' : statusColor === 'green' ? 'bg-green-400' : statusColor === 'orange' ? 'bg-orange-400' : statusColor === 'red' ? 'bg-red-400' : 'bg-gray-300'}`}></span>
                                     </div>
 
                                     {/* Abweichende Pause aligned with the status dot */}
@@ -1663,6 +1672,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   <span className="text-red-600 font-medium text-xs">
                                     {einsatz.status}
                                   </span>
+                                ) : statusColor === 'gold' ? (
+                                  <span className="font-medium bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent">beendet</span>
                                 ) : statusColor === 'green' ? (
                                   <span className="text-green-600 font-medium">gestartet</span>
                                 ) : statusColor === 'orange' ? (
@@ -2341,6 +2352,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <span className="text-red-600 font-medium text-xs">
                                       {einsatz.status}
                                     </span>
+                                  ) : statusColor === 'gold' ? (
+                                    <span className="font-medium bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent">beendet</span>
                                   ) : statusColor === 'green' ? (
                                     <span className="text-green-600 font-medium">gestartet</span>
                                   ) : statusColor === 'orange' ? (
@@ -2349,6 +2362,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <span className="text-gray-400">—</span>
                                   )}
                                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                    statusColor === 'gold' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D]' :
                                     statusColor === 'green' ? 'bg-green-400' :
                                     statusColor === 'orange' ? 'bg-orange-400' :
                                     statusColor === 'red' ? 'bg-red-400' :
@@ -2419,6 +2433,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   <span className="text-red-600 font-medium text-xs">
                                     {einsatz.status}
                                   </span>
+                                ) : statusColor === 'gold' ? (
+                                  <span className="font-medium bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent">beendet</span>
                                 ) : statusColor === 'green' ? (
                                   <span className="text-green-600 font-medium">gestartet</span>
                                 ) : statusColor === 'orange' ? (
@@ -3688,14 +3704,17 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                     <h4 className="text-sm font-medium text-gray-900">Status</h4>
                     <div className="flex items-center space-x-2">
                       <div className={`w-3 h-3 rounded-full ${
+                        getStatusColor(selectedAssignmentDetail) === 'gold' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D]' :
                         getStatusColor(selectedAssignmentDetail) === 'green' ? 'bg-green-400' :
                         getStatusColor(selectedAssignmentDetail) === 'orange' ? 'bg-orange-400' :
                         getStatusColor(selectedAssignmentDetail) === 'red' ? 'bg-red-400' :
                         'bg-gray-300'
                       }`}></div>
-                      <span className="text-sm text-gray-600">
+                      <span className={`text-sm ${getStatusColor(selectedAssignmentDetail) === 'gold' ? 'font-medium bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent' : 'text-gray-600'}`}>
                         {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(selectedAssignmentDetail.status) 
                           ? selectedAssignmentDetail.status 
+                          : getStatusColor(selectedAssignmentDetail) === 'gold' 
+                          ? 'beendet' 
                           : getStatusColor(selectedAssignmentDetail) === 'green' 
                           ? 'gestartet' 
                           : getStatusColor(selectedAssignmentDetail) === 'orange' 
