@@ -1511,6 +1511,11 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>
                                       TC
                                     </span>
+                                    {/* Abweichende Pause Indicator */}
+                                    <span className="flex items-center gap-1 text-[10px] text-gray-400/70">
+                                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
+                                      Abweichende Pause
+                                    </span>
                                   </div>
                                   <button
                                     onClick={(e) => {
