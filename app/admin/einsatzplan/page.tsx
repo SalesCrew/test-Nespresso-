@@ -401,6 +401,18 @@ export default function EinsatzplanPage() {
           const trackingForAssignment = data.assignments.find((a: any) => a.assignment_id === editingEinsatz.id);
           
           if (trackingForAssignment) {
+            // Fetch outside-break and TC status for this assignment
+            const [outsideBreakRes, tcRes] = await Promise.all([
+              fetch(`/api/admin/assignments/${trackingForAssignment.assignment_id}/outside-breaks`, { cache: 'no-store' }).catch(() => null),
+              fetch(`/api/admin/daily-checkin-status?date=${new Date().toISOString().split('T')[0]}`, { cache: 'no-store' }).catch(() => null)
+            ]);
+            const outsideBreakData = outsideBreakRes ? await outsideBreakRes.json().catch(() => ({ items: [] })) : { items: [] };
+            const tcData = tcRes ? await tcRes.json().catch(() => ({ checkins: [] })) : { checkins: [] };
+            
+            const hasOutsideBreak = Array.isArray(outsideBreakData.items) && outsideBreakData.items.length > 0;
+            const outsideBreakTimestamp = hasOutsideBreak ? outsideBreakData.items[0].reported_at : null;
+            const hasCheckedIn = Array.isArray(tcData.checkins) && tcData.checkins.some((c: any) => c.assignment_id === trackingForAssignment.assignment_id);
+            
             // Transform to match the expected format
             setAssignmentTrackingData({
               id: trackingForAssignment.assignment_id,
@@ -424,6 +436,9 @@ export default function EinsatzplanPage() {
               foto_maschine_url: trackingForAssignment.foto_maschine_url,
               foto_kapsellade_url: trackingForAssignment.foto_kapsellade_url,
               foto_pos_gesamt_url: trackingForAssignment.foto_pos_gesamt_url,
+              hasCheckedIn,
+              hasOutsideBreak,
+              outsideBreakTimestamp
             });
           } else {
             // No tracking data yet, create basic structure from editingEinsatz
@@ -3593,25 +3608,46 @@ Import EP
                     </div>
                   </div>
 
-                  {/* Status */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-900">Status</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        getTrackingStatusColor(assignmentTrackingData) === 'green' ? 'bg-green-400' :
-                        getTrackingStatusColor(assignmentTrackingData) === 'orange' ? 'bg-orange-400' :
-                        getTrackingStatusColor(assignmentTrackingData) === 'red' ? 'bg-red-400' :
-                        'bg-gray-300'
-                      }`}></div>
-                      <span className="text-sm text-gray-600">
-                        {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(assignmentTrackingData.status) 
-                          ? assignmentTrackingData.status 
-                          : getTrackingStatusColor(assignmentTrackingData) === 'green' 
-                          ? 'gestartet' 
-                          : getTrackingStatusColor(assignmentTrackingData) === 'orange' 
-                          ? 'verspätet' 
-                          : 'pending'}
-                      </span>
+                  {/* Status and Indicators */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Status</h4>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          getTrackingStatusColor(assignmentTrackingData) === 'green' ? 'bg-green-400' :
+                          getTrackingStatusColor(assignmentTrackingData) === 'orange' ? 'bg-orange-400' :
+                          getTrackingStatusColor(assignmentTrackingData) === 'red' ? 'bg-red-400' :
+                          'bg-gray-300'
+                        }`}></div>
+                        <span className="text-sm text-gray-600">
+                          {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(assignmentTrackingData.status) 
+                            ? assignmentTrackingData.status 
+                            : getTrackingStatusColor(assignmentTrackingData) === 'green' 
+                            ? 'gestartet' 
+                            : getTrackingStatusColor(assignmentTrackingData) === 'orange' 
+                            ? 'verspätet' 
+                            : 'pending'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-medium text-gray-900">Indikatoren</h4>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-xs font-bold ${assignmentTrackingData.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>TC</span>
+                          <span className="text-xs text-gray-500">{assignmentTrackingData.hasCheckedIn ? 'Erledigt' : 'Ausstehend'}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${assignmentTrackingData.hasOutsideBreak ? 'bg-green-400/60' : 'bg-gray-300/60'}`}></div>
+                          <span className={`text-xs ${assignmentTrackingData.hasOutsideBreak ? 'text-green-400/60' : 'text-gray-300/60'}`}>Abweichende Pause</span>
+                          {assignmentTrackingData.outsideBreakTimestamp && (
+                            <span className="text-xs text-gray-500">
+                              {new Date(assignmentTrackingData.outsideBreakTimestamp).toLocaleString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })} Uhr
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
