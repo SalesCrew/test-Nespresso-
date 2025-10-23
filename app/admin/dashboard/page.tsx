@@ -1541,7 +1541,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>TC</span>
                                     
                                     {/* Status with dot */}
-                                    <div className="flex items-center justify-end gap-2">
+                                    <div className="flex items-center justify-end gap-2 pr-1">
                                       {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
                                         <span className="text-red-600 font-medium">{einsatz.status}</span>
                                       ) : statusColor === 'green' ? (
@@ -1551,11 +1551,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                       ) : (
                                         <span className="text-gray-400">—</span>
                                       )}
+                                      {/* Single status dot aligned to right margin */}
                                       <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'green' ? 'bg-green-400' : statusColor === 'orange' ? 'bg-orange-400' : statusColor === 'red' ? 'bg-red-400' : 'bg-gray-300'}`}></span>
                                     </div>
 
                                     {/* Abweichende Pause aligned with the status dot */}
-                                    <div className="flex items-center justify-end gap-2 text-[10px] text-gray-400/70">
+                                    <div className="flex items-center justify-end gap-2 text-[10px] text-gray-400/70 pr-1">
                                       <span>Abweichende&nbsp;Pause</span>
                                       <span className={`inline-block w-2 h-2 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
                                     </div>
