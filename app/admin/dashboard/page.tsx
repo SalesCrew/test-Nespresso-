@@ -1530,7 +1530,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             key={einsatz.id} 
                             className={`p-4 rounded-lg transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               statusColor === 'gold'
-                                ? 'bg-gradient-to-r from-[#EFB54E]/10 via-[#FFED96]/10 via-[#FCD94C]/10 via-[#F9F793]/10 to-[#EFB94D]/10 border border-[#EFB54E]'
+                                ? 'bg-gradient-to-r from-[#EFB54E]/5 via-[#FFED96]/5 via-[#FCD94C]/5 via-[#F9F793]/5 to-[#EFB94D]/5 border border-[#EFB54E]/30'
                                 : statusColor === 'green' 
                                 ? 'bg-gradient-to-r from-white to-green-50/35 border border-gray-100 hover:border-gray-200' 
                                 : statusColor === 'orange'
