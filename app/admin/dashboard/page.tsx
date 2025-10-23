@@ -2308,15 +2308,20 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-4 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm ${
-                              statusColor === 'green' 
-                                ? 'bg-gradient-to-r from-white to-green-50/35' 
+                            className={`p-4 rounded-lg transition-all duration-200 hover:shadow-sm ${
+                              statusColor === 'gold'
+                                ? 'border border-[#EFB54E]/30'
+                                : statusColor === 'green' 
+                                ? 'bg-gradient-to-r from-white to-green-50/35 border border-gray-200' 
                                 : statusColor === 'orange'
-                                ? 'bg-orange-50'
+                                ? 'bg-orange-50 border border-gray-200'
                                 : statusColor === 'red'
-                                ? 'bg-red-50'
-                                : 'bg-white'
+                                ? 'bg-red-50 border border-gray-200'
+                                : 'bg-white border border-gray-200'
                             }`}
+                            style={statusColor === 'gold' ? {
+                              background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))'
+                            } : {}}
                           >
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-5 gap-4 flex-1 items-center">
@@ -2387,15 +2392,20 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                         return (
                           <div 
                             key={einsatz.id} 
-                            className={`p-3 rounded-lg border border-gray-200 transition-all duration-200 hover:border-gray-300 hover:shadow-sm ${
-                              statusColor === 'green' 
-                                ? 'bg-gradient-to-br from-white to-green-50/35' 
+                            className={`p-3 rounded-lg transition-all duration-200 hover:border-gray-300 hover:shadow-sm ${
+                              statusColor === 'gold'
+                                ? 'border border-[#EFB54E]/30'
+                                : statusColor === 'green' 
+                                ? 'bg-gradient-to-br from-white to-green-50/35 border border-gray-200' 
                                 : statusColor === 'orange'
-                                ? 'bg-orange-50'
+                                ? 'bg-orange-50 border border-gray-200'
                                 : statusColor === 'red'
-                                ? 'bg-red-50'
-                                : 'bg-white'
+                                ? 'bg-red-50 border border-gray-200'
+                                : 'bg-white border border-gray-200'
                             }`}
+                            style={statusColor === 'gold' ? {
+                              background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))'
+                            } : {}}
                           >
                             <div className="space-y-2">
                               <div className="flex items-center justify-between">
@@ -2403,6 +2413,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
                                 </h4>
                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                  statusColor === 'gold' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D]' :
                                   statusColor === 'green' ? 'bg-green-400' :
                                   statusColor === 'orange' ? 'bg-orange-400' :
                                   statusColor === 'red' ? 'bg-red-400' :
