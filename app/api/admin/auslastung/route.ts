@@ -61,6 +61,30 @@ export async function GET(req: NextRequest) {
 
     const { data: participants } = await assignmentsQuery;
 
+    // Get active special statuses for the week
+    const { data: activeStatuses } = await svc
+      .from('active_special_status')
+      .select('user_id, status_type, started_at, ended_at')
+      .eq('is_active', true);
+
+    // Build a map of special statuses that overlap with the selected week
+    const specialStatusMap = new Map<string, string>();
+    if (activeStatuses && weekStart && weekEnd) {
+      const weekStartDate = new Date(weekStart);
+      const weekEndDate = new Date(weekEnd);
+      weekEndDate.setHours(23, 59, 59, 999);
+
+      activeStatuses.forEach((status: any) => {
+        const statusStart = new Date(status.started_at);
+        const statusEnd = status.ended_at ? new Date(status.ended_at) : new Date('2099-12-31');
+        
+        // Check if the status period overlaps with the week
+        if (statusStart <= weekEndDate && statusEnd >= weekStartDate) {
+          specialStatusMap.set(status.user_id, status.status_type);
+        }
+      });
+    }
+
     // Build promotor workload data
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
     const contractMap = new Map((contracts || []).map(c => [c.user_id, c]));
@@ -105,6 +129,11 @@ export async function GET(req: NextRequest) {
           activeSpecialStatus = assignment.special_status;
         }
       });
+
+      // If no special status found in assignments, check the active_special_status table
+      if (!activeSpecialStatus && specialStatusMap.has(user.user_id)) {
+        activeSpecialStatus = specialStatusMap.get(user.user_id) || null;
+      }
 
       const contractHours = contract?.hours_per_week || 0;
       const assignedHours = Math.round(totalHours);
