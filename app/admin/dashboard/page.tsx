@@ -1251,6 +1251,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       console.log('Released assignments:', releaseData);
 
       // Then, approve the krankenstand request with the calculated end date
+      console.log('🔵 Approving krankenstand with end_date:', endDate.toISOString());
       const approveResponse = await fetch(`/api/special-status/requests/${releaseModalData.requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1260,8 +1261,12 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
         })
       });
 
+      const approveData = await approveResponse.json();
+      console.log('🔵 Approve response:', approveData);
+
       if (!approveResponse.ok) {
-        throw new Error('Failed to approve request');
+        console.error('❌ Approval failed:', approveData);
+        throw new Error(approveData.error || 'Failed to approve request');
       }
 
       // Success - close modal and refresh

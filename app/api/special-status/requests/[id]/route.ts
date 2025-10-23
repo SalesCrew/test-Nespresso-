@@ -58,12 +58,19 @@ export async function PATCH(
         .eq('id', params.id);
 
       // 2. Create/update active special status with end_date if provided
+      console.log('🔵 Creating active special status for user:', requestData.user_id);
+      console.log('🔵 End date received:', end_date);
+      
       // First, deactivate any existing active status for this user
-      await service
+      const { error: deactivateError } = await service
         .from('active_special_status')
         .update({ is_active: false })
         .eq('user_id', requestData.user_id)
         .eq('is_active', true);
+      
+      if (deactivateError) {
+        console.error('⚠️ Error deactivating old status (may not exist):', deactivateError);
+      }
       
       // Then, insert new active status
       const activeStatusData: any = {
@@ -75,11 +82,21 @@ export async function PATCH(
       
       if (end_date) {
         activeStatusData.ended_at = end_date;
+        console.log('✅ Setting ended_at to:', end_date);
       }
       
-      await service
+      console.log('🔵 Inserting active status:', activeStatusData);
+      const { data: insertedStatus, error: insertError } = await service
         .from('active_special_status')
-        .insert(activeStatusData);
+        .insert(activeStatusData)
+        .select();
+      
+      if (insertError) {
+        console.error('❌ Error inserting active status:', insertError);
+        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      }
+      
+      console.log('✅ Active status created:', insertedStatus);
 
       // 3. Update today's assignments for this user
       const { data: todaysAssignments } = await service
