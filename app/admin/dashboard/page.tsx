@@ -1536,23 +1536,29 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   )}
                                 </div>
                                 <div className="text-xs text-right">
-                                  <div className="flex flex-col items-end space-y-0.5">
+                                  <div className="flex flex-col items-end space-y-1">
+                                    {/* TC aligned above the status dot */}
                                     <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>TC</span>
-                                    {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
-                                      <span className="text-red-600 font-medium">
-                                        {einsatz.status}
-                                      </span>
-                                    ) : statusColor === 'green' ? (
-                                      <span className="text-green-600 font-medium">gestartet</span>
-                                    ) : statusColor === 'orange' ? (
-                                      <span className="text-orange-600 font-medium">verspätet</span>
-                                    ) : (
-                                      <span className="text-gray-400">—</span>
-                                    )}
-                                    <span className="flex items-center gap-1 text-[10px] text-gray-400/70">
-                                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
-                                      Abweichende&nbsp;Pause
-                                    </span>
+                                    
+                                    {/* Status with dot */}
+                                    <div className="flex items-center justify-end gap-2">
+                                      {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
+                                        <span className="text-red-600 font-medium">{einsatz.status}</span>
+                                      ) : statusColor === 'green' ? (
+                                        <span className="text-green-600 font-medium">gestartet</span>
+                                      ) : statusColor === 'orange' ? (
+                                        <span className="text-orange-600 font-medium">verspätet</span>
+                                      ) : (
+                                        <span className="text-gray-400">—</span>
+                                      )}
+                                      <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'green' ? 'bg-green-400' : statusColor === 'orange' ? 'bg-orange-400' : statusColor === 'red' ? 'bg-red-400' : 'bg-gray-300'}`}></span>
+                                    </div>
+
+                                    {/* Abweichende Pause aligned with the status dot */}
+                                    <div className="flex items-center justify-end gap-2 text-[10px] text-gray-400/70">
+                                      <span>Abweichende&nbsp;Pause</span>
+                                      <span className={`inline-block w-2 h-2 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
