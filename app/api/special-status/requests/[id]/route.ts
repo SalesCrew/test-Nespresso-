@@ -61,15 +61,14 @@ export async function PATCH(
       console.log('🔵 Creating active special status for user:', requestData.user_id);
       console.log('🔵 End date received:', end_date);
       
-      // First, deactivate any existing active status for this user
-      const { error: deactivateError } = await service
+      // First, delete any existing active status for this user (to avoid unique constraint)
+      const { error: deleteError } = await service
         .from('active_special_status')
-        .update({ is_active: false })
-        .eq('user_id', requestData.user_id)
-        .eq('is_active', true);
+        .delete()
+        .eq('user_id', requestData.user_id);
       
-      if (deactivateError) {
-        console.error('⚠️ Error deactivating old status (may not exist):', deactivateError);
+      if (deleteError) {
+        console.error('⚠️ Error deleting old status (may not exist):', deleteError);
       }
       
       // Then, insert new active status
