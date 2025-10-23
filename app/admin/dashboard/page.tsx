@@ -3904,7 +3904,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
             </CardContent>
           </Card>
         </div>
-      )}
+        );
+      })()}
 
       {/* Photo Lightbox Modal */}
       {showPhotoLightbox && selectedPhoto && (
