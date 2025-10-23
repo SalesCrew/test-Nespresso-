@@ -1508,14 +1508,6 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     <h4 className="text-sm font-medium text-gray-900">
                                       {einsatz.buddyName ? `${einsatz.promotor} & ${einsatz.buddyName}` : einsatz.promotor}
                                     </h4>
-                                    <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>
-                                      TC
-                                    </span>
-                                    {/* Abweichende Pause Indicator */}
-                                    <span className="flex items-center gap-1 text-[10px] text-gray-400/70">
-                                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
-                                      Abweichende Pause
-                                    </span>
                                   </div>
                                   <button
                                     onClick={(e) => {
@@ -1544,17 +1536,24 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                   )}
                                 </div>
                                 <div className="text-xs text-right">
-                                  {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
-                                    <span className="text-red-600 font-medium">
-                                      {einsatz.status}
+                                  <div className="flex flex-col items-end space-y-0.5">
+                                    <span className={`text-[10px] font-bold ${einsatz.hasCheckedIn ? 'text-green-400/60' : 'text-gray-300/60'}`}>TC</span>
+                                    {['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status) ? (
+                                      <span className="text-red-600 font-medium">
+                                        {einsatz.status}
+                                      </span>
+                                    ) : statusColor === 'green' ? (
+                                      <span className="text-green-600 font-medium">gestartet</span>
+                                    ) : statusColor === 'orange' ? (
+                                      <span className="text-orange-600 font-medium">verspätet</span>
+                                    ) : (
+                                      <span className="text-gray-400">—</span>
+                                    )}
+                                    <span className="flex items-center gap-1 text-[10px] text-gray-400/70">
+                                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${einsatz.hasOutsideBreak ? 'bg-green-400' : 'bg-gray-300'}`}></span>
+                                      Abweichende&nbsp;Pause
                                     </span>
-                                  ) : statusColor === 'green' ? (
-                                    <span className="text-green-600 font-medium">gestartet</span>
-                                  ) : statusColor === 'orange' ? (
-                                    <span className="text-orange-600 font-medium">verspätet</span>
-                                  ) : (
-                                    <span className="text-gray-400">—</span>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center ml-4">
