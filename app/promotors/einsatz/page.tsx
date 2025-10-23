@@ -1350,9 +1350,35 @@ const loadProcessState = async () => {
     }
   };
 
-  const handleAbweichendePause = () => {
-    setAbweichendePauseSubmitted(true);
-    setTimeout(() => setAbweichendePauseSubmitted(false), 3000); // Reset after 3 seconds
+  const handleAbweichendePause = async () => {
+    try {
+      // Optimistic UI
+      setAbweichendePauseSubmitted(true);
+      setTimeout(() => setAbweichendePauseSubmitted(false), 3000);
+
+      if (!nextAssignment?.id) return;
+
+      // Build a Europe/Vienna local timestamp and convert to ISO UTC
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Vienna',
+        hour12: false,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      }).formatToParts(now);
+      const get = (t: string) => parts.find(p => p.type === t)?.value || '00';
+      const localIso = `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`;
+      const viennaOffsetMinutes = -new Date().getTimezoneOffset() + (new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Vienna', timeZoneName: 'short' }).formatToParts(now).some(p => p.value.includes('CEST')) ? 120 : 60);
+      const reportedAt = new Date(localIso).toISOString(); // store as UTC; display in Vienna when needed
+
+      await fetch('/api/promotors/assignments/outside-break', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId: nextAssignment.id, reportedAt })
+      });
+    } catch (e) {
+      console.error('Error reporting outside break:', e);
+    }
   };
 
   const handleEarlyEnd = () => {
