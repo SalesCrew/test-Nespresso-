@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     // Get all active special statuses
     const { data: activeStatuses, error: statusError } = await service
       .from('active_special_status')
-      .select('user_id, status_type')
+      .select('user_id, status_type, ended_at')
       .eq('is_active', true);
 
     if (statusError) {
@@ -23,12 +23,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'No active special statuses to apply' });
     }
 
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0];
+    // Get today's date
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
     let updatedCount = 0;
+    let expiredCount = 0;
 
     // For each user with active special status
     for (const status of activeStatuses) {
+      // Check if status has expired
+      if (status.ended_at && new Date(status.ended_at) < now) {
+        // Mark as inactive
+        await service
+          .from('active_special_status')
+          .update({ is_active: false })
+          .eq('user_id', status.user_id)
+          .eq('is_active', true);
+        
+        expiredCount++;
+        continue;
+      }
+      
+      // Continue with normal flow for non-expired statuses (const status of activeStatuses) {
       // Get today's assignment IDs for this user
       const { data: participations } = await service
         .from('assignment_participants')
@@ -65,9 +81,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ 
-      message: `Applied special status to ${updatedCount} assignments`,
-      activeUsers: activeStatuses.length,
-      assignmentsUpdated: updatedCount
+      message: `Applied special status to ${updatedCount} assignments, expired ${expiredCount} statuses`,
+      activeUsers: activeStatuses.length - expiredCount,
+      assignmentsUpdated: updatedCount,
+      expiredStatuses: expiredCount
     });
   } catch (error) {
     console.error('Unexpected error in apply-daily:', error);

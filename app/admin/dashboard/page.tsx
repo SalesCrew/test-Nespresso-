@@ -1222,6 +1222,16 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     setReleasingAssignments(true);
     
     try {
+      // Calculate the end date based on the latest selected assignment
+      const selectedAssignments = upcomingAssignments.filter(a => selectedAssignmentIds.has(a.id));
+      const latestAssignment = selectedAssignments.reduce((latest, current) => {
+        return new Date(current.start_ts) > new Date(latest.start_ts) ? current : latest;
+      }, selectedAssignments[0]);
+      
+      // End date is the date of the latest assignment (inclusive)
+      const endDate = new Date(latestAssignment.start_ts);
+      endDate.setHours(23, 59, 59, 999); // End of that day
+      
       // First, release the selected assignments
       const releaseResponse = await fetch('/api/assignments/release-multiple', {
         method: 'POST',
@@ -1240,11 +1250,14 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       const releaseData = await releaseResponse.json();
       console.log('Released assignments:', releaseData);
 
-      // Then, approve the krankenstand request
+      // Then, approve the krankenstand request with the calculated end date
       const approveResponse = await fetch(`/api/special-status/requests/${releaseModalData.requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'approve' })
+        body: JSON.stringify({ 
+          action: 'approve',
+          end_date: endDate.toISOString()
+        })
       });
 
       if (!approveResponse.ok) {

@@ -28,7 +28,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { action } = await request.json();
+    const { action, end_date } = await request.json();
     
     if (!action || !['approve', 'decline'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -57,14 +57,20 @@ export async function PATCH(
         })
         .eq('id', params.id);
 
-      // 2. Create/update active special status
+      // 2. Create/update active special status with end_date if provided
+      const activeStatusData: any = {
+        user_id: requestData.user_id,
+        status_type: requestData.request_type,
+        is_active: true
+      };
+      
+      if (end_date) {
+        activeStatusData.ended_at = end_date;
+      }
+      
       await service
         .from('active_special_status')
-        .upsert({
-          user_id: requestData.user_id,
-          status_type: requestData.request_type,
-          is_active: true
-        });
+        .upsert(activeStatusData);
 
       // 3. Update today's assignments for this user
       const { data: todaysAssignments } = await service
