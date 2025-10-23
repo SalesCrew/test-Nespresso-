@@ -1393,13 +1393,15 @@ const loadProcessState = async () => {
   };
 
   const handleEarlyEnd = () => {
-    // Calculate how many minutes early (before 16:15)
-    const now = new Date();
-    const today = new Date();
-    const endTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 16, 15, 0); // 16:15
-    const timeDiffMinutes = (endTime.getTime() - now.getTime()) / (1000 * 60);
+    // Calculate time until the actual assignment end (using Vienna local time)
+    if (!nextAssignment?.end_ts) return;
     
-    setMinutesEarlyEnd(Math.round(timeDiffMinutes));
+    const now = new Date();
+    const endDate = parseLocalFromISO(nextAssignment.end_ts);
+    const timeDiffMs = endDate.getTime() - now.getTime();
+    const timeDiffMinutes = Math.floor(timeDiffMs / (1000 * 60));
+    
+    setMinutesEarlyEnd(timeDiffMinutes);
     setShowEarlyEndModal(true);
   };
 
@@ -3460,7 +3462,12 @@ const loadProcessState = async () => {
                   <StopCircle className="h-6 w-6" />
                 </div>
                 <h2 className="text-xl font-bold mb-1">Früher Abschluss</h2>
-                <p className="text-red-100 text-sm">Du beendest {minutesEarlyEnd} Minuten vor der geplanten Zeit</p>
+                <p className="text-red-100 text-sm">
+                  Du beendest {minutesEarlyEnd >= 60 
+                    ? `${Math.floor(minutesEarlyEnd / 60)} ${Math.floor(minutesEarlyEnd / 60) === 1 ? 'Stunde' : 'Stunden'}${minutesEarlyEnd % 60 > 0 ? ` und ${minutesEarlyEnd % 60} ${minutesEarlyEnd % 60 === 1 ? 'Minute' : 'Minuten'}` : ''}`
+                    : `${minutesEarlyEnd} ${minutesEarlyEnd === 1 ? 'Minute' : 'Minuten'}`
+                  } vor der geplanten Zeit
+                </p>
               </div>
             </div>
             
