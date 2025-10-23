@@ -2184,7 +2184,10 @@ const loadProcessState = async () => {
                       Gemeldet
                     </>
                   ) : (
-                    "Abweichende Pause"
+                    <div className="flex flex-col items-center w-full">
+                      <span>Abweichende Pause</span>
+                      <span className="text-[10px] opacity-70">(Pausen außerhalb von 12-14 Uhr)</span>
+                    </div>
                   )}
                 </Button>
                 
