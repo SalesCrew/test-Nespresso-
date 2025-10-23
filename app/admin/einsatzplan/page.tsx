@@ -3712,27 +3712,6 @@ Import EP
                     </div>
                   )}
 
-                  {/* Early End Reasoning */}
-                  {assignmentTrackingData.early_end_reason && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-gray-900">Früher Schluss</h4>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Minuten zu früh beendet:</span>
-                          <span className="text-sm font-medium text-blue-700">
-                            {assignmentTrackingData.minutes_early_end} Min
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-600 block mb-1">Begründung:</span>
-                          <p className="text-sm text-gray-900 bg-white rounded p-2 border">
-                            {assignmentTrackingData.early_end_reason}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Buddy Information */}
                   {assignmentTrackingData.buddyName && (
                     <div className="space-y-2">
