@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   Bell,
   Calendar,
+  CalendarX,
   CheckCircle2,
   Clock,
   Users,
@@ -105,6 +106,14 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [activeRegionFilter, setActiveRegionFilter] = useState<string>("all");
   const [promotorSelectionSearch, setPromotorSelectionSearch] = useState("");
   const [lastSelectedByIcon, setLastSelectedByIcon] = useState<string[]>([]);
+  
+  // Assignment release modal states (for Krankenstand approval)
+  const [showReleaseAssignmentsModal, setShowReleaseAssignmentsModal] = useState(false);
+  const [releaseModalData, setReleaseModalData] = useState<{requestId: string, userId: string, promotorName: string, requestType: string} | null>(null);
+  const [upcomingAssignments, setUpcomingAssignments] = useState<any[]>([]);
+  const [selectedAssignmentIds, setSelectedAssignmentIds] = useState<Set<string>>(new Set());
+  const [upcomingAssignmentsLoading, setUpcomingAssignmentsLoading] = useState(false);
+  const [releasingAssignments, setReleasingAssignments] = useState(false);
   
   // Message enhancement states
   const [messageText, setMessageText] = useState("");
@@ -1161,7 +1170,33 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     }
   };
 
-  const handleApproveRequest = async (requestId: string) => {
+  const handleApproveRequest = async (requestId: string, requestType?: string, userId?: string, promotorName?: string) => {
+    // For Krankenstand requests, open the assignment selection modal
+    if (requestType === 'krankenstand' && userId && promotorName) {
+      setReleaseModalData({ requestId, userId, promotorName, requestType });
+      setShowReleaseAssignmentsModal(true);
+      setUpcomingAssignmentsLoading(true);
+      
+      try {
+        const response = await fetch(`/api/promotors/${userId}/upcoming-assignments`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setUpcomingAssignments(data.assignments || []);
+        } else {
+          console.error('Failed to fetch upcoming assignments');
+          setUpcomingAssignments([]);
+        }
+      } catch (error) {
+        console.error('Error fetching upcoming assignments:', error);
+        setUpcomingAssignments([]);
+      } finally {
+        setUpcomingAssignmentsLoading(false);
+      }
+      return;
+    }
+    
+    // For other request types, approve directly (existing behavior)
     try {
       const response = await fetch(`/api/special-status/requests/${requestId}`, {
         method: 'PATCH',
@@ -1178,6 +1213,57 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       }
     } catch (error) {
       console.error('Error approving request:', error);
+    }
+  };
+
+  const handleReleaseAssignments = async () => {
+    if (!releaseModalData || selectedAssignmentIds.size === 0) return;
+    
+    setReleasingAssignments(true);
+    
+    try {
+      // First, release the selected assignments
+      const releaseResponse = await fetch('/api/assignments/release-multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignment_ids: Array.from(selectedAssignmentIds),
+          user_id: releaseModalData.userId,
+          reason: 'krankenstand'
+        })
+      });
+
+      if (!releaseResponse.ok) {
+        throw new Error('Failed to release assignments');
+      }
+
+      const releaseData = await releaseResponse.json();
+      console.log('Released assignments:', releaseData);
+
+      // Then, approve the krankenstand request
+      const approveResponse = await fetch(`/api/special-status/requests/${releaseModalData.requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' })
+      });
+
+      if (!approveResponse.ok) {
+        throw new Error('Failed to approve request');
+      }
+
+      // Success - close modal and refresh
+      setShowReleaseAssignmentsModal(false);
+      setReleaseModalData(null);
+      setSelectedAssignmentIds(new Set());
+      setUpcomingAssignments([]);
+      loadSpecialStatusRequests();
+      loadTodaysAssignments();
+      
+    } catch (error) {
+      console.error('Error releasing assignments:', error);
+      alert('Fehler beim Freigeben der Einsätze');
+    } finally {
+      setReleasingAssignments(false);
     }
   };
 
@@ -2572,7 +2658,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                         </div>
                         <div className="flex items-center space-x-2 ml-4">
                           <button
-                            onClick={() => handleApproveRequest(request.id)}
+                            onClick={() => handleApproveRequest(request.id, request.request_type, request.user_id, request.user_profiles?.display_name)}
                             className="w-8 h-8 flex items-center justify-center hover:bg-green-50 rounded transition-colors"
                             title="Genehmigen"
                           >
@@ -2596,6 +2682,262 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                 </div>
               )}
             </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Assignment Release Modal (for Krankenstand approval) */}
+      {showReleaseAssignmentsModal && releaseModalData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-5xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
+            <CardHeader 
+              className="pb-4 border-b border-gray-200"
+              style={{
+                background: 'linear-gradient(135deg, #ffffff 0%, rgba(239, 68, 68, 0.02) 100%)'
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                    <CalendarX className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg font-semibold text-gray-900">
+                      Einsätze freigeben - {releaseModalData.promotorName}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-500">
+                      Wähle welche Einsätze freigegeben werden sollen
+                    </CardDescription>
+                  </div>
+                  <Badge className="bg-red-100 text-red-700 border-0">
+                    Krankenstand
+                  </Badge>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setShowReleaseAssignmentsModal(false);
+                    setReleaseModalData(null);
+                    setSelectedAssignmentIds(new Set());
+                    setUpcomingAssignments([]);
+                  }}
+                  className="h-8 w-8 text-gray-900 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-6 overflow-auto max-h-[65vh]">
+              {upcomingAssignmentsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="p-4 rounded-lg border border-gray-200 animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : upcomingAssignments.length === 0 ? (
+                <div className="text-center py-12">
+                  <CalendarX className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Keine zukünftigen Einsätze
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    {releaseModalData.promotorName} hat keine geplanten Einsätze in den nächsten 7 Tagen.
+                  </p>
+                  <Button
+                    onClick={async () => {
+                      // Approve directly without releasing assignments
+                      try {
+                        const response = await fetch(`/api/special-status/requests/${releaseModalData.requestId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'approve' })
+                        });
+                        
+                        if (response.ok) {
+                          setShowReleaseAssignmentsModal(false);
+                          setReleaseModalData(null);
+                          loadSpecialStatusRequests();
+                          loadTodaysAssignments();
+                        }
+                      } catch (error) {
+                        console.error('Error approving:', error);
+                      }
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Krankenstand genehmigen
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {upcomingAssignments.map((assignment) => {
+                      const isSelected = selectedAssignmentIds.has(assignment.id);
+                      const assignmentDate = new Date(assignment.start_ts);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const tomorrow = new Date(today);
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      
+                      let dateBadgeColor = 'bg-gray-100 text-gray-700';
+                      let dateBadgeLabel = assignmentDate.toLocaleDateString('de-DE', { 
+                        weekday: 'short', day: '2-digit', month: '2-digit' 
+                      });
+                      
+                      if (assignmentDate.toDateString() === today.toDateString()) {
+                        dateBadgeColor = 'bg-orange-100 text-orange-700';
+                        dateBadgeLabel = 'Heute';
+                      } else if (assignmentDate.toDateString() === tomorrow.toDateString()) {
+                        dateBadgeColor = 'bg-yellow-100 text-yellow-700';
+                        dateBadgeLabel = 'Morgen';
+                      }
+
+                      return (
+                        <div
+                          key={assignment.id}
+                          onClick={() => {
+                            const newSelected = new Set(selectedAssignmentIds);
+                            if (isSelected) {
+                              newSelected.delete(assignment.id);
+                            } else {
+                              newSelected.add(assignment.id);
+                            }
+                            setSelectedAssignmentIds(newSelected);
+                          }}
+                          className={`p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                              : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className={`text-xs ${dateBadgeColor} border-0`}>
+                                  {dateBadgeLabel}
+                                </Badge>
+                                <Badge className={`text-xs border-0 ${
+                                  assignment.user_role === 'lead' 
+                                    ? 'bg-blue-100 text-blue-700' 
+                                    : 'bg-purple-100 text-purple-700'
+                                }`}>
+                                  {assignment.user_role === 'lead' ? 'Lead' : 'Buddy'}
+                                </Badge>
+                              </div>
+                              <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                                {assignment.title || 'Promotion'}
+                              </h4>
+                              <p className="text-xs text-gray-500 mb-2">
+                                {new Date(assignment.start_ts).toLocaleTimeString('de-DE', { 
+                                  hour: '2-digit', minute: '2-digit' 
+                                })} - {new Date(assignment.end_ts).toLocaleTimeString('de-DE', { 
+                                  hour: '2-digit', minute: '2-digit' 
+                                })}
+                              </p>
+                            </div>
+                            <div className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                              isSelected
+                                ? 'bg-blue-500 border-blue-500'
+                                : 'border-gray-300 bg-white'
+                            }`}>
+                              {isSelected && (
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5 text-xs">
+                            <div className="flex items-center text-gray-600">
+                              <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                              <span className="truncate">{assignment.location_text}</span>
+                            </div>
+                            <div className="flex items-center text-gray-600">
+                              <span className="font-medium mr-1">PLZ:</span>
+                              {assignment.postal_code} {assignment.city}
+                            </div>
+                            
+                            {assignment.user_role === 'buddy' && assignment.promotor && (
+                              <div className="flex items-center text-gray-600">
+                                <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                                <span>Lead: {assignment.promotor}</span>
+                              </div>
+                            )}
+                            
+                            {assignment.user_role === 'lead' && assignment.buddy_name && (
+                              <div className="flex items-center text-gray-600">
+                                <Users className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                                <span>Buddy: {assignment.buddy_name}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selection Summary */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => {
+                          if (selectedAssignmentIds.size === upcomingAssignments.length) {
+                            setSelectedAssignmentIds(new Set());
+                          } else {
+                            setSelectedAssignmentIds(new Set(upcomingAssignments.map(a => a.id)));
+                          }
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        {selectedAssignmentIds.size === upcomingAssignments.length ? 'Alle abwählen' : 'Alle auswählen'}
+                      </button>
+                      <span className="text-sm text-gray-600">
+                        {selectedAssignmentIds.size} von {upcomingAssignments.length} ausgewählt
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+
+            {!upcomingAssignmentsLoading && upcomingAssignments.length > 0 && (
+              <div className="border-t border-gray-200 p-4 bg-gray-50">
+                <div className="flex items-center justify-end space-x-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowReleaseAssignmentsModal(false);
+                      setReleaseModalData(null);
+                      setSelectedAssignmentIds(new Set());
+                      setUpcomingAssignments([]);
+                    }}
+                    disabled={releasingAssignments}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button
+                    onClick={handleReleaseAssignments}
+                    disabled={selectedAssignmentIds.size === 0 || releasingAssignments}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {releasingAssignments ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Freigeben...
+                      </>
+                    ) : (
+                      `${selectedAssignmentIds.size} Einsätze freigeben`
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       )}
