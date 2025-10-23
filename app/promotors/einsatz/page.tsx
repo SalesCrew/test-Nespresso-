@@ -1192,6 +1192,18 @@ const loadProcessState = async () => {
   // New Timer Logic
   useEffect(() => {
     if (einsatzStatus === "started" && nextAssignment?.end_ts) {
+      // Check if an outside-break was already reported for this assignment and keep the button as submitted
+      (async () => {
+        try {
+          if (nextAssignment?.id) {
+            const res = await fetch(`/api/promotors/assignments/outside-break?id=${nextAssignment.id}`, { cache: 'no-store' });
+            const data = await res.json().catch(() => ({}));
+            if (Array.isArray(data?.items) && data.items.length > 0) {
+              setAbweichendePauseSubmitted(true);
+            }
+          }
+        } catch {}
+      })();
       const now = new Date();
       // Parse end_ts as local time to avoid timezone offsets
       const endDate = parseLocalFromISO(nextAssignment.end_ts);
@@ -1352,9 +1364,8 @@ const loadProcessState = async () => {
 
   const handleAbweichendePause = async () => {
     try {
-      // Optimistic UI
+      // Optimistic UI - keep submitted state for entire assignment session
       setAbweichendePauseSubmitted(true);
-      setTimeout(() => setAbweichendePauseSubmitted(false), 3000);
 
       if (!nextAssignment?.id) return;
 

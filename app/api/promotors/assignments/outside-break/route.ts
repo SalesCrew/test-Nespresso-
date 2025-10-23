@@ -33,4 +33,28 @@ export async function POST(req: Request) {
   }
 }
 
+// GET: check if there is an existing outside-break for assignment (used to keep submitted state)
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const assignmentId = searchParams.get('id');
+    const server = createSupabaseServerClient();
+    const { data: { user } } = await server.auth.getUser();
+    if (!user) return NextResponse.json({ items: [] }, { status: 200 });
+    if (!assignmentId) return NextResponse.json({ items: [] }, { status: 200 });
+
+    const { data, error } = await server
+      .from('assignment_outside_breaks')
+      .select('id, reported_at')
+      .eq('assignment_id', assignmentId)
+      .eq('user_id', user.id)
+      .limit(1);
+
+    if (error) return NextResponse.json({ items: [] }, { status: 200 });
+    return NextResponse.json({ items: data || [] });
+  } catch {
+    return NextResponse.json({ items: [] });
+  }
+}
+
 
