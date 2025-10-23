@@ -90,6 +90,9 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
   
+  // State for outside-break timestamp in detail modal
+  const [detailModalOutsideBreakTimestamp, setDetailModalOutsideBreakTimestamp] = useState<string | null>(null);
+  
 
   
   // KPI Popup state
@@ -959,6 +962,24 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   // Use real promotor data instead of mock data
   const activePromotors = activePromotorsData;
+
+  // Fetch outside-break timestamp when detail modal opens
+  useEffect(() => {
+    if (showAssignmentDetailModal && selectedAssignmentDetail?.id) {
+      fetch(`/api/admin/assignments/${selectedAssignmentDetail.id}/outside-breaks`, { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.items) && data.items.length > 0) {
+            setDetailModalOutsideBreakTimestamp(data.items[0].reported_at);
+          } else {
+            setDetailModalOutsideBreakTimestamp(null);
+          }
+        })
+        .catch(() => setDetailModalOutsideBreakTimestamp(null));
+    } else {
+      setDetailModalOutsideBreakTimestamp(null);
+    }
+  }, [showAssignmentDetailModal, selectedAssignmentDetail?.id]);
 
   // Function to load today's assignments
   const loadTodaysAssignments = async () => {
@@ -3621,23 +3642,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       {/* Eddie KI Assistant */}
       <AdminEddieAssistant />
       {/* Assignment Detail Modal */}
-      {showAssignmentDetailModal && selectedAssignmentDetail && (() => {
-        // Fetch outside-break timestamp for this assignment
-        const [outsideBreakTimestamp, setOutsideBreakTimestamp] = React.useState<string | null>(null);
-        React.useEffect(() => {
-          if (selectedAssignmentDetail?.id) {
-            fetch(`/api/admin/assignments/${selectedAssignmentDetail.id}/outside-breaks`, { cache: 'no-store' })
-              .then(res => res.json())
-              .then(data => {
-                if (Array.isArray(data.items) && data.items.length > 0) {
-                  setOutsideBreakTimestamp(data.items[0].reported_at);
-                }
-              })
-              .catch(() => {});
-          }
-        }, [selectedAssignmentDetail?.id]);
-        
-        return (
+      {showAssignmentDetailModal && selectedAssignmentDetail && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
             <CardHeader className="pb-4 border-b border-gray-200">
@@ -3710,9 +3715,9 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                       <div className="flex items-center space-x-2">
                         <div className={`w-2 h-2 rounded-full ${selectedAssignmentDetail.hasOutsideBreak ? 'bg-green-400/60' : 'bg-gray-300/60'}`}></div>
                         <span className={`text-xs ${selectedAssignmentDetail.hasOutsideBreak ? 'text-green-400/60' : 'text-gray-300/60'}`}>Abweichende Pause</span>
-                        {outsideBreakTimestamp && (
+                        {detailModalOutsideBreakTimestamp && (
                           <span className="text-xs text-gray-500">
-                            {new Date(outsideBreakTimestamp).toLocaleString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })} Uhr
+                            {new Date(detailModalOutsideBreakTimestamp).toLocaleString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' })} Uhr
                           </span>
                         )}
                       </div>
@@ -3904,8 +3909,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
             </CardContent>
           </Card>
         </div>
-        );
-      })()}
+      )}
 
       {/* Photo Lightbox Modal */}
       {showPhotoLightbox && selectedPhoto && (
