@@ -1540,9 +1540,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                 : 'bg-white border border-gray-100 hover:border-gray-200'
                             }`}
                             style={statusColor === 'gold' ? {
-                              background: 'linear-gradient(to right, #EFB54E, #FFED96, #FCD94C, #F9F793, #EFB94D)',
-                              backgroundBlendMode: 'multiply',
-                              backgroundColor: 'rgba(255, 255, 255, 0.95)'
+                              background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))'
                             } : {}}
                             onClick={() => {
                               setSelectedAssignmentDetail(einsatz);
