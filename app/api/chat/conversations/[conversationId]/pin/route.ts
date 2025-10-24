@@ -28,14 +28,15 @@ export async function POST(
       return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 });
     }
 
-    // Pin the conversation
+    // Pin the conversation for this user only (update participant record)
     const { error: updateError } = await supabase
-      .from('chat_conversations')
+      .from('chat_participants')
       .update({
         is_pinned: true,
         pinned_at: new Date().toISOString(),
       })
-      .eq('id', conversationId);
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id);
 
     if (updateError) {
       console.error('Error pinning conversation:', updateError);
