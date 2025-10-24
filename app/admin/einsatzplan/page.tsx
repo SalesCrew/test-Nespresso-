@@ -13,6 +13,7 @@ import {
   BarChart3, 
   Settings,
   Calendar,
+  Store,
   LayoutGrid,
   LayoutList,
   ChevronDown,
@@ -135,6 +136,7 @@ export default function EinsatzplanPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'einsatzplan' | 'maerkte'>('einsatzplan');
   const [viewMode, setViewMode] = useState<'list' | 'cards' | 'days'>('list');
   const [isMainCardExpanded, setIsMainCardExpanded] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -202,6 +204,25 @@ export default function EinsatzplanPage() {
   
   // Assignments loading state  
   const [assignmentsLoading, setAssignmentsLoading] = useState(true); // Start loading immediately
+  
+  // Markets view states
+  const [marketsData, setMarketsData] = useState<any[]>([
+    { id: '1', name: 'Interspar', address: 'Landstraßer Hauptstraße 1b', plz: '1030', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Thomas Huber', marktleiterPhone: '+43 660 1234567', marktleiterEmail: 'thomas.huber@interspar.at', visits: 12, lastVisit: '2025-10-15', nextVisit: '2025-11-05', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Sehr gute Zusammenarbeit, großer Markt', promotorNotes: 'Bitte Nespresso Bereich links neben Eingang beachten' },
+    { id: '2', name: 'Billa Plus', address: 'Mariahilfer Straße 45', plz: '1070', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Sarah Schmidt', marktleiterPhone: '+43 664 2345678', marktleiterEmail: 'schmidt@billa.at', visits: 8, lastVisit: '2025-10-10', nextVisit: '2025-10-28', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
+    { id: '3', name: 'Merkur', address: 'Hauptplatz 3', plz: '8010', city: 'Graz', cluster: 'steiermark', marktleiter: 'Michael Wagner', marktleiterPhone: '+43 676 3456789', marktleiterEmail: 'm.wagner@merkur.at', visits: 15, lastVisit: '2025-10-18', nextVisit: '2025-11-02', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Top Location, hohe Frequenz', promotorNotes: 'Marktleiter sehr kooperativ' },
+    { id: '4', name: 'Spar', address: 'Rainerstraße 27', plz: '5020', city: 'Salzburg', cluster: 'salzburg', marktleiter: 'Lisa Berger', marktleiterPhone: '+43 650 4567890', marktleiterEmail: 'berger@spar.at', visits: 6, lastVisit: '2025-09-25', nextVisit: '2025-11-12', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
+    { id: '5', name: 'Hofer', address: 'Museumstraße 12', plz: '6020', city: 'Innsbruck', cluster: 'tirol', marktleiter: 'Andreas Moser', marktleiterPhone: '+43 699 5678901', marktleiterEmail: 'a.moser@hofer.at', visits: 10, lastVisit: '2025-10-12', nextVisit: null, status: 'inactive', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Temporär geschlossen wegen Umbau', promotorNotes: '' },
+    { id: '6', name: 'Interspar Hypermarkt', address: 'Wiener Straße 115', plz: '3100', city: 'St. Pölten', cluster: 'wien-noe-bgl', marktleiter: 'Christina Maier', marktleiterPhone: '+43 660 6789012', marktleiterEmail: 'c.maier@interspar.at', visits: 14, lastVisit: '2025-10-20', nextVisit: '2025-11-08', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Großer Hypermarkt, gute Sichtbarkeit', promotorNotes: '' },
+    { id: '7', name: 'Billa', address: 'Landstraße 42', plz: '4020', city: 'Linz', cluster: 'oberoesterreich', marktleiter: 'Peter Gruber', marktleiterPhone: '+43 664 7890123', marktleiterEmail: 'gruber@billa.at', visits: 5, lastVisit: '2025-09-30', nextVisit: '2025-11-15', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Parkplatz vor dem Markt verfügbar' },
+    { id: '8', name: 'Merkur Markt', address: 'Kirchengasse 8', plz: '9020', city: 'Klagenfurt', cluster: 'kaernten', marktleiter: 'Sandra Huber', marktleiterPhone: '+43 676 8901234', marktleiterEmail: 's.huber@merkur.at', visits: 9, lastVisit: '2025-10-05', nextVisit: '2025-10-30', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
+    { id: '9', name: 'Spar Supermarkt', address: 'Bahnhofstraße 18', plz: '6900', city: 'Bregenz', cluster: 'vorarlberg', marktleiter: 'Martin Fischer', marktleiterPhone: '+43 650 9012345', marktleiterEmail: 'fischer@spar.at', visits: 7, lastVisit: '2025-10-08', nextVisit: '2025-11-10', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Nähe Bahnhof, gute Erreichbarkeit', promotorNotes: '' },
+    { id: '10', name: 'Billa Plus City', address: 'Graben 14', plz: '1010', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Julia Schneider', marktleiterPhone: '+43 699 0123456', marktleiterEmail: 'schneider@billa.at', visits: 11, lastVisit: '2025-10-22', nextVisit: '2025-11-06', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Premium Lage, hohe Kundenfrequenz', promotorNotes: 'Früh kommen, Markt öffnet 07:00 Uhr' }
+  ]);
+  const [selectedMarket, setSelectedMarket] = useState<any>(null);
+  const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
+  const [editingMarket, setEditingMarket] = useState<any>(null);
+  const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
+  const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   
   // Create assignment modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -1868,24 +1889,50 @@ export default function EinsatzplanPage() {
         <header className="bg-white border-b border-gray-100 px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Einsatzplan</h1>
-              <p className="text-gray-500 text-sm">Übersicht und Planung aller Einsätze</p>
+              <h1 className="text-2xl font-semibold text-gray-900">{activeView === 'einsatzplan' ? 'Einsatzplan' : 'Märkte'}</h1>
+              <p className="text-gray-500 text-sm">{activeView === 'einsatzplan' ? 'Übersicht und Planung aller Einsätze' : 'Markt-Verwaltung und Informationen'}</p>
             </div>
             <div className="flex items-center space-x-3">
-              
               <button
-                onClick={() => setShowImportModal(true)}
-                className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
-                style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                onClick={() => setActiveView('einsatzplan')}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  activeView === 'einsatzplan'
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
               >
-Import EP
+                <Calendar className="h-4 w-4" />
+                <span>Einsatzplan</span>
               </button>
+              <button
+                onClick={() => setActiveView('maerkte')}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${
+                  activeView === 'maerkte'
+                    ? 'bg-gray-100 text-gray-900 border-gray-300 scale-[1.02] shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <Store className="h-4 w-4" />
+                <span>Märkte</span>
+              </button>
+              
+              {activeView === 'einsatzplan' && (
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
+                  style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                >
+Import EP
+                </button>
+              )}
             </div>
           </div>
         </header>
 
         {/* Dashboard Content */}
         <main className="p-8 space-y-6">
+          {activeView === 'einsatzplan' ? (
+          <>
           {/* Einsatzplan View */}
           <div className="flex gap-6">
             {/* Big Card - Left Side */}
@@ -3264,6 +3311,176 @@ Import EP
               </CardContent>
             </Card>
           </div>
+          </>
+          ) : (
+          <>
+          {/* Märkte View */}
+          <div className="flex gap-6">
+            {/* Markets Card */}
+            <div className="flex-1 relative">
+              <div className="h-[600px] w-full"></div>
+              
+              <Card 
+                className={`border-0 w-full transition-all duration-300 overflow-visible ${isMainCardExpanded ? 'absolute top-0 left-0 right-0 h-[960px] z-20' : 'absolute top-0 left-0 right-0 h-[600px]'}`}
+                style={{
+                  background: 'linear-gradient(135deg, #ffffff 0%, rgba(99, 102, 241, 0.003) 50%, rgba(79, 70, 229, 0.005) 100%)',
+                  boxShadow: '0 4px 20px -2px rgba(255, 133, 82, 0.06), 0 2px 8px -1px rgba(255, 185, 151, 0.04), 0 8px 32px -4px rgba(255, 133, 82, 0.03)',
+                  overflow: 'visible'
+                }}
+              >
+                <CardContent className={`p-6 h-full flex flex-col overflow-visible ${isMainCardExpanded ? 'bg-white' : ''}`}>
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Store className="h-5 w-5 text-gray-600" />
+                        <h3 className="text-lg font-semibold text-gray-900">Märkte</h3>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {/* TODO: Create market */}}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                          title="Neuen Markt erstellen"
+                        >
+                          <Plus className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button
+                          onClick={() => setIsMainCardExpanded(!isMainCardExpanded)}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                        >
+                          {isMainCardExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-600" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setViewMode(viewMode === 'list' ? 'cards' : 'list')}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
+                        >
+                          {viewMode === 'list' ? (
+                            <LayoutGrid className="h-4 w-4 text-gray-600" />
+                          ) : (
+                            <LayoutList className="h-4 w-4 text-gray-600" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+                      {/* Cluster Filter */}
+                      <button
+                        onClick={() => setRegionFilter(regionFilter === 'ALLE' ? 'wien-noe-bgl' : 'ALLE')}
+                        className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-50/30 border border-gray-200 transition-all duration-200 hover:to-blue-50/50 ${
+                          regionFilter !== 'ALLE'
+                            ? 'text-black scale-110' 
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        {regionFilter === 'ALLE' ? 'Cluster' : regionFilter}
+                      </button>
+
+                      {/* PLZ Filter */}
+                      <button
+                        onClick={() => setPlzFilter(plzFilter ? '' : '1010')}
+                        className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                          plzFilter
+                            ? 'text-gray-700 scale-110' 
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        {plzFilter || 'PLZ'}
+                      </button>
+
+                      {/* Visit Count Filter */}
+                      <button
+                        className="px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-green-50/30 border border-gray-200 text-gray-500"
+                      >
+                        Besuche
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Column Headers */}
+                  <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b border-gray-200 mb-2">
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">Markt & Adresse</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-center">PLZ & Stadt</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Cluster</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Marktleiter</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Besuche</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-right">Status</div>
+                  </div>
+
+                  {/* Markets List */}
+                  <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {marketsData.map((market) => {
+                      const visitBadgeColor = market.visits <= 5 
+                        ? 'bg-orange-100 text-orange-700' 
+                        : market.visits <= 10 
+                        ? 'bg-yellow-100 text-yellow-700' 
+                        : 'bg-green-100 text-green-700';
+
+                      return (
+                        <div
+                          key={market.id}
+                          onClick={() => {
+                            setSelectedMarket(market);
+                            setEditingMarket({ ...market });
+                            setShowMarketDetailModal(true);
+                          }}
+                          className={`p-4 rounded-lg border border-gray-100 transition-all duration-200 hover:border-gray-200 hover:shadow-sm cursor-pointer ${
+                            market.status === 'active'
+                              ? 'bg-gradient-to-r from-white to-purple-50/35'
+                              : 'bg-white opacity-60'
+                          }`}
+                        >
+                          <div className="grid grid-cols-6 gap-4 items-center">
+                            {/* Name & Address */}
+                            <div className="min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 truncate">{market.name}</h4>
+                              <p className="text-xs text-gray-500 truncate">{market.address}</p>
+                            </div>
+                            
+                            {/* PLZ & City */}
+                            <div className="text-center">
+                              <span className="text-xs text-gray-600">{market.plz} {market.city}</span>
+                            </div>
+                            
+                            {/* Cluster */}
+                            <div className="text-center">
+                              <span className="text-xs text-gray-600">{market.cluster}</span>
+                            </div>
+                            
+                            {/* Marktleiter */}
+                            <div className="text-center">
+                              <span className="text-xs text-gray-600">{market.marktleiter}</span>
+                            </div>
+                            
+                            {/* Visit Count */}
+                            <div className="text-center">
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${visitBadgeColor}`}>
+                                {market.visits}×
+                              </span>
+                            </div>
+                            
+                            {/* Status */}
+                            <div className="text-right flex items-center justify-end space-x-2">
+                              <span className={`text-xs ${market.status === 'active' ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                                {market.status === 'active' ? 'Aktiv' : 'Inaktiv'}
+                              </span>
+                              <div className={`w-2 h-2 rounded-full ${market.status === 'active' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          </>
+          )}
         </main>
       </div>
 
@@ -4958,6 +5175,331 @@ Import EP
             </div>
           </div>
         </>
+      )}
+
+      {/* Market Detail Modal */}
+      {showMarketDetailModal && editingMarket && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-5xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Store className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{editingMarket.name}</h3>
+                  <p className="text-sm text-gray-500">{editingMarket.address}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMarketDetailModal(false);
+                  setSelectedMarket(null);
+                  setEditingMarket(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+
+            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Market Info */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Markt Informationen</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Marktname</label>
+                        <input
+                          type="text"
+                          value={editingMarket.name}
+                          onChange={(e) => setEditingMarket({...editingMarket, name: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Adresse</label>
+                        <input
+                          type="text"
+                          value={editingMarket.address}
+                          onChange={(e) => setEditingMarket({...editingMarket, address: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-gray-500">PLZ</label>
+                          <input
+                            type="text"
+                            value={editingMarket.plz}
+                            onChange={(e) => setEditingMarket({...editingMarket, plz: e.target.value})}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500">Stadt</label>
+                          <input
+                            type="text"
+                            value={editingMarket.city}
+                            onChange={(e) => setEditingMarket({...editingMarket, city: e.target.value})}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Cluster</label>
+                        <select
+                          value={editingMarket.cluster}
+                          onChange={(e) => setEditingMarket({...editingMarket, cluster: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                          <option value="wien-noe-bgl">W/NÖ/BGL</option>
+                          <option value="steiermark">ST</option>
+                          <option value="salzburg">S</option>
+                          <option value="oberoesterreich">OÖ</option>
+                          <option value="tirol">T</option>
+                          <option value="vorarlberg">V</option>
+                          <option value="kaernten">K</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Marktleiter Info */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Marktleiter</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Name</label>
+                        <input
+                          type="text"
+                          value={editingMarket.marktleiter}
+                          onChange={(e) => setEditingMarket({...editingMarket, marktleiter: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">Telefon</label>
+                        <input
+                          type="text"
+                          value={editingMarket.marktleiterPhone}
+                          onChange={(e) => setEditingMarket({...editingMarket, marktleiterPhone: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500">E-Mail</label>
+                        <input
+                          type="email"
+                          value={editingMarket.marktleiterEmail}
+                          onChange={(e) => setEditingMarket({...editingMarket, marktleiterEmail: e.target.value})}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Visit Statistics */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Besuchs-Statistik</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-600">Gesamt Besuche</span>
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                          editingMarket.visits <= 5 
+                            ? 'bg-orange-100 text-orange-700' 
+                            : editingMarket.visits <= 10 
+                            ? 'bg-yellow-100 text-yellow-700' 
+                            : 'bg-green-100 text-green-700'
+                        }`}>
+                          {editingMarket.visits}×
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-600">Letzter Besuch</span>
+                        <span className="text-xs text-gray-900">{editingMarket.lastVisit ? new Date(editingMarket.lastVisit).toLocaleDateString('de-DE') : '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-xs text-gray-600">Nächster Besuch</span>
+                        <span className="text-xs text-gray-900">{editingMarket.nextVisit ? new Date(editingMarket.nextVisit).toLocaleDateString('de-DE') : '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Photos Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Fotos</h4>
+                    
+                    {/* Exterior Photo */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">Foto Außenansicht</label>
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                          {editingMarket.photoExterior ? (
+                            <img src={editingMarket.photoExterior} alt="Exterior" className="h-full object-cover rounded-lg" />
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-gray-400 text-xs">Kein Foto</div>
+                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={editingMarket.photoExteriorComment}
+                          onChange={(e) => setEditingMarket({...editingMarket, photoExteriorComment: e.target.value})}
+                          placeholder="Kommentar zum Foto..."
+                          className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Interior Photo */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">Foto Innenbereich</label>
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                          {editingMarket.photoInterior ? (
+                            <img src={editingMarket.photoInterior} alt="Interior" className="h-full object-cover rounded-lg" />
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-gray-400 text-xs">Kein Foto</div>
+                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={editingMarket.photoInteriorComment}
+                          onChange={(e) => setEditingMarket({...editingMarket, photoInteriorComment: e.target.value})}
+                          placeholder="Kommentar zum Foto..."
+                          className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Products Photo */}
+                    <div className="space-y-2">
+                      <label className="text-xs text-gray-500">Foto Produktplatzierung</label>
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                          {editingMarket.photoProducts ? (
+                            <img src={editingMarket.photoProducts} alt="Products" className="h-full object-cover rounded-lg" />
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-gray-400 text-xs">Kein Foto</div>
+                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={editingMarket.photoProductsComment}
+                          onChange={(e) => setEditingMarket({...editingMarket, photoProductsComment: e.target.value})}
+                          placeholder="Kommentar zum Foto..."
+                          className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes Section */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <h4 className="text-sm font-medium text-gray-900">Notizen</h4>
+                      <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+                        <button
+                          onClick={() => setMarketNotesMode('internal')}
+                          className={`px-3 py-1 rounded text-xs transition-all ${
+                            marketNotesMode === 'internal'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Interne Notiz
+                        </button>
+                        <button
+                          onClick={() => setMarketNotesMode('promotor')}
+                          className={`px-3 py-1 rounded text-xs transition-all ${
+                            marketNotesMode === 'promotor'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Notiz an Promotoren
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      value={marketNotesMode === 'internal' ? editingMarket.internalNotes : editingMarket.promotorNotes}
+                      onChange={(e) => setEditingMarket({
+                        ...editingMarket,
+                        [marketNotesMode === 'internal' ? 'internalNotes' : 'promotorNotes']: e.target.value
+                      })}
+                      placeholder={marketNotesMode === 'internal' ? 'Interne Notizen...' : 'Notizen für Promotoren...'}
+                      rows={6}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                    />
+                    <div className="text-xs text-gray-400 text-right">
+                      {(marketNotesMode === 'internal' ? editingMarket.internalNotes : editingMarket.promotorNotes).length} Zeichen
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+
+            {/* Footer Actions */}
+            <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  if (pendingMarketDelete[editingMarket.id]) {
+                    setMarketsData(prev => prev.filter(m => m.id !== editingMarket.id));
+                    setShowMarketDetailModal(false);
+                    setPendingMarketDelete({});
+                  } else {
+                    setPendingMarketDelete({ [editingMarket.id]: true });
+                    setTimeout(() => setPendingMarketDelete({}), 2000);
+                  }
+                }}
+                className={`px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-all ${
+                  pendingMarketDelete[editingMarket.id] ? 'wobble' : ''
+                }`}
+              >
+                {pendingMarketDelete[editingMarket.id] ? 'Wirklich löschen?' : 'Markt löschen'}
+              </button>
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowMarketDetailModal(false);
+                    setSelectedMarket(null);
+                    setEditingMarket(null);
+                  }}
+                >
+                  Abbrechen
+                </Button>
+                <button
+                  onClick={() => {
+                    setMarketsData(prev => prev.map(m => m.id === editingMarket.id ? editingMarket : m));
+                    setShowMarketDetailModal(false);
+                    setSelectedMarket(null);
+                    setEditingMarket(null);
+                  }}
+                  className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                  style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Eddie KI Assistant */}
