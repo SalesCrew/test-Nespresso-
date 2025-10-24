@@ -3367,37 +3367,76 @@ Import EP
                     </div>
 
                     {/* Filter Pills */}
-                    <div className="flex items-center space-x-2 flex-wrap gap-y-2">
-                      {/* Cluster Filter */}
-                      <button
-                        onClick={() => setRegionFilter(regionFilter === 'ALLE' ? 'wien-noe-bgl' : 'ALLE')}
-                        className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-50/30 border border-gray-200 transition-all duration-200 hover:to-blue-50/50 ${
-                          regionFilter !== 'ALLE'
-                            ? 'text-black scale-110' 
-                            : 'text-gray-500'
-                        }`}
-                      >
-                        {regionFilter === 'ALLE' ? 'Cluster' : regionFilter}
-                      </button>
-
-                      {/* PLZ Filter */}
-                      <button
-                        onClick={() => setPlzFilter(plzFilter ? '' : '1010')}
-                        className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
-                          plzFilter
-                            ? 'text-gray-700 scale-110' 
-                            : 'text-gray-500'
-                        }`}
-                      >
-                        {plzFilter || 'PLZ'}
-                      </button>
-
-                      {/* Visit Count Filter */}
-                      <button
-                        className="px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-green-50/30 border border-gray-200 text-gray-500"
-                      >
-                        Besuche
-                      </button>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {["ALLE", "W/NÖ/BGL", "ST", "S", "OÖ", "T", "V", "K"].map((region) => {
+                          const isSelected = regionFilter === region || (regionFilter === "ALLE" && region === "ALLE");
+                          return (
+                            <button
+                              key={region}
+                              onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
+                              className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
+                                isSelected 
+                                  ? 'bg-gray-100 text-gray-700 scale-110' 
+                                  : 'bg-white text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {region}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* PLZ Filter Pill */}
+                      <div className="flex items-center space-x-2">
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowPlzDropdown(!showPlzDropdown)}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
+                              plzFilter
+                                ? 'text-gray-700 scale-110' 
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {plzFilter || 'PLZ'}
+                          </button>
+                          
+                          {showPlzDropdown && (
+                            <div 
+                              ref={plzDropdownRef}
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                            >
+                              <div className="p-2">
+                                <button
+                                  onClick={() => {
+                                    setPlzFilter("");
+                                    setShowPlzDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                  Alle PLZ
+                                </button>
+                                {[...new Set(marketsData.map(m => m.plz))].sort().map((plz) => (
+                                  <button
+                                    key={plz}
+                                    onClick={() => {
+                                      setPlzFilter(plz);
+                                      setShowPlzDropdown(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                      plzFilter === plz
+                                        ? 'bg-gray-100 text-gray-700'
+                                        : 'hover:bg-gray-50 text-gray-600'
+                                    }`}
+                                  >
+                                    {plz}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -3413,7 +3452,22 @@ Import EP
 
                   {/* Markets List */}
                   <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {marketsData.map((market) => {
+                    {marketsData.filter(market => {
+                      // Region filter using cluster mapping
+                      const clusterMatch = regionFilter === "ALLE" || 
+                        (regionFilter === "W/NÖ/BGL" && market.cluster === "wien-noe-bgl") ||
+                        (regionFilter === "ST" && market.cluster === "steiermark") ||
+                        (regionFilter === "S" && market.cluster === "salzburg") ||
+                        (regionFilter === "OÖ" && market.cluster === "oberoesterreich") ||
+                        (regionFilter === "T" && market.cluster === "tirol") ||
+                        (regionFilter === "V" && market.cluster === "vorarlberg") ||
+                        (regionFilter === "K" && market.cluster === "kaernten");
+                      
+                      // PLZ filter
+                      const plzMatch = !plzFilter || market.plz === plzFilter;
+                      
+                      return clusterMatch && plzMatch;
+                    }).map((market) => {
                       const visitBadgeColor = market.visits <= 5 
                         ? 'bg-orange-100 text-orange-700' 
                         : market.visits <= 10 
