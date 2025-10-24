@@ -44,11 +44,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ conversations: [] });
     }
 
-    // Fetch conversation details
+    // Fetch conversation details (including pin data)
     const { data: conversations, error: conversationsError } = await supabase
       .from('chat_conversations')
-      .select('id, type, name, description, is_read_only, created_by, created_at, updated_at, profile_picture_url')
+      .select('id, type, name, description, is_read_only, created_by, created_at, updated_at, profile_picture_url, is_pinned, pinned_at')
       .in('id', conversationIds)
+      .order('is_pinned', { ascending: false })
+      .order('pinned_at', { ascending: false, nullsFirst: false })
       .order('updated_at', { ascending: false });
 
     if (conversationsError) {
@@ -56,10 +58,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
     }
 
-    // Fetch participants for all conversations (including marked_unread, cleared_at, and pin status)
+    // Fetch participants for all conversations (including marked_unread status and cleared_at)
     const { data: allParticipants, error: allParticipantsError } = await supabase
       .from('chat_participants')
-      .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at, cleared_at, is_pinned, pinned_at')
+      .select('conversation_id, user_id, last_read_at, marked_unread, marked_unread_at, cleared_at')
       .in('conversation_id', conversationIds);
 
     if (allParticipantsError) {
@@ -122,13 +124,11 @@ export async function GET(request: NextRequest) {
           };
         });
 
-        // Get current user's last_read_at, marked_unread status, cleared_at, and pin status
+        // Get current user's last_read_at, marked_unread status, and cleared_at
         const currentUserParticipant = convParticipants.find(p => p.user_id === user.id);
         const lastReadAt = currentUserParticipant?.last_read_at || new Date(0).toISOString();
         const markedUnread = currentUserParticipant?.marked_unread || false;
         const clearedAt = currentUserParticipant?.cleared_at || '1970-01-01T00:00:00.000Z';
-        const isPinned = currentUserParticipant?.is_pinned || false;
-        const pinnedAt = currentUserParticipant?.pinned_at || null;
 
         // Count unread messages (only those created after both last_read_at AND cleared_at)
         const { count: unreadCount } = await supabase
@@ -170,8 +170,8 @@ export async function GET(request: NextRequest) {
           created_at: conv.created_at,
           updated_at: conv.updated_at,
           profile_picture_url: profilePictureUrl,
-          is_pinned: isPinned,
-          pinned_at: pinnedAt,
+          is_pinned: conv.is_pinned || false,
+          pinned_at: conv.pinned_at || null,
           marked_unread: markedUnread,
           participants: participantDetails,
           last_message: lastMessage ? {
@@ -187,17 +187,7 @@ export async function GET(request: NextRequest) {
       }) || []
     );
 
-    // Sort conversations: pinned first (by pinned_at desc), then by updated_at desc
-    const sortedConversations = conversationsWithDetails.sort((a, b) => {
-      if (a.is_pinned && !b.is_pinned) return -1;
-      if (!a.is_pinned && b.is_pinned) return 1;
-      if (a.is_pinned && b.is_pinned) {
-        return new Date(b.pinned_at || 0).getTime() - new Date(a.pinned_at || 0).getTime();
-      }
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-    });
-
-    return NextResponse.json({ conversations: sortedConversations });
+    return NextResponse.json({ conversations: conversationsWithDetails });
   } catch (error) {
     console.error('Error in GET /api/chat/conversations:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
