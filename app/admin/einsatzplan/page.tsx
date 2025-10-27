@@ -228,6 +228,23 @@ export default function EinsatzplanPage() {
   const [showMarketMatchPopup, setShowMarketMatchPopup] = useState<string | null>(null); // assignmentId
   const [marketMatchSearch, setMarketMatchSearch] = useState("");
   const [tempMatchedMarkets, setTempMatchedMarkets] = useState<Record<string, string>>({});
+  const marketMatchPopupRef = useRef<HTMLDivElement | null>(null);
+
+  // Close market match popup on outside click (ignore clicks on the icon or inside the popup)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!showMarketMatchPopup) return;
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      // If click is inside the popup, ignore
+      if (marketMatchPopupRef.current && marketMatchPopupRef.current.contains(target)) return;
+      // If click is on the chain icon trigger, ignore
+      if (target.closest('[data-market-match-icon]')) return;
+      setShowMarketMatchPopup(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => document.removeEventListener('mousedown', handleClickOutside, true);
+  }, [showMarketMatchPopup]);
   // Create market modal state for Märkte view
   // Photo preview overlay state
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -3044,6 +3061,7 @@ Import EP
                                   e.stopPropagation();
                                   setShowMarketMatchPopup(showMarketMatchPopup === einsatz.id ? null : einsatz.id);
                                 }}
+                                data-market-match-icon
                               >
                                 <Link2 
                                   className={`h-5 w-5 ${
@@ -3058,6 +3076,7 @@ Import EP
                             {/* Market matching popup - positioned below the chain icon */}
                             {showMarketMatchPopup === einsatz.id && (
                               <div 
+                                ref={marketMatchPopupRef}
                                 className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50"
                                 onClick={(e) => e.stopPropagation()}
                               >
