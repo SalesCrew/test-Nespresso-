@@ -3579,7 +3579,7 @@ Import EP
                             
                             {/* Visit Count */}
                             <div className="text-center">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current ${visitBadgeColor}`}>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current/50 ${visitBadgeColor}`}>
                                 {market.visits}×
                               </span>
                             </div>
@@ -5472,7 +5472,7 @@ Import EP
                     <div className="space-y-2">
                       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <span className="text-xs text-gray-600">Gesamt Besuche</span>
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current ${
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current/50 ${
                           editingMarket.visits <= 5 
                             ? 'bg-orange-100 text-orange-700' 
                             : editingMarket.visits <= 10 
