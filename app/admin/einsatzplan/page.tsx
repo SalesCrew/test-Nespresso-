@@ -5290,7 +5290,7 @@ Import EP
                             value={editingMarket.stammPromotorId || ''}
                             onValueChange={(val) => setEditingMarket({ ...editingMarket, stammPromotorId: val })}
                           >
-                            <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-200">
                               <SelectValue placeholder="Promotor wählen" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border border-gray-200">
