@@ -5527,7 +5527,7 @@ Import EP
                       })}
                       placeholder={marketNotesMode === 'internal' ? 'Interne Notizen...' : 'Notizen für Promotoren...'}
                       rows={10}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none flex-1 min-h-[220px]"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-200 resize-none flex-1 min-h-[245px]"
                     />
                     <div className="text-xs text-gray-400 text-right mt-2">
                       {(marketNotesMode === 'internal' ? editingMarket.internalNotes : editingMarket.promotorNotes).length} Zeichen
