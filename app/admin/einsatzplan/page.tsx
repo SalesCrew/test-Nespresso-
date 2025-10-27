@@ -3034,7 +3034,7 @@ Import EP
                                 </div>
                               </div>
                               {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
-                              <div className="absolute -bottom-1 -right-1 pointer-events-none">
+                              <div className="absolute -bottom-1 -right-1 pointer-events-none opacity-50">
                                 <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
                               </div>
                             </div>
