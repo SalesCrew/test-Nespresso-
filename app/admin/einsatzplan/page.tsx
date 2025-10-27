@@ -226,6 +226,7 @@ export default function EinsatzplanPage() {
     { id: 'p3', name: 'Jonas Weber' },
     { id: 'p4', name: 'Lena Müller' },
   ]);
+  const [stammSearch, setStammSearch] = useState("");
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
   const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
   const [editingMarket, setEditingMarket] = useState<any>(null);
@@ -5293,7 +5294,16 @@ Import EP
                               <SelectValue placeholder="Promotor wählen" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border border-gray-200">
-                              {tempPromotors.map((p) => (
+                              <div className="p-2 pb-1">
+                                <input
+                                  type="text"
+                                  value={stammSearch}
+                                  onChange={(e) => setStammSearch(e.target.value)}
+                                  placeholder="Suchen..."
+                                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-0"
+                                />
+                              </div>
+                              {(stammSearch ? tempPromotors.filter(p => p.name.toLowerCase().includes(stammSearch.toLowerCase())) : tempPromotors).map((p) => (
                                 <SelectItem
                                   key={p.id}
                                   value={p.id}
