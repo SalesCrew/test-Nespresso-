@@ -5306,19 +5306,23 @@ Import EP
                       </div>
                       <div>
                         <label className="text-xs text-gray-500">Cluster</label>
-                        <select
+                        <Select
                           value={editingMarket.cluster}
-                          onChange={(e) => setEditingMarket({...editingMarket, cluster: e.target.value})}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          onValueChange={(val) => setEditingMarket({ ...editingMarket, cluster: val })}
                         >
-                          <option value="wien-noe-bgl">W/NÖ/BGL</option>
-                          <option value="steiermark">ST</option>
-                          <option value="salzburg">S</option>
-                          <option value="oberoesterreich">OÖ</option>
-                          <option value="tirol">T</option>
-                          <option value="vorarlberg">V</option>
-                          <option value="kaernten">K</option>
-                        </select>
+                          <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <SelectValue placeholder="Cluster" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200">
+                            <SelectItem value="wien-noe-bgl" className="focus:bg-transparent data-[highlighted]:bg-[rgba(59,130,246,0.08)]">W/NÖ/BGL</SelectItem>
+                            <SelectItem value="steiermark" className="focus:bg-transparent data-[highlighted]:bg-[rgba(16,185,129,0.08)]">ST</SelectItem>
+                            <SelectItem value="salzburg" className="focus:bg-transparent data-[highlighted]:bg-[rgba(245,158,11,0.08)]">S</SelectItem>
+                            <SelectItem value="oberoesterreich" className="focus:bg-transparent data-[highlighted]:bg-[rgba(168,85,247,0.08)]">OÖ</SelectItem>
+                            <SelectItem value="tirol" className="focus:bg-transparent data-[highlighted]:bg-[rgba(20,184,166,0.08)]">T</SelectItem>
+                            <SelectItem value="vorarlberg" className="focus:bg-transparent data-[highlighted]:bg-[rgba(99,102,241,0.08)]">V</SelectItem>
+                            <SelectItem value="kaernten" className="focus:bg-transparent data-[highlighted]:bg-[rgba(244,63,94,0.08)]">K</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
