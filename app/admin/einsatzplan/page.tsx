@@ -207,26 +207,9 @@ export default function EinsatzplanPage() {
   const [assignmentsLoading, setAssignmentsLoading] = useState(true); // Start loading immediately
   
   // Markets view states
-  // Temporary mock markets data (MediaMarkt across Austria). Replace with backend later.
-  const [marketsData, setMarketsData] = useState<any[]>([
-    { id: '1', name: 'MediaMarkt Wien Mitte', address: 'Landstraßer Hauptstraße 1b', plz: '1030', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Thomas Huber', marktleiterPhone: '+43 660 1234567', marktleiterEmail: 'thomas.huber@mediamarkt.at', visits: 12, lastVisit: '2025-10-15', nextVisit: '2025-11-05', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Bitte Nespresso Bereich links neben Eingang beachten' },
-    { id: '2', name: 'MediaMarkt Wien Mariahilf', address: 'Mariahilfer Straße 45', plz: '1070', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Sarah Schmidt', marktleiterPhone: '+43 664 2345678', marktleiterEmail: 's.schmidt@mediamarkt.at', visits: 8, lastVisit: '2025-10-10', nextVisit: '2025-10-28', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
-    { id: '3', name: 'MediaMarkt Graz City', address: 'Hauptplatz 3', plz: '8010', city: 'Graz', cluster: 'steiermark', marktleiter: 'Michael Wagner', marktleiterPhone: '+43 676 3456789', marktleiterEmail: 'm.wagner@mediamarkt.at', visits: 15, lastVisit: '2025-10-18', nextVisit: '2025-11-02', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Marktleiter sehr kooperativ' },
-    { id: '4', name: 'MediaMarkt Salzburg Zentrum', address: 'Rainerstraße 27', plz: '5020', city: 'Salzburg', cluster: 'salzburg', marktleiter: 'Lisa Berger', marktleiterPhone: '+43 650 4567890', marktleiterEmail: 'l.berger@mediamarkt.at', visits: 6, lastVisit: '2025-09-25', nextVisit: '2025-11-12', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
-    { id: '5', name: 'MediaMarkt Innsbruck', address: 'Museumstraße 12', plz: '6020', city: 'Innsbruck', cluster: 'tirol', marktleiter: 'Andreas Moser', marktleiterPhone: '+43 699 5678901', marktleiterEmail: 'a.moser@mediamarkt.at', visits: 10, lastVisit: '2025-10-12', nextVisit: null, status: 'inactive', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Temporär geschlossen wegen Umbau', promotorNotes: '' },
-    { id: '6', name: 'MediaMarkt St. Pölten', address: 'Wiener Straße 115', plz: '3100', city: 'St. Pölten', cluster: 'wien-noe-bgl', marktleiter: 'Christina Maier', marktleiterPhone: '+43 660 6789012', marktleiterEmail: 'c.maier@mediamarkt.at', visits: 14, lastVisit: '2025-10-20', nextVisit: '2025-11-08', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
-    { id: '7', name: 'MediaMarkt Linz Landstraße', address: 'Landstraße 42', plz: '4020', city: 'Linz', cluster: 'oberoesterreich', marktleiter: 'Peter Gruber', marktleiterPhone: '+43 664 7890123', marktleiterEmail: 'p.gruber@mediamarkt.at', visits: 5, lastVisit: '2025-09-30', nextVisit: '2025-11-15', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Parkplatz vor dem Markt verfügbar' },
-    { id: '8', name: 'MediaMarkt Klagenfurt City', address: 'Kirchengasse 8', plz: '9020', city: 'Klagenfurt', cluster: 'kaernten', marktleiter: 'Sandra Huber', marktleiterPhone: '+43 676 8901234', marktleiterEmail: 's.huber@mediamarkt.at', visits: 9, lastVisit: '2025-10-05', nextVisit: '2025-10-30', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
-    { id: '9', name: 'MediaMarkt Bregenz', address: 'Bahnhofstraße 18', plz: '6900', city: 'Bregenz', cluster: 'vorarlberg', marktleiter: 'Martin Fischer', marktleiterPhone: '+43 650 9012345', marktleiterEmail: 'm.fischer@mediamarkt.at', visits: 7, lastVisit: '2025-10-08', nextVisit: '2025-11-10', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
-    { id: '10', name: 'MediaMarkt Wien Innenstadt', address: 'Graben 14', plz: '1010', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Julia Schneider', marktleiterPhone: '+43 699 0123456', marktleiterEmail: 'j.schneider@mediamarkt.at', visits: 11, lastVisit: '2025-10-22', nextVisit: '2025-11-06', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Früh kommen, Markt öffnet 07:00 Uhr' }
-  ]);
-  // Temporary promotors list for dropdowns
-  const [tempPromotors] = useState<Array<{ id: string; name: string }>>([
-    { id: 'p1', name: 'Kevin Bauer' },
-    { id: 'p2', name: 'Sarah Schmidt' },
-    { id: 'p3', name: 'Jonas Weber' },
-    { id: 'p4', name: 'Lena Müller' },
-  ]);
+  const [marketsData, setMarketsData] = useState<any[]>([]);
+  const [marketsLoading, setMarketsLoading] = useState(false);
+  const [marketsPromotorsList, setMarketsPromotorsList] = useState<Array<{ id: string; name: string }>>([]);
   const [stammSearch, setStammSearch] = useState("");
   const [marketSearch, setMarketSearch] = useState("");
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
@@ -235,6 +218,11 @@ export default function EinsatzplanPage() {
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
+  // Photo navigation state (current index for each photo type)
+  const [photoInternalIndex, setPhotoInternalIndex] = useState(0);
+  const [photoExteriorIndex, setPhotoExteriorIndex] = useState(0);
+  const [photoInteriorIndex, setPhotoInteriorIndex] = useState(0);
+  const [photoProductsIndex, setPhotoProductsIndex] = useState(0);
   // Create market modal state for Märkte view
   const [showCreateMarketModal, setShowCreateMarketModal] = useState(false);
   const [newMarket, setNewMarket] = useState<any>({
@@ -314,38 +302,105 @@ export default function EinsatzplanPage() {
     }
   };
 
+  // Load markets data
+  const loadMarkets = async () => {
+    setMarketsLoading(true);
+    try {
+      const response = await fetch('/api/admin/markets');
+      if (!response.ok) {
+        throw new Error('Failed to fetch markets');
+      }
+      const data = await response.json();
+      setMarketsData(data.markets || []);
+    } catch (error) {
+      console.error('Error loading markets:', error);
+      alert('Fehler beim Laden der Märkte');
+    } finally {
+      setMarketsLoading(false);
+    }
+  };
+
+  // Load promotors list for both markets and assignments
+  const loadPromotorsList = async () => {
+    try {
+      const response = await fetch('/api/admin/promotors-list');
+      if (!response.ok) {
+        throw new Error('Failed to fetch promotors');
+      }
+      const data = await response.json();
+      const mapped = (data.promotors || []).map((p: any) => ({
+        id: p.user_id,
+        name: p.name
+      }));
+      setMarketsPromotorsList(mapped);
+      
+      // Also set promotorsList for assignments (TODO: fetch with region data if needed)
+      // For now, use same data structure
+      setPromotorsList(mapped);
+    } catch (error) {
+      console.error('Error loading promotors:', error);
+    }
+  };
+
   // Handle photo delete with safety wobble (2s confirm)
-  const handlePhotoDelete = (kind: 'internal' | 'exterior' | 'interior' | 'products') => {
+  const handlePhotoDelete = async (kind: 'internal' | 'exterior' | 'interior' | 'products') => {
     if (pendingPhotoDelete[kind]) {
-      setEditingMarket((prev: any) => {
-        if (!prev) return prev;
-        const updated: any = { ...prev };
-        switch (kind) {
-          case 'internal':
-            updated.photoInternal = null;
-            updated.photoInternalComment = '';
-            break;
-          case 'exterior':
-            updated.photoExterior = null;
-            updated.photoExteriorComment = '';
-            break;
-          case 'interior':
-            updated.photoInterior = null;
-            updated.photoInteriorComment = '';
-            break;
-          case 'products':
-            updated.photoProducts = null;
-            updated.photoProductsComment = '';
-            break;
+      // Second click - delete the photo
+      if (!editingMarket) return;
+      
+      const photoArrayKey = kind === 'internal' ? 'photosInternal' :
+                           kind === 'exterior' ? 'photosExterior' :
+                           kind === 'interior' ? 'photosInterior' : 'photosProducts';
+      
+      const currentPhotos = editingMarket[photoArrayKey] || [];
+      const currentIndex = kind === 'internal' ? photoInternalIndex :
+                          kind === 'exterior' ? photoExteriorIndex :
+                          kind === 'interior' ? photoInteriorIndex : photoProductsIndex;
+      
+      if (currentPhotos.length === 0) return;
+
+      try {
+        // Call delete API
+        const response = await fetch(`/api/admin/markets/${editingMarket.id}/photos`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            photo_type: kind,
+            photo_index: currentIndex
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete photo');
         }
-        return updated;
-      });
-      setPendingPhotoDelete((prev) => {
-        const next = { ...prev };
-        delete next[kind];
-        return next;
-      });
+
+        const { photos } = await response.json();
+        
+        // Update local state
+        setEditingMarket((prev: any) => ({
+          ...prev,
+          [photoArrayKey]: photos
+        }));
+
+        // Reset index if needed
+        if (currentIndex >= photos.length && photos.length > 0) {
+          const setIndex = kind === 'internal' ? setPhotoInternalIndex :
+                          kind === 'exterior' ? setPhotoExteriorIndex :
+                          kind === 'interior' ? setPhotoInteriorIndex : setPhotoProductsIndex;
+          setIndex(photos.length - 1);
+        }
+
+        setPendingPhotoDelete((prev) => {
+          const next = { ...prev };
+          delete next[kind];
+          return next;
+        });
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+        alert('Fehler beim Löschen des Fotos');
+      }
     } else {
+      // First click - start wobble
       setPendingPhotoDelete((prev) => ({ ...prev, [kind]: true }));
       setTimeout(() => {
         setPendingPhotoDelete((prev) => {
@@ -354,6 +409,77 @@ export default function EinsatzplanPage() {
           return next;
         });
       }, 2000);
+    }
+  };
+
+  // Handle photo navigation
+  const navigatePhoto = (kind: 'internal' | 'exterior' | 'interior' | 'products', direction: 'prev' | 'next') => {
+    if (!editingMarket) return;
+    
+    const photoArrayKey = kind === 'internal' ? 'photosInternal' :
+                         kind === 'exterior' ? 'photosExterior' :
+                         kind === 'interior' ? 'photosInterior' : 'photosProducts';
+    
+    const photos = editingMarket[photoArrayKey] || [];
+    if (photos.length <= 1) return;
+
+    const currentIndex = kind === 'internal' ? photoInternalIndex :
+                        kind === 'exterior' ? photoExteriorIndex :
+                        kind === 'interior' ? photoInteriorIndex : photoProductsIndex;
+    
+    const setIndex = kind === 'internal' ? setPhotoInternalIndex :
+                    kind === 'exterior' ? setPhotoExteriorIndex :
+                    kind === 'interior' ? setPhotoInteriorIndex : setPhotoProductsIndex;
+
+    let newIndex;
+    if (direction === 'prev') {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : photos.length - 1;
+    } else {
+      newIndex = currentIndex < photos.length - 1 ? currentIndex + 1 : 0;
+    }
+    
+    setIndex(newIndex);
+  };
+
+  // Handle photo upload
+  const handlePhotoUpload = async (kind: 'internal' | 'exterior' | 'interior' | 'products', file: File) => {
+    if (!editingMarket || !file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('photo_type', kind);
+      formData.append('comment', '');
+
+      const response = await fetch(`/api/admin/markets/${editingMarket.id}/photos/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload photo');
+      }
+
+      const { photos } = await response.json();
+      
+      const photoArrayKey = kind === 'internal' ? 'photosInternal' :
+                           kind === 'exterior' ? 'photosExterior' :
+                           kind === 'interior' ? 'photosInterior' : 'photosProducts';
+      
+      // Update local state
+      setEditingMarket((prev: any) => ({
+        ...prev,
+        [photoArrayKey]: photos
+      }));
+
+      // Set index to the newly added photo
+      const setIndex = kind === 'internal' ? setPhotoInternalIndex :
+                      kind === 'exterior' ? setPhotoExteriorIndex :
+                      kind === 'interior' ? setPhotoInteriorIndex : setPhotoProductsIndex;
+      setIndex(photos.length - 1);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      alert('Fehler beim Hochladen des Fotos');
     }
   };
   
@@ -453,7 +579,7 @@ export default function EinsatzplanPage() {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [promotionView, setPromotionView] = useState<'sent' | 'applications'>('sent');
   
-  // Promotors list for assignment
+  // Promotors list for assignment (includes region)
   const [promotorsList, setPromotorsList] = useState<any[]>([]);
   // Detail modal dropdown searches
   const [detailPromotorSearch, setDetailPromotorSearch] = useState("");
@@ -1945,7 +2071,21 @@ export default function EinsatzplanPage() {
     }
   };
 
-  useEffect(() => { loadAssignments(true); }, []);
+  useEffect(() => { 
+    loadAssignments(true); 
+    loadMarkets();
+    loadPromotorsList();
+  }, []);
+
+  // Reset photo indices when market detail modal opens
+  useEffect(() => {
+    if (showMarketDetailModal) {
+      setPhotoInternalIndex(0);
+      setPhotoExteriorIndex(0);
+      setPhotoInteriorIndex(0);
+      setPhotoProductsIndex(0);
+    }
+  }, [showMarketDetailModal]);
 
   return (
     <div className="min-h-screen bg-gray-50/30">
@@ -3566,7 +3706,7 @@ Import EP
                           market.city,
                           market.cluster,
                           market.marktleiter,
-                          (tempPromotors.find(p => p.id === (market as any).stammPromotorId)?.name || '')
+                          (market.stammPromotorName || '')
                         ]
                           .join(' ')
                           .toLowerCase()
@@ -3627,7 +3767,7 @@ Import EP
 
                             {/* Stammmarkt von */}
                             <div className="text-center">
-                              <span className="text-xs text-gray-600">{tempPromotors.find(p => p.id === (market as any).stammPromotorId)?.name || '-'}</span>
+                              <span className="text-xs text-gray-600">{market.stammPromotorName || '-'}</span>
                             </div>
 
                             {/* Status */}
@@ -3705,7 +3845,7 @@ Import EP
                   <Select value={newMarket.stammPromotorId} onValueChange={(val) => setNewMarket({ ...newMarket, stammPromotorId: val })}>
                     <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-0"><SelectValue placeholder="Promotor wählen" /></SelectTrigger>
                     <SelectContent className="bg-white border border-gray-200">
-                      {tempPromotors.map((p) => (
+                      {marketsPromotorsList.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -3729,13 +3869,40 @@ Import EP
             <div className="flex items-center justify-end p-4 border-t border-gray-200 bg-gray-50">
               <Button variant="ghost" onClick={() => setShowCreateMarketModal(false)}>Abbrechen</Button>
               <button
-                onClick={() => {
-                  const id = String(Date.now());
-                  setMarketsData((prev) => [
-                    ...prev,
-                    { id, ...newMarket }
-                  ]);
-                  setShowCreateMarketModal(false);
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/markets', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newMarket)
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Failed to create market');
+                    }
+
+                    // Reload markets list
+                    await loadMarkets();
+                    
+                    // Reset form and close modal
+                    setNewMarket({
+                      name: '',
+                      address: '',
+                      plz: '',
+                      city: '',
+                      cluster: 'wien-noe-bgl',
+                      marktleiter: '',
+                      marktleiterPhone: '',
+                      marktleiterEmail: '',
+                      stammPromotorId: '',
+                      visits: 0,
+                      status: 'active'
+                    });
+                    setShowCreateMarketModal(false);
+                  } catch (error) {
+                    console.error('Error creating market:', error);
+                    alert('Fehler beim Erstellen des Marktes');
+                  }
                 }}
                 className="ml-3 px-4 py-2 text-sm text-white rounded-lg transition-colors"
                 style={{ background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85 }}
@@ -5501,7 +5668,7 @@ Import EP
                                   className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-0"
                                 />
                               </div>
-                              {(stammSearch ? tempPromotors.filter(p => p.name.toLowerCase().includes(stammSearch.toLowerCase())) : tempPromotors).map((p) => (
+                              {(stammSearch ? marketsPromotorsList.filter(p => p.name.toLowerCase().includes(stammSearch.toLowerCase())) : marketsPromotorsList).map((p) => (
                                 <SelectItem
                                   key={p.id}
                                   value={p.id}
@@ -5632,36 +5799,57 @@ Import EP
                   <div className="space-y-2">
                     <label className="text-xs text-gray-500">Fotos intern</label>
                     <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handlePhotoUpload('internal', file);
+                          e.target.value = '';
+                        }}
+                        style={{ display: 'none' }}
+                        id="upload-internal"
+                      />
                       {/* Top-right actions (hover) */}
-                      <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                      <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button type="button" aria-label="Foto hinzufügen" onClick={() => document.getElementById('upload-internal')?.click()} className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                           <Plus className="h-4 w-4 text-green-600" />
                         </button>
                         <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('internal')} className={`bg-white/90 border ${pendingPhotoDelete['internal'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
                           <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['internal'] ? 'text-red-600' : 'text-red-500'}`} />
                         </button>
                       </div>
-                      {/* Hover arrows */}
-                      <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                        <ChevronLeft className="h-4 w-4 text-gray-600" />
-                      </button>
-                      <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                        <ChevronRight className="h-4 w-4 text-gray-600" />
-                      </button>
+                      {/* Hover arrows - only show if multiple photos */}
+                      {(editingMarket.photosInternal?.length || 0) > 1 && (
+                        <>
+                          <button type="button" aria-label="Vorheriges Foto" onClick={() => navigatePhoto('internal', 'prev')} className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                            <ChevronLeft className="h-4 w-4 text-gray-600" />
+                          </button>
+                          <button type="button" aria-label="Nächstes Foto" onClick={() => navigatePhoto('internal', 'next')} className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                            <ChevronRight className="h-4 w-4 text-gray-600" />
+                          </button>
+                        </>
+                      )}
                       <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
-                        {editingMarket.photoInternal ? (
-                          <img src={editingMarket.photoInternal} alt="Intern" className="h-full object-cover rounded-lg" />
+                        {(editingMarket.photosInternal?.length || 0) > 0 ? (
+                          <img src={editingMarket.photosInternal[photoInternalIndex]?.url} alt="Intern" className="h-full object-cover rounded-lg" />
                         ) : (
                           <div className="text-center">
                             <div className="text-gray-400 text-xs">Kein Foto</div>
-                            <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                            <button onClick={() => document.getElementById('upload-internal')?.click()} className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
                           </div>
                         )}
                       </div>
                       <input
                         type="text"
-                        value={editingMarket.photoInternalComment || ''}
-                        onChange={(e) => setEditingMarket({ ...editingMarket, photoInternalComment: e.target.value })}
+                        value={editingMarket.photosInternal?.[photoInternalIndex]?.comment || ''}
+                        onChange={(e) => {
+                          const photos = [...(editingMarket.photosInternal || [])];
+                          if (photos[photoInternalIndex]) {
+                            photos[photoInternalIndex] = { ...photos[photoInternalIndex], comment: e.target.value };
+                            setEditingMarket({ ...editingMarket, photosInternal: photos });
+                          }
+                        }}
                         placeholder="Kommentar zum Foto..."
                         className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
@@ -5679,36 +5867,57 @@ Import EP
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Außenansicht</label>
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePhotoUpload('exterior', file);
+                            e.target.value = '';
+                          }}
+                          style={{ display: 'none' }}
+                          id="upload-exterior"
+                        />
                         {/* Top-right actions (hover) */}
-                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <button type="button" aria-label="Foto hinzufügen" onClick={() => document.getElementById('upload-exterior')?.click()} className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-green-600" />
                           </button>
-                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('exterior')} className={`bg-white/90 border ${pendingPhotoDelete['exterior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
-                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['exterior'] ? 'text-red-600' : 'text-red-500'}`} />
+                          <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('exterior')} className={`bg-white/90 border ${pendingPhotoDelete['exterior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                            <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['exterior'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
-                        {/* Hover arrows */}
-                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronLeft className="h-4 w-4 text-gray-600" />
-                        </button>
-                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronRight className="h-4 w-4 text-gray-600" />
-                        </button>
+                        {/* Hover arrows - only show if multiple photos */}
+                        {(editingMarket.photosExterior?.length || 0) > 1 && (
+                          <>
+                            <button type="button" aria-label="Vorheriges Foto" onClick={() => navigatePhoto('exterior', 'prev')} className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronLeft className="h-4 w-4 text-gray-600" />
+                            </button>
+                            <button type="button" aria-label="Nächstes Foto" onClick={() => navigatePhoto('exterior', 'next')} className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronRight className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </>
+                        )}
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
-                          {editingMarket.photoExterior ? (
-                            <img src={editingMarket.photoExterior} alt="Exterior" className="h-full object-cover rounded-lg" />
+                          {(editingMarket.photosExterior?.length || 0) > 0 ? (
+                            <img src={editingMarket.photosExterior[photoExteriorIndex]?.url} alt="Exterior" className="h-full object-cover rounded-lg" />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
-                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                              <button onClick={() => document.getElementById('upload-exterior')?.click()} className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
                             </div>
                           )}
                         </div>
                         <input
                           type="text"
-                          value={editingMarket.photoExteriorComment}
-                          onChange={(e) => setEditingMarket({...editingMarket, photoExteriorComment: e.target.value})}
+                          value={editingMarket.photosExterior?.[photoExteriorIndex]?.comment || ''}
+                          onChange={(e) => {
+                            const photos = [...(editingMarket.photosExterior || [])];
+                            if (photos[photoExteriorIndex]) {
+                              photos[photoExteriorIndex] = { ...photos[photoExteriorIndex], comment: e.target.value };
+                              setEditingMarket({ ...editingMarket, photosExterior: photos });
+                            }
+                          }}
                           placeholder="Kommentar zum Foto..."
                           className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
@@ -5719,36 +5928,57 @@ Import EP
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Innenbereich</label>
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePhotoUpload('interior', file);
+                            e.target.value = '';
+                          }}
+                          style={{ display: 'none' }}
+                          id="upload-interior"
+                        />
                         {/* Top-right actions (hover) */}
-                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <button type="button" aria-label="Foto hinzufügen" onClick={() => document.getElementById('upload-interior')?.click()} className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-green-600" />
                           </button>
-                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('interior')} className={`bg-white/90 border ${pendingPhotoDelete['interior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
-                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['interior'] ? 'text-red-600' : 'text-red-500'}`} />
+                          <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('interior')} className={`bg-white/90 border ${pendingPhotoDelete['interior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                            <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['interior'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
-                        {/* Hover arrows */}
-                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronLeft className="h-4 w-4 text-gray-600" />
-                        </button>
-                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronRight className="h-4 w-4 text-gray-600" />
-                        </button>
+                        {/* Hover arrows - only show if multiple photos */}
+                        {(editingMarket.photosInterior?.length || 0) > 1 && (
+                          <>
+                            <button type="button" aria-label="Vorheriges Foto" onClick={() => navigatePhoto('interior', 'prev')} className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronLeft className="h-4 w-4 text-gray-600" />
+                            </button>
+                            <button type="button" aria-label="Nächstes Foto" onClick={() => navigatePhoto('interior', 'next')} className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronRight className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </>
+                        )}
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
-                          {editingMarket.photoInterior ? (
-                            <img src={editingMarket.photoInterior} alt="Interior" className="h-full object-cover rounded-lg" />
+                          {(editingMarket.photosInterior?.length || 0) > 0 ? (
+                            <img src={editingMarket.photosInterior[photoInteriorIndex]?.url} alt="Interior" className="h-full object-cover rounded-lg" />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
-                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                              <button onClick={() => document.getElementById('upload-interior')?.click()} className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
                             </div>
                           )}
                         </div>
                         <input
                           type="text"
-                          value={editingMarket.photoInteriorComment}
-                          onChange={(e) => setEditingMarket({...editingMarket, photoInteriorComment: e.target.value})}
+                          value={editingMarket.photosInterior?.[photoInteriorIndex]?.comment || ''}
+                          onChange={(e) => {
+                            const photos = [...(editingMarket.photosInterior || [])];
+                            if (photos[photoInteriorIndex]) {
+                              photos[photoInteriorIndex] = { ...photos[photoInteriorIndex], comment: e.target.value };
+                              setEditingMarket({ ...editingMarket, photosInterior: photos });
+                            }
+                          }}
                           placeholder="Kommentar zum Foto..."
                           className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
@@ -5759,36 +5989,57 @@ Import EP
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Produktplatzierung</label>
                       <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePhotoUpload('products', file);
+                            e.target.value = '';
+                          }}
+                          style={{ display: 'none' }}
+                          id="upload-products"
+                        />
                         {/* Top-right actions (hover) */}
-                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                        <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <button type="button" aria-label="Foto hinzufügen" onClick={() => document.getElementById('upload-products')?.click()} className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-green-600" />
                           </button>
-                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('products')} className={`bg-white/90 border ${pendingPhotoDelete['products'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
-                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['products'] ? 'text-red-600' : 'text-red-500'}`} />
+                          <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('products')} className={`bg-white/90 border ${pendingPhotoDelete['products'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                            <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['products'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
-                        {/* Hover arrows */}
-                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronLeft className="h-4 w-4 text-gray-600" />
-                        </button>
-                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <ChevronRight className="h-4 w-4 text-gray-600" />
-                        </button>
+                        {/* Hover arrows - only show if multiple photos */}
+                        {(editingMarket.photosProducts?.length || 0) > 1 && (
+                          <>
+                            <button type="button" aria-label="Vorheriges Foto" onClick={() => navigatePhoto('products', 'prev')} className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronLeft className="h-4 w-4 text-gray-600" />
+                            </button>
+                            <button type="button" aria-label="Nächstes Foto" onClick={() => navigatePhoto('products', 'next')} className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white z-10">
+                              <ChevronRight className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </>
+                        )}
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
-                          {editingMarket.photoProducts ? (
-                            <img src={editingMarket.photoProducts} alt="Products" className="h-full object-cover rounded-lg" />
+                          {(editingMarket.photosProducts?.length || 0) > 0 ? (
+                            <img src={editingMarket.photosProducts[photoProductsIndex]?.url} alt="Products" className="h-full object-cover rounded-lg" />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
-                              <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                              <button onClick={() => document.getElementById('upload-products')?.click()} className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
                             </div>
                           )}
                         </div>
                         <input
                           type="text"
-                          value={editingMarket.photoProductsComment}
-                          onChange={(e) => setEditingMarket({...editingMarket, photoProductsComment: e.target.value})}
+                          value={editingMarket.photosProducts?.[photoProductsIndex]?.comment || ''}
+                          onChange={(e) => {
+                            const photos = [...(editingMarket.photosProducts || [])];
+                            if (photos[photoProductsIndex]) {
+                              photos[photoProductsIndex] = { ...photos[photoProductsIndex], comment: e.target.value };
+                              setEditingMarket({ ...editingMarket, photosProducts: photos });
+                            }
+                          }}
                           placeholder="Kommentar zum Foto..."
                           className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
@@ -5843,12 +6094,28 @@ Import EP
             {/* Footer Actions */}
             <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between shrink-0">
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (pendingMarketDelete[editingMarket.id]) {
-                    setMarketsData(prev => prev.filter(m => m.id !== editingMarket.id));
-                    setShowMarketDetailModal(false);
-                    setPendingMarketDelete({});
+                    // Second click - delete
+                    try {
+                      const response = await fetch(`/api/admin/markets/${editingMarket.id}`, {
+                        method: 'DELETE'
+                      });
+
+                      if (!response.ok) {
+                        throw new Error('Failed to delete market');
+                      }
+
+                      // Reload markets
+                      await loadMarkets();
+                      setShowMarketDetailModal(false);
+                      setPendingMarketDelete({});
+                    } catch (error) {
+                      console.error('Error deleting market:', error);
+                      alert('Fehler beim Löschen des Marktes');
+                    }
                   } else {
+                    // First click - wobble
                     setPendingMarketDelete({ [editingMarket.id]: true });
                     setTimeout(() => setPendingMarketDelete({}), 2000);
                   }
@@ -5871,11 +6138,28 @@ Import EP
                   Abbrechen
                 </Button>
                 <button
-                  onClick={() => {
-                    setMarketsData(prev => prev.map(m => m.id === editingMarket.id ? editingMarket : m));
-                    setShowMarketDetailModal(false);
-                    setSelectedMarket(null);
-                    setEditingMarket(null);
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/admin/markets/${editingMarket.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(editingMarket)
+                      });
+
+                      if (!response.ok) {
+                        throw new Error('Failed to update market');
+                      }
+
+                      // Reload markets to get fresh data
+                      await loadMarkets();
+                      
+                      setShowMarketDetailModal(false);
+                      setSelectedMarket(null);
+                      setEditingMarket(null);
+                    } catch (error) {
+                      console.error('Error updating market:', error);
+                      alert('Fehler beim Speichern des Marktes');
+                    }
                   }}
                   className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
                   style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
