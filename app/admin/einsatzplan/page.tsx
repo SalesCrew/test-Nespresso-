@@ -5394,11 +5394,22 @@ Import EP
                     <label className="text-xs text-gray-500">Fotos intern</label>
                     <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                       <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
-                        <div className="text-center">
-                          <div className="text-gray-400 text-xs">Kein Foto</div>
-                          <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
-                        </div>
+                        {editingMarket.photoInternal ? (
+                          <img src={editingMarket.photoInternal} alt="Intern" className="h-full object-cover rounded-lg" />
+                        ) : (
+                          <div className="text-center">
+                            <div className="text-gray-400 text-xs">Kein Foto</div>
+                            <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">Hochladen</button>
+                          </div>
+                        )}
                       </div>
+                      <input
+                        type="text"
+                        value={editingMarket.photoInternalComment || ''}
+                        onChange={(e) => setEditingMarket({ ...editingMarket, photoInternalComment: e.target.value })}
+                        placeholder="Kommentar zum Foto..."
+                        className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
                     </div>
                   </div>
                 </div>
@@ -5515,8 +5526,8 @@ Import EP
                         [marketNotesMode === 'internal' ? 'internalNotes' : 'promotorNotes']: e.target.value
                       })}
                       placeholder={marketNotesMode === 'internal' ? 'Interne Notizen...' : 'Notizen für Promotoren...'}
-                      rows={6}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none flex-1 min-h-0"
+                      rows={10}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none flex-1 min-h-[220px]"
                     />
                     <div className="text-xs text-gray-400 text-right mt-2">
                       {(marketNotesMode === 'internal' ? editingMarket.internalNotes : editingMarket.promotorNotes).length} Zeichen
