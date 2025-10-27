@@ -3796,6 +3796,7 @@ Import EP
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${market.address}, ${market.plz} ${market.city}`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 className="text-xs text-gray-500 truncate hover:text-gray-600"
                               >
                                 {`${market.address}, ${market.plz} ${market.city}`}
