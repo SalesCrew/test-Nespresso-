@@ -3505,12 +3505,13 @@ Import EP
                   </div>
 
                   {/* Column Headers */}
-                  <div className="grid grid-cols-6 gap-4 px-4 py-2 border-b border-gray-200 mb-2">
+                  <div className="grid grid-cols-7 gap-4 px-4 py-2 border-b border-gray-200 mb-2">
                     <div className="text-xs text-gray-500 uppercase tracking-wide">Markt & Adresse</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide text-center">PLZ & Stadt</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Cluster</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Marktleiter</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Besuche</div>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide text-center">Stammmarkt von</div>
                     <div className="text-xs text-gray-500 uppercase tracking-wide text-right">Status</div>
                   </div>
 
@@ -3552,7 +3553,7 @@ Import EP
                               : 'bg-white opacity-60'
                           }`}
                         >
-                          <div className="grid grid-cols-6 gap-4 items-center">
+                          <div className="grid grid-cols-7 gap-4 items-center">
                             {/* Name & Address */}
                             <div className="min-w-0">
                               <h4 className="text-sm font-medium text-gray-900 truncate">{market.name}</h4>
@@ -3580,7 +3581,12 @@ Import EP
                                 {market.visits}×
                               </span>
                             </div>
-                            
+
+                            {/* Stammmarkt von */}
+                            <div className="text-center">
+                              <span className="text-xs text-gray-600">{tempPromotors.find(p => p.id === (market as any).stammPromotorId)?.name || '-'}</span>
+                            </div>
+
                             {/* Status */}
                             <div className="text-right flex items-center justify-end space-x-2">
                               <span className={`text-xs ${market.status === 'active' ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
