@@ -3508,7 +3508,7 @@ Import EP
                           value={marketSearch}
                           onChange={(e) => setMarketSearch(e.target.value)}
                           placeholder="Suchen..."
-                          className="px-3 py-1.5 rounded-full text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-0"
+                          className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-0"
                         />
                       </div>
                     </div>
