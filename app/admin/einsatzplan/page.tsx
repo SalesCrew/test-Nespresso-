@@ -5235,7 +5235,7 @@ Import EP
       {/* Market Detail Modal */}
       {showMarketDetailModal && editingMarket && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-5xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white">
+          <Card className="w-full max-w-5xl border border-gray-200 shadow-sm max-h-[90vh] overflow-hidden bg-white flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -5258,7 +5258,7 @@ Import EP
               </button>
             </div>
 
-            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+            <CardContent className="p-6 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-6">
@@ -5510,7 +5510,7 @@ Import EP
             </CardContent>
 
             {/* Footer Actions */}
-            <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between">
+            <div className="border-t border-gray-200 p-4 bg-gray-50 flex items-center justify-between shrink-0">
               <button
                 onClick={() => {
                   if (pendingMarketDelete[editingMarket.id]) {
