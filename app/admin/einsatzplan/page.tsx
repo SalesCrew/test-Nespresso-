@@ -235,7 +235,7 @@ export default function EinsatzplanPage() {
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
-  // Create market modal state
+  // Create market modal state for Märkte view
   const [showCreateMarketModal, setShowCreateMarketModal] = useState(false);
   const [newMarket, setNewMarket] = useState<any>({
     name: '',
@@ -2051,9 +2051,9 @@ Import EP
                           <Dumbbell className="h-4 w-4 text-gray-600" />
                         </button>
                         <button
-                          onClick={() => setShowCreateMarketModal(true)}
+                          onClick={() => setShowCreateModal(true)}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
-                          title="Neuen Markt erstellen"
+                          title="Neuen Einsatz erstellen"
                         >
                           <Plus className="h-4 w-4 text-gray-600" />
                         </button>
@@ -3417,7 +3417,7 @@ Import EP
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => {/* TODO: Create market */}}
+                          onClick={() => setShowCreateMarketModal(true)}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
                           title="Neuen Markt erstellen"
                         >
