@@ -5492,7 +5492,7 @@ Import EP
                       {/* Top-right actions (hover) */}
                       <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <Plus className="h-4 w-4 text-gray-600" />
+                          <Plus className="h-4 w-4 text-green-600" />
                         </button>
                         <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('internal')} className={`bg-white/90 border ${pendingPhotoDelete['internal'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
                           <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['internal'] ? 'text-red-600' : 'text-red-500'}`} />
@@ -5539,7 +5539,7 @@ Import EP
                         {/* Top-right actions (hover) */}
                         <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Plus className="h-4 w-4 text-gray-600" />
+                            <Plus className="h-4 w-4 text-green-600" />
                           </button>
                         <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('exterior')} className={`bg-white/90 border ${pendingPhotoDelete['exterior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
                           <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['exterior'] ? 'text-red-600' : 'text-red-500'}`} />
@@ -5579,7 +5579,7 @@ Import EP
                         {/* Top-right actions (hover) */}
                         <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Plus className="h-4 w-4 text-gray-600" />
+                            <Plus className="h-4 w-4 text-green-600" />
                           </button>
                         <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('interior')} className={`bg-white/90 border ${pendingPhotoDelete['interior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
                           <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['interior'] ? 'text-red-600' : 'text-red-500'}`} />
@@ -5619,7 +5619,7 @@ Import EP
                         {/* Top-right actions (hover) */}
                         <div className="absolute right-2 top-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Plus className="h-4 w-4 text-gray-600" />
+                            <Plus className="h-4 w-4 text-green-600" />
                           </button>
                         <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('products')} className={`bg-white/90 border ${pendingPhotoDelete['products'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
                           <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['products'] ? 'text-red-600' : 'text-red-500'}`} />
