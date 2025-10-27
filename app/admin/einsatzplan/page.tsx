@@ -2920,13 +2920,9 @@ Import EP
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
-                            {/* Match indicator - absolute positioned in top-right corner, outside of flow */}
-                            <div className="absolute -top-1 -right-1 opacity-40 pointer-events-none z-10">
-                              <Link2 className={`h-3.5 w-3.5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
-                            </div>
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
-                                <div className="min-w-0">
+                                <div className="min-w-0 relative">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
                                   <button
                                     onClick={(e) => {
@@ -2937,6 +2933,10 @@ Import EP
                                   >
                                     {einsatz.address}
                                   </button>
+                                  {/* Match indicator in bottom-left of this column */}
+                                  <div className="absolute -bottom-1 -left-1 opacity-40 pointer-events-none">
+                                    <Link2 className={`h-3 w-3 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                  </div>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
                                   <span>{einsatz.plz} {einsatz.city}</span>
