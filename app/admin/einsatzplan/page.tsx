@@ -228,6 +228,7 @@ export default function EinsatzplanPage() {
     { id: 'p4', name: 'Lena Müller' },
   ]);
   const [stammSearch, setStammSearch] = useState("");
+  const [marketSearch, setMarketSearch] = useState("");
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
   const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
   const [editingMarket, setEditingMarket] = useState<any>(null);
@@ -3451,7 +3452,7 @@ Import EP
                         })}
                       </div>
                       
-                      {/* PLZ Filter Pill */}
+                      {/* PLZ Filter Pill + Search */}
                       <div className="flex items-center space-x-2">
                         <div className="relative">
                           <button
@@ -3500,6 +3501,15 @@ Import EP
                             </div>
                           )}
                         </div>
+
+                        {/* Market search */}
+                        <input
+                          type="text"
+                          value={marketSearch}
+                          onChange={(e) => setMarketSearch(e.target.value)}
+                          placeholder="Suchen..."
+                          className="px-3 py-1.5 rounded-full text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-0"
+                        />
                       </div>
                     </div>
                   </div>
@@ -3530,8 +3540,24 @@ Import EP
                       
                       // PLZ filter
                       const plzMatch = !plzFilter || market.plz === plzFilter;
+
+                      // Text search across fields
+                      const search = marketSearch.trim().toLowerCase();
+                      const searchMatch =
+                        !search ||
+                        [
+                          market.name,
+                          market.address,
+                          market.city,
+                          market.cluster,
+                          market.marktleiter,
+                          (tempPromotors.find(p => p.id === (market as any).stammPromotorId)?.name || '')
+                        ]
+                          .join(' ')
+                          .toLowerCase()
+                          .includes(search);
                       
-                      return clusterMatch && plzMatch;
+                      return clusterMatch && plzMatch && searchMatch;
                     }).map((market) => {
                       const visitBadgeColor = market.visits <= 5 
                         ? 'bg-orange-100 text-orange-700' 
