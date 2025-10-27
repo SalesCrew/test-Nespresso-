@@ -2920,9 +2920,9 @@ Import EP
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between relative">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
-                                <div className="min-w-0 relative">
+                                <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
                                   <button
                                     onClick={(e) => {
@@ -2933,10 +2933,6 @@ Import EP
                                   >
                                     {einsatz.address}
                                   </button>
-                                  {/* Match indicator at bottom-right of this cell */}
-                                  <div className="absolute bottom-0 right-0">
-                                    <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
-                                  </div>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
                                   <span>{einsatz.plz} {einsatz.city}</span>
@@ -3036,6 +3032,10 @@ Import EP
                                     'bg-gray-400'
                                   }`}></div>
                                 </div>
+                              </div>
+                              {/* Match indicator - absolute bottom-right of row */}
+                              <div className="absolute bottom-2 right-2 pointer-events-none">
+                                <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
                               </div>
                             </div>
                           </div>
