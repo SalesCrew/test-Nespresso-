@@ -224,6 +224,10 @@ export default function EinsatzplanPage() {
   const [photoExteriorIndex, setPhotoExteriorIndex] = useState(0);
   const [photoInteriorIndex, setPhotoInteriorIndex] = useState(0);
   const [photoProductsIndex, setPhotoProductsIndex] = useState(0);
+  // Market matching popup state
+  const [showMarketMatchPopup, setShowMarketMatchPopup] = useState<string | null>(null); // assignmentId
+  const [marketMatchSearch, setMarketMatchSearch] = useState("");
+  const [tempMatchedMarkets, setTempMatchedMarkets] = useState<Record<string, string>>({});
   // Create market modal state for Märkte view
   // Photo preview overlay state
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -3034,10 +3038,77 @@ Import EP
                                 </div>
                               </div>
                               {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
-                              <div className="absolute -bottom-1 -right-1 pointer-events-none opacity-25">
-                                <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
+                              <div 
+                                className="absolute -bottom-1 -right-1 opacity-25 cursor-pointer z-10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowMarketMatchPopup(showMarketMatchPopup === einsatz.id ? null : einsatz.id);
+                                }}
+                              >
+                                <Link2 
+                                  className={`h-5 w-5 ${
+                                    tempMatchedMarkets[einsatz.id] || einsatz.matched_market_id 
+                                      ? 'text-emerald-500' 
+                                      : 'text-gray-400'
+                                  }`} 
+                                  strokeWidth={2.5} 
+                                />
                               </div>
                             </div>
+                            {/* Market matching popup - positioned below the chain icon */}
+                            {showMarketMatchPopup === einsatz.id && (
+                              <div 
+                                className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="space-y-3">
+                                  {/* Current matched market */}
+                                  <div>
+                                    <label className="text-xs font-medium text-gray-700 block mb-1">
+                                      Zugeordneter Markt
+                                    </label>
+                                    <div className="text-sm text-gray-600 italic min-h-[24px]">
+                                      {tempMatchedMarkets[einsatz.id] 
+                                        ? tempMatchedMarkets[einsatz.id]
+                                        : einsatz.matched_market_id 
+                                          ? 'Markt ' + einsatz.matched_market_id.slice(0, 8)
+                                          : 'Kein Markt zugeordnet'}
+                                    </div>
+                                  </div>
+
+                                  {/* Search bar */}
+                                  <div>
+                                    <input
+                                      type="text"
+                                      placeholder="Markt suchen..."
+                                      value={marketMatchSearch}
+                                      onChange={(e) => setMarketMatchSearch(e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none"
+                                    />
+                                  </div>
+
+                                  {/* Market dropdown */}
+                                  <div className="max-h-48 overflow-y-auto border border-gray-200 rounded">
+                                    {['SPAR Mariahilfer Straße', 'BILLA Stephansplatz', 'HOFER Favoriten', 'Lidl Wien Mitte', 'PENNY Brigittenau'].map((market) => (
+                                      <div
+                                        key={market}
+                                        onClick={() => {
+                                          setTempMatchedMarkets(prev => ({
+                                            ...prev,
+                                            [einsatz.id]: market
+                                          }));
+                                          setShowMarketMatchPopup(null);
+                                          setMarketMatchSearch('');
+                                        }}
+                                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                      >
+                                        {market}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                           })
