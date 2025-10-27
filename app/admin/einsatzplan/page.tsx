@@ -3064,7 +3064,7 @@ Import EP
                                 <div className="space-y-3">
                                   {/* Current matched market */}
                                   <div>
-                                    <label className="text-xs font-medium text-gray-700 block mb-1">
+                                    <label className="text-xs font-medium text-emerald-600 block mb-1">
                                       Zugeordneter Markt
                                     </label>
                                     <div className="text-sm text-gray-600 italic min-h-[24px]">
@@ -3088,7 +3088,7 @@ Import EP
                                   </div>
 
                                   {/* Market dropdown */}
-                                  <div className="max-h-48 overflow-y-auto border border-gray-200 rounded">
+                                  <div className="max-h-48 overflow-y-auto no-scrollbar border border-gray-200 rounded">
                                     {['SPAR Mariahilfer Straße', 'BILLA Stephansplatz', 'HOFER Favoriten', 'Lidl Wien Mitte', 'PENNY Brigittenau'].map((market) => (
                                       <div
                                         key={market}
