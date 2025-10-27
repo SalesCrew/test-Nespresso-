@@ -2933,9 +2933,9 @@ Import EP
                                   >
                                     {einsatz.address}
                                   </button>
-                                  {/* Match indicator in bottom-left of this column */}
-                                  <div className="absolute -bottom-1 -left-1 opacity-40 pointer-events-none">
-                                    <Link2 className={`h-3 w-3 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                  {/* Match indicator in bottom-right of this column */}
+                                  <div className="absolute -bottom-1 -right-1 opacity-40 pointer-events-none">
+                                    <Link2 className={`h-4.5 w-4.5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
                                   </div>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
