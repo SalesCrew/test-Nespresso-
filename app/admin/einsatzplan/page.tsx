@@ -3033,8 +3033,8 @@ Import EP
                                   }`}></div>
                                 </div>
                               </div>
-                              {/* Match indicator - absolute bottom-right of row */}
-                              <div className="absolute bottom-2 right-2 pointer-events-none">
+                              {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
+                              <div className="absolute -bottom-1 -right-1 pointer-events-none">
                                 <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
                               </div>
                             </div>
