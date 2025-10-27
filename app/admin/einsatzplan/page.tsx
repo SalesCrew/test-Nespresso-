@@ -5433,7 +5433,14 @@ Import EP
                   {/* Fotos intern (beside notes) */}
                   <div className="space-y-2">
                     <label className="text-xs text-gray-500">Fotos intern</label>
-                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                      {/* Hover arrows */}
+                      <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                        <ChevronLeft className="h-4 w-4 text-gray-600" />
+                      </button>
+                      <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                        <ChevronRight className="h-4 w-4 text-gray-600" />
+                      </button>
                       <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
                         {editingMarket.photoInternal ? (
                           <img src={editingMarket.photoInternal} alt="Intern" className="h-full object-cover rounded-lg" />
@@ -5464,7 +5471,14 @@ Import EP
                     {/* Exterior Photo */}
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Außenansicht</label>
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        {/* Hover arrows */}
+                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronLeft className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronRight className="h-4 w-4 text-gray-600" />
+                        </button>
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
                           {editingMarket.photoExterior ? (
                             <img src={editingMarket.photoExterior} alt="Exterior" className="h-full object-cover rounded-lg" />
@@ -5488,7 +5502,14 @@ Import EP
                     {/* Interior Photo */}
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Innenbereich</label>
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        {/* Hover arrows */}
+                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronLeft className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronRight className="h-4 w-4 text-gray-600" />
+                        </button>
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
                           {editingMarket.photoInterior ? (
                             <img src={editingMarket.photoInterior} alt="Interior" className="h-full object-cover rounded-lg" />
@@ -5512,7 +5533,14 @@ Import EP
                     {/* Products Photo */}
                     <div className="space-y-2">
                       <label className="text-xs text-gray-500">Foto Produktplatzierung</label>
-                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 relative group">
+                        {/* Hover arrows */}
+                        <button type="button" aria-label="Vorheriges Foto" className="absolute left-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronLeft className="h-4 w-4 text-gray-600" />
+                        </button>
+                        <button type="button" aria-label="Nächstes Foto" className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
+                          <ChevronRight className="h-4 w-4 text-gray-600" />
+                        </button>
                         <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
                           {editingMarket.photoProducts ? (
                             <img src={editingMarket.photoProducts} alt="Products" className="h-full object-cover rounded-lg" />
