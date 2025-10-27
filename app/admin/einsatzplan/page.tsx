@@ -235,6 +235,21 @@ export default function EinsatzplanPage() {
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
+  // Create market modal state
+  const [showCreateMarketModal, setShowCreateMarketModal] = useState(false);
+  const [newMarket, setNewMarket] = useState<any>({
+    name: '',
+    address: '',
+    plz: '',
+    city: '',
+    cluster: 'wien-noe-bgl',
+    marktleiter: '',
+    marktleiterPhone: '',
+    marktleiterEmail: '',
+    stammPromotorId: '',
+    visits: 0,
+    status: 'active'
+  });
   
   // Create assignment modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -2036,9 +2051,9 @@ Import EP
                           <Dumbbell className="h-4 w-4 text-gray-600" />
                         </button>
                         <button
-                          onClick={() => setShowCreateModal(true)}
+                          onClick={() => setShowCreateMarketModal(true)}
                           className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
-                          title="Neuen Einsatz erstellen"
+                          title="Neuen Markt erstellen"
                         >
                           <Plus className="h-4 w-4 text-gray-600" />
                         </button>
@@ -3637,6 +3652,100 @@ Import EP
       </div>
 
       {/* Promotor Selection Modal */}
+      {showCreateMarketModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-3xl border border-gray-200 shadow-sm bg-white">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Store className="h-5 w-5 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Neuen Markt erstellen</h3>
+              </div>
+              <button onClick={() => setShowCreateMarketModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
+
+            <CardContent className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-xs text-gray-500">Marktname</label>
+                  <input type="text" value={newMarket.name} onChange={(e) => setNewMarket({ ...newMarket, name: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-gray-500">Adresse</label>
+                  <input type="text" value={newMarket.address} onChange={(e) => setNewMarket({ ...newMarket, address: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">PLZ</label>
+                  <input type="text" value={newMarket.plz} onChange={(e) => setNewMarket({ ...newMarket, plz: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Stadt</label>
+                  <input type="text" value={newMarket.city} onChange={(e) => setNewMarket({ ...newMarket, city: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Cluster</label>
+                  <Select value={newMarket.cluster} onValueChange={(val) => setNewMarket({ ...newMarket, cluster: val })}>
+                    <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-0"><SelectValue placeholder="Cluster" /></SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200">
+                      <SelectItem value="wien-noe-bgl">W/NÖ/BGL</SelectItem>
+                      <SelectItem value="steiermark">ST</SelectItem>
+                      <SelectItem value="salzburg">S</SelectItem>
+                      <SelectItem value="oberoesterreich">OÖ</SelectItem>
+                      <SelectItem value="tirol">T</SelectItem>
+                      <SelectItem value="vorarlberg">V</SelectItem>
+                      <SelectItem value="kaernten">K</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Stammmarkt von</label>
+                  <Select value={newMarket.stammPromotorId} onValueChange={(val) => setNewMarket({ ...newMarket, stammPromotorId: val })}>
+                    <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-0"><SelectValue placeholder="Promotor wählen" /></SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200">
+                      {tempPromotors.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Marktleiter</label>
+                  <input type="text" value={newMarket.marktleiter} onChange={(e) => setNewMarket({ ...newMarket, marktleiter: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Telefon</label>
+                  <input type="text" value={newMarket.marktleiterPhone} onChange={(e) => setNewMarket({ ...newMarket, marktleiterPhone: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-gray-500">E-Mail</label>
+                  <input type="email" value={newMarket.marktleiterEmail} onChange={(e) => setNewMarket({ ...newMarket, marktleiterEmail: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0" />
+                </div>
+              </div>
+            </CardContent>
+
+            <div className="flex items-center justify-end p-4 border-t border-gray-200 bg-gray-50">
+              <Button variant="ghost" onClick={() => setShowCreateMarketModal(false)}>Abbrechen</Button>
+              <button
+                onClick={() => {
+                  const id = String(Date.now());
+                  setMarketsData((prev) => [
+                    ...prev,
+                    { id, ...newMarket }
+                  ]);
+                  setShowCreateMarketModal(false);
+                }}
+                className="ml-3 px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                style={{ background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85 }}
+              >
+                Speichern
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
       {showPromotorSelection && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card 
