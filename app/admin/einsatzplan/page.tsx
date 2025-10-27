@@ -233,6 +233,7 @@ export default function EinsatzplanPage() {
   const [editingMarket, setEditingMarket] = useState<any>(null);
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
+  const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
   
   // Create assignment modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -292,6 +293,49 @@ export default function EinsatzplanPage() {
           const newState = { ...prev };
           delete newState[assignmentId];
           return newState;
+        });
+      }, 2000);
+    }
+  };
+
+  // Handle photo delete with safety wobble (2s confirm)
+  const handlePhotoDelete = (kind: 'internal' | 'exterior' | 'interior' | 'products') => {
+    if (pendingPhotoDelete[kind]) {
+      setEditingMarket((prev: any) => {
+        if (!prev) return prev;
+        const updated: any = { ...prev };
+        switch (kind) {
+          case 'internal':
+            updated.photoInternal = null;
+            updated.photoInternalComment = '';
+            break;
+          case 'exterior':
+            updated.photoExterior = null;
+            updated.photoExteriorComment = '';
+            break;
+          case 'interior':
+            updated.photoInterior = null;
+            updated.photoInteriorComment = '';
+            break;
+          case 'products':
+            updated.photoProducts = null;
+            updated.photoProductsComment = '';
+            break;
+        }
+        return updated;
+      });
+      setPendingPhotoDelete((prev) => {
+        const next = { ...prev };
+        delete next[kind];
+        return next;
+      });
+    } else {
+      setPendingPhotoDelete((prev) => ({ ...prev, [kind]: true }));
+      setTimeout(() => {
+        setPendingPhotoDelete((prev) => {
+          const next = { ...prev };
+          delete next[kind];
+          return next;
         });
       }, 2000);
     }
@@ -5440,8 +5484,8 @@ Import EP
                         <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                           <Plus className="h-4 w-4 text-gray-600" />
                         </button>
-                        <button type="button" aria-label="Foto löschen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                          <Trash2 className="h-4 w-4 text-gray-600" />
+                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('internal')} className={`bg-white/90 border ${pendingPhotoDelete['internal'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['internal'] ? 'text-red-600' : 'text-red-500'}`} />
                         </button>
                       </div>
                       {/* Hover arrows */}
@@ -5487,8 +5531,8 @@ Import EP
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-gray-600" />
                           </button>
-                          <button type="button" aria-label="Foto löschen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Trash2 className="h-4 w-4 text-gray-600" />
+                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('exterior')} className={`bg-white/90 border ${pendingPhotoDelete['exterior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['exterior'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
                         {/* Hover arrows */}
@@ -5527,8 +5571,8 @@ Import EP
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-gray-600" />
                           </button>
-                          <button type="button" aria-label="Foto löschen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Trash2 className="h-4 w-4 text-gray-600" />
+                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('interior')} className={`bg-white/90 border ${pendingPhotoDelete['interior'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['interior'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
                         {/* Hover arrows */}
@@ -5567,8 +5611,8 @@ Import EP
                           <button type="button" aria-label="Foto hinzufügen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
                             <Plus className="h-4 w-4 text-gray-600" />
                           </button>
-                          <button type="button" aria-label="Foto löschen" className="bg-white/90 border border-gray-200 rounded-full shadow p-1 hover:bg-white">
-                            <Trash2 className="h-4 w-4 text-gray-600" />
+                        <button type="button" aria-label="Foto löschen" onClick={() => handlePhotoDelete('products')} className={`bg-white/90 border ${pendingPhotoDelete['products'] ? 'border-red-300 wobble' : 'border-gray-200'} rounded-full shadow p-1 hover:bg-white`}>
+                          <Trash2 className={`h-4 w-4 ${pendingPhotoDelete['products'] ? 'text-red-600' : 'text-red-500'}`} />
                           </button>
                         </div>
                         {/* Hover arrows */}
