@@ -3049,7 +3049,7 @@ Import EP
                                   className={`h-5 w-5 ${
                                     tempMatchedMarkets[einsatz.id] || einsatz.matched_market_id 
                                       ? 'text-emerald-500' 
-                                      : 'text-gray-400'
+                                      : 'text-red-500'
                                   }`} 
                                   strokeWidth={2.5} 
                                 />
