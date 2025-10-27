@@ -2920,7 +2920,11 @@ Import EP
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between relative">
+                              {/* Top-right chain icon (match indicator) */}
+                              <div className="absolute right-2 top-2 opacity-50">
+                                <Link2 className={`h-4 w-4 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                              </div>
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
@@ -3008,7 +3012,7 @@ Import EP
                                     </div>
                                   </div>
                                 )}
-                                <div className="text-xs text-center flex items-center justify-end space-x-2">
+                                <div className="text-xs text-center flex items-center justify-end space-x-2 relative">
                                   <span className={`font-medium ${
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'text-green-500' :
                                     einsatz.status === 'Buddy Tag' ? 'text-purple-500' :
@@ -3031,6 +3035,10 @@ Import EP
                                     einsatz.status === 'Markierte' ? 'bg-purple-400' :
                                     'bg-gray-400'
                                   }`}></div>
+                                  {/* Bottom-right chain icon (match indicator) */}
+                                  <div className="absolute -bottom-1 -right-1 opacity-40">
+                                    <Link2 className={`h-3.5 w-3.5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -3789,7 +3797,7 @@ Import EP
                               : 'bg-white opacity-60'
                           }`}
                         >
-                          <div className="grid grid-cols-7 gap-4 items-center relative">
+                          <div className="grid grid-cols-7 gap-4 items-center">
                             {/* Name & Address */}
                             <div className="min-w-0">
                               <h4 className="text-sm font-medium text-gray-900 truncate">{market.name}</h4>
@@ -3840,16 +3848,6 @@ Import EP
                               </span>
                               <div className={`w-2 h-2 rounded-full ${market.status === 'active' ? 'bg-green-400' : 'bg-gray-300'}`}></div>
                             </div>
-                            {/* Match indicator - does not shift layout */}
-                            {Boolean(market.matched_market_id) ? (
-                              <div title="Markt verknüpft" className="absolute top-2 right-2 opacity-60">
-                                <Link2 className="w-4 h-4 text-emerald-600" />
-                              </div>
-                            ) : (
-                              <div title="Kein Match" className="absolute top-2 right-2 opacity-40">
-                                <Link2 className="w-4 h-4 text-gray-400" />
-                              </div>
-                            )}
                           </div>
                         </div>
                       );
