@@ -224,6 +224,9 @@ export default function EinsatzplanPage() {
   const [photoInteriorIndex, setPhotoInteriorIndex] = useState(0);
   const [photoProductsIndex, setPhotoProductsIndex] = useState(0);
   // Create market modal state for Märkte view
+  // Photo preview overlay state
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  // Create market modal state for Märkte view
   const [showCreateMarketModal, setShowCreateMarketModal] = useState(false);
   const [newMarket, setNewMarket] = useState<any>({
     name: '',
@@ -5882,9 +5885,14 @@ Import EP
                           </button>
                         </>
                       )}
-                      <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                      <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2 overflow-hidden">
                         {(editingMarket.photosInternal?.length || 0) > 0 ? (
-                          <img src={editingMarket.photosInternal[photoInternalIndex]?.url} alt="Intern" className="h-full object-cover rounded-lg" />
+                          <img
+                            src={editingMarket.photosInternal[photoInternalIndex]?.url}
+                            alt="Intern"
+                            className="w-full h-full object-cover cursor-zoom-in"
+                            onClick={() => setPhotoPreviewUrl(editingMarket.photosInternal[photoInternalIndex]?.url || null)}
+                          />
                         ) : (
                           <div className="text-center">
                             <div className="text-gray-400 text-xs">Kein Foto</div>
@@ -5950,9 +5958,14 @@ Import EP
                             </button>
                           </>
                         )}
-                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2 overflow-hidden">
                           {(editingMarket.photosExterior?.length || 0) > 0 ? (
-                            <img src={editingMarket.photosExterior[photoExteriorIndex]?.url} alt="Exterior" className="h-full object-cover rounded-lg" />
+                            <img
+                              src={editingMarket.photosExterior[photoExteriorIndex]?.url}
+                              alt="Exterior"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() => setPhotoPreviewUrl(editingMarket.photosExterior[photoExteriorIndex]?.url || null)}
+                            />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
@@ -6011,9 +6024,14 @@ Import EP
                             </button>
                           </>
                         )}
-                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2 overflow-hidden">
                           {(editingMarket.photosInterior?.length || 0) > 0 ? (
-                            <img src={editingMarket.photosInterior[photoInteriorIndex]?.url} alt="Interior" className="h-full object-cover rounded-lg" />
+                            <img
+                              src={editingMarket.photosInterior[photoInteriorIndex]?.url}
+                              alt="Interior"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() => setPhotoPreviewUrl(editingMarket.photosInterior[photoInteriorIndex]?.url || null)}
+                            />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
@@ -6072,9 +6090,14 @@ Import EP
                             </button>
                           </>
                         )}
-                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2">
+                        <div className="flex items-center justify-center h-32 bg-gray-100 rounded-lg mb-2 overflow-hidden">
                           {(editingMarket.photosProducts?.length || 0) > 0 ? (
-                            <img src={editingMarket.photosProducts[photoProductsIndex]?.url} alt="Products" className="h-full object-cover rounded-lg" />
+                            <img
+                              src={editingMarket.photosProducts[photoProductsIndex]?.url}
+                              alt="Products"
+                              className="w-full h-full object-cover cursor-zoom-in"
+                              onClick={() => setPhotoPreviewUrl(editingMarket.photosProducts[photoProductsIndex]?.url || null)}
+                            />
                           ) : (
                             <div className="text-center">
                               <div className="text-gray-400 text-xs">Kein Foto</div>
@@ -6225,6 +6248,11 @@ Import EP
       )}
 
       {/* Eddie KI Assistant */}
+  {photoPreviewUrl && (
+    <div className="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4" onClick={() => setPhotoPreviewUrl(null)}>
+      <img src={photoPreviewUrl} alt="Vorschau" className="max-w-full max-h-full rounded-lg shadow-2xl" />
+    </div>
+  )}
       <AdminEddieAssistant />
     </div>
   );
