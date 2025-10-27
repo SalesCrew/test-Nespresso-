@@ -1979,6 +1979,16 @@ export default function EinsatzplanPage() {
 Import EP
                 </button>
               )}
+
+              {activeView === 'maerkte' && (
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="px-4 py-2 text-sm text-white border border-gray-200 rounded-lg transition-colors"
+                  style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
+                >
+                  Import POS
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -5396,7 +5406,7 @@ Import EP
                           value={editingMarket.cluster}
                           onValueChange={(val) => setEditingMarket({ ...editingMarket, cluster: val })}
                         >
-                          <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                          <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-gray-200">
                             <SelectValue placeholder="Cluster" />
                           </SelectTrigger>
                           <SelectContent className="bg-white border border-gray-200">
