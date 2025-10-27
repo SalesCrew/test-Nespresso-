@@ -3513,7 +3513,7 @@ Import EP
                             
                             {/* Visit Count */}
                             <div className="text-center">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${visitBadgeColor}`}>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current ${visitBadgeColor}`}>
                                 {market.visits}×
                               </span>
                             </div>
