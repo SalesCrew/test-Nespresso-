@@ -2921,8 +2921,8 @@ Import EP
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
                             {/* Match indicator - absolute bottom-right of entire card */}
-                            <div className="absolute bottom-2 right-2 opacity-40 pointer-events-none z-10">
-                              <Link2 className={`h-[18px] w-[18px] ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                            <div className="absolute bottom-3 right-3 pointer-events-none z-10">
+                              <Link2 className={`h-5 w-5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} strokeWidth={2.5} />
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
