@@ -3089,7 +3089,33 @@ Import EP
 
                                   {/* Market dropdown */}
                                   <div className="max-h-48 overflow-y-auto no-scrollbar border border-gray-200 rounded">
-                                    {['SPAR Mariahilfer Straße', 'BILLA Stephansplatz', 'HOFER Favoriten', 'Lidl Wien Mitte', 'PENNY Brigittenau'].map((market) => (
+                                    {[
+                                      'SPAR Mariahilfer Straße',
+                                      'BILLA Stephansplatz',
+                                      'HOFER Favoriten',
+                                      'Lidl Wien Mitte',
+                                      'PENNY Brigittenau',
+                                      'SPAR Hietzing',
+                                      'BILLA Plus Westbahnhof',
+                                      'HOFER Donaustadt',
+                                      'Lidl Floridsdorf',
+                                      'PENNY Simmering',
+                                      'SPAR Hernals',
+                                      'BILLA Landstraße',
+                                      'HOFER Meidling',
+                                      'Lidl Leopoldau',
+                                      'PENNY Ottakring',
+                                      'SPAR Liesing',
+                                      'BILLA Favoritenstraße',
+                                      'HOFER Stadlau',
+                                      'Lidl Kagran',
+                                      'PENNY Penzing',
+                                      'SPAR Neubau',
+                                      'BILLA Neubaugasse',
+                                      'HOFER Brigittenau',
+                                      'Lidl Praterstern',
+                                      'PENNY Margareten'
+                                    ].map((market) => (
                                       <div
                                         key={market}
                                         onClick={() => {
