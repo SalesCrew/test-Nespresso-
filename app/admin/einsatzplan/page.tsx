@@ -3567,7 +3567,9 @@ Import EP
                             
                             {/* Cluster */}
                             <div className="text-center">
-                              <span className="text-xs text-gray-600">{market.cluster}</span>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getRegionBorder(market.cluster)} ${getRegionGradient(market.cluster)} text-gray-700`}>
+                                {market.cluster}
+                              </span>
                             </div>
                             
                             {/* Marktleiter */}
