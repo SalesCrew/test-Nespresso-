@@ -219,6 +219,13 @@ export default function EinsatzplanPage() {
     { id: '9', name: 'MediaMarkt Bregenz', address: 'Bahnhofstraße 18', plz: '6900', city: 'Bregenz', cluster: 'vorarlberg', marktleiter: 'Martin Fischer', marktleiterPhone: '+43 650 9012345', marktleiterEmail: 'm.fischer@mediamarkt.at', visits: 7, lastVisit: '2025-10-08', nextVisit: '2025-11-10', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
     { id: '10', name: 'MediaMarkt Wien Innenstadt', address: 'Graben 14', plz: '1010', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Julia Schneider', marktleiterPhone: '+43 699 0123456', marktleiterEmail: 'j.schneider@mediamarkt.at', visits: 11, lastVisit: '2025-10-22', nextVisit: '2025-11-06', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: 'Früh kommen, Markt öffnet 07:00 Uhr' }
   ]);
+  // Temporary promotors list for dropdowns
+  const [tempPromotors] = useState<Array<{ id: string; name: string }>>([
+    { id: 'p1', name: 'Kevin Bauer' },
+    { id: 'p2', name: 'Sarah Schmidt' },
+    { id: 'p3', name: 'Jonas Weber' },
+    { id: 'p4', name: 'Lena Müller' },
+  ]);
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
   const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
   const [editingMarket, setEditingMarket] = useState<any>(null);
@@ -5266,14 +5273,38 @@ Import EP
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Markt Informationen</h4>
                     <div className="space-y-2">
-                      <div>
-                        <label className="text-xs text-gray-500">Marktname</label>
-                        <input
-                          type="text"
-                          value={editingMarket.name}
-                          onChange={(e) => setEditingMarket({...editingMarket, name: e.target.value})}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500">Marktname</label>
+                          <input
+                            type="text"
+                            value={editingMarket.name}
+                            onChange={(e) => setEditingMarket({...editingMarket, name: e.target.value})}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500">Stammmarkt von</label>
+                          <Select
+                            value={editingMarket.stammPromotorId || ''}
+                            onValueChange={(val) => setEditingMarket({ ...editingMarket, stammPromotorId: val })}
+                          >
+                            <SelectTrigger className="w-full h-9 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                              <SelectValue placeholder="Promotor wählen" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border border-gray-200">
+                              {tempPromotors.map((p) => (
+                                <SelectItem
+                                  key={p.id}
+                                  value={p.id}
+                                  className="focus:bg-transparent data-[highlighted]:bg-gray-100"
+                                >
+                                  {p.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div>
                         <label className="text-xs text-gray-500">Adresse</label>
