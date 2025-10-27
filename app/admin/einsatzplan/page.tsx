@@ -2920,9 +2920,13 @@ Import EP
                                 : 'border-gray-100'
                             } ${getStatusBackgroundColor(einsatz.status)}`}
                           >
+                            {/* Match indicator - absolute bottom-right of entire card */}
+                            <div className="absolute bottom-2 right-2 opacity-40 pointer-events-none z-10">
+                              <Link2 className={`h-[18px] w-[18px] ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
+                            </div>
                             <div className="flex items-center justify-between">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
-                                <div className="min-w-0 relative">
+                                <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
                                   <button
                                     onClick={(e) => {
@@ -2933,10 +2937,6 @@ Import EP
                                   >
                                     {einsatz.address}
                                   </button>
-                                  {/* Match indicator in bottom-right of this column */}
-                                  <div className="absolute -bottom-1 -right-1 opacity-40 pointer-events-none">
-                                    <Link2 className={`h-4.5 w-4.5 ${einsatz.matched_market_id ? 'text-emerald-500' : 'text-gray-400'}`} />
-                                  </div>
                                 </div>
                                 <div className="text-xs text-gray-600 text-center">
                                   <span>{einsatz.plz} {einsatz.city}</span>
