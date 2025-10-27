@@ -3792,7 +3792,14 @@ Import EP
                             {/* Name & Address */}
                             <div className="min-w-0">
                               <h4 className="text-sm font-medium text-gray-900 truncate">{market.name}</h4>
-                              <p className="text-xs text-gray-500 truncate">{market.address}</p>
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${market.address}, ${market.plz} ${market.city}`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-gray-500 truncate hover:text-gray-600"
+                              >
+                                {`${market.address}, ${market.plz} ${market.city}`}
+                              </a>
                             </div>
                             
                             {/* PLZ & City */}
