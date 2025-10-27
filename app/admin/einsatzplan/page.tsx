@@ -206,6 +206,7 @@ export default function EinsatzplanPage() {
   const [assignmentsLoading, setAssignmentsLoading] = useState(true); // Start loading immediately
   
   // Markets view states
+  // Temporary mock markets data (MediaMarkt across Austria). Replace with backend later.
   const [marketsData, setMarketsData] = useState<any[]>([
     { id: '1', name: 'MediaMarkt Wien Mitte', address: 'Landstraßer Hauptstraße 1b', plz: '1030', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Thomas Huber', marktleiterPhone: '+43 660 1234567', marktleiterEmail: 'thomas.huber@mediamarkt.at', visits: 12, lastVisit: '2025-10-15', nextVisit: '2025-11-05', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: 'Sehr gute Zusammenarbeit, großer Markt', promotorNotes: 'Bitte Nespresso Bereich links neben Eingang beachten' },
     { id: '2', name: 'MediaMarkt Wien Mariahilf', address: 'Mariahilfer Straße 45', plz: '1070', city: 'Wien', cluster: 'wien-noe-bgl', marktleiter: 'Sarah Schmidt', marktleiterPhone: '+43 664 2345678', marktleiterEmail: 's.schmidt@mediamarkt.at', visits: 8, lastVisit: '2025-10-10', nextVisit: '2025-10-28', status: 'active', photoExterior: null, photoInterior: null, photoProducts: null, photoExteriorComment: '', photoInteriorComment: '', photoProductsComment: '', internalNotes: '', promotorNotes: '' },
