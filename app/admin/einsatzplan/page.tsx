@@ -305,6 +305,7 @@ export default function EinsatzplanPage() {
   // Load markets data
   const loadMarkets = async () => {
     setMarketsLoading(true);
+    const startTime = Date.now();
     try {
       const response = await fetch('/api/admin/markets');
       if (!response.ok) {
@@ -316,7 +317,11 @@ export default function EinsatzplanPage() {
       console.error('Error loading markets:', error);
       alert('Fehler beim Laden der Märkte');
     } finally {
-      setMarketsLoading(false);
+      // Ensure minimum loading time so skeletons are visible (parity with promotors dashboard)
+      const elapsedTime = Date.now() - startTime;
+      const minLoadingTime = 600; // 0.6s
+      const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+      setTimeout(() => setMarketsLoading(false), remainingTime);
     }
   };
 
@@ -3682,7 +3687,53 @@ Import EP
 
                   {/* Markets List */}
                   <div className="flex-1 overflow-y-auto space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {marketsData.filter(market => {
+                    {marketsLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(6)].map((_, i) => (
+                          <div key={`market-skeleton-${i}`} className="p-4 rounded-lg border border-gray-100 bg-white">
+                            <div className="grid grid-cols-7 gap-4 items-center">
+                              {/* Name & Address skeleton */}
+                              <div className="min-w-0">
+                                <div className="h-4 bg-gray-200 rounded w-3/5 mb-2 animate-skeleton-fade"></div>
+                                <div className="h-3 bg-gray-100 rounded w-4/5 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* PLZ & City skeleton */}
+                              <div className="text-center">
+                                <div className="mx-auto h-4 bg-gray-200 rounded w-20 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* Cluster pill skeleton */}
+                              <div className="text-center">
+                                <div className="mx-auto h-5 w-24 rounded-full border border-gray-200 bg-gray-100 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* Marktleiter skeleton */}
+                              <div className="text-center">
+                                <div className="mx-auto h-4 bg-gray-200 rounded w-24 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* Besuche pill skeleton */}
+                              <div className="text-center">
+                                <div className="mx-auto h-5 w-14 rounded-full border border-gray-200 bg-gray-100 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* Stammmarkt von skeleton */}
+                              <div className="text-center">
+                                <div className="mx-auto h-4 bg-gray-200 rounded w-28 animate-skeleton-fade"></div>
+                              </div>
+
+                              {/* Status text + dot skeleton */}
+                              <div className="text-right flex items-center justify-end space-x-2">
+                                <div className="h-4 bg-gray-200 rounded w-10 animate-skeleton-fade"></div>
+                                <div className="w-2 h-2 rounded-full bg-gray-200 animate-skeleton-fade"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                    marketsData.filter(market => {
                       // Region filter using cluster mapping
                       const clusterMatch = regionFilter === "ALLE" || 
                         (regionFilter === "W/NÖ/BGL" && market.cluster === "wien-noe-bgl") ||
@@ -3780,7 +3831,8 @@ Import EP
                           </div>
                         </div>
                       );
-                    })}
+                    })
+                    )}
                   </div>
                 </CardContent>
               </Card>
