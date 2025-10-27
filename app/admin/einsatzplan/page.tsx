@@ -5404,7 +5404,7 @@ Import EP
                 </div>
 
                 {/* Right Column */}
-                <div className="space-y-6">
+                <div className="space-y-6 flex flex-col h-full">
                   {/* Photos Section */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Fotos</h4>
@@ -5483,7 +5483,7 @@ Import EP
                   </div>
 
                   {/* Notes Section */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 flex flex-col flex-1">
                     <div className="flex items-center border-b border-gray-200 pb-2">
                       <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
                         <button
@@ -5516,9 +5516,9 @@ Import EP
                       })}
                       placeholder={marketNotesMode === 'internal' ? 'Interne Notizen...' : 'Notizen für Promotoren...'}
                       rows={6}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none flex-1 min-h-0"
                     />
-                    <div className="text-xs text-gray-400 text-right">
+                    <div className="text-xs text-gray-400 text-right mt-2">
                       {(marketNotesMode === 'internal' ? editingMarket.internalNotes : editingMarket.promotorNotes).length} Zeichen
                     </div>
                   </div>
