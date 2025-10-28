@@ -2123,6 +2123,27 @@ export default function EinsatzplanPage() {
       console.log('🟢 Mapped data:', mapped.length, 'items');
       console.log('🟢 First mapped item:', mapped[0]);
       
+      // Overlay today's tracking status for finished assignments to show proper coloring (e.g., "beendet")
+      let mappedWithToday = mapped;
+      try {
+        const todayRes = await fetch('/api/assignments/today', { cache: 'no-store' });
+        if (todayRes.ok) {
+          const todayJson = await todayRes.json().catch(() => ({}));
+          const todayAssignments: Array<{ assignment_id: string; display_status?: string }> = Array.isArray(todayJson.assignments) ? todayJson.assignments : [];
+          if (todayAssignments.length > 0) {
+            const todayMap = new Map(todayAssignments.map(a => [a.assignment_id, (a.display_status || '').toLowerCase()]));
+            mappedWithToday = mapped.map(item => {
+              const ds = todayMap.get(item.id);
+              // Only override to Beendet; leave other statuses as-is to avoid side effects
+              if (ds === 'beendet') {
+                return { ...item, status: 'Beendet' };
+              }
+              return item;
+            });
+          }
+        }
+      } catch {}
+      
 
       
       // Check for duplicate IDs before setting state
@@ -2140,7 +2161,7 @@ export default function EinsatzplanPage() {
       const sept2Assignments = mapped.filter(m => m.date.includes('2025-09-02'));
       console.log('🟢 Sept 2 assignments in fetched data:', sept2Assignments.length, sept2Assignments.map(a => ({ id: a.id, date: a.date, promotor: a.promotor })));
       
-      setEinsatzplanData(mapped);
+      setEinsatzplanData(mappedWithToday);
       console.log('🟢 State updated with', mapped.length, 'assignments');
       
       // Extract unique markets from assignments (using location_text)
