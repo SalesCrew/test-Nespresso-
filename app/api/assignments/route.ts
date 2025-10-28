@@ -28,7 +28,24 @@ export async function GET(req: Request) {
     
     const { data, error } = await q
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ assignments: data ?? [] })
+
+    // Ensure matched_market_id is present even if the view is out of date.
+    const rows = data ?? []
+    if (rows.length === 0) return NextResponse.json({ assignments: [] })
+
+    const ids = rows.map((r: any) => r.id).filter(Boolean)
+    const { data: mmRows } = await svc
+      .from('assignments')
+      .select('id, matched_market_id')
+      .in('id', ids)
+    const mmMap = new Map((mmRows || []).map((r: any) => [r.id, r.matched_market_id]))
+
+    const enriched = rows.map((r: any) => ({
+      ...r,
+      matched_market_id: r.matched_market_id !== undefined ? r.matched_market_id : (mmMap.get(r.id) ?? null),
+    }))
+
+    return NextResponse.json({ assignments: enriched })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
   }

@@ -9,10 +9,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     // Load assignment
     const { data: assignment, error: aErr } = await svc
       .from('assignments')
-      .select('id, location_text, postal_code, city')
+      .select('id, location_text, postal_code, city, matched_market_id')
       .eq('id', params.id)
       .single()
     if (aErr || !assignment) return NextResponse.json({ error: aErr?.message || 'Assignment not found' }, { status: 404 })
+
+    // If already matched, return early without recomputing
+    if (assignment.matched_market_id) {
+      return NextResponse.json({ matched_market_id: assignment.matched_market_id, confidence: 100, market: null })
+    }
 
     // 1) Try PLZ prefilter first
     const assignmentPlz = String(assignment.postal_code || '').trim()
