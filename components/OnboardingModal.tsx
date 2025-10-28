@@ -594,7 +594,14 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                               type="button"
                               onClick={() => {
                                 setSelectedYear(year);
-                                setCalendarStep('month');
+                                // If day & month already chosen, finalize; else go back to day selection
+                                if (selectedDay && selectedMonth) {
+                                  const formatted = `${selectedDay.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${year}`;
+                                  updateFormData("birthDate", formatted);
+                                  setShowBirthDatePicker(false);
+                                } else {
+                                  setCalendarStep('day');
+                                }
                               }}
                               className="px-3 py-2 rounded-lg text-sm bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
                             >
@@ -610,13 +617,10 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                       <div>
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedYear(null);
-                            setCalendarStep('year');
-                          }}
+                          onClick={() => setCalendarStep('day')}
                           className="mb-3 text-xs text-gray-500 hover:text-gray-700"
                         >
-                          ← Zurück zu Jahr
+                          ← Zurück zu Tag
                         </button>
                         <div className="grid grid-cols-4 gap-2">
                           {['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'].map((month, idx) => (
@@ -625,7 +629,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                               type="button"
                               onClick={() => {
                                 setSelectedMonth(idx + 1);
-                                setCalendarStep('day');
+                                // After month choose year next
+                                setCalendarStep('year');
                               }}
                               className="px-3 py-2 rounded-lg text-sm bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
                             >
@@ -637,7 +642,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                     )}
                     
                     {/* Day selector (first) */}
-                    {calendarStep === 'day' && selectedMonth && selectedYear && (
+                    {calendarStep === 'day' && (
                       <div>
                         <button
                           type="button"
@@ -650,16 +655,20 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                           ← Zurück zu Monat
                         </button>
                         <div className="grid grid-cols-7 gap-1">
-                          {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => i + 1).map(day => (
+                          {Array.from({ length: (selectedYear && selectedMonth) ? new Date(selectedYear, selectedMonth, 0).getDate() : 31 }, (_, i) => i + 1).map(day => (
                             <button
                               key={day}
                               type="button"
                               onClick={() => {
                                 setSelectedDay(day);
-                                const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
-                                updateFormData("birthDate", formatted);
-                                setShowBirthDatePicker(false);
-                                setCalendarStep('year');
+                                // If month and year already selected finalize, otherwise go to month next
+                                if (selectedMonth && selectedYear) {
+                                  const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
+                                  updateFormData("birthDate", formatted);
+                                  setShowBirthDatePicker(false);
+                                } else {
+                                  setCalendarStep('month');
+                                }
                               }}
                               className="px-2 py-2 rounded-lg text-xs bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all"
                             >
