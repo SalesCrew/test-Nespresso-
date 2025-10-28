@@ -11,7 +11,7 @@ import {
   Users, 
   MessageSquare, 
   BarChart3, 
-  Settings,
+  Settings, 
   Calendar,
   Store,
   LayoutGrid,
@@ -3070,13 +3070,13 @@ Import EP
                             className={`relative p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
-                                : 'border-gray-100'
+                                : (einsatz.status === 'Beendet' ? 'border-[#EFB54E]/30' : 'border-gray-100')
                             } ${getStatusBackgroundColor(einsatz.status)} ${flashAssignmentId === einsatz.id ? 'shadow-xl' : ''}`}
-                            style={(flashAssignmentId === einsatz.id || (selectedEinsatz?.id === einsatz.id && aiMode)) 
+                            style={einsatz.status === 'Beendet' ? { background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))' } : ((flashAssignmentId === einsatz.id || (selectedEinsatz?.id === einsatz.id && aiMode)) 
                               ? { boxShadow: flashAssignmentId === einsatz.id 
                                   ? '0 4px 20px rgba(34,197,94,0.35)'
                                   : '0 0 12px rgba(134, 239, 172, 0.5)' }
-                              : undefined}
+                              : undefined)}
                           >
                             <div className="flex items-center justify-between relative">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
