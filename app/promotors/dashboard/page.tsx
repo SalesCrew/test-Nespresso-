@@ -657,11 +657,8 @@ export default function DashboardPage() {
   const totalTodos = sortedTodos.length;
 
   const toggleTodo = async (id: number) => {
-    // Don't allow toggling assignment todos (100000-199999) - managed by tracking system
-    // Don't allow toggling message todos (300000+) - managed by message system
-    // Allow document todos (200000-299999) and regular todos to be toggled
-    if (id >= 100000 && id < 200000) return;
-    if (id >= 300000) return;
+    // Disable manual toggling entirely; completion is driven by app actions only
+    return;
     
     // Find the todo to get its details
     const allCurrentTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...regularTodos];
