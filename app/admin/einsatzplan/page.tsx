@@ -1345,6 +1345,8 @@ export default function EinsatzplanPage() {
       case 'zeitausgleich': return 'bg-yellow-50/40';
       case 'markierte': return 'bg-purple-50/40';
       case 'bestätigt': return 'bg-green-50/40';
+      // Beendet (finished) - soft gold background, aligned with dashboard accent
+      case 'beendet': return 'bg-yellow-50';
       case 'geplant': return 'bg-white';
       default: return 'bg-white';
     }
@@ -1370,6 +1372,7 @@ export default function EinsatzplanPage() {
       case "Notfall": return "from-white to-orange-100/60";
       case "Urlaub": return "from-white to-blue-100/60";
       case "Zeitausgleich": return "from-white to-yellow-100/60";
+      case "Beendet": return "from-white to-yellow-100/60"; // gentle gold tint
       case "Markierte": return "from-white to-purple-100/60";
       default: return "from-white to-white";
     }
@@ -1383,6 +1386,7 @@ export default function EinsatzplanPage() {
       case "Notfall": return "hover:bg-orange-100/50";
       case "Urlaub": return "hover:bg-blue-100/50";
       case "Zeitausgleich": return "hover:bg-yellow-100/50";
+      case "Beendet": return "hover:bg-yellow-100/50";
       case "Markierte": return "hover:bg-purple-100/50";
       default: return "hover:bg-gray-50";
     }
