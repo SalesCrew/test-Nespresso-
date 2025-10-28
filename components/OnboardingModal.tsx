@@ -670,9 +670,9 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                                 setSelectedDay(day);
                                 // If month and year already selected finalize, otherwise go to month next
                                 if (selectedMonth && selectedYear) {
-                                  const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
-                                  updateFormData("birthDate", formatted);
-                                  setShowBirthDatePicker(false);
+                                const formatted = `${day.toString().padStart(2, '0')}.${selectedMonth.toString().padStart(2, '0')}.${selectedYear}`;
+                                updateFormData("birthDate", formatted);
+                                setShowBirthDatePicker(false);
                                 } else {
                                   setCalendarStep('month');
                                 }
