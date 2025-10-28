@@ -3765,16 +3765,7 @@ Import EP
                             <ChevronDown className="h-4 w-4 text-gray-600" />
                           )}
                         </button>
-                        <button
-                          onClick={() => setViewMode(viewMode === 'list' ? 'cards' : 'list')}
-                          className="p-1 rounded hover:bg-gray-100 transition-colors opacity-50"
-                        >
-                          {viewMode === 'list' ? (
-                            <LayoutGrid className="h-4 w-4 text-gray-600" />
-                          ) : (
-                            <LayoutList className="h-4 w-4 text-gray-600" />
-                          )}
-                        </button>
+                        {/* View mode toggle removed per request */}
                       </div>
                     </div>
 
@@ -5497,7 +5488,7 @@ Import EP
                 {/* Location with Market Picker */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Standort *</label>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Standort *</label>
                     <button
                       type="button"
                       title="Markt auswählen"
@@ -5516,13 +5507,13 @@ Import EP
                     </button>
                   </div>
                   <div className="relative">
-                    <input
-                      type="text"
+                  <input
+                    type="text"
                       value={hoveredMarket ? `${hoveredMarket.name}` : newAssignment.location_text}
-                      onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
-                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
-                      placeholder="z.B. Interspar Graz"
-                      required
+                    onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
+                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    placeholder="z.B. Interspar Graz"
+                    required
                       style={hoveredMarket ? { opacity: 0.65 } : undefined}
                     />
                     {showMarketPicker && (
