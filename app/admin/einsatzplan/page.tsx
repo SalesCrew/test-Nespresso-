@@ -1345,8 +1345,8 @@ export default function EinsatzplanPage() {
       case 'zeitausgleich': return 'bg-yellow-50/40';
       case 'markierte': return 'bg-purple-50/40';
       case 'bestätigt': return 'bg-green-50/40';
-      // Beendet (finished) - soft gold background, aligned with dashboard accent
-      case 'beendet': return 'bg-yellow-50';
+      // Beendet (finished) - dashboard gold gradient approximation for row background
+      case 'beendet': return 'bg-[#FFF9E6]';
       case 'geplant': return 'bg-white';
       default: return 'bg-white';
     }
@@ -1372,7 +1372,8 @@ export default function EinsatzplanPage() {
       case "Notfall": return "from-white to-orange-100/60";
       case "Urlaub": return "from-white to-blue-100/60";
       case "Zeitausgleich": return "from-white to-yellow-100/60";
-      case "Beendet": return "from-white to-yellow-100/60"; // gentle gold tint
+      // Beendet: match dashboard gradient stops for text/dot; we only apply a soft row gradient
+      case "Beendet": return "from-[#FFF9E6] to-[#FFF4CC]";
       case "Markierte": return "from-white to-purple-100/60";
       default: return "from-white to-white";
     }
@@ -3167,6 +3168,7 @@ Import EP
                                 )}
                                 <div className="text-xs text-center flex items-center justify-end space-x-2">
                                   <span className={`font-medium ${
+                                    einsatz.status === 'Beendet' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D] bg-clip-text text-transparent' :
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'text-green-500' :
                                     einsatz.status === 'Buddy Tag' ? 'text-purple-500' :
                                     einsatz.status === 'Krankenstand' ? 'text-red-500' :
@@ -3179,6 +3181,7 @@ Import EP
                                     {einsatz.status}
                                   </span>
                                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                    einsatz.status === 'Beendet' ? 'bg-gradient-to-r from-[#EFB54E] via-[#FFED96] via-[#FCD94C] via-[#F9F793] to-[#EFB94D]' :
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'bg-green-400' :
                                     einsatz.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                                     einsatz.status === 'Krankenstand' ? 'bg-red-400' :
