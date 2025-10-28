@@ -187,6 +187,12 @@ export default function EinsatzplanPage() {
   const [auslastungData, setAuslastungData] = useState<any[]>([]);
   const [auslastungLoading, setAuslastungLoading] = useState(false);
   
+  // Market picker for Create Assignment modal
+  const [showMarketPicker, setShowMarketPicker] = useState(false);
+  const marketPickerRef = useRef<HTMLDivElement | null>(null);
+  const [marketPickerSearch, setMarketPickerSearch] = useState('');
+  const [hoveredMarket, setHoveredMarket] = useState<any | null>(null);
+  
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
   const [showPromotorSelection, setShowPromotorSelection] = useState(false);
@@ -5464,17 +5470,95 @@ Import EP
                   />
                 </div>
 
-                {/* Location */}
+                {/* Location with Market Picker */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Standort *</label>
-                  <input
-                    type="text"
-                    value={newAssignment.location_text}
-                    onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
-                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
-                    placeholder="z.B. Interspar Graz"
-                    required
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Standort *</label>
+                    <button
+                      type="button"
+                      title="Markt auswählen"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMarketPicker((v) => !v);
+                        setTimeout(() => {
+                          if (marketPickerRef.current) {
+                            marketPickerRef.current.scrollTop = 0;
+                          }
+                        }, 0);
+                      }}
+                      className="flex items-center gap-1 text-xs px-2 py-1 rounded-md border border-gray-200 hover:bg-gray-50 text-gray-700"
+                    >
+                      <Store className="h-3.5 w-3.5" /> Märkte
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={hoveredMarket ? `${hoveredMarket.name}` : newAssignment.location_text}
+                      onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
+                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                      placeholder="z.B. Interspar Graz"
+                      required
+                      style={hoveredMarket ? { opacity: 0.65 } : undefined}
+                    />
+                    {showMarketPicker && (
+                      <div 
+                        ref={marketPickerRef}
+                        className="absolute right-0 top-11 z-50 w-[420px] bg-white border border-gray-200 rounded-lg shadow-xl p-3 max-h-72 overflow-y-auto custom-scrollbar"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="relative mb-2">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={marketPickerSearch}
+                            onChange={(e) => setMarketPickerSearch(e.target.value)}
+                            placeholder="Markt suchen..."
+                            className="w-full pl-10 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none"
+                          />
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                          {marketsData
+                            .filter((m: any) => {
+                              const q = marketPickerSearch.trim().toLowerCase();
+                              if (!q) return true;
+                              const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase();
+                              return hay.includes(q);
+                            })
+                            .map((m: any) => (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onMouseEnter={() => setHoveredMarket(m)}
+                                onMouseLeave={() => setHoveredMarket(null)}
+                                onClick={() => {
+                                  setNewAssignment(prev => ({
+                                    ...prev,
+                                    location_text: m.name || '',
+                                    postal_code: m.plz || '',
+                                    city: m.city || ''
+                                  }));
+                                  setMarketPickerSearch('');
+                                  setShowMarketPicker(false);
+                                }}
+                                className="w-full text-left py-2 px-2 hover:bg-gray-50 rounded-md transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{m.name}</div>
+                                    <div className="text-xs text-gray-500">{m.address}</div>
+                                  </div>
+                                  <div className="text-xs text-gray-600">{m.plz} {m.city}</div>
+                                </div>
+                              </button>
+                            ))}
+                          {marketsData.length === 0 && (
+                            <div className="text-xs text-gray-500 p-2">Keine Märkte gefunden.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* PLZ and City */}
@@ -5483,21 +5567,23 @@ Import EP
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">PLZ *</label>
                     <input
                       type="text"
-                      value={newAssignment.postal_code}
+                      value={hoveredMarket ? (hoveredMarket.plz || '') : newAssignment.postal_code}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, postal_code: e.target.value }))}
                       className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
                       placeholder="z.B. 8010"
                       required
+                      style={hoveredMarket ? { opacity: 0.65 } : undefined}
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stadt</label>
                     <input
                       type="text"
-                      value={newAssignment.city}
+                      value={hoveredMarket ? (hoveredMarket.city || '') : newAssignment.city}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, city: e.target.value }))}
                       className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
                       placeholder="z.B. Graz"
+                      style={hoveredMarket ? { opacity: 0.65 } : undefined}
                     />
                   </div>
                 </div>
