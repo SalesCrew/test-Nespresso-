@@ -1,4 +1,5 @@
 "use client";
+// noop: non-reactive comment (no functional effect)
 // no-op comment to mark minor update; functional behavior unchanged
 
 import { useState, useEffect, useRef, useMemo } from "react";
