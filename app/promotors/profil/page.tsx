@@ -671,7 +671,7 @@ export default function ProfilPage() {
   const [documents, setDocuments] = useState<Array<{ id: number; name: string; status: 'missing'|'pending'|'approved'; required: boolean }>>([
     { id: 1, name: 'Pass', status: 'missing', required: true },
     { id: 2, name: 'Führerschein', status: 'missing', required: false },
-    { id: 3, name: 'Strafregister Erscheinung', status: 'missing', required: true },
+    { id: 3, name: 'Strafregister Bescheinigung', status: 'missing', required: true },
     { id: 4, name: 'Staatsbürgerschaftsnachweis', status: 'missing', required: false },
     { id: 5, name: 'Arbeitserlaubnis', status: 'missing', required: false },
     { id: 6, name: 'Zusätzliche Dokumente', status: 'missing', required: false },

@@ -734,7 +734,7 @@ Dein Nespresso Team`;
       const res = await fetch(`/api/promotors/${uid}/documents`, { cache: 'no-store' })
       const json = await res.json()
       const rows: Array<{ doc_type: string; status: string; file_path?: string }> = Array.isArray(json.documents) ? json.documents : []
-      const nameFromType = (t: string) => t === 'passport' ? 'Pass' : t === 'fuehrerschein' ? 'Führerschein' : t === 'citizenship' ? 'Staatsbürgerschaftsnachweis' : t === 'arbeitserlaubnis' ? 'Arbeitserlaubnis' : t === 'strafregister' ? 'Strafregister' : 'Zusätzliche Dokumente'
+      const nameFromType = (t: string) => t === 'passport' ? 'Pass' : t === 'fuehrerschein' ? 'Führerschein' : t === 'citizenship' ? 'Staatsbürgerschaftsnachweis' : t === 'arbeitserlaubnis' ? 'Arbeitserlaubnis' : t === 'strafregister' ? 'Strafregister Bescheinigung' : 'Zusätzliche Dokumente'
       const statuses: Record<string, string> = {}
       const files: Record<string, boolean> = {}
       for (const r of rows) {

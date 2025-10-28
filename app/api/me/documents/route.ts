@@ -47,7 +47,7 @@ export async function GET() {
     const documentTypes = [
       { type: 'passport', name: 'Pass', required: true },
       { type: 'fuehrerschein', name: 'Führerschein', required: hasDrivingLicense },
-      { type: 'strafregister', name: 'Strafregister Erscheinung', required: true },
+      { type: 'strafregister', name: 'Strafregister Bescheinigung', required: true },
       { type: 'citizenship', name: 'Staatsbürgerschaftsnachweis', required: false },
       { type: 'arbeitserlaubnis', name: 'Arbeitserlaubnis', required: needsWorkPermit },
       { type: 'additional', name: 'Zusätzliche Dokumente', required: false }
