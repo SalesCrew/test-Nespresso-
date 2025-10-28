@@ -186,6 +186,8 @@ export default function EinsatzplanPage() {
   const auslastungKWDropdownRef = useRef<HTMLDivElement>(null);
   const [auslastungData, setAuslastungData] = useState<any[]>([]);
   const [auslastungLoading, setAuslastungLoading] = useState(false);
+  // New: filter to show only assignments matched to a market
+  const [matchedOnly, setMatchedOnly] = useState<boolean>(false);
   // Flash/highlight a specific assignment in the list (e.g., when jumping from history)
   const [flashAssignmentId, setFlashAssignmentId] = useState<string | null>(null);
 
@@ -636,8 +638,6 @@ export default function EinsatzplanPage() {
       alert(error.message || 'Fehler beim Erstellen des Einsatzes');
     }
   };
-
-  
   // Load distribution history from database
   const loadInvitationHistory = async () => {
     try {
@@ -1284,7 +1284,6 @@ export default function EinsatzplanPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showStatusDropdown]);
-
   // Close Promotor dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1931,9 +1930,6 @@ export default function EinsatzplanPage() {
       });
     }
   };
-
-
-
   const filteredEinsatzplan = useMemo(() => {
     return einsatzplanData.filter(item => {
     // Region filter using PLZ mapping
@@ -2367,53 +2363,68 @@ Import EP
                       
                       {/* PLZ, Status and Date Filter Pills */}
                       <div className="flex items-center space-x-2">
-                        {/* PLZ Filter Pill */}
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowPlzDropdown(!showPlzDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
-                              plzFilter
-                                ? 'text-gray-700 scale-110' 
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {plzFilter || 'PLZ'}
-                          </button>
-                          
-                          {showPlzDropdown && (
-                            <div 
-                              ref={plzDropdownRef}
-                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                        {/* PLZ Filter Pill + Matched Filter + Search */}
+                        <div className="flex items-center space-x-2">
+                          <div className="relative">
+                            <button
+                              onClick={() => setShowPlzDropdown(!showPlzDropdown)}
+                              className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
+                                plzFilter
+                                  ? 'text-gray-700 scale-110' 
+                                  : 'text-gray-500'
+                              }`}
                             >
-                              <div className="p-2">
-                                <button
-                                  onClick={() => {
-                                    setPlzFilter("");
-                                    setShowPlzDropdown(false);
-                                  }}
-                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                  Alle PLZ
-                                </button>
-                                {getPlzOptions().map((plz) => (
+                              {plzFilter || 'PLZ'}
+                            </button>
+                            
+                            {showPlzDropdown && (
+                              <div 
+                                ref={plzDropdownRef}
+                                className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                              >
+                                <div className="p-2">
                                   <button
-                                    key={plz}
                                     onClick={() => {
-                                      setPlzFilter(plz);
+                                      setPlzFilter("");
                                       setShowPlzDropdown(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
-                                      plzFilter === plz
-                                        ? 'bg-gray-100 text-gray-700'
-                                        : 'hover:bg-gray-50 text-gray-600'
-                                    }`}
+                                    className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
                                   >
-                                    {plz}
+                                    Alle PLZ
                                   </button>
-                                ))}
+                                  {[...new Set(marketsData.map(m => m.plz))].sort().map((plz) => (
+                                    <button
+                                      key={plz}
+                                      onClick={() => {
+                                        setPlzFilter(plz);
+                                        setShowPlzDropdown(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                        plzFilter === plz
+                                          ? 'bg-gray-100 text-gray-700'
+                                          : 'hover:bg-gray-50 text-gray-600'
+                                      }`}
+                                    >
+                                      {plz}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
+
+                          {/* Matched filter pill */}
+                          <button
+                            onClick={() => setMatchedOnly(prev => !prev)}
+                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                              matchedOnly
+                                ? 'bg-red-100 text-red-700 border-red-300 scale-110'
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
+                            }`}
+                            title="Nur zugeordnete Märkte anzeigen"
+                          >
+                            Zugeordnet
+                          </button>
                         </div>
                         
                         {/* Promotor Filter Pill */}
@@ -2982,7 +2993,9 @@ Import EP
                     ) : (
                       /* List View */
                       <div key={`list-${regionFilter}-${selectedWeeks.join('-')}-${dateRange.start}-${dateRange.end}-${dateFilter}-${plzFilter}-${promotorFilter}-${statusFilter}-${marketFilter}-${hideVerplant}`} className="space-y-2 px-4 -mx-4">
-                        {filteredEinsatzplan.map((einsatz) => {
+                        {filteredEinsatzplan
+                          .filter(e => (!matchedOnly || !!e.matched_market_id))
+                          .map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
                         return (
@@ -3268,7 +3281,6 @@ Import EP
                 </CardContent>
               </Card>
             </div>
-
             {/* Smaller Card - Right Side */}
             <div className="w-80 flex items-center">
               <Card 
@@ -3831,7 +3843,7 @@ Import EP
                         })}
                       </div>
                       
-                      {/* PLZ Filter Pill + Search */}
+                      {/* PLZ Filter Pill + Matched Filter + Search */}
                       <div className="flex items-center space-x-2">
                         <div className="relative">
                           <button
@@ -3880,6 +3892,19 @@ Import EP
                             </div>
                           )}
                         </div>
+
+                        {/* Matched filter pill */}
+                        <button
+                          onClick={() => setMatchedOnly(prev => !prev)}
+                          className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                            matchedOnly
+                              ? 'bg-red-100 text-red-700 border-red-300 scale-110'
+                              : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
+                          }`}
+                          title="Nur zugeordnete Märkte anzeigen"
+                        >
+                          Zugeordnet
+                        </button>
 
                         {/* Market search */}
                         <input
@@ -4358,7 +4383,6 @@ Import EP
           </Card>
         </div>
       )}
-
       {/* History Detail Modal */}
       {showHistoryDetail && selectedHistoryItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -5336,9 +5360,6 @@ Import EP
           </div>
         </div>
       )}
-
-
-
       {/* Replacement Assignments Modal */}
       {showReplacementModal && declinedPromotor && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
