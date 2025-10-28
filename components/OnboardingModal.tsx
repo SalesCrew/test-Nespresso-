@@ -32,7 +32,8 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
   const [currentStep, setCurrentStep] = useState(1)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showBirthDatePicker, setShowBirthDatePicker] = useState(false)
-  const [calendarStep, setCalendarStep] = useState<'year' | 'month' | 'day'>('year')
+  // Start the birthdate picker on day to ask for Tag → Monat → Jahr
+  const [calendarStep, setCalendarStep] = useState<'year' | 'month' | 'day'>('day')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
   const [selectedYear, setSelectedYear] = useState<number | null>(null)
