@@ -1072,6 +1072,14 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     return time || '--:--';
   };
 
+  // Format an ISO timestamp (e.g., 2025-10-28T09:30:00Z) as HH:MM without applying local timezone offset.
+  // This mirrors the Einsatzplan formatting to ensure times are displayed consistently.
+  const formatIsoTimeNoTZ = (iso: string | null | undefined) => {
+    if (!iso) return '--:--';
+    const s = String(iso);
+    return s.includes('T') ? s.substring(11, 16) : s;
+  };
+
   const getStatusColor = (einsatz: any) => {
     // Red for special statuses (krankenstand, urlaub, zeitausgleich, notfall)
     if (['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(einsatz.status)) {
@@ -2846,11 +2854,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                 {assignment.title || 'Promotion'}
                               </h4>
                               <p className="text-xs text-gray-500">
-                                {new Date(assignment.start_ts).toLocaleTimeString('de-DE', { 
-                                  hour: '2-digit', minute: '2-digit' 
-                                })} - {new Date(assignment.end_ts).toLocaleTimeString('de-DE', { 
-                                  hour: '2-digit', minute: '2-digit' 
-                                })}
+                                {formatIsoTimeNoTZ(assignment.start_ts)} - {formatIsoTimeNoTZ(assignment.end_ts)}
                               </p>
                             </div>
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
