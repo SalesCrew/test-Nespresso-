@@ -227,7 +227,7 @@ export default function EinsatzplanPage() {
   // Market matching popup state
   const [showMarketMatchPopup, setShowMarketMatchPopup] = useState<string | null>(null); // assignmentId
   const [marketMatchSearch, setMarketMatchSearch] = useState("");
-  const [tempMatchedMarkets, setTempMatchedMarkets] = useState<Record<string, string>>({});
+  const marketById = useMemo(() => new Map(marketsData.map((m: any) => [m.id, m])), [marketsData]);
   const marketMatchPopupRef = useRef<HTMLDivElement | null>(null);
 
   // Close market match popup on outside click (ignore clicks on the icon or inside the popup)
@@ -761,9 +761,6 @@ export default function EinsatzplanPage() {
   const [inviteDetails, setInviteDetails] = useState<Record<string, { invited: string[]; accepted: string[]; rejected: string[] }>>({});
   // Hover state for invite popups
   const [hoveredInvite, setHoveredInvite] = useState<{ assignmentId: string; type: 'invited' | 'accepted' | 'rejected' } | null>(null);
-  
-
-  
   // Function to assign promotion to a promotor
   const assignPromotionToPromotor = async (promotorName: string, promotorId?: string) => {
     if (!editingEinsatz) return;
@@ -1501,9 +1498,6 @@ export default function EinsatzplanPage() {
     
     return '';
   };
-
-
-
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
     console.log('🔵 processRohExcel START - file:', file.name, 'size:', file.size);
@@ -2052,6 +2046,7 @@ export default function EinsatzplanPage() {
           notes: r.notes || '',
           special_status: r.special_status || null,
           market: r.location_text || '',
+          matched_market_id: (r as any).matched_market_id || null,
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
@@ -2106,6 +2101,34 @@ export default function EinsatzplanPage() {
     loadMarkets();
     loadPromotorsList();
   }, []);
+
+  // Auto-match unmatched assignments after both lists load
+  useEffect(() => {
+    const runAutoMatch = async () => {
+      if (assignmentsLoading || marketsLoading) return;
+      if (!marketsData.length || !einsatzplanData.length) return;
+      const unmatched = einsatzplanData.filter((e: any) => !e.matched_market_id);
+      const concurrency = 5;
+      let i = 0;
+      const next = async () => {
+        if (i >= unmatched.length) return;
+        const batch = unmatched.slice(i, i + concurrency);
+        i += concurrency;
+        await Promise.all(batch.map(async (e: any) => {
+          try {
+            const res = await fetch(`/api/assignments/${e.id}/match-market`, { method: 'POST' });
+            const j = await res.json().catch(() => ({}));
+            if (res.ok && j.matched_market_id) {
+              setEinsatzplanData(prev => prev.map(p => p.id === e.id ? { ...p, matched_market_id: j.matched_market_id } : p));
+            }
+          } catch {}
+        }));
+        await next();
+      };
+      await next();
+    };
+    runAutoMatch();
+  }, [assignmentsLoading, marketsLoading, marketsData, einsatzplanData]);
 
   // Reset photo indices when market detail modal opens
   useEffect(() => {
@@ -3065,7 +3088,7 @@ Import EP
                               >
                                 <Link2 
                                   className={`h-5 w-5 ${
-                                    tempMatchedMarkets[einsatz.id] || einsatz.matched_market_id 
+                                    einsatz.matched_market_id 
                                       ? 'text-emerald-500' 
                                       : 'text-red-500'
                                   }`} 
@@ -3087,12 +3110,31 @@ Import EP
                                       Zugeordneter Markt
                                     </label>
                                     <div className="text-sm text-gray-600 italic min-h-[24px]">
-                                      {tempMatchedMarkets[einsatz.id] 
-                                        ? tempMatchedMarkets[einsatz.id]
-                                        : einsatz.matched_market_id 
-                                          ? 'Markt ' + einsatz.matched_market_id.slice(0, 8)
-                                          : 'Kein Markt zugeordnet'}
+                                      {einsatz.matched_market_id
+                                        ? (marketById.get(einsatz.matched_market_id)?.name || ('Markt ' + einsatz.matched_market_id.slice(0, 8)))
+                                        : 'Kein Markt zugeordnet'}
                                     </div>
+                                    {einsatz.matched_market_id && (
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            const res = await fetch(`/api/assignments/${einsatz.id}`, {
+                                              method: 'PATCH',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ matched_market_id: null })
+                                            })
+                                            if (res.ok) {
+                                              setEinsatzplanData(prev => prev.map(p => p.id === einsatz.id ? { ...p, matched_market_id: null } : p))
+                                            }
+                                          } finally {
+                                            setShowMarketMatchPopup(null)
+                                          }
+                                        }}
+                                        className="mt-2 text-xs text-red-600 hover:underline"
+                                      >
+                                        Zuordnung entfernen
+                                      </button>
+                                    )}
                                   </div>
 
                                   {/* Search bar */}
@@ -3108,48 +3150,36 @@ Import EP
 
                                   {/* Market dropdown */}
                                   <div className="max-h-48 overflow-y-auto no-scrollbar border border-gray-200 rounded">
-                                    {[
-                                      'SPAR Mariahilfer Straße',
-                                      'BILLA Stephansplatz',
-                                      'HOFER Favoriten',
-                                      'Lidl Wien Mitte',
-                                      'PENNY Brigittenau',
-                                      'SPAR Hietzing',
-                                      'BILLA Plus Westbahnhof',
-                                      'HOFER Donaustadt',
-                                      'Lidl Floridsdorf',
-                                      'PENNY Simmering',
-                                      'SPAR Hernals',
-                                      'BILLA Landstraße',
-                                      'HOFER Meidling',
-                                      'Lidl Leopoldau',
-                                      'PENNY Ottakring',
-                                      'SPAR Liesing',
-                                      'BILLA Favoritenstraße',
-                                      'HOFER Stadlau',
-                                      'Lidl Kagran',
-                                      'PENNY Penzing',
-                                      'SPAR Neubau',
-                                      'BILLA Neubaugasse',
-                                      'HOFER Brigittenau',
-                                      'Lidl Praterstern',
-                                      'PENNY Margareten'
-                                    ].map((market) => (
-                                      <div
-                                        key={market}
-                                        onClick={() => {
-                                          setTempMatchedMarkets(prev => ({
-                                            ...prev,
-                                            [einsatz.id]: market
-                                          }));
-                                          setShowMarketMatchPopup(null);
-                                          setMarketMatchSearch('');
-                                        }}
-                                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
-                                      >
-                                        {market}
-                                      </div>
-                                    ))}
+                                    {marketsData
+                                      .filter((m: any) => {
+                                        const q = marketMatchSearch.trim().toLowerCase()
+                                        if (!q) return true
+                                        const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase()
+                                        return hay.includes(q)
+                                      })
+                                      .map((m: any) => (
+                                        <div
+                                          key={m.id}
+                                          onClick={async () => {
+                                            try {
+                                              const res = await fetch(`/api/assignments/${einsatz.id}`, { 
+                                                method: 'PATCH',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ matched_market_id: m.id })
+                                              })
+                                              if (res.ok) {
+                                                setEinsatzplanData(prev => prev.map(p => p.id === einsatz.id ? { ...p, matched_market_id: m.id } : p))
+                                              }
+                                            } finally {
+                                              setShowMarketMatchPopup(null)
+                                              setMarketMatchSearch('')
+                                            }
+                                          }}
+                                          className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                        >
+                                          {m.name} {m.plz ? `(${m.plz} ${m.city || ''})` : ''}
+                                        </div>
+                                      ))}
                                   </div>
                                 </div>
                               </div>
@@ -3395,7 +3425,6 @@ Import EP
               </Card>
             </div>
           </div>
-
           {/* Promotion Distribution Component */}
           <div className="mt-8">
             <Card 
@@ -3573,6 +3602,7 @@ Import EP
                                 .filter((p: any) => selectedPromotors.includes(p.name))
                                 .map((p: any) => p.id)
                                 .filter(Boolean)
+                              
                               // Check if any selected assignments are "Verplant" (assigned)
                               const selectedAssignmentData = einsatzplanData.filter((assignment: any) => 
                                 selectedPromotions.includes(assignment.id));
@@ -4418,7 +4448,6 @@ Import EP
                 </button>
               </div>
             </div>
-
             {/* Modal Content */}
             <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
               {detailModalTab === 'details' && assignmentTrackingData ? (
@@ -5145,7 +5174,6 @@ Import EP
           </div>
         </div>
       )}
-
       {/* Import EP Modal */}
       {showImportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -5788,7 +5816,6 @@ Import EP
           </div>
         </>
       )}
-
       {/* Market Detail Modal */}
       {showMarketDetailModal && editingMarket && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

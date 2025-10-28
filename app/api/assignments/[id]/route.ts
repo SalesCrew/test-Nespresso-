@@ -30,6 +30,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.notes !== undefined) updates.notes = String(body.notes)
     if (body.buddy_user_id !== undefined) updates.buddy_user_id = body.buddy_user_id
     if (body.buddy_name !== undefined) updates.buddy_name = body.buddy_name
+    // Allow persisting or clearing the matched market relation
+    if (body.matched_market_id !== undefined) updates.matched_market_id = body.matched_market_id || null
 
     // Handle special_status separately
     if (body.special_status !== undefined) {
