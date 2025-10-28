@@ -2992,9 +2992,10 @@ Import EP
                       </div>
                     ) : (
                       /* List View */
-                      <div key={`list-${regionFilter}-${selectedWeeks.join('-')}-${dateRange.start}-${dateRange.end}-${dateFilter}-${plzFilter}-${promotorFilter}-${statusFilter}-${marketFilter}-${hideVerplant}`} className="space-y-2 px-4 -mx-4">
+                      <div key={`list-${regionFilter}-${selectedWeeks.join('-')}-${dateRange.start}-${dateRange.end}-${dateFilter}-${plzFilter}-${promotorFilter}-${statusFilter}-${marketFilter}-${hideVerplant}-${matchedOnly}`} className="space-y-2 px-4 -mx-4">
                         {filteredEinsatzplan
-                          .filter(e => (!matchedOnly || !!e.matched_market_id))
+                          // When active, show only assignments WITHOUT a matched market
+                          .filter(e => (!matchedOnly || !e.matched_market_id))
                           .map((einsatz) => {
                         const hasPromotor = ['Verplant', 'bestätigt', 'Krankenstand'].includes(einsatz.status);
                         const isUnplanned = !hasPromotor;
@@ -3893,17 +3894,17 @@ Import EP
                           )}
                         </div>
 
-                        {/* Matched filter pill */}
+                        {/* Unmatched filter pill - align with other filter pills */}
                         <button
-                          onClick={() => setMatchedOnly(prev => !prev)}
-                          className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                          onClick={() => setMatchedOnly((prev: boolean) => !prev)}
+                          className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
                             matchedOnly
-                              ? 'bg-red-100 text-red-700 border-red-300 scale-110'
-                              : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
+                              ? 'bg-gray-100 text-gray-700 scale-110'
+                              : 'bg-white text-gray-500 hover:bg-gray-50'
                           }`}
-                          title="Nur zugeordnete Märkte anzeigen"
+                          title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                         >
-                          Zugeordnet
+                          Ohne Markt
                         </button>
 
                         {/* Market search */}
