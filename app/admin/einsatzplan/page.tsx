@@ -189,6 +189,28 @@ export default function EinsatzplanPage() {
   // Flash/highlight a specific assignment in the list (e.g., when jumping from history)
   const [flashAssignmentId, setFlashAssignmentId] = useState<string | null>(null);
 
+  // Wait until the element is centered (or timeout) before flashing
+  const waitForScrollToCenter = (el: HTMLElement, timeoutMs = 1600) => {
+    return new Promise<void>((resolve) => {
+      const start = performance.now();
+      const check = () => {
+        const rect = el.getBoundingClientRect();
+        const elCenter = rect.top + rect.height / 2;
+        const viewportCenter = window.innerHeight / 2;
+        if (Math.abs(elCenter - viewportCenter) < 8) {
+          resolve();
+          return;
+        }
+        if (performance.now() - start > timeoutMs) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(check);
+      };
+      requestAnimationFrame(check);
+    });
+  };
+
   const focusAssignmentFromHistory = (assignmentId: string) => {
     // Close the history modal first
     setShowHistoryDetail(false);
@@ -199,9 +221,11 @@ export default function EinsatzplanPage() {
       if (el) {
         // Smoothly center the assignment in view
         el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-        // Apply temporary highlight shadow
-        setFlashAssignmentId(assignmentId);
-        setTimeout(() => setFlashAssignmentId(null), 1200);
+        // After scroll finishes (or timeout), apply the temporary highlight
+        waitForScrollToCenter(el).then(() => {
+          setFlashAssignmentId(assignmentId);
+          setTimeout(() => setFlashAssignmentId(null), 1200);
+        });
       }
     }, 150);
   };
