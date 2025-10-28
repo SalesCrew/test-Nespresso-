@@ -578,12 +578,12 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                   <div className="absolute z-50 bottom-full mb-2 bg-white rounded-lg shadow-xl border border-gray-100 p-4 w-full max-w-sm">
                     {/* Step indicator */}
                     <div className="text-center mb-3 text-xs text-gray-500">
-                      {calendarStep === 'year' && 'Schritt 1: Jahr wählen'}
+                      {calendarStep === 'day' && 'Schritt 1: Tag wählen'}
                       {calendarStep === 'month' && 'Schritt 2: Monat wählen'}
-                      {calendarStep === 'day' && 'Schritt 3: Tag wählen'}
+                      {calendarStep === 'year' && 'Schritt 3: Jahr wählen'}
                     </div>
                     
-                    {/* Year selector */}
+                    {/* Year selector (now last) */}
                     {calendarStep === 'year' && (
                       <div>
                         <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -604,7 +604,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                       </div>
                     )}
                     
-                    {/* Month selector */}
+                    {/* Month selector (second) */}
                     {calendarStep === 'month' && (
                       <div>
                         <button
@@ -635,7 +635,7 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                       </div>
                     )}
                     
-                    {/* Day selector */}
+                    {/* Day selector (first) */}
                     {calendarStep === 'day' && selectedMonth && selectedYear && (
                       <div>
                         <button
