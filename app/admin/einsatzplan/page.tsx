@@ -1345,8 +1345,8 @@ export default function EinsatzplanPage() {
       case 'zeitausgleich': return 'bg-yellow-50/40';
       case 'markierte': return 'bg-purple-50/40';
       case 'bestätigt': return 'bg-green-50/40';
-      // Beendet (finished) - dashboard gold gradient approximation for row background
-      case 'beendet': return 'bg-[#FFF9E6]';
+      // Beendet (finished) - exact fill used in dashboard for finished rows
+      case 'beendet': return 'bg-[#FFF7D6]';
       case 'geplant': return 'bg-white';
       default: return 'bg-white';
     }
