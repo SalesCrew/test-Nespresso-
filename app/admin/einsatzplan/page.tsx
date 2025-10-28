@@ -3194,6 +3194,7 @@ Import EP
                                 </div>
                               </div>
                               {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
+                              {/* Keep the chain icon under popovers (calendar/dropdowns) by lowering z-index */}
                               <div 
                                 className="absolute -bottom-1 -right-1 opacity-25 cursor-pointer z-0"
                                 onClick={(e) => {
