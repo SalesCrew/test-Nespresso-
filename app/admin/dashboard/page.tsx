@@ -4178,7 +4178,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                 {/* Photos Section */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
-                  {(selectedAssignmentDetail.foto_maschine_url || selectedAssignmentDetail.foto_kapsellade_url || selectedAssignmentDetail.foto_pos_gesamt_url) ? (
+                  {(selectedAssignmentDetail.foto_maschine_url || selectedAssignmentDetail.foto_kapsellade_url || selectedAssignmentDetail.foto_pos_gesamt_url || selectedAssignmentDetail.foto_extra_url) ? (
                     <div className="grid grid-cols-1 gap-4">
                       {/* Foto Maschine */}
                       <div className="space-y-2">
@@ -4251,6 +4251,33 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => {
                               setSelectedPhoto({ url: selectedAssignmentDetail.foto_pos_gesamt_url, title: "Foto POS gesamt" });
+                              setShowPhotoLightbox(true);
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Nicht verfügbar</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Optionales Foto */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-gray-700">Optionales Foto</span>
+                          {selectedAssignmentDetail.foto_extra_url ? (
+                            <span className="text-xs text-green-600">✓</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Nicht verfügbar</span>
+                          )}
+                        </div>
+                        {selectedAssignmentDetail.foto_extra_url ? (
+                          <img 
+                            src={selectedAssignmentDetail.foto_extra_url} 
+                            alt="Optionales Foto" 
+                            className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              setSelectedPhoto({ url: selectedAssignmentDetail.foto_extra_url, title: "Optionales Foto" });
                               setShowPhotoLightbox(true);
                             }}
                           />

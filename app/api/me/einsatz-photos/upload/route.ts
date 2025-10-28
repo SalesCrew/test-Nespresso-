@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not assigned to this assignment' }, { status: 403 });
     }
 
+    // Validate photo type (allow the 3 existing + new optional 'foto_extra')
+    const allowedTypes = new Set(['foto_maschine', 'foto_kapsellade', 'foto_pos_gesamt', 'foto_extra']);
+    if (!allowedTypes.has(photo_type)) {
+      return NextResponse.json({ error: 'Invalid photo_type' }, { status: 400 });
+    }
+
     // Create file path
     const fileExt = file.name.split('.').pop();
     const fileName = `${assignment_id}_${photo_type}_${Date.now()}.${fileExt}`;

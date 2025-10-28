@@ -86,7 +86,8 @@ export async function GET() {
         minutes_early_end,
         foto_maschine_url,
         foto_kapsellade_url,
-        foto_pos_gesamt_url
+        foto_pos_gesamt_url,
+        foto_extra_url
       `)
       .order('planned_start', { ascending: true });
 
@@ -123,7 +124,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { assignment_id, user_id, action, status, actual_start_time, actual_end_time, early_start_reason, minutes_early_start, early_end_reason, minutes_early_end, foto_maschine_url, foto_kapsellade_url, foto_pos_gesamt_url } = body;
+    const { assignment_id, user_id, action, status, actual_start_time, actual_end_time, early_start_reason, minutes_early_start, early_end_reason, minutes_early_end, foto_maschine_url, foto_kapsellade_url, foto_pos_gesamt_url, foto_extra_url } = body;
 
     if (!assignment_id) {
       return NextResponse.json({ error: 'Missing assignment_id' }, { status: 400 });
@@ -204,6 +205,10 @@ export async function PATCH(request: Request) {
     if (foto_pos_gesamt_url) {
       updateData.foto_pos_gesamt_url = foto_pos_gesamt_url;
       console.log('✅ [API] Adding foto_pos_gesamt_url to update');
+    }
+    if (foto_extra_url) {
+      updateData.foto_extra_url = foto_extra_url;
+      console.log('✅ [API] Adding foto_extra_url to update');
     }
 
     // Handle action-based updates (legacy admin interface)

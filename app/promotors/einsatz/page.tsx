@@ -191,15 +191,17 @@ export default function EinsatzPage() {
 
   // Photo upload states
   const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
-  const [photoUploadStep, setPhotoUploadStep] = useState<1 | 2 | 3>(1);
+  const [photoUploadStep, setPhotoUploadStep] = useState<1 | 2 | 3 | 4>(1);
   const [uploadedPhotos, setUploadedPhotos] = useState<{
     foto_maschine: string | null;
     foto_kapsellade: string | null;
     foto_pos_gesamt: string | null;
+    foto_extra: string | null; // optional 4th photo
   }>({
     foto_maschine: null,
     foto_kapsellade: null,
-    foto_pos_gesamt: null
+    foto_pos_gesamt: null,
+    foto_extra: null
   });
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
@@ -1413,11 +1415,12 @@ const loadProcessState = async () => {
     }
   };
 
-  const getPhotoTypeTitle = (step: 1 | 2 | 3) => {
+  const getPhotoTypeTitle = (step: 1 | 2 | 3 | 4) => {
     switch (step) {
       case 1: return "Foto Maschine";
       case 2: return "Foto Kapsellade";
       case 3: return "Foto POS gesamt";
+      case 4: return "Optionales Foto";
       default: return "";
     }
   };
@@ -1428,7 +1431,8 @@ const loadProcessState = async () => {
     setIsUploadingPhoto(true);
     try {
       const photoType = photoUploadStep === 1 ? 'foto_maschine' : 
-                       photoUploadStep === 2 ? 'foto_kapsellade' : 'foto_pos_gesamt';
+                       photoUploadStep === 2 ? 'foto_kapsellade' :
+                       photoUploadStep === 3 ? 'foto_pos_gesamt' : 'foto_extra';
       
       const formData = new FormData();
       formData.append('file', file);
@@ -1447,8 +1451,8 @@ const loadProcessState = async () => {
           [photoType]: data.photo_url
         }));
         
-        if (photoUploadStep < 3) {
-          setPhotoUploadStep(prev => (prev + 1) as 1 | 2 | 3);
+        if (photoUploadStep < 4) {
+          setPhotoUploadStep(prev => (prev + 1) as 1 | 2 | 3 | 4);
         } else {
           // All photos uploaded, complete the einsatz
           setShowPhotoUploadModal(false);
@@ -1468,9 +1472,9 @@ const loadProcessState = async () => {
 
   const handleCompleteEinsatz = async (skipPhotoUpload = false) => {
     // Check if all photos are uploaded (unless skipping photo upload)
-    const allPhotosUploaded = uploadedPhotos.foto_maschine && uploadedPhotos.foto_kapsellade && uploadedPhotos.foto_pos_gesamt;
+    const allRequiredUploaded = uploadedPhotos.foto_maschine && uploadedPhotos.foto_kapsellade && uploadedPhotos.foto_pos_gesamt;
     
-    if (!skipPhotoUpload && !allPhotosUploaded) {
+    if (!skipPhotoUpload && !allRequiredUploaded) {
       // Show photo upload modal first
       setPhotoUploadStep(1);
       setShowPhotoUploadModal(true);
@@ -1519,6 +1523,9 @@ const loadProcessState = async () => {
         }
         if (uploadedPhotos.foto_pos_gesamt) {
           updateData.foto_pos_gesamt_url = uploadedPhotos.foto_pos_gesamt;
+        }
+        if (uploadedPhotos.foto_extra) {
+          updateData.foto_extra_url = uploadedPhotos.foto_extra;
         }
         
         const response = await fetch('/api/assignments/today', {
@@ -3553,7 +3560,7 @@ const loadProcessState = async () => {
                   📸
                 </div>
                 <h2 className="text-xl font-bold mb-1">{getPhotoTypeTitle(photoUploadStep)}</h2>
-                <p className="text-blue-100 text-sm">Schritt {photoUploadStep}/3</p>
+                <p className="text-blue-100 text-sm">Schritt {photoUploadStep}/4</p>
               </div>
             </div>
             
@@ -3562,7 +3569,9 @@ const loadProcessState = async () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    Bitte machen Sie ein Foto von {getPhotoTypeTitle(photoUploadStep).toLowerCase()}
+                    {photoUploadStep === 4
+                      ? 'Optional: Laden Sie ein weiteres Foto hoch (überspringen möglich)'
+                      : `Bitte machen Sie ein Foto von ${getPhotoTypeTitle(photoUploadStep).toLowerCase()}`}
                   </p>
                 </div>
                 
@@ -3602,7 +3611,7 @@ const loadProcessState = async () => {
                 
                 {/* Progress Indicator */}
                 <div className="flex justify-center space-x-2">
-                  {[1, 2, 3].map((step) => (
+                  {[1, 2, 3, 4].map((step) => (
                     <div
                       key={step}
                       className={`w-3 h-3 rounded-full ${
@@ -3618,11 +3627,24 @@ const loadProcessState = async () => {
                 
                 {photoUploadStep > 1 && (
                   <button
-                    onClick={() => setPhotoUploadStep(prev => (prev - 1) as 1 | 2 | 3)}
+                    onClick={() => setPhotoUploadStep(prev => (prev - 1) as 1 | 2 | 3 | 4)}
                     className="w-full mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-gray-700 dark:text-gray-200"
                     disabled={isUploadingPhoto}
                   >
                     Zurück zum vorherigen Foto
+                  </button>
+                )}
+
+                {photoUploadStep === 4 && (
+                  <button
+                    onClick={async () => {
+                      setShowPhotoUploadModal(false);
+                      await handleCompleteEinsatz(true);
+                    }}
+                    className="w-full mt-2 p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm text-gray-700"
+                    disabled={isUploadingPhoto}
+                  >
+                    Überspringen und Abschluss
                   </button>
                 )}
               </div>
