@@ -759,8 +759,6 @@ export default function EinsatzplanPage() {
     return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
-  // (moved below filteredEinsatzplan definition)
-
   useEffect(() => {
     (async () => {
       try {
@@ -771,9 +769,6 @@ export default function EinsatzplanPage() {
       } catch {}
     })();
   }, []);
-  
-
-  
   // Eye filter state - when true, filter out "Verplant" items
   const [hideVerplant, setHideVerplant] = useState(false);
   // Invite counts per assignment id (for compact list view badges)
@@ -5810,6 +5805,18 @@ Import EP
                       default: return 'bg-gray-50 text-gray-700 border-gray-200';
                     }
                   };
+                  const getClusterShort = (cluster: string) => {
+                    switch (cluster) {
+                      case 'wien-noe-bgl': return 'W/NÖ/BGL';
+                      case 'steiermark': return 'ST';
+                      case 'salzburg': return 'S';
+                      case 'oberoesterreich': return 'OÖ';
+                      case 'tirol': return 'T';
+                      case 'vorarlberg': return 'V';
+                      case 'kaernten': return 'K';
+                      default: return cluster;
+                    }
+                  };
                   
                   // Get special status styling
                   const getSpecialStatus = (status: string | null) => {
@@ -5855,7 +5862,7 @@ Import EP
                               className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${getClusterPill(promotor.cluster)} flex-none`}
                               title={promotor.cluster}
                             >
-                              {promotor.cluster}
+                              {getClusterShort(promotor.cluster)}
                             </span>
                             {specialStatusInfo ? (
                               <span
