@@ -192,6 +192,21 @@ export default function EinsatzplanPage() {
   const marketPickerRef = useRef<HTMLDivElement | null>(null);
   const [marketPickerSearch, setMarketPickerSearch] = useState('');
   const [hoveredMarket, setHoveredMarket] = useState<any | null>(null);
+
+  // Close market picker on outside click
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!showMarketPicker) return;
+      const el = marketPickerRef.current;
+      if (el && !el.contains(e.target as Node)) {
+        setShowMarketPicker(false);
+        setMarketPickerSearch('');
+        setHoveredMarket(null);
+      }
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [showMarketPicker]);
   
   // Promotion distribution states
   const [selectedPromotions, setSelectedPromotions] = useState<number[]>([]);
