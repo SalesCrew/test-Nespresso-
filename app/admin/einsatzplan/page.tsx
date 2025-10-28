@@ -1408,6 +1408,18 @@ export default function EinsatzplanPage() {
     }
   };
 
+  // Visits pill colors (match cluster pill fill/border ratio)
+  const getVisitsBg = (visits: number) => {
+    if (visits <= 5) return 'bg-[#FFF3E6]'; // soft orange
+    if (visits <= 10) return 'bg-[#FEF9C3]'; // soft yellow
+    return 'bg-[#E7F5ED]'; // soft green
+  };
+  const getVisitsBorder = (visits: number) => {
+    if (visits <= 5) return 'border-[#FFE3C7]';
+    if (visits <= 10) return 'border-[#FDE68A]';
+    return 'border-[#CFECDD]';
+  };
+
   const selectAllFiltered = () => {
     const filteredNames = promotorsList
       .filter((promotor: any) => 
@@ -3940,11 +3952,8 @@ Import EP
                       
                       return clusterMatch && plzMatch && searchMatch;
                     }).map((market) => {
-                      const visitBadgeColor = market.visits <= 5 
-                        ? 'bg-orange-100 text-orange-700' 
-                        : market.visits <= 10 
-                        ? 'bg-yellow-100 text-yellow-700' 
-                        : 'bg-green-100 text-green-700';
+                      const visitBg = getVisitsBg(market.visits)
+                      const visitBorder = getVisitsBorder(market.visits)
 
                       return (
                         <div
@@ -3994,7 +4003,7 @@ Import EP
                             
                             {/* Visit Count */}
                             <div className="text-center">
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border border-current/50 ${visitBadgeColor}`}>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${visitBorder} ${visitBg} text-gray-700`}>
                                 {market.visits}×
                               </span>
                             </div>
