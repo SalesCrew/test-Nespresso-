@@ -5519,7 +5519,7 @@ Import EP
                     {showMarketPicker && (
                       <div 
                         ref={marketPickerRef}
-                        className="absolute right-0 top-11 z-50 w-[420px] bg-white border border-gray-200 rounded-lg shadow-xl p-3 max-h-72 overflow-y-auto custom-scrollbar"
+                        className="absolute right-0 top-11 z-50 w-[420px] bg-white border border-gray-200 rounded-lg shadow-xl p-3"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="relative mb-2">
@@ -5532,7 +5532,7 @@ Import EP
                             className="w-full pl-10 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none"
                           />
                         </div>
-                        <div className="divide-y divide-gray-100">
+                        <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                           {marketsData
                             .filter((m: any) => {
                               const q = marketPickerSearch.trim().toLowerCase();
