@@ -2421,9 +2421,9 @@ Import EP
                                 ? 'bg-red-100 text-red-700 border-red-300 scale-110'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
                             }`}
-                            title="Nur zugeordnete Märkte anzeigen"
+                            title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                           >
-                            Zugeordnet
+                            Nicht zugeordnet
                           </button>
                         </div>
                         
@@ -3905,7 +3905,7 @@ Import EP
                           style={matchedOnly ? { backgroundImage: 'linear-gradient(180deg, rgba(148,163,184,0.15), rgba(148,163,184,0.07))' } : undefined}
                           title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                         >
-                          Ohne Markt
+                          Nicht zugeordnet
                         </button>
 
                         {/* Market search */}
