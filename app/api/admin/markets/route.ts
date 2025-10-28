@@ -36,17 +36,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch markets' }, { status: 500 });
     }
 
-    // Fetch visit statistics for all markets
-    const { data: visitStats, error: visitsError } = await svc
-      .from('market_visits')
-      .select('*');
-    
+    // Compute visits: count of assignments matched to a market, status 'assigned', and start date <= today
+    const today = new Date();
+    const tomorrowUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1, 0, 0, 0, 0));
+    const { data: visitAgg, error: visitsError } = await svc
+      .from('assignments')
+      .select('matched_market_id, count:id')
+      .eq('status', 'assigned')
+      .not('matched_market_id', 'is', null)
+      .lt('start_ts', tomorrowUtc.toISOString())
+      .group('matched_market_id');
     if (visitsError) {
-      console.error('Error fetching visit stats:', visitsError);
+      console.error('Error computing visits:', visitsError);
     }
-
-    // Create visit stats map
-    const visitsMap = new Map((visitStats || []).map((v: any) => [v.market_id, v]));
+    const visitsCountMap = new Map((visitAgg || []).map((v: any) => [v.matched_market_id, Number(v.count) || 0]));
 
     // Fetch promotor names for stamm_promotor_id
     const stammPromotorIds = markets?.map(m => m.stamm_promotor_id).filter(Boolean) || [];
@@ -63,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     // Map markets to UI structure
     const mappedMarkets = (markets || []).map((market: any) => {
-      const visits = visitsMap.get(market.id);
+      const visitsCount = visitsCountMap.get(market.id) || 0;
       const stammPromotorName = market.stamm_promotor_id ? promotorsMap.get(market.stamm_promotor_id) : null;
       
       return {
@@ -79,9 +82,9 @@ export async function GET(req: NextRequest) {
         marktleiterPhone: market.marktleiter_phone,
         marktleiterEmail: market.marktleiter_email,
         status: market.status,
-        visits: visits?.total_visits || 0,
-        lastVisit: visits?.last_visit_date || null,
-        nextVisit: visits?.next_visit_date || null,
+        visits: visitsCount,
+        lastVisit: null,
+        nextVisit: null,
         internalNotes: market.internal_notes || '',
         promotorNotes: market.promotor_notes || '',
         photosInternal: market.photos_internal || [],
