@@ -186,6 +186,25 @@ export default function EinsatzplanPage() {
   const auslastungKWDropdownRef = useRef<HTMLDivElement>(null);
   const [auslastungData, setAuslastungData] = useState<any[]>([]);
   const [auslastungLoading, setAuslastungLoading] = useState(false);
+  // Flash/highlight a specific assignment in the list (e.g., when jumping from history)
+  const [flashAssignmentId, setFlashAssignmentId] = useState<string | null>(null);
+
+  const focusAssignmentFromHistory = (assignmentId: string) => {
+    // Close the history modal first
+    setShowHistoryDetail(false);
+    setSelectedHistoryItem(null);
+    // Wait for modal to close and layout to settle
+    setTimeout(() => {
+      const el = document.querySelector(`[data-einsatz-id="${assignmentId}"]`) as HTMLElement | null;
+      if (el) {
+        // Smoothly center the assignment in view
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        // Apply temporary highlight shadow
+        setFlashAssignmentId(assignmentId);
+        setTimeout(() => setFlashAssignmentId(null), 1200);
+      }
+    }, 150);
+  };
   
   // Market picker for Create Assignment modal
   const [showMarketPicker, setShowMarketPicker] = useState(false);
@@ -2983,14 +3002,17 @@ Import EP
                                 loadPromotorNote(einsatz.id);
                               }
                             }}
-                            style={selectedEinsatz?.id === einsatz.id && aiMode ? { 
-                              boxShadow: '0 0 12px rgba(134, 239, 172, 0.5)' 
-                            } : undefined}
+                            
                             className={`relative p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
                                 : 'border-gray-100'
-                            } ${getStatusBackgroundColor(einsatz.status)}`}
+                            } ${getStatusBackgroundColor(einsatz.status)} ${flashAssignmentId === einsatz.id ? 'shadow-xl' : ''}`}
+                            style={(flashAssignmentId === einsatz.id || (selectedEinsatz?.id === einsatz.id && aiMode)) 
+                              ? { boxShadow: flashAssignmentId === einsatz.id 
+                                  ? '0 4px 20px rgba(34,197,94,0.35)'
+                                  : '0 0 12px rgba(134, 239, 172, 0.5)' }
+                              : undefined}
                           >
                             <div className="flex items-center justify-between relative">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
@@ -4352,9 +4374,11 @@ Import EP
                   </h4>
                   <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
                     {selectedHistoryItem.promotions.map((promotion: any) => (
-                      <div 
+                      <button 
                         key={promotion.id}
-                        className="p-3 rounded-lg bg-white border border-gray-200"
+                        type="button"
+                        onClick={() => focusAssignmentFromHistory(promotion.id)}
+                        className="p-3 rounded-lg bg-white border border-gray-200 w-full text-left hover:bg-gray-50 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -4373,7 +4397,7 @@ Import EP
                             'bg-gray-400'
                           }`}></div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
