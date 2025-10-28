@@ -3195,7 +3195,7 @@ Import EP
                               </div>
                               {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
                               <div 
-                                className="absolute -bottom-1 -right-1 opacity-25 cursor-pointer z-10"
+                                className="absolute -bottom-1 -right-1 opacity-25 cursor-pointer z-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setShowMarketMatchPopup(showMarketMatchPopup === einsatz.id ? null : einsatz.id);
