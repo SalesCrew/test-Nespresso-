@@ -4610,30 +4610,30 @@ Dein Nespresso Team`;
                     {/* Boost App (read-only like Hübner) */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                        Boost App
+                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                          Boost App
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
-                            <p className="font-medium text-gray-900">
-                              {accessCredentials?.boost_app_email || (
-                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                              )}
-                            </p>
+                              <p className="font-medium text-gray-900">
+                                {accessCredentials?.boost_app_email || (
+                                  <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                                )}
+                              </p>
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
                           <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
                             <p className="font-mono text-gray-900">
-                              {accessCredentials?.boost_app_password ? (
+                                  {accessCredentials?.boost_app_password ? (
                                 <span>••••••••••••</span>
-                              ) : (
-                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                              )}
-                            </p>
+                                  ) : (
+                                    <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                                  )}
+                                </p>
                           </div>
                         </div>
                       </div>

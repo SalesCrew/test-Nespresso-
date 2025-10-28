@@ -1,4 +1,5 @@
 "use client";
+// no-op comment to mark minor update; functional behavior unchanged
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -11,7 +12,7 @@ import {
   Users, 
   MessageSquare, 
   BarChart3, 
-  Settings, 
+  Settings,
   Calendar,
   Store,
   LayoutGrid,
@@ -2391,52 +2392,52 @@ Import EP
                       <div className="flex items-center space-x-2">
                         {/* PLZ Filter Pill + Matched Filter + Search */}
                         <div className="flex items-center space-x-2">
-                          <div className="relative">
-                            <button
-                              onClick={() => setShowPlzDropdown(!showPlzDropdown)}
-                              className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
-                                plzFilter
-                                  ? 'text-gray-700 scale-110' 
-                                  : 'text-gray-500'
-                              }`}
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowPlzDropdown(!showPlzDropdown)}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
+                              plzFilter
+                                ? 'text-gray-700 scale-110' 
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {plzFilter || 'PLZ'}
+                          </button>
+                          
+                          {showPlzDropdown && (
+                            <div 
+                              ref={plzDropdownRef}
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto custom-scrollbar"
                             >
-                              {plzFilter || 'PLZ'}
-                            </button>
-                            
-                            {showPlzDropdown && (
-                              <div 
-                                ref={plzDropdownRef}
-                                className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-40 bg-white max-h-60 overflow-y-auto custom-scrollbar"
-                              >
-                                <div className="p-2">
+                              <div className="p-2">
+                                <button
+                                  onClick={() => {
+                                    setPlzFilter("");
+                                    setShowPlzDropdown(false);
+                                  }}
+                                  className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                >
+                                  Alle PLZ
+                                </button>
+                                  {[...new Set(marketsData.map(m => m.plz))].sort().map((plz) => (
                                   <button
+                                    key={plz}
                                     onClick={() => {
-                                      setPlzFilter("");
+                                      setPlzFilter(plz);
                                       setShowPlzDropdown(false);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                    className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
+                                      plzFilter === plz
+                                        ? 'bg-gray-100 text-gray-700'
+                                        : 'hover:bg-gray-50 text-gray-600'
+                                    }`}
                                   >
-                                    Alle PLZ
+                                    {plz}
                                   </button>
-                                  {[...new Set(marketsData.map(m => m.plz))].sort().map((plz) => (
-                                    <button
-                                      key={plz}
-                                      onClick={() => {
-                                        setPlzFilter(plz);
-                                        setShowPlzDropdown(false);
-                                      }}
-                                      className={`w-full text-left px-3 py-2 rounded text-xs transition-colors ${
-                                        plzFilter === plz
-                                          ? 'bg-gray-100 text-gray-700'
-                                          : 'hover:bg-gray-50 text-gray-600'
-                                      }`}
-                                    >
-                                      {plz}
-                                    </button>
-                                  ))}
-                                </div>
+                                ))}
                               </div>
-                            )}
+                            </div>
+                          )}
                           </div>
 
                           {/* Matched filter pill */}
@@ -3194,7 +3195,6 @@ Import EP
                                 </div>
                               </div>
                               {/* Match indicator - absolute bottom-right of row (tighter to the corner) */}
-                              {/* Keep the chain icon under popovers (calendar/dropdowns) by lowering z-index */}
                               <div 
                                 className="absolute -bottom-1 -right-1 opacity-25 cursor-pointer z-0"
                                 onClick={(e) => {
