@@ -96,4 +96,16 @@ export function computeBestMarket(
   return { market: best, score: bestScore }
 }
 
+// Optional helper for candidate selection; kept simple for clarity
+export function selectCandidates(
+  assignment: AssignmentLike,
+  markets: MarketLike[],
+): MarketLike[] {
+  const byPlz = markets.filter(m => (m.plz || '').trim() === (assignment.postal_code || '').trim())
+  if (byPlz.length) return byPlz
+  const cityKey = normalizeForMatch(String(assignment.city || assignment.location_text || ''))
+  const byCity = markets.filter(m => normalizeForMatch(String(m.city || '')) === cityKey)
+  return byCity.length ? byCity : markets
+}
+
 

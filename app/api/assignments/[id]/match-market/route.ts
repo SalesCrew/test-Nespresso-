@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
-import { computeBestMarket } from '@/lib/matchers/marketMatcher'
+import { computeBestMarket, normalizeForMatch } from '@/lib/matchers/marketMatcher'
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -14,11 +14,48 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       .single()
     if (aErr || !assignment) return NextResponse.json({ error: aErr?.message || 'Assignment not found' }, { status: 404 })
 
-    // Load markets
-    const { data: markets, error: mErr } = await svc
-      .from('markets')
-      .select('id, name, address, plz, city')
-    if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
+    // 1) Try PLZ prefilter first
+    const assignmentPlz = String(assignment.postal_code || '').trim()
+    let candidates: any[] = []
+    if (assignmentPlz) {
+      const { data: byPlz, error: plzErr } = await svc
+        .from('markets')
+        .select('id, name, address, plz, city')
+        .eq('plz', assignmentPlz)
+      if (plzErr) return NextResponse.json({ error: plzErr.message }, { status: 500 })
+      candidates = byPlz || []
+      if (candidates.length === 1) {
+        const only = candidates[0]
+        const { data: updated, error: uErr } = await svc
+          .from('assignments')
+          .update({ matched_market_id: only.id })
+          .eq('id', params.id)
+          .select('id, matched_market_id')
+          .single()
+        if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 })
+        return NextResponse.json({ matched_market_id: updated.matched_market_id, confidence: 100, market: only })
+      }
+    }
+
+    // 2) If multiple PLZ candidates, score among them; otherwise fallback to city, then all
+    if (candidates.length === 0) {
+      const cityKey = normalizeForMatch(String(assignment.city || assignment.location_text || ''))
+      if (cityKey) {
+        const { data: byCity, error: cityErr } = await svc
+          .from('markets')
+          .select('id, name, address, plz, city')
+          .ilike('city', '%') // fetch all; we'll normalize in JS quickly
+        if (cityErr) return NextResponse.json({ error: cityErr.message }, { status: 500 })
+        candidates = (byCity || []).filter((m: any) => normalizeForMatch(String(m.city || '')) === cityKey)
+      }
+    }
+    if (candidates.length === 0) {
+      const { data: allMarkets, error: mErr } = await svc
+        .from('markets')
+        .select('id, name, address, plz, city')
+      if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
+      candidates = allMarkets || []
+    }
 
     const { market, score } = computeBestMarket(
       {
@@ -27,7 +64,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         postal_code: assignment.postal_code,
         city: assignment.city,
       },
-      (markets || []).map(m => ({
+      candidates.map(m => ({
         id: m.id,
         name: (m as any).name,
         address: (m as any).address,
@@ -36,13 +73,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       }))
     )
 
-    // Threshold for auto-match
     const threshold = 70
     if (!market || score < threshold) {
       return NextResponse.json({ matched_market_id: null, confidence: score, market: null })
     }
 
-    // Persist immediately
     const { data: updated, error: uErr } = await svc
       .from('assignments')
       .update({ matched_market_id: market.id })

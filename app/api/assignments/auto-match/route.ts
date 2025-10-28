@@ -92,6 +92,10 @@ export async function POST(req: Request) {
     for (const a of assignments) {
       const cityKey = normalizeForMatch(String(a.city || a.location_text || ''))
       const byPlz = plzToMarkets.get(String(a.postal_code || '').trim()) || []
+      if (byPlz.length === 1) {
+        updates.push({ id: a.id, matched_market_id: byPlz[0].id })
+        continue
+      }
       const byCity = normalizedCityToMarkets.get(cityKey) || []
       const candidates = (byPlz.length ? byPlz : (byCity.length ? byCity : (markets || []))) as any[]
       const { market, score } = computeBestMarket(

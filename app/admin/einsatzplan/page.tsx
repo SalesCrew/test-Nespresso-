@@ -3112,7 +3112,7 @@ Import EP
                                     <div className="text-sm text-gray-600 italic min-h-[24px]">
                                       {einsatz.matched_market_id
                                         ? (marketById.get(einsatz.matched_market_id)?.name || ('Markt ' + einsatz.matched_market_id.slice(0, 8)))
-                                        : 'Kein Markt zugeordnet'}
+                                          : 'Kein Markt zugeordnet'}
                                     </div>
                                     {einsatz.matched_market_id && (
                                       <button
@@ -3174,12 +3174,12 @@ Import EP
                                               setShowMarketMatchPopup(null)
                                               setMarketMatchSearch('')
                                             }
-                                          }}
-                                          className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
-                                        >
+                                        }}
+                                        className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                                      >
                                           {m.name} {m.plz ? `(${m.plz} ${m.city || ''})` : ''}
-                                        </div>
-                                      ))}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               </div>
