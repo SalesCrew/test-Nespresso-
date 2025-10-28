@@ -57,14 +57,24 @@ export async function GET() {
     }
 
     // Fetch today's assignments with tracking data using the working todays_assignments view
-    const { data: assignments, error: assignmentsError } = await service
+    // First attempt: keep existing sort if column exists
+    let { data: assignments, error: assignmentsError } = await service
       .from('todays_assignments')
-      // Select all columns to remain backward/forward compatible with view changes
       .select('*')
       .order('planned_start', { ascending: true });
 
+    // Fallback: if order column changed, retry without ordering to avoid 500s
     if (assignmentsError) {
-      console.error('Error fetching today\'s assignments:', assignmentsError);
+      console.warn("/api/assignments/today primary query failed, retrying without order:", assignmentsError?.message);
+      const retry = await service
+        .from('todays_assignments')
+        .select('*');
+      assignments = retry.data || [];
+      assignmentsError = retry.error || null;
+    }
+
+    if (assignmentsError) {
+      console.error('Error fetching today\'s assignments after retry:', assignmentsError);
       return NextResponse.json({ 
         error: 'Failed to fetch assignments', 
         details: assignmentsError.message 
