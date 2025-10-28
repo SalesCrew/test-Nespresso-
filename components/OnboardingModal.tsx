@@ -587,6 +587,13 @@ export default function OnboardingModal({ isOpen, onComplete, onClose }: Onboard
                     {/* Year selector (now last) */}
                     {calendarStep === 'year' && (
                       <div>
+                        <button
+                          type="button"
+                          onClick={() => setCalendarStep('month')}
+                          className="mb-3 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                          ← Zurück zu Monat
+                        </button>
                         <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                           {Array.from({ length: 80 }, (_, i) => new Date().getFullYear() - 16 - i).map(year => (
                             <button
