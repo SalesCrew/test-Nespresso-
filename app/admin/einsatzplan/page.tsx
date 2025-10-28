@@ -3894,14 +3894,15 @@ Import EP
                           )}
                         </div>
 
-                        {/* Unmatched filter pill - align with other filter pills */}
+                        {/* Unmatched filter pill - consistent with others; add light gradient highlight when active */}
                         <button
                           onClick={() => setMatchedOnly((prev: boolean) => !prev)}
-                          className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
+                          className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border ${
                             matchedOnly
-                              ? 'bg-gray-100 text-gray-700 scale-110'
-                              : 'bg-white text-gray-500 hover:bg-gray-50'
+                              ? 'bg-gray-100 text-gray-700 border-gray-300 scale-110'
+                              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
                           }`}
+                          style={matchedOnly ? { backgroundImage: 'linear-gradient(180deg, rgba(148,163,184,0.15), rgba(148,163,184,0.07))' } : undefined}
                           title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                         >
                           Ohne Markt
