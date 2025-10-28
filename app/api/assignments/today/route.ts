@@ -59,36 +59,8 @@ export async function GET() {
     // Fetch today's assignments with tracking data using the working todays_assignments view
     const { data: assignments, error: assignmentsError } = await service
       .from('todays_assignments')
-      .select(`
-        assignment_id,
-        title,
-        location_text,
-        postal_code,
-        city,
-        planned_start,
-        planned_end,
-        user_id,
-        role,
-        participant_status,
-        promotor_name,
-        tracking_id,
-        buddy_user_id,
-        buddy_name,
-        actual_start_time,
-        actual_end_time,
-        tracking_status,
-        display_status,
-        special_status,
-        notes,
-        early_start_reason,
-        minutes_early_start,
-        early_end_reason,
-        minutes_early_end,
-        foto_maschine_url,
-        foto_kapsellade_url,
-        foto_pos_gesamt_url,
-        foto_extra_url
-      `)
+      // Select all columns to remain backward/forward compatible with view changes
+      .select('*')
       .order('planned_start', { ascending: true });
 
     if (assignmentsError) {
