@@ -36,20 +36,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch markets' }, { status: 500 });
     }
 
-    // Compute visits: count of assignments matched to a market, status 'assigned', and start date <= today
+    // Fetch visit statistics for all markets (last/next visit based on heuristic view)
+    const { data: visitStats, error: visitsError } = await svc
+      .from('market_visits')
+      .select('*');
+    
+    if (visitsError) {
+      console.error('Error fetching visit stats:', visitsError);
+    }
+
+    // Create visit stats map
+    const visitsMap = new Map((visitStats || []).map((v: any) => [v.market_id, v]));
+
+    // SAFELY compute Besuche = count of matched assigned assignments up to today (no GROUP BY to avoid PostgREST issues)
     const today = new Date();
     const tomorrowUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1, 0, 0, 0, 0));
-    const { data: visitAgg, error: visitsError } = await svc
+    const { data: matchedAssignments, error: matchedErr } = await svc
       .from('assignments')
-      .select('matched_market_id, count:id')
+      .select('id, matched_market_id')
       .eq('status', 'assigned')
       .not('matched_market_id', 'is', null)
-      .lt('start_ts', tomorrowUtc.toISOString())
-      .group('matched_market_id');
-    if (visitsError) {
-      console.error('Error computing visits:', visitsError);
+      .lt('start_ts', tomorrowUtc.toISOString());
+    if (matchedErr) {
+      console.error('Error fetching matched assignments:', matchedErr);
     }
-    const visitsCountMap = new Map((visitAgg || []).map((v: any) => [v.matched_market_id, Number(v.count) || 0]));
+    const visitsCountMap = new Map<string, number>();
+    for (const row of matchedAssignments || []) {
+      const key = (row as any).matched_market_id as string;
+      if (!key) continue;
+      visitsCountMap.set(key, (visitsCountMap.get(key) || 0) + 1);
+    }
 
     // Fetch promotor names for stamm_promotor_id
     const stammPromotorIds = markets?.map(m => m.stamm_promotor_id).filter(Boolean) || [];
@@ -66,6 +82,7 @@ export async function GET(req: NextRequest) {
 
     // Map markets to UI structure
     const mappedMarkets = (markets || []).map((market: any) => {
+      const visits = visitsMap.get(market.id);
       const visitsCount = visitsCountMap.get(market.id) || 0;
       const stammPromotorName = market.stamm_promotor_id ? promotorsMap.get(market.stamm_promotor_id) : null;
       
@@ -83,8 +100,8 @@ export async function GET(req: NextRequest) {
         marktleiterEmail: market.marktleiter_email,
         status: market.status,
         visits: visitsCount,
-        lastVisit: null,
-        nextVisit: null,
+        lastVisit: visits?.last_visit_date || null,
+        nextVisit: visits?.next_visit_date || null,
         internalNotes: market.internal_notes || '',
         promotorNotes: market.promotor_notes || '',
         photosInternal: market.photos_internal || [],
