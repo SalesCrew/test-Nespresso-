@@ -33,11 +33,11 @@ export async function GET(req: Request) {
     const rows = data ?? []
     if (rows.length === 0) return NextResponse.json({ assignments: [] })
 
-    const ids = rows.map((r: any) => r.id).filter(Boolean)
+    const rowIds = rows.map((r: any) => r.id).filter(Boolean)
     const { data: mmRows } = await svc
       .from('assignments')
       .select('id, matched_market_id')
-      .in('id', ids)
+      .in('id', rowIds)
     const mmMap = new Map((mmRows || []).map((r: any) => [r.id, r.matched_market_id]))
 
     const enriched = rows.map((r: any) => ({
