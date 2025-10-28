@@ -4607,94 +4607,33 @@ Dein Nespresso Team`;
                       </div>
                     </div>
 
-                    {/* Boost App */}
+                    {/* Boost App (read-only like Hübner) */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
-                          Boost App
-                        </div>
-                        <button
-                          onClick={() => toggleEditCredentials('boost_app')}
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title={editingCredentials.boost_app ? "Speichern" : "Bearbeiten"}
-                        >
-                          {editingCredentials.boost_app ? (
-                            <Check className="h-3 w-3 text-green-600" />
-                          ) : (
-                            <Edit2 className="h-3 w-3 text-gray-500" />
-                          )}
-                        </button>
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                        Boost App
                       </h4>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
-                          <div 
-                            className="bg-white rounded-md px-3 py-2 border border-gray-200"
-                            style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
-                          >
-                            {editingCredentials.boost_app ? (
-                              <input
-                                type="email"
-                                value={editCredentialsForm.boost_app?.email || ''}
-                                onChange={(e) => setEditCredentialsForm(prev => ({
-                                  ...prev,
-                                  boost_app: { ...prev.boost_app, email: e.target.value }
-                                }))}
-                                className="w-full text-sm font-medium text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0"
-                                style={{ all: 'unset', fontFamily: 'inherit', fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}
-                              />
-                            ) : (
-                              <p className="font-medium text-gray-900">
-                                {accessCredentials?.boost_app_email || (
-                                  <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
-                                )}
-                              </p>
-                            )}
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-medium text-gray-900">
+                              {accessCredentials?.boost_app_email || (
+                                <span className="text-gray-400 italic">Keine E-Mail hinterlegt</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">Passwort</span>
-                          <div 
-                            className="bg-white rounded-md px-3 py-2 border border-gray-200 flex items-center justify-between"
-                            style={editingCredentials.boost_app ? { boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' } : {}}
-                          >
-                            {editingCredentials.boost_app ? (
-                              <input
-                                type="text"
-                                value={editCredentialsForm.boost_app?.password || ''}
-                                onChange={(e) => setEditCredentialsForm(prev => ({
-                                  ...prev,
-                                  boost_app: { ...prev.boost_app, password: e.target.value }
-                                }))}
-                                className="w-full text-sm font-mono text-gray-900 bg-transparent border-0 outline-none focus:outline-none ring-0 focus:ring-0 shadow-none focus:shadow-none p-0 m-0 flex-1"
-                                style={{ all: 'unset', fontFamily: 'monospace', fontSize: 'inherit', color: 'inherit' }}
-                              />
-                            ) : (
-                              <>
-                                <p className="font-mono text-gray-900 flex-1">
-                                  {accessCredentials?.boost_app_password ? (
-                                    passwordVisibility.boost_app ? 
-                                      accessCredentials.boost_app_password : 
-                                      '••••••••••••'
-                                  ) : (
-                                    <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
-                                  )}
-                                </p>
-                                {accessCredentials?.boost_app_password && (
-                                  <button
-                                    onClick={() => togglePasswordVisibility('boost_app')}
-                                    className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    {passwordVisibility.boost_app ? (
-                                      <EyeOff className="h-3 w-3 text-gray-500" />
-                                    ) : (
-                                      <Eye className="h-3 w-3 text-gray-500" />
-                                    )}
-                                  </button>
-                                )}
-                              </>
-                            )}
+                          <div className="bg-white rounded-md px-3 py-2 border border-gray-200">
+                            <p className="font-mono text-gray-900">
+                              {accessCredentials?.boost_app_password ? (
+                                <span>••••••••••••</span>
+                              ) : (
+                                <span className="text-gray-400 italic font-sans">Kein Passwort hinterlegt</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </div>
