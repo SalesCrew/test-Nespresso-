@@ -204,9 +204,17 @@ export default function ProfilPage() {
     if (isEditingContact) {
       try {
         setSavingContact(true)
-        // Persist contact data (placeholder; hook up to API when available)
-        await Promise.resolve()
-        console.log("Saving contact data:", editableProfile)
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.id) {
+          await fetch(`/api/promotors/${user.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: editableProfile.phone })
+          })
+        }
+      } catch (e) {
+        console.error('Failed to save contact data', e)
       } finally {
         setSavingContact(false)
       }
@@ -218,9 +226,20 @@ export default function ProfilPage() {
     if (isEditingClothing) {
       try {
         setSavingClothing(true)
-        // Persist clothing data (placeholder)
-        await Promise.resolve()
-        console.log("Saving clothing data:", editableClothing)
+        const supabase = createSupabaseBrowserClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.id) {
+          await fetch(`/api/promotors/${user.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              height: editableClothing.height,
+              clothing_size: editableClothing.size
+            })
+          })
+        }
+      } catch (e) {
+        console.error('Failed to save clothing data', e)
       } finally {
         setSavingClothing(false)
       }
