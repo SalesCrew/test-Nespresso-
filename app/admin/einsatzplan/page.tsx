@@ -316,6 +316,7 @@ export default function EinsatzplanPage() {
   // Create market modal state for Märkte view
   // Photo preview overlay state
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [savingDetail, setSavingDetail] = useState(false);
   // Create market modal state for Märkte view
   const [showCreateMarketModal, setShowCreateMarketModal] = useState(false);
   const [newMarket, setNewMarket] = useState<any>({
@@ -5239,6 +5240,8 @@ Import EP
               {detailModalTab === 'overview' && (
               <button
                 onClick={async () => {
+                  if (savingDetail) return;
+                  setSavingDetail(true);
                   try {
                     // Save basic assignment data (NOT including status - that's handled by status dropdown)
                     await fetch(`/api/assignments/${editingEinsatz.id}`, {
@@ -5271,6 +5274,7 @@ Import EP
                   } catch (error) {
                     console.error('Error saving assignment:', error);
                   }
+                  setSavingDetail(false);
                   // Update the einsatzplan data - preserve market field
                   setEinsatzplanData(prev => prev.map(item => 
                     item.id === editingEinsatz.id ? { ...item, ...editingEinsatz } : item
@@ -5281,6 +5285,7 @@ Import EP
                   setDetailModalTab('overview');
                 }}
                 className="px-6 py-2 text-sm text-white rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                disabled={savingDetail}
                 style={{
                   background: 'linear-gradient(135deg, #22C55E, #105F2D)',
                   opacity: 0.9
@@ -5288,7 +5293,14 @@ Import EP
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
               >
-                Speichern
+                {savingDetail ? (
+                  <span className="inline-flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    wird gesendet
+                  </span>
+                ) : (
+                  'Speichern'
+                )}
               </button>
               )}
             </div>
