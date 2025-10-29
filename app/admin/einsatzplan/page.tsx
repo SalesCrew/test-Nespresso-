@@ -2446,18 +2446,7 @@ Import EP
                           )}
                           </div>
 
-                          {/* Matched filter pill */}
-                          <button
-                            onClick={() => setMatchedOnly(prev => !prev)}
-                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
-                              matchedOnly
-                                ? 'bg-red-100 text-red-700 border-red-300 scale-110'
-                                : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
-                            }`}
-                            title="Nur Einsätze ohne zugeordneten Markt anzeigen"
-                          >
-                            Nicht zugeordnet
-                          </button>
+                          
                         </div>
                         
                         {/* Promotor Filter Pill */}
@@ -3942,19 +3931,7 @@ Import EP
                           )}
                         </div>
 
-                        {/* Unmatched filter pill - consistent with others; add light gradient highlight when active */}
-                        <button
-                          onClick={() => setMatchedOnly((prev: boolean) => !prev)}
-                          className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border ${
-                            matchedOnly
-                              ? 'bg-gray-100 text-gray-700 border-gray-300 scale-110'
-                              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                          }`}
-                          style={matchedOnly ? { backgroundImage: 'linear-gradient(180deg, rgba(148,163,184,0.15), rgba(148,163,184,0.07))' } : undefined}
-                          title="Nur Einsätze ohne zugeordneten Markt anzeigen"
-                        >
-                          Nicht zugeordnet
-                        </button>
+                        
 
                         {/* Market search */}
                         <input
