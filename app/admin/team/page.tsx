@@ -43,7 +43,8 @@ import {
   CreditCard,
   Ruler,
   Edit2,
-  Key
+  Key,
+  ExternalLink
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -4391,10 +4392,22 @@ Dein Nespresso Team`;
                   <div className="space-y-6">
                     {/* Hübner */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                         Hübner
                       </h4>
+                      {/* Website link (UI only) */}
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          onClick={(e) => e.preventDefault()}
+                          title="Zur Webseite"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Zur Webseite
+                        </button>
+                      </div>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4423,7 +4436,7 @@ Dein Nespresso Team`;
 
                     {/* DemoTool */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                           DemoTool
@@ -4440,6 +4453,18 @@ Dein Nespresso Team`;
                           )}
                         </button>
                       </h4>
+                      {/* Website link (UI only) */}
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          onClick={(e) => e.preventDefault()}
+                          title="Zur Webseite"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Zur Webseite
+                        </button>
+                      </div>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4516,7 +4541,7 @@ Dein Nespresso Team`;
 
                     {/* TMA */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
                           TMA
@@ -4533,6 +4558,18 @@ Dein Nespresso Team`;
                           )}
                         </button>
                       </h4>
+                      {/* Website link (UI only) */}
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          onClick={(e) => e.preventDefault()}
+                          title="Zur Webseite"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Zur Webseite
+                        </button>
+                      </div>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4609,10 +4646,22 @@ Dein Nespresso Team`;
 
                     {/* Boost App (read-only like Hübner) */}
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200/60">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
                           <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                           Boost App
                       </h4>
+                      {/* Website link (UI only) */}
+                      <div className="mb-3">
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                          onClick={(e) => e.preventDefault()}
+                          title="Zur Webseite"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Zur Webseite
+                        </button>
+                      </div>
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
