@@ -61,10 +61,13 @@ export async function recomputeOnboarding(svc: SupabaseClient, userId: string) {
   const profileAll = profileFields.every(Boolean);
   const profileStatus: OnboardingStatus = statusFromFlags(profileAny, profileAll);
 
-  // Step: documents (ignore strafregister, citizenship now optional, fuehrerschein only if has driving license)
-  const requiredDocs = ['passport'];
+  // Step: documents
+  // Required: passport, strafregister
+  // Conditional required: fuehrerschein (only if applicant claims to have one), arbeitserlaubnis (only if profile needs it)
+  // Optional: citizenship, additional
+  const requiredDocs = ['passport', 'strafregister'];
   const needsWP = !!profile?.needs_work_permit;
-  const hasDrivingLicense = !!application?.drivingLicense;
+  const hasDrivingLicense = (application?.drivingLicense ?? (application as any)?.driving_license) ? true : false;
   if (needsWP) requiredDocs.push('arbeitserlaubnis');
   if (hasDrivingLicense) requiredDocs.push('fuehrerschein');
   const docMap = new Map(docs.map(d => [String(d.doc_type), d.status]));
