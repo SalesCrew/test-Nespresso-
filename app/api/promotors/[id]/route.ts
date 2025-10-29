@@ -77,6 +77,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     bank_name: typeof raw.bank_name === 'string' ? raw.bank_name : undefined,
   } as any;
 
+  const email: string | undefined = typeof raw.email === 'string' ? raw.email : undefined;
+
   const updates: any = { updated_at: new Date().toISOString() };
   for (const [k, v] of Object.entries(allowed)) if (v !== undefined) updates[k] = v;
   if (Object.keys(updates).length === 1) {
@@ -100,6 +102,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
     } else {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
+  // If email was provided, update the linked application email (source of truth for UI)
+  if (email) {
+    try {
+      const { data: prof } = await svc
+        .from('promotor_profiles')
+        .select('application_id')
+        .eq('user_id', params.id)
+        .maybeSingle();
+      if (prof?.application_id) {
+        await svc
+          .from('applications')
+          .update({ email })
+          .eq('id', prof.application_id);
+      }
+    } catch (e: any) {
+      console.error('Failed to update application email:', e?.message || e);
     }
   }
   // Recompute onboarding after profile change

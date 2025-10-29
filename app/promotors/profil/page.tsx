@@ -210,7 +210,7 @@ export default function ProfilPage() {
           await fetch(`/api/promotors/${user.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: editableProfile.phone })
+            body: JSON.stringify({ phone: editableProfile.phone, email: editableProfile.email })
           })
         }
       } catch (e) {
@@ -1158,7 +1158,7 @@ export default function ProfilPage() {
                     <Contact className="h-5 w-5 mr-2 text-blue-500" />
                     Kontaktdaten
                   </div>
-                <Button
+                                  <Button
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
@@ -1169,7 +1169,7 @@ export default function ProfilPage() {
                     savingContact ? (
                       <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                     ) : (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                    <Check className="h-1.5 w-1.5 text-green-500" />
                     )
                   ) : (
                     <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
@@ -1242,7 +1242,7 @@ export default function ProfilPage() {
                       savingClothing ? (
                         <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                       ) : (
-                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                       )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
@@ -1456,7 +1456,7 @@ export default function ProfilPage() {
                       savingEmployment ? (
                         <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                       ) : (
-                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                       )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
@@ -1599,7 +1599,7 @@ export default function ProfilPage() {
                       savingBank ? (
                         <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                       ) : (
-                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                       )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
@@ -1733,7 +1733,7 @@ export default function ProfilPage() {
                       savingPersonal ? (
                         <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                       ) : (
-                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                       )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
@@ -1841,7 +1841,7 @@ export default function ProfilPage() {
                       savingAccess ? (
                         <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
                       ) : (
-                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      <Check className="h-1.5 w-1.5 text-green-500" />
                       )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
