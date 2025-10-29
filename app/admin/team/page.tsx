@@ -187,6 +187,7 @@ export default function PromotorenPage() {
   const [editableContractHTML, setEditableContractHTML] = useState<string>('');
   const [viewContractHTML, setViewContractHTML] = useState<string>('');
   const [loadingContractHTML, setLoadingContractHTML] = useState(false);
+  const [sendingContract, setSendingContract] = useState(false);
   const editableContractRef = useRef<HTMLDivElement>(null);
   // Contracts for selected promotor
   const [promotorContracts, setPromotorContracts] = useState<any[] | null>(null);
@@ -4255,6 +4256,8 @@ Dein Nespresso Team`;
                     </button>
                     <button
                       onClick={async () => {
+                        if (sendingContract) return;
+                        setSendingContract(true);
                         const promotorId = selectedPromotorForContract ? String(selectedPromotorForContract) : null;
                         if (!promotorId) return;
                         
@@ -4262,6 +4265,7 @@ Dein Nespresso Team`;
                         const finalHTML = editableContractRef.current?.innerHTML || '';
                         if (!finalHTML) {
                           setToastMsg('Fehler: Kein Vertragsinhalt gefunden');
+                          setSendingContract(false);
                           return;
                         }
                         
@@ -4303,14 +4307,24 @@ Dein Nespresso Team`;
                           setToastMsg('Vertrag erfolgreich erstellt und versendet!');
                           setShowContractPreview(false);
                           setEditableContractHTML('');
+                          setSendingContract(false);
                         } catch (e: any) {
                           console.error(e);
                           setToastMsg(e.message || 'Fehler beim Erstellen des Vertrags');
+                          setSendingContract(false);
                         }
                       }}
                       className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg font-medium transition-all duration-200"
+                      disabled={sendingContract}
                     >
-                      Vertrag senden
+                      {sendingContract ? (
+                        <span className="inline-flex items-center">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          wird gesendet
+                        </span>
+                      ) : (
+                        'Vertrag senden'
+                      )}
                     </button>
                   </div>
                 </div>
