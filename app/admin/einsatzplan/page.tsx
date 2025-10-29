@@ -2446,7 +2446,18 @@ Import EP
                           )}
                           </div>
 
-                          {/* Matched filter pill removed for Märkte view (kept in Einsatzplan) */}
+                          {/* Matched filter pill */}
+                          <button
+                            onClick={() => setMatchedOnly(prev => !prev)}
+                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                              matchedOnly
+                                ? 'bg-red-100 text-red-700 border-red-300 scale-110'
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
+                            }`}
+                            title="Nur Einsätze ohne zugeordneten Markt anzeigen"
+                          >
+                            Nicht zugeordnet
+                          </button>
                         </div>
                         
                         {/* Promotor Filter Pill */}
@@ -3931,7 +3942,7 @@ Import EP
                           )}
                         </div>
 
-                        {/* Unmatched filter pill removed for Märkte view (kept in Einsatzplan) */}
+                        {/* Removed 'Nicht zugeordnet' pill in Märkte view (kept in Einsatzplan) */}
 
                         {/* Market search */}
                         <input
