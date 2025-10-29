@@ -2446,7 +2446,7 @@ Import EP
                           )}
                           </div>
 
-                          
+                          {/* Matched filter pill removed for Märkte view (kept in Einsatzplan) */}
                         </div>
                         
                         {/* Promotor Filter Pill */}
@@ -3931,7 +3931,7 @@ Import EP
                           )}
                         </div>
 
-                        
+                        {/* Unmatched filter pill removed for Märkte view (kept in Einsatzplan) */}
 
                         {/* Market search */}
                         <input
