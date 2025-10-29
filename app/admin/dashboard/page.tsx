@@ -37,6 +37,7 @@ import {
   Trash2,
   Thermometer,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   const [showKpiView, setShowKpiView] = useState(true); // true for CA KPIs, false for Mystery Shop
   const [isEinsaetzeExpanded, setIsEinsaetzeExpanded] = useState(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
+ const [sendingMessage, setSendingMessage] = useState(false);
+ const [schedulingMessage, setSchedulingMessage] = useState(false);
   
   // State for today's assignments
   const [todaysEinsaetze, setTodaysEinsaetze] = useState<any[]>([]);
@@ -403,6 +406,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   // Function to handle message scheduling
   const handleScheduleMessage = async () => {
+    if (schedulingMessage) return;
+    setSchedulingMessage(true);
     if (!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0) return;
     
     try {
@@ -447,6 +452,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       }
     } catch (error) {
       console.error('Error scheduling message:', error);
+    } finally {
+      setSchedulingMessage(false);
     }
   };
 
@@ -2183,6 +2190,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                     <div className="flex space-x-2">
                       <button 
                         onClick={async () => {
+                          if (sendingMessage) return;
+                          setSendingMessage(true);
                           if (!messageText.trim() || selectedPromotors.length === 0) return;
                           
                           try {
@@ -2223,11 +2232,21 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             }
                           } catch (error) {
                             console.error('Error sending message:', error);
+                          } finally {
+                            setSendingMessage(false);
                           }
                         }}
-                        className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all"
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-70"
+                        disabled={sendingMessage}
                       >
-                        Sofort senden
+                        {sendingMessage ? (
+                          <span className="inline-flex items-center">
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            wird gesendet
+                          </span>
+                        ) : (
+                          'Sofort senden'
+                        )}
                       </button>
                       <button 
                         onClick={() => setShowScheduleModal(true)}
@@ -3859,10 +3878,17 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                 </Button>
                 <Button
                   onClick={handleScheduleMessage}
-                  disabled={!messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all"
+                  disabled={schedulingMessage || !messageText.trim() || !scheduleDate || !scheduleTime || selectedPromotors.length === 0}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all disabled:opacity-70"
                 >
-                  Planen
+                  {schedulingMessage ? (
+                    <span className="inline-flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      wird geplant
+                    </span>
+                  ) : (
+                    'Planen'
+                  )}
                 </Button>
               </div>
             </CardContent>
