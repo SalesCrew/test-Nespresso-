@@ -2351,52 +2351,7 @@ Dein Nespresso Team`;
                 )}
               </div>
               
-              {/* Market Filter Dropdown */}
-              <div className="relative" ref={marketDropdownRef}>
-                <button
-                  onClick={() => setMarketDropdownOpen(!marketDropdownOpen)}
-                  className="flex items-center justify-between min-w-[160px] px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-gray-300 transition-all duration-200"
-                >
-                  <span className="truncate">{marketFilter === "all" ? "Alle Märkte" : marketFilter}</span>
-                  <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform duration-200 flex-shrink-0 ml-2 ${marketDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {marketDropdownOpen && (
-                  <div className="absolute top-full mt-1 w-full min-w-[280px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          setMarketFilter("all");
-                          setMarketDropdownOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                          marketFilter === "all" 
-                            ? "bg-gray-50 text-gray-900" 
-                            : "text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        Alle Märkte
-                      </button>
-                      {availableMarkets.map((market) => (
-                        <button
-                          key={market}
-                          onClick={() => {
-                            setMarketFilter(market);
-                            setMarketDropdownOpen(false);
-                          }}
-                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                            marketFilter === market 
-                              ? "bg-gray-50 text-gray-900" 
-                              : "text-gray-600 hover:bg-purple-100/50"
-                          }`}
-                        >
-                          <span className="truncate block">{market}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Removed Market Filter Dropdown per request */}
             </div>
           </div>
 
