@@ -125,6 +125,13 @@ export default function ProfilPage() {
   const [isEditingPersonal, setIsEditingPersonal] = useState(false)
   const [isEditingAccess, setIsEditingAccess] = useState(false)
   const [isEditingEmployment, setIsEditingEmployment] = useState(false)
+  // Saving states for section edits
+  const [savingContact, setSavingContact] = useState(false)
+  const [savingClothing, setSavingClothing] = useState(false)
+  const [savingBank, setSavingBank] = useState(false)
+  const [savingPersonal, setSavingPersonal] = useState(false)
+  const [savingAccess, setSavingAccess] = useState(false)
+  const [savingEmployment, setSavingEmployment] = useState(false)
   const [showHuebnerPassword, setShowHuebnerPassword] = useState(false)
   const [showDemotoolPassword, setShowDemotoolPassword] = useState(false)
   const [showTmaPassword, setShowTmaPassword] = useState(false)
@@ -193,20 +200,30 @@ export default function ProfilPage() {
     avatar: "/placeholder.svg?height=80&width=80"
   })
 
-  const handleEditToggle = () => {
+  const handleEditToggle = async () => {
     if (isEditingContact) {
-      // Save the data when exiting edit mode
-      // In a real app, this would make an API call
-      console.log("Saving contact data:", editableProfile)
+      try {
+        setSavingContact(true)
+        // Persist contact data (placeholder; hook up to API when available)
+        await Promise.resolve()
+        console.log("Saving contact data:", editableProfile)
+      } finally {
+        setSavingContact(false)
+      }
     }
     setIsEditingContact(!isEditingContact)
   }
 
-  const handleClothingEditToggle = () => {
+  const handleClothingEditToggle = async () => {
     if (isEditingClothing) {
-      // Save the data when exiting edit mode
-      // In a real app, this would make an API call
-      console.log("Saving clothing data:", editableClothing)
+      try {
+        setSavingClothing(true)
+        // Persist clothing data (placeholder)
+        await Promise.resolve()
+        console.log("Saving clothing data:", editableClothing)
+      } finally {
+        setSavingClothing(false)
+      }
     }
     setIsEditingClothing(!isEditingClothing)
   }
@@ -214,6 +231,7 @@ export default function ProfilPage() {
   const handleBankEditToggle = async () => {
     if (isEditingBank) {
       try {
+        setSavingBank(true)
         const supabase = createSupabaseBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (user?.id) {
@@ -230,6 +248,8 @@ export default function ProfilPage() {
         }
       } catch (e) {
         console.error('Failed to save bank data', e)
+      } finally {
+        setSavingBank(false)
       }
     }
     setIsEditingBank(!isEditingBank)
@@ -239,6 +259,7 @@ export default function ProfilPage() {
     if (isEditingPersonal) {
       // Save the data when exiting edit mode
       try {
+        setSavingPersonal(true)
         const supabase = createSupabaseBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
         
@@ -259,6 +280,8 @@ export default function ProfilPage() {
         }
       } catch (e) {
         console.error('Failed to save personal data', e)
+      } finally {
+        setSavingPersonal(false)
       }
     }
     setIsEditingPersonal(!isEditingPersonal)
@@ -267,6 +290,7 @@ export default function ProfilPage() {
   const handleAccessEditToggle = async () => {
     if (isEditingAccess) {
       try {
+        setSavingAccess(true)
         const supabase = createSupabaseBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
         
@@ -312,6 +336,8 @@ export default function ProfilPage() {
         }
       } catch (e) {
         console.error('Failed to save access credentials', e)
+      } finally {
+        setSavingAccess(false)
       }
     }
     setIsEditingAccess(!isEditingAccess)
@@ -320,6 +346,7 @@ export default function ProfilPage() {
   const handleEmploymentEditToggle = async () => {
     if (isEditingEmployment) {
       try {
+        setSavingEmployment(true)
         const supabase = createSupabaseBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
         
@@ -338,6 +365,8 @@ export default function ProfilPage() {
         }
       } catch (e) {
         console.error('Failed to save working days', e)
+      } finally {
+        setSavingEmployment(false)
       }
     }
     setIsEditingEmployment(!isEditingEmployment)
@@ -1110,14 +1139,19 @@ export default function ProfilPage() {
                     <Contact className="h-5 w-5 mr-2 text-blue-500" />
                     Kontaktdaten
                   </div>
-                                  <Button
+                <Button
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                   onClick={handleEditToggle}
+                  disabled={savingContact}
                 >
                   {isEditingContact ? (
-                    <Check className="h-1.5 w-1.5 text-green-500" />
+                    savingContact ? (
+                      <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                    ) : (
+                      <Check className="h-1.5 w-1.5 text-green-500" />
+                    )
                   ) : (
                     <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                   )}
@@ -1183,9 +1217,14 @@ export default function ProfilPage() {
                     size="icon"
                     className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     onClick={handleClothingEditToggle}
+                    disabled={savingClothing}
                   >
                     {isEditingClothing ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                      savingClothing ? (
+                        <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                      ) : (
+                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
@@ -1392,9 +1431,14 @@ export default function ProfilPage() {
                     size="icon"
                     className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     onClick={handleEmploymentEditToggle}
+                    disabled={savingEmployment}
                   >
                     {isEditingEmployment ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                      savingEmployment ? (
+                        <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                      ) : (
+                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
@@ -1530,9 +1574,14 @@ export default function ProfilPage() {
                     size="icon"
                     className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     onClick={handleBankEditToggle}
+                    disabled={savingBank}
                   >
                     {isEditingBank ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                      savingBank ? (
+                        <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                      ) : (
+                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
@@ -1659,9 +1708,14 @@ export default function ProfilPage() {
                     size="icon"
                     className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     onClick={handlePersonalEditToggle}
+                    disabled={savingPersonal}
                   >
                     {isEditingPersonal ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                      savingPersonal ? (
+                        <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                      ) : (
+                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
@@ -1762,9 +1816,14 @@ export default function ProfilPage() {
                     size="sm"
                     className="h-6 w-6 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     onClick={handleAccessEditToggle}
+                    disabled={savingAccess}
                   >
                     {isEditingAccess ? (
-                      <Check className="h-1.5 w-1.5 text-green-500" />
+                      savingAccess ? (
+                        <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                      ) : (
+                        <Check className="h-1.5 w-1.5 text-green-500" />
+                      )
                     ) : (
                       <Edit2 className="h-1.5 w-1.5 text-gray-400/60 hover:text-gray-600/80 dark:hover:text-gray-300/80" />
                     )}
