@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Bell,
@@ -102,6 +102,9 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
   const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
+  // Real KPI history for company-wide CA KPIs (from admin/statistiken)
+  const [kpiHistory, setKpiHistory] = useState<Array<{ mcet: number; tma: number; vlShare: number; createdAt: Date }>>([]);
+  const [kpiHistoryLoading, setKpiHistoryLoading] = useState(false);
   
   // Promotor Selection states
   const [showPromotorSelection, setShowPromotorSelection] = useState(false);
@@ -701,6 +704,197 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   };
 
+  // Load company KPI feedback history once (same source as admin/statistiken)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setKpiHistoryLoading(true);
+        const res = await fetch('/api/admin/kpi-feedback');
+        if (!res.ok) throw new Error('Failed to fetch KPI feedback');
+        const data = await res.json();
+        const mapped = Array.isArray(data?.feedback)
+          ? data.feedback.map((item: any) => ({
+              mcet: Number(item.mc_et) || 0,
+              tma: Number(item.tma) || 0,
+              vlShare: Number(item.vl_value) || 0,
+              createdAt: new Date(item.created_at)
+            }))
+          : [];
+        if (mounted) setKpiHistory(mapped);
+      } catch (e) {
+        console.error('Error loading KPI history:', e);
+        if (mounted) setKpiHistory([]);
+      } finally {
+        if (mounted) setKpiHistoryLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Helpers derived from admin/statistiken
+  const getAverageColor = (metric: 'mcet' | 'tma' | 'vlShare', value: number | null) => {
+    if (value == null || Number.isNaN(value)) return 'text-gray-400';
+    const v = value;
+    if (metric === 'mcet') {
+      if (v >= 4.0) return 'text-green-600';
+      if (v >= 3.5) return 'text-[#FD7E14]';
+      return 'text-red-600';
+    } else if (metric === 'tma') {
+      if (v >= 70) return 'text-green-600';
+      if (v >= 60) return 'text-[#FD7E14]';
+      return 'text-red-600';
+    } else {
+      if (v >= 10) return 'text-green-600';
+      if (v >= 5) return 'text-[#FD7E14]';
+      return 'text-red-600';
+    }
+  };
+
+  const averageOf = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+
+  const calcAverages = (timeframe: 'alltime' | '30days' | '6months') => {
+    if (!kpiHistory.length) return { mcet: null, tma: null, vlShare: null };
+    const now = new Date();
+    let relevant = kpiHistory;
+    if (timeframe === '30days') {
+      const cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      relevant = kpiHistory.filter((e) => e.createdAt >= cutoff);
+    } else if (timeframe === '6months') {
+      const cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+      relevant = kpiHistory.filter((e) => e.createdAt >= cutoff);
+    }
+    if (!relevant.length) return { mcet: null, tma: null, vlShare: null };
+    return {
+      mcet: averageOf(relevant.map((e) => e.mcet)),
+      tma: averageOf(relevant.map((e) => e.tma)),
+      vlShare: averageOf(relevant.map((e) => e.vlShare))
+    };
+  };
+
+  const buildWaves = (entries: typeof kpiHistory) => {
+    if (!entries.length) return [] as typeof entries[];
+    const sorted = [...entries].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const waves: typeof entries[] = [];
+    let current: typeof entries = [] as any;
+    let lastDate: Date | null = null;
+    for (const e of sorted) {
+      if (!lastDate || lastDate.getTime() - e.createdAt.getTime() > 3 * 24 * 60 * 60 * 1000) {
+        if (current.length) waves.push(current);
+        current = [e];
+        lastDate = e.createdAt;
+      } else {
+        current.push(e);
+      }
+    }
+    if (current.length) waves.push(current);
+    return waves;
+  };
+
+  const waveAvg = (wave: typeof kpiHistory) => ({
+    mcet: averageOf(wave.map((e) => e.mcet)) || 0,
+    tma: averageOf(wave.map((e) => e.tma)) || 0,
+    vlShare: averageOf(wave.map((e) => e.vlShare)) || 0
+  });
+
+  const percentChange = (current: number, previous: number) => {
+    if (!previous) return null;
+    const ch = ((current - previous) / previous) * 100;
+    return ch;
+  };
+
+  const waveChanges = () => {
+    const waves = buildWaves(kpiHistory);
+    if (waves.length < 2) return { mcet: null, tma: null, vlShare: null } as Record<string, number | null> as any;
+    const last = waveAvg(waves[0]);
+    const prev = waveAvg(waves[1]);
+    return {
+      mcet: percentChange(last.mcet, prev.mcet),
+      tma: percentChange(last.tma, prev.tma),
+      vlShare: percentChange(last.vlShare, prev.vlShare)
+    };
+  };
+
+  const sixWaveChanges = () => {
+    const waves = buildWaves(kpiHistory);
+    if (waves.length < 7) return { mcet: null, tma: null, vlShare: null } as Record<string, number | null> as any;
+    const cur = waveAvg(waves[0]);
+    const sixAgo = waveAvg(waves[6]);
+    return {
+      mcet: percentChange(cur.mcet, sixAgo.mcet),
+      tma: percentChange(cur.tma, sixAgo.tma),
+      vlShare: percentChange(cur.vlShare, sixAgo.vlShare)
+    };
+  };
+
+  // Build monthly chart data from real KPI history
+  const buildKpiMonthlyChartData = () => {
+    if (!kpiHistory.length) return [] as Array<{ month: string; mcet: number; tma: number; vl: number }>;
+    // Group by month-year
+    const buckets: Record<string, { mcet: number[]; tma: number[]; vl: number[]; d: Date }> = {};
+    for (const e of kpiHistory) {
+      const key = e.createdAt.getFullYear() + '-' + (e.createdAt.getMonth() + 1);
+      if (!buckets[key]) {
+        buckets[key] = { mcet: [], tma: [], vl: [], d: new Date(e.createdAt.getFullYear(), e.createdAt.getMonth(), 1) };
+      }
+      buckets[key].mcet.push(e.mcet);
+      buckets[key].tma.push(e.tma);
+      buckets[key].vl.push(e.vlShare);
+    }
+    const rows = Object.values(buckets)
+      .map((b) => ({
+        month: b.d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' }),
+        mcet: Number((b.mcet.reduce((a, c) => a + c, 0) / b.mcet.length).toFixed(1)),
+        tma: Number((b.tma.reduce((a, c) => a + c, 0) / b.tma.length).toFixed(1)),
+        vl: Number((b.vl.reduce((a, c) => a + c, 0) / b.vl.length).toFixed(1)),
+        sortDate: b.d.getTime()
+      }))
+      .sort((a, b) => a.sortDate - b.sortDate)
+      .slice(-12)
+      .map(({ sortDate, ...rest }) => rest);
+    return rows;
+  };
+
+  const kpiChartData = useMemo(buildKpiMonthlyChartData, [kpiHistory]);
+
+  // Real KPI stats object consumed by the popup (keeps existing render API)
+  const calculateKpiStatsData = () => {
+    const all = calcAverages('alltime');
+    const d30 = calcAverages('30days');
+    const d6m = calcAverages('6months');
+    const wave = waveChanges();
+    const six = sixWaveChanges();
+
+    const sign = (n: number | null, withPercent = false) => {
+      if (n == null || Number.isNaN(n)) return withPercent ? '0%' : '0';
+      const val = withPercent ? `${n >= 0 ? '+' : ''}${n.toFixed(1)}%` : `${n >= 0 ? '+' : ''}${n.toFixed(1)}`;
+      return val;
+    };
+
+    // Optimal targets
+    const opt = { mcet: 4.5, tma: 75, vlShare: 10 };
+
+    return {
+      alltime: {
+        mcet: { value: all.mcet ?? 0, changePercent: sign(all.mcet != null ? (all.mcet - opt.mcet) : 0, false) },
+        tma: { value: all.tma ?? 0, changePercent: sign(all.tma != null ? (all.tma - opt.tma) : 0, false) },
+        vlShare: { value: all.vlShare ?? 0, changePercent: sign(all.vlShare != null ? (all.vlShare - opt.vlShare) : 0, false) }
+      },
+      '30days': {
+        mcet: { value: d30.mcet ?? 0, changePercent: sign(wave.mcet, true) },
+        tma: { value: d30.tma ?? 0, changePercent: sign(wave.tma, true) },
+        vlShare: { value: d30.vlShare ?? 0, changePercent: sign(wave.vlShare, true) }
+      },
+      '6months': {
+        mcet: { value: d6m.mcet ?? 0, changePercent: sign(six.mcet, true) },
+        tma: { value: d6m.tma ?? 0, changePercent: sign(six.tma, true) },
+        vlShare: { value: d6m.vlShare ?? 0, changePercent: sign(six.vlShare, true) }
+      }
+    } as const;
+  };
+
   // Mystery Shop data - use all-time average
   const mysteryShopData = {
     value: 88.7, // All-time average from mysteryShopStatsData
@@ -812,84 +1006,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
     return 'bg-gray-100 text-gray-800';
   };
 
-  const calculateKpiStatsData = () => {
-    // Calculate averages for all time
-    const allTimeAvg = {
-      mcet: historyData.reduce((sum, entry) => sum + entry.mcet, 0) / historyData.length,
-      tma: historyData.reduce((sum, entry) => sum + entry.tma, 0) / historyData.length,
-      vl: historyData.reduce((sum, entry) => sum + entry.vl, 0) / historyData.length
-    }
-
-    // Get current month (most recent entry) and comparison months
-    const currentMonth = historyData[historyData.length - 1] // Most recent
-    const lastMonth = historyData[historyData.length - 2] // Previous month  
-    const sixMonthsAgo = historyData[historyData.length - 7] // 6 months ago
-
-    // Calculate averages for last 6 months
-    const last6MonthsData = historyData.slice(-6)
-    const sixMonthsAvg = {
-      mcet: last6MonthsData.reduce((sum, entry) => sum + entry.mcet, 0) / last6MonthsData.length,
-      tma: last6MonthsData.reduce((sum, entry) => sum + entry.tma, 0) / last6MonthsData.length,
-      vl: last6MonthsData.reduce((sum, entry) => sum + entry.vl, 0) / last6MonthsData.length
-    }
-
-    // Helper to calculate percentage change
-    const calcPercentChange = (current: number, previous: number) => {
-      const change = ((current - previous) / previous) * 100
-      return change >= 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`
-    }
-
-    // Helper to calculate optimal difference
-    const calcOptimalDiff = (value: number, optimal: number) => {
-      const diff = value - optimal
-      return diff >= 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`
-    }
-
-    return {
-      "30days": {
-        mcet: { 
-          value: currentMonth.mcet, 
-          changePercent: calcPercentChange(currentMonth.mcet, lastMonth.mcet)
-        },
-        tma: { 
-          value: currentMonth.tma, 
-          changePercent: calcPercentChange(currentMonth.tma, lastMonth.tma)
-        },
-        vlShare: { 
-          value: currentMonth.vl, 
-          changePercent: calcPercentChange(currentMonth.vl, lastMonth.vl)
-        }
-      },
-      "6months": {
-        mcet: { 
-          value: sixMonthsAvg.mcet, 
-          changePercent: calcPercentChange(currentMonth.mcet, sixMonthsAgo.mcet)
-        },
-        tma: { 
-          value: sixMonthsAvg.tma, 
-          changePercent: calcPercentChange(currentMonth.tma, sixMonthsAgo.tma)
-        },
-        vlShare: { 
-          value: sixMonthsAvg.vl, 
-          changePercent: calcPercentChange(currentMonth.vl, sixMonthsAgo.vl)
-        }
-      },
-      "alltime": {
-        mcet: { 
-          value: allTimeAvg.mcet, 
-          changePercent: calcOptimalDiff(allTimeAvg.mcet, 4.5)
-        },
-        tma: { 
-          value: allTimeAvg.tma, 
-          changePercent: calcOptimalDiff(allTimeAvg.tma, 75)
-        },
-        vlShare: { 
-          value: allTimeAvg.vl, 
-          changePercent: calcOptimalDiff(allTimeAvg.vl, 10)
-        }
-      }
-    }
-  }
+  // Note: calculateKpiStatsData is defined above to use real KPI history
 
   const kpiStatsData = calculateKpiStatsData()
 
@@ -3335,7 +3452,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                   <div className="bg-white p-6 rounded-lg border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Monatlicher Trend-Verlauf</h3>
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={historyData}>
+                      <LineChart data={kpiChartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis 
                           dataKey="month" 
