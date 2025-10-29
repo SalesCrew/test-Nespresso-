@@ -2033,32 +2033,56 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                           {/* MC/ET Column */}
                           <div className="flex flex-col">
                             <span className="text-[9px] font-medium text-gray-600">MC/ET</span>
-                            <span className={`text-sm font-semibold ${getKpiColor("mcet", companyKpis.mcet.value)}`}>
-                              {companyKpis.mcet.value}
-                            </span>
-                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.mcet.changePercent)}`}>
-                              {companyKpis.mcet.changePercent}
-                            </span>
+                            {kpiHistoryLoading ? (
+                              <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
+                            ) : (
+                              <span className={`text-sm font-semibold ${getKpiColor("mcet", companyKpis.mcet.value)}`}>
+                                {companyKpis.mcet.value}
+                              </span>
+                            )}
+                            {kpiHistoryLoading ? (
+                              <div className="h-3 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
+                            ) : (
+                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.mcet.changePercent)}`}>
+                                {companyKpis.mcet.changePercent}
+                              </span>
+                            )}
                           </div>
                           {/* TMA Column */}
                           <div className="flex flex-col">
                             <span className="text-[9px] font-medium text-gray-600">TMA</span>
-                            <span className={`text-sm font-semibold ${getKpiColor("tma", companyKpis.tma.value)}`}>
-                              {companyKpis.tma.value}%
-                            </span>
-                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.tma.changePercent)}`}>
-                              {companyKpis.tma.changePercent}
-                            </span>
+                            {kpiHistoryLoading ? (
+                              <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
+                            ) : (
+                              <span className={`text-sm font-semibold ${getKpiColor("tma", companyKpis.tma.value)}`}>
+                                {companyKpis.tma.value}%
+                              </span>
+                            )}
+                            {kpiHistoryLoading ? (
+                              <div className="h-3 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
+                            ) : (
+                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.tma.changePercent)}`}>
+                                {companyKpis.tma.changePercent}
+                              </span>
+                            )}
                           </div>
                           {/* VL Share Column */}
                           <div className="flex flex-col">
                             <span className="text-[9px] font-medium text-gray-600">VL Share</span>
-                            <span className={`text-sm font-semibold ${getKpiColor("vlshare", companyKpis.vlShare.value)}`}>
-                              {companyKpis.vlShare.value}%
-                            </span>
-                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.vlShare.changePercent)}`}>
-                              {companyKpis.vlShare.changePercent}
-                            </span>
+                            {kpiHistoryLoading ? (
+                              <div className="h-4 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
+                            ) : (
+                              <span className={`text-sm font-semibold ${getKpiColor("vlshare", companyKpis.vlShare.value)}`}>
+                                {companyKpis.vlShare.value}%
+                              </span>
+                            )}
+                            {kpiHistoryLoading ? (
+                              <div className="h-3 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
+                            ) : (
+                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.vlShare.changePercent)}`}>
+                                {companyKpis.vlShare.changePercent}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
