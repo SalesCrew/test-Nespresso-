@@ -685,6 +685,8 @@ export default function EinsatzplanPage() {
   const detailBuddySearchRef = useRef<HTMLInputElement | null>(null);
   // Buddy toggle for bulk invites
   const [inviteBuddy, setInviteBuddy] = useState(false);
+  // Loading state for bulk send button
+  const [sendingInvites, setSendingInvites] = useState(false);
   // Accepted applications for the current assignment (detail view)
   const [applicationsList, setApplicationsList] = useState<any[]>([]);
   // Flash effect for promotor field
@@ -3713,7 +3715,10 @@ Import EP
                           </div>
                         <button
                           className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          disabled={sendingInvites}
                           onClick={async () => {
+                            if (sendingInvites) return;
+                            setSendingInvites(true);
                             try {
                               // Map selected promoter names to IDs
                               const ids = promotorsList
@@ -3747,14 +3752,24 @@ Import EP
                             } catch (error) {
                               console.error('Failed to send invitations:', error);
                             }
+                            setSendingInvites(false);
                             setSelectedPromotions([]);
                             setSelectedPromotors([]);
                             setInviteBuddy(false);
                             setSelectionMode(false);
                           }}
                         >
-                          <Send className="h-4 w-4" />
-                          <span>Senden</span>
+                          {sendingInvites ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>wird gesendet</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4" />
+                              <span>Senden</span>
+                            </>
+                          )}
                         </button>
                         </div>
                       )}
