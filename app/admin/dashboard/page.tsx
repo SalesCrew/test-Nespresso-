@@ -2191,8 +2191,8 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                       <button 
                         onClick={async () => {
                           if (sendingMessage) return;
-                          setSendingMessage(true);
                           if (!messageText.trim() || selectedPromotors.length === 0) return;
+                          setSendingMessage(true);
                           
                           try {
                             // Get promotor IDs from selected names
