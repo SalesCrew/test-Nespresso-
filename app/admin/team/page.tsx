@@ -273,6 +273,9 @@ export default function PromotorenPage() {
   const [editingBankData, setEditingBankData] = useState<Record<string, boolean>>({});
   const [editingClothingData, setEditingClothingData] = useState<Record<string, boolean>>({});
   const [editingWorkingDays, setEditingWorkingDays] = useState<Record<string, boolean>>({});
+  const [savingBankData, setSavingBankData] = useState<Record<string, boolean>>({});
+  const [savingClothingData, setSavingClothingData] = useState<Record<string, boolean>>({});
+  const [savingWorkingDays, setSavingWorkingDays] = useState<Record<string, boolean>>({});
   const [editBankForm, setEditBankForm] = useState<Record<string, any>>({});
   const [editClothingForm, setEditClothingForm] = useState<Record<string, any>>({});
   const [editWorkingDaysForm, setEditWorkingDaysForm] = useState<Record<string, string[]>>({});
@@ -494,6 +497,7 @@ Dein Nespresso Team`;
     if (isEditing) {
       // Save changes
       try {
+      setSavingBankData(prev => ({ ...prev, [promotorId]: true }));
         const formData = editBankForm[promotorId];
         console.log('Updating bank data for promotor:', promotorId, formData);
         const response = await fetch(`/api/promotors/${promotorId}`, {
@@ -541,7 +545,9 @@ Dein Nespresso Team`;
         }
       } catch (e) {
         setToastMsg('Fehler beim Speichern der Bankdaten');
-      }
+    } finally {
+      setSavingBankData(prev => ({ ...prev, [promotorId]: false }));
+    }
     } else {
       // Enter edit mode
       const promotor = promotors.find(p => p.id === promotorId);
@@ -567,6 +573,7 @@ Dein Nespresso Team`;
     if (isEditing) {
       // Save changes
       try {
+      setSavingClothingData(prev => ({ ...prev, [promotorId]: true }));
         const formData = editClothingForm[promotorId];
         console.log('Updating clothing data for promotor:', promotorId, formData);
         
@@ -603,7 +610,9 @@ Dein Nespresso Team`;
         }
       } catch (e) {
         setToastMsg('Fehler beim Speichern der Kleidergröße');
-      }
+    } finally {
+      setSavingClothingData(prev => ({ ...prev, [promotorId]: false }));
+    }
     } else {
       // Enter edit mode
       const promotor = promotors.find(p => p.id === promotorId);
@@ -624,6 +633,7 @@ Dein Nespresso Team`;
     if (isEditing) {
       // Save changes
       try {
+      setSavingWorkingDays(prev => ({ ...prev, [promotorId]: true }));
         const formData = editWorkingDaysForm[promotorId];
         console.log('Updating working days for promotor:', promotorId, formData);
         
@@ -655,7 +665,9 @@ Dein Nespresso Team`;
         }
       } catch (e) {
         setToastMsg('Fehler beim Speichern der Arbeitstage');
-      }
+    } finally {
+      setSavingWorkingDays(prev => ({ ...prev, [promotorId]: false }));
+    }
     } else {
       // Enter edit mode
       const promotor = promotors.find(p => p.id === promotorId);
@@ -3037,9 +3049,14 @@ Dein Nespresso Team`;
                                   size="sm"
                                   className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
                                   onClick={() => handleEditWorkingDays(promotor.id)}
+                                  disabled={!!savingWorkingDays[promotor.id]}
                                 >
                                   {editingWorkingDays[promotor.id] ? (
-                                    <Check className="h-3 w-3 text-green-500" />
+                                    savingWorkingDays[promotor.id] ? (
+                                      <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                                    ) : (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    )
                                   ) : (
                                     <Edit2 className="h-3 w-3 text-gray-400" />
                                   )}
@@ -3325,9 +3342,14 @@ Dein Nespresso Team`;
                                   size="sm"
                                   className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
                                   onClick={() => handleEditBankData(promotor.id)}
+                                  disabled={!!savingBankData[promotor.id]}
                                 >
                                   {editingBankData[promotor.id] ? (
-                                    <Check className="h-3 w-3 text-green-500" />
+                                    savingBankData[promotor.id] ? (
+                                      <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                                    ) : (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    )
                                   ) : (
                                     <Edit2 className="h-3 w-3 text-gray-400" />
                                   )}
@@ -3556,15 +3578,20 @@ Dein Nespresso Team`;
                                    <Ruler className="h-4 w-4 mr-2 text-purple-500" />
                                    Kleidergröße
                                  </div>
-                                 <Button
+                                <Button
                                    variant="ghost"
                                    size="sm"
                                    className="h-6 w-6 rounded-full opacity-30 hover:opacity-100 transition-opacity"
                                    onClick={() => handleEditClothingData(promotor.id)}
+                                  disabled={!!savingClothingData[promotor.id]}
                                  >
-                                   {editingClothingData[promotor.id] ? (
-                                     <Check className="h-3 w-3 text-green-500" />
-                                   ) : (
+                                  {editingClothingData[promotor.id] ? (
+                                    savingClothingData[promotor.id] ? (
+                                      <Loader2 className="h-3 w-3 text-green-500 animate-spin" />
+                                    ) : (
+                                      <Check className="h-3 w-3 text-green-500" />
+                                    )
+                                  ) : (
                                      <Edit2 className="h-3 w-3 text-gray-400" />
                                    )}
                                  </Button>
