@@ -102,6 +102,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
   // KPI Popup state
   const [showKpiPopup, setShowKpiPopup] = useState(false);
   const [kpiPopupActiveTab, setKpiPopupActiveTab] = useState<"ca-kpis" | "mystery-shop">("ca-kpis");
+  const ENABLE_MYSTERY_SHOP_UI = false; // keep UI code but hide for now
   // Real KPI history for company-wide CA KPIs (from admin/statistiken)
   const [kpiHistory, setKpiHistory] = useState<Array<{ mcet: number; tma: number; vlShare: number; createdAt: Date }>>([]);
   const [kpiHistoryLoading, setKpiHistoryLoading] = useState(false);
@@ -3564,7 +3565,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                 </div>
               )}
 
-              {kpiPopupActiveTab === "mystery-shop" && (
+              {ENABLE_MYSTERY_SHOP_UI && kpiPopupActiveTab === "mystery-shop" && (
                 <div className="space-y-6">
                   {/* Three timeframes in horizontal layout */}
                   <div className="grid grid-cols-3 gap-6">
