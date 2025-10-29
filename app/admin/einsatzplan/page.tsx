@@ -5296,7 +5296,7 @@ Import EP
                 {savingDetail ? (
                   <span className="inline-flex items-center">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    wird gesendet
+                    wird gespeichert
                   </span>
                 ) : (
                   'Speichern'
