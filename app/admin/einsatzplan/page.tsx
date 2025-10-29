@@ -687,6 +687,8 @@ export default function EinsatzplanPage() {
   const [inviteBuddy, setInviteBuddy] = useState(false);
   // Loading state for bulk send button
   const [sendingInvites, setSendingInvites] = useState(false);
+  // Loading state for market save in detail modal
+  const [savingMarket, setSavingMarket] = useState(false);
   // Accepted applications for the current assignment (detail view)
   const [applicationsList, setApplicationsList] = useState<any[]>([]);
   // Flash effect for promotor field
@@ -6633,6 +6635,8 @@ Import EP
                 </Button>
                 <button
                   onClick={async () => {
+                    if (savingMarket) return;
+                    setSavingMarket(true);
                     try {
                       const response = await fetch(`/api/admin/markets/${editingMarket.id}`, {
                         method: 'PATCH',
@@ -6653,12 +6657,22 @@ Import EP
                     } catch (error) {
                       console.error('Error updating market:', error);
                       alert('Fehler beim Speichern des Marktes');
+                    } finally {
+                      setSavingMarket(false);
                     }
                   }}
                   className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                  disabled={savingMarket}
                   style={{background: 'linear-gradient(135deg, #22C55E, #105F2D)', opacity: 0.85}}
                 >
-                  Speichern
+                  {savingMarket ? (
+                    <span className="inline-flex items-center">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      wird gespeichert
+                    </span>
+                  ) : (
+                    'Speichern'
+                  )}
                 </button>
               </div>
             </div>
