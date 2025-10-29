@@ -968,12 +968,21 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 
   const mysteryShopStatsData = calculateMysteryShopStatsData();
 
-  // CA KPI data - all-time averages with difference from optimal values
-  const companyKpis = {
-    mcet: { value: 4.3, changePercent: "-0.2" }, // 4.3 vs optimal 4.5 = -0.2 (better = green)
-    tma: { value: 72.1, changePercent: "-2.9" }, // 72.1 vs optimal 75 = -2.9 (worse = red)  
-    vlShare: { value: 12.8, changePercent: "+2.8" } // 12.8 vs optimal 10 = +2.8 (better = green)
-  };
+  // CA KPI data - all-time averages with difference from optimal values (REAL)
+  const companyKpis = useMemo(() => {
+    const avg = calcAverages('alltime');
+    const opt = { mcet: 4.5, tma: 75, vlShare: 10 };
+    const fmt = (val: number | null, target: number) => {
+      if (val == null || Number.isNaN(val)) return '0';
+      const diff = val - target;
+      return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}`;
+    };
+    return {
+      mcet: { value: Number(((avg.mcet ?? 0)).toFixed(1)), changePercent: fmt(avg.mcet, opt.mcet) },
+      tma: { value: Math.round(avg.tma ?? 0), changePercent: fmt(avg.tma, opt.tma) },
+      vlShare: { value: Math.round(avg.vlShare ?? 0), changePercent: fmt(avg.vlShare, opt.vlShare) }
+    };
+  }, [kpiHistory]);
 
   const mysteryShopHistoryData = [
     { shop: "Mysteryshop 1", percentage: 85.2 },
@@ -1042,13 +1051,9 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   };
 
-  // Toggle between CA KPIs and Mystery Shop every 7 seconds
+  // Disable auto-toggle to keep CA KPIs visible
   useEffect(() => {
-    const interval = setInterval(() => {
-      setShowKpiView(prev => !prev);
-    }, 7000);
-
-    return () => clearInterval(interval);
+    setShowKpiView(true);
   }, []);
   
   // Load AI response for "Was gibts zu tun"
