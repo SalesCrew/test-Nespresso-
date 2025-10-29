@@ -4410,18 +4410,7 @@ Dein Nespresso Team`;
                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                         Hübner
                       </h4>
-                      {/* Website link (UI only) */}
-                      <div className="mb-3">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-                          onClick={(e) => e.preventDefault()}
-                          title="Zur Webseite"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Zur Webseite
-                        </button>
-                      </div>
+                      
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4467,18 +4456,7 @@ Dein Nespresso Team`;
                           )}
                         </button>
                       </h4>
-                      {/* Website link (UI only) */}
-                      <div className="mb-3">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-                          onClick={(e) => e.preventDefault()}
-                          title="Zur Webseite"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Zur Webseite
-                        </button>
-                      </div>
+                      
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4572,18 +4550,7 @@ Dein Nespresso Team`;
                           )}
                         </button>
                       </h4>
-                      {/* Website link (UI only) */}
-                      <div className="mb-3">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-                          onClick={(e) => e.preventDefault()}
-                          title="Zur Webseite"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Zur Webseite
-                        </button>
-                      </div>
+                      
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
@@ -4664,18 +4631,7 @@ Dein Nespresso Team`;
                           <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
                           Boost App
                       </h4>
-                      {/* Website link (UI only) */}
-                      <div className="mb-3">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-                          onClick={(e) => e.preventDefault()}
-                          title="Zur Webseite"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          Zur Webseite
-                        </button>
-                      </div>
+                      
                       <div className="space-y-3 text-sm">
                         <div className="space-y-1">
                           <span className="text-gray-500 text-xs uppercase tracking-wide font-medium">E-Mail</span>
