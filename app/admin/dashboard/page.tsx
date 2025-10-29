@@ -2119,11 +2119,17 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Sales Challenge Leaderboard */}
             <Card 
-              className="border-0 bg-white"
+              className="border-0 bg-white relative"
               style={{
                 boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
               }}
             >
+              {/* Coming Soon Badge (green gradient) */}
+              <div className="absolute -top-2 -right-2 z-10">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
+                  BALD
+                </div>
+              </div>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
