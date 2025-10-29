@@ -2037,16 +2037,16 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             {kpiHistoryLoading ? (
                               <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
                             ) : (
-                              <span className={`text-sm font-semibold ${getKpiColor("mcet", companyKpis.mcet.value)}`}>
-                                {companyKpis.mcet.value}
-                              </span>
+                            <span className={`text-sm font-semibold ${getKpiColor("mcet", companyKpis.mcet.value)}`}>
+                              {companyKpis.mcet.value}
+                            </span>
                             )}
                             {kpiHistoryLoading ? (
                               <div className="h-3 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
                             ) : (
-                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.mcet.changePercent)}`}>
-                                {companyKpis.mcet.changePercent}
-                              </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.mcet.changePercent)}`}>
+                              {companyKpis.mcet.changePercent}
+                            </span>
                             )}
                           </div>
                           {/* TMA Column */}
@@ -2055,16 +2055,16 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             {kpiHistoryLoading ? (
                               <div className="h-4 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
                             ) : (
-                              <span className={`text-sm font-semibold ${getKpiColor("tma", companyKpis.tma.value)}`}>
-                                {companyKpis.tma.value}%
-                              </span>
+                            <span className={`text-sm font-semibold ${getKpiColor("tma", companyKpis.tma.value)}`}>
+                              {companyKpis.tma.value}%
+                            </span>
                             )}
                             {kpiHistoryLoading ? (
                               <div className="h-3 w-10 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
                             ) : (
-                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.tma.changePercent)}`}>
-                                {companyKpis.tma.changePercent}
-                              </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.tma.changePercent)}`}>
+                              {companyKpis.tma.changePercent}
+                            </span>
                             )}
                           </div>
                           {/* VL Share Column */}
@@ -2073,16 +2073,16 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                             {kpiHistoryLoading ? (
                               <div className="h-4 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto mb-1" />
                             ) : (
-                              <span className={`text-sm font-semibold ${getKpiColor("vlshare", companyKpis.vlShare.value)}`}>
-                                {companyKpis.vlShare.value}%
-                              </span>
+                            <span className={`text-sm font-semibold ${getKpiColor("vlshare", companyKpis.vlShare.value)}`}>
+                              {companyKpis.vlShare.value}%
+                            </span>
                             )}
                             {kpiHistoryLoading ? (
                               <div className="h-3 w-8 bg-gray-200 rounded animate-skeleton-fade mx-auto" />
                             ) : (
-                              <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.vlShare.changePercent)}`}>
-                                {companyKpis.vlShare.changePercent}
-                              </span>
+                            <span className={`text-[9px] px-[2px] py-0.5 rounded inline-block leading-none w-fit mx-auto ${getPillColorKpi(companyKpis.vlShare.changePercent)}`}>
+                              {companyKpis.vlShare.changePercent}
+                            </span>
                             )}
                           </div>
                         </div>
@@ -2119,17 +2119,11 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Sales Challenge Leaderboard */}
             <Card 
-              className="border-0 bg-white relative"
+              className="border-0 bg-white relative overflow-hidden"
               style={{
                 boxShadow: '0 4px 20px -2px rgba(126, 34, 206, 0.06), 0 2px 8px -1px rgba(168, 85, 247, 0.04), 0 8px 32px -4px rgba(126, 34, 206, 0.03)'
               }}
             >
-              {/* Coming Soon Badge (green gradient) */}
-              <div className="absolute -top-2 -right-2 z-10">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-pulse">
-                  BALD
-                </div>
-              </div>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -2212,6 +2206,15 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                   ))}
                 </div>
               </CardContent>
+              {/* Coming soon overlay (green gradient badge) */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-gray-900/40 to-black/30 rounded-lg flex items-center justify-center pointer-events-none z-10 backdrop-blur-[2px]">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/30 to-emerald-500/30 blur-xl rounded-lg scale-110"></div>
+                  <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 rounded-lg shadow-2xl">
+                    <span className="text-white text-sm font-semibold tracking-wide">kommt bald!</span>
+                  </div>
+                </div>
+              </div>
             </Card>
 
             {/* Message Terminal */}
