@@ -2233,6 +2233,25 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                   >
                     2‑Step
                   </button>
+                  {/* Help tooltip in top-right, same style as Perfect Match */}
+                  <div className="ml-auto group inline-block relative">
+                    <button className="text-gray-900 opacity-20 hover:opacity-50" aria-label="Hilfe">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a3.375 3.375 0 1 1 6.75 0c0 1.257-.665 2.174-1.879 2.864-.686.395-1.121 1.11-1.121 1.886v.375"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25h.008v.008H12z"/>
+                      </svg>
+                    </button>
+                    <div className="absolute right-0 top-full mt-2 hidden group-hover:block z-20 pointer-events-none group-hover:pointer-events-auto">
+                      <div className="w-80 rounded-xl border border-gray-100 bg-white shadow-xl p-3 text-xs leading-relaxed text-gray-700">
+                        <p className="font-semibold text-gray-900 mb-2">Wie funktioniert das Nachrichten Terminal?</p>
+                        <p className="mb-2">1. Text eingeben und <span className="font-medium text-blue-600">Promotoren</span> auswählen.</p>
+                        <p className="mb-2">2. Mit <span className="font-medium text-blue-600">Sofort senden</span> sofort versenden oder über <span className="font-medium text-blue-600">Planen</span> terminieren.</p>
+                        <p className="mb-2">3. Optional: <span className="font-medium text-blue-600">2‑Step</span> aktivieren, damit Empfänger Uploads (Foto/PDF) bestätigen.</p>
+                        <p className="mb-0">4. Mit dem <span className="font-medium text-blue-600">Zauberstab</span> Rechtschreibung/Formatierung verbessern lassen.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
               </CardHeader>
