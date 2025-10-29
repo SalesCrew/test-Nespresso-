@@ -37,7 +37,8 @@ import {
   Download,
   Clock,
   ArrowLeft,
-  Key
+  Key,
+  ExternalLink
 } from "lucide-react"
 
 // @ts-ignore
@@ -1774,6 +1775,18 @@ export default function ProfilPage() {
                 {/* Hübner Section */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Hübner</h4>
+                  {/* Website link (UI only) */}
+                  <div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                      onClick={(e) => e.preventDefault()}
+                      title="Zur Webseite"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Zur Webseite
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-0.5">
                       <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
@@ -1834,6 +1847,18 @@ export default function ProfilPage() {
                 {/* Demotool Section */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Demotool</h4>
+                  {/* Website link (UI only) */}
+                  <div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                      onClick={(e) => e.preventDefault()}
+                      title="Zur Webseite"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Zur Webseite
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-0.5">
                       <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
@@ -1894,6 +1919,18 @@ export default function ProfilPage() {
                 {/* TMA Section */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">TMA</h4>
+                  {/* Website link (UI only) */}
+                  <div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                      onClick={(e) => e.preventDefault()}
+                      title="Zur Webseite"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Zur Webseite
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-0.5">
                       <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
@@ -1954,6 +1991,18 @@ export default function ProfilPage() {
                 {/* Boost App Section */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Boost App</h4>
+                  {/* Website link (UI only) */}
+                  <div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+                      onClick={(e) => e.preventDefault()}
+                      title="Zur Webseite"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Zur Webseite
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-0.5">
                       <label className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
