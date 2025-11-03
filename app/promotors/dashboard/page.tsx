@@ -1757,6 +1757,10 @@ export default function DashboardPage() {
                     <span className="text-gray-700 dark:text-gray-300">Urlaub</span>
                   </li>
                   <li className="flex items-center">
+                    <div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-red-500/50 bg-gradient-to-br from-red-500/60 to-red-600/60 flex-shrink-0 shadow-sm"></div>
+                    <span className="text-gray-700 dark:text-gray-300">Krankenstand</span>
+                  </li>
+                  <li className="flex items-center">
                     <div className="w-3.5 h-3.5 rounded-full mr-2.5 border border-indigo-400/50 bg-indigo-100 dark:bg-indigo-800/50 flex-shrink-0 shadow-sm"></div>
                     <span className="text-gray-700 dark:text-gray-300">Heute (ohne Einsatz)</span>
                   </li>
