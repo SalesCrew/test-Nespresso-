@@ -192,6 +192,7 @@ export default function PromotorenPage() {
   // Contracts for selected promotor
   const [promotorContracts, setPromotorContracts] = useState<any[] | null>(null);
   const [loadingContracts, setLoadingContracts] = useState(false);
+  const [acceptingContract, setAcceptingContract] = useState(false);
 
   const refreshPromotorContracts = async (promotorId: string) => {
     try {
@@ -3933,9 +3934,12 @@ Dein Nespresso Team`;
                           {contract.file_path ? (
                             <>
                 <button 
-                                className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+                                className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-medium rounded-lg transition-all duration-200 disabled:opacity-70"
+                                disabled={acceptingContract}
                                 onClick={async () => {
+                                  if (acceptingContract) return;
                                   try {
+                                    setAcceptingContract(true);
                                     const res = await fetch('/api/admin/contracts', {
                                       method: 'PATCH',
                                       headers: { 'Content-Type': 'application/json' },
@@ -3947,10 +3951,16 @@ Dein Nespresso Team`;
                                   } catch (e: any) {
                                     setToastMsg(e.message || 'Fehler beim Annehmen des Vertrags');
                                     console.error(e);
+                                  } finally {
+                                    setAcceptingContract(false);
                                   }
                                 }}
                               >
-                                Vertrag annehmen
+                                {acceptingContract ? (
+                                  <span className="inline-flex items-center"><Loader2 className="h-4 w-4 animate-spin mr-2" />wird angenommen</span>
+                                ) : (
+                                  'Vertrag annehmen'
+                                )}
                       </button>
                       <button 
                                 className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 border border-gray-300"
