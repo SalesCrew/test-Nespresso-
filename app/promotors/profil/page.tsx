@@ -54,6 +54,15 @@ const skeletonStyles = `
     0% { background-color: #f3f4f6; }
     100% { background-color: #e5e7eb; }
   }
+  /* Scanning lines used for loading overlays (mirrors admin/chat) */
+  @keyframes scanHorizontal {
+    0% { left: -1px; }
+    100% { left: calc(100% + 1px); }
+  }
+  @keyframes scanVertical {
+    0% { top: -1px; }
+    100% { top: calc(100% + 1px); }
+  }
 `;
 
 // Typing animation component for document names
@@ -152,6 +161,7 @@ export default function ProfilPage() {
   const [showContractOnboarding, setShowContractOnboarding] = useState(false)
   const [onboardingStep, setOnboardingStep] = useState<'highlight-button' | 'highlight-download' | 'highlight-upload'>('highlight-button')
   const [showUploadJump, setShowUploadJump] = useState(false)
+  const [uploadingContractId, setUploadingContractId] = useState<string | null>(null)
   const [editableProfile, setEditableProfile] = useState({
     email: "",
     phone: ""
@@ -2287,7 +2297,16 @@ export default function ProfilPage() {
               {(() => {
                 const pendingContracts = promotorContracts.filter(c => !c.is_active && !c.file_path);
                 return pendingContracts.map((contract) => (
-                  <div key={contract.id} className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                  <div key={contract.id} className="relative bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                    {uploadingContractId === contract.id && (
+                      <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none z-10">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-blue-50/50 backdrop-blur-[1px]"></div>
+                        <div className="absolute inset-0">
+                          <div className="absolute h-full w-1 bg-gradient-to-b from-transparent via-white to-transparent opacity-90 shadow-lg" style={{ left: '0%', filter: 'blur(1px)', animation: 'scanHorizontal 2s linear infinite' }}></div>
+                          <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 shadow-lg" style={{ top: '0%', filter: 'blur(1px)', animation: 'scanVertical 2s linear infinite' }}></div>
+                        </div>
+                      </div>
+                    )}
                 <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Neuer Vertrag verfügbar</span>
                       <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full">Ausstehend</span>
@@ -2331,13 +2350,18 @@ export default function ProfilPage() {
                             if (!file) return;
                             const supabase = createSupabaseBrowserClient();
                             const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-                            const upRes = await fetch(`/api/promotors/${userId}/contracts/upload-url`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_ext: ext }) });
-                            const up = await upRes.json();
-                            if (!up?.path || !up?.token) return;
-                            const { error: upErr } = await supabase.storage.from('contracts').uploadToSignedUrl(up.path, up.token, file);
-                            if (upErr) return;
-                            await fetch(`/api/promotors/${userId}/contracts/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract_id: contract.id, file_path: up.path }) });
-                            await loadPromotorContracts(userId);
+                            try {
+                              setUploadingContractId(contract.id);
+                              const upRes = await fetch(`/api/promotors/${userId}/contracts/upload-url`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_ext: ext }) });
+                              const up = await upRes.json();
+                              if (!up?.path || !up?.token) return;
+                              const { error: upErr } = await supabase.storage.from('contracts').uploadToSignedUrl(up.path, up.token, file);
+                              if (upErr) return;
+                              await fetch(`/api/promotors/${userId}/contracts/confirm`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contract_id: contract.id, file_path: up.path }) });
+                              await loadPromotorContracts(userId);
+                            } finally {
+                              setUploadingContractId(null);
+                            }
                           };
                           input.click();
                         }}
