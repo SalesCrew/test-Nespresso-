@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface PollCreateModalProps {
   open: boolean;
@@ -14,6 +15,9 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [allowMultiple, setAllowMultiple] = useState(true);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   // Close on outside click
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
     return q.length > 0 && filled.length >= 2 && filled.length <= 12 && filled.every(o => o.length <= 120);
   }, [question, options]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const gradient = theme === "admin"
     ? "linear-gradient(135deg, #22C55E, #105F2D)"
@@ -62,8 +66,8 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]">
+  const node = (
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]">
       <div
         ref={containerRef}
         className="w-full sm:w-[560px] max-w-[92vw] rounded-2xl shadow-xl border border-gray-100"
@@ -135,6 +139,8 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
       </div>
     </div>
   );
+
+  return createPortal(node, document.body);
 }
 
 
