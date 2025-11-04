@@ -19,7 +19,7 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
   // Local emoji picker for this modal
   const [emojiPicker, setEmojiPicker] = useState<{
     show: boolean;
-    anchor: { top: number; left: number } | null; // relative to container
+    anchor: { top: number; left: number } | null; // viewport coordinates
     target: { type: 'question' } | { type: 'option'; index: number } | null;
     category: 'smileys' | 'symbols';
   }>({ show: false, anchor: null, target: null, category: 'smileys' });
@@ -121,17 +121,18 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                 data-modal-emoji-trigger
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 onClick={(e) => {
-                  const hostRect = containerRef.current?.getBoundingClientRect();
                   const triggerRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  if (!hostRect) return;
                   const pickerWidth = 260;
+                  const pickerHeight = 196;
                   const padding = 12;
-                  const desiredLeft = triggerRect.right - hostRect.left + 8;
-                  const maxLeft = hostRect.width - pickerWidth - padding;
-                  const clampedLeft = Math.max(padding, Math.min(desiredLeft, maxLeft));
-                  const desiredTop = triggerRect.top - hostRect.top - 4;
-                  const maxTop = hostRect.height - 196; // picker height + margin
-                  const clampedTop = Math.max(padding, Math.min(desiredTop, maxTop));
+                  const viewportWidth = window.innerWidth;
+                  const viewportHeight = window.innerHeight;
+                  const desiredLeft = triggerRect.right + 8 + window.scrollX;
+                  const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                  const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                  const desiredTop = triggerRect.top - 4 + window.scrollY;
+                  const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                  const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                   setEmojiPicker({
                     show: true,
                     anchor: { top: clampedTop, left: clampedLeft },
@@ -160,17 +161,18 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                     data-modal-emoji-trigger
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     onClick={(e) => {
-                      const hostRect = containerRef.current?.getBoundingClientRect();
                       const triggerRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      if (!hostRect) return;
                       const pickerWidth = 260;
+                      const pickerHeight = 196;
                       const padding = 12;
-                      const desiredLeft = triggerRect.right - hostRect.left + 8;
-                      const maxLeft = hostRect.width - pickerWidth - padding;
-                      const clampedLeft = Math.max(padding, Math.min(desiredLeft, maxLeft));
-                      const desiredTop = triggerRect.top - hostRect.top - 4;
-                      const maxTop = hostRect.height - 196;
-                      const clampedTop = Math.max(padding, Math.min(desiredTop, maxTop));
+                      const viewportWidth = window.innerWidth;
+                      const viewportHeight = window.innerHeight;
+                      const desiredLeft = triggerRect.right + 8 + window.scrollX;
+                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const desiredTop = triggerRect.top - 4 + window.scrollY;
+                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                       setEmojiPicker({
                         show: true,
                         anchor: { top: clampedTop, left: clampedLeft },
@@ -190,66 +192,6 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
             <span className="text-sm text-gray-700">Mehrere Antworten erlauben</span>
           </label>
         </div>
-        {/* Local Emoji Picker - positioned relative to modal container */}
-        {emojiPicker.show && emojiPicker.anchor && (
-          <div
-            data-modal-emoji-picker
-            className="absolute bg-white rounded-lg shadow-lg border border-gray-200"
-            style={{
-              top: emojiPicker.anchor.top,
-              left: emojiPicker.anchor.left,
-              width: '260px',
-              height: '180px',
-              overflow: 'hidden'
-            }}
-          >
-            <div className="h-full flex flex-col">
-              <div
-                className="flex-1 p-2"
-                style={{ overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                <div className="grid grid-cols-8 gap-1">
-                  {(
-                    emojiPicker.category === 'smileys'
-                      ? ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🥳','😎']
-                      : ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💖','💘','💝','💟','✅','❌','⭕','💯','✨','⭐','🔥','⚡']
-                  ).map((emoji, i) => (
-                    <button
-                      key={i}
-                      className="text-xl p-1.5 rounded hover:bg-gray-100"
-                      onClick={() => {
-                        if (!emojiPicker.target) return;
-                        if (emojiPicker.target.type === 'question') {
-                          setQuestion(prev => prev + emoji);
-                        } else {
-                          setOptions(prev => {
-                            const next = [...prev];
-                            next[emojiPicker.target!.index] = (next[emojiPicker.target!.index] || '') + emoji;
-                            return next;
-                          });
-                        }
-                        setEmojiPicker(prev => ({ ...prev, show: false }));
-                      }}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="border-t border-gray-200 p-1 bg-gray-50">
-                <div className="flex justify-around">
-                  {(['smileys','symbols'] as const).map(cat => (
-                    <button
-                      key={cat}
-                      className={`px-2 py-1 rounded text-xs ${emojiPicker.category===cat? 'bg-gray-200 text-gray-800':'hover:bg-gray-100 text-gray-600'}`}
-                      onClick={() => setEmojiPicker(prev => ({ ...prev, category: cat }))}
-                    >{cat}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Footer */}
         <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-3 border-t border-gray-100">
@@ -271,7 +213,72 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
     </div>
   );
 
-  return createPortal(node, document.body);
+  return (
+    <>
+      {createPortal(node, document.body)}
+      {emojiPicker.show && emojiPicker.anchor && createPortal(
+        <div
+          data-modal-emoji-picker
+          className="bg-white rounded-lg shadow-xl border border-gray-200"
+          style={{
+            position: 'absolute',
+            top: emojiPicker.anchor.top,
+            left: emojiPicker.anchor.left,
+            width: '260px',
+            height: '196px',
+            zIndex: 1000000,
+            overflow: 'hidden'
+          }}
+        >
+          <div className="h-full flex flex-col">
+            <div
+              className="flex-1 p-2"
+              style={{ overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="grid grid-cols-8 gap-1">
+                {(emojiPicker.category === 'smileys'
+                    ? ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🥳','😎']
+                    : ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💖','💘','💝','💟','✅','❌','⭕','💯','✨','⭐','🔥','⚡'])
+                  .map((emoji, i) => (
+                    <button
+                      key={i}
+                      className="text-xl p-1.5 rounded hover:bg-gray-100"
+                      onClick={() => {
+                        if (!emojiPicker.target) return;
+                        if (emojiPicker.target.type === 'question') {
+                          setQuestion(prev => prev + emoji);
+                        } else {
+                          const targetIndex = (emojiPicker.target.type === 'option') ? emojiPicker.target.index : 0;
+                          setOptions(prev => {
+                            const next = [...prev];
+                            next[targetIndex] = (next[targetIndex] || '') + emoji;
+                            return next;
+                          });
+                        }
+                        setEmojiPicker(prev => ({ ...prev, show: false }));
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+              </div>
+            </div>
+            <div className="border-t border-gray-200 p-1 bg-gray-50">
+              <div className="flex justify-around">
+                {(['smileys','symbols'] as const).map(cat => (
+                  <button
+                    key={cat}
+                    className={`px-2 py-1 rounded text-xs ${emojiPicker.category===cat? 'bg-gray-200 text-gray-800':'hover:bg-gray-100 text-gray-600'}`}
+                    onClick={() => setEmojiPicker(prev => ({ ...prev, category: cat }))}
+                  >{cat}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body)}
+    </>
+  );
 }
 
 
