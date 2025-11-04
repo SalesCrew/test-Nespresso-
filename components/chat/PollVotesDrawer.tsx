@@ -114,7 +114,10 @@ export default function PollVotesDrawer({
                   {opt.voters.length} Stimme{opt.voters.length === 1 ? '' : 'n'}
                 </span>
               </div>
-              <div className="space-y-1.5">
+              <div
+                className="space-y-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                style={{ maxHeight: '112px' }}
+              >
                 {opt.voters.map((v) => {
                   const u = resolveUser(v.user_id);
                   return (
@@ -133,11 +136,6 @@ export default function PollVotesDrawer({
               </div>
             </div>
           ))}
-        </div>
-        <div className="px-4 py-3 border-t" style={{ borderColor: border }}>
-          <button onClick={onClose} className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none" style={{ background: '#F3F4F6', border: `1px solid ${border}`, color: text }}>
-            Schließen
-          </button>
         </div>
       </div>
     </div>
