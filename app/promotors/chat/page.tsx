@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera, ChevronDown } from "lucide-react";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
 import PollMessage from "@/components/chat/PollMessage";
@@ -504,6 +504,17 @@ export default function PromotorChatPage() {
   const allMessages = selectedChat && selectedChat.id 
     ? { [selectedChat.id]: conversationMessages }
     : {};
+
+  // Avatar resolver for poll voters in this conversation
+  const selectedConvForAvatars = useMemo(() => {
+    if (!selectedChat?.id) return null;
+    return chatIntegration.conversations.find(c => String(c.id) === String(selectedChat.id)) || null;
+  }, [chatIntegration.conversations, selectedChat?.id]);
+  const getAvatarForUser = useCallback((userId: string) => {
+    const conv: any = selectedConvForAvatars as any;
+    const p = conv?.participants?.find((x: any) => x.user_id === userId);
+    return p?.profile_picture_url || '/placeholder.svg';
+  }, [selectedConvForAvatars]);
 
   // Refs for scroll behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1937,6 +1948,7 @@ export default function PromotorChatPage() {
                                   poll={(message as any).poll}
                                   mine={!!message.own}
                                   theme="promotor"
+                                  getAvatar={getAvatarForUser}
                                   onToggle={async (optionId, checked) => {
                                     try {
                                       if (!selectedChat?.id) return;

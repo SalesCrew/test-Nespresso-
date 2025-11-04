@@ -22,9 +22,10 @@ interface PollMessageProps {
   mine: boolean; // message from current user (admin bubble)
   theme: "admin" | "promotor"; // controls gradient for fills and accents
   onToggle: (optionId: string, checked: boolean) => void;
+  getAvatar?: (userId: string) => string | null | undefined; // optional mapping for voter avatars
 }
 
-export default function PollMessage({ poll, mine, theme, onToggle }: PollMessageProps) {
+export default function PollMessage({ poll, mine, theme, onToggle, getAvatar }: PollMessageProps) {
   const totalVotes = useMemo(() => poll.options.reduce((s, o) => s + (o.count || 0), 0), [poll.options]);
   const isSelected = (id: string) => poll.my_votes.includes(id);
   const gradient = theme === "admin"
@@ -90,11 +91,14 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                   <div className="absolute right-0 top-0 flex items-center gap-1 text-xs" style={{ color: mine ? '#F0FFF4' : '#6B7280' }}>
                     {Math.min(3, (opt.voterIds || []).length) > 0 && (
                       <div className="flex -space-x-1.5 mr-1">
-                        {(opt.voterIds || []).slice(0, 3).map((id, i) => (
-                          <div key={i} className="h-4 w-4 rounded-full border border-white overflow-hidden bg-gray-300">
-                            <img src="/placeholder-user.jpg" alt="voter" className="h-full w-full object-cover" />
-                          </div>
-                        ))}
+                        {(opt.voterIds || []).slice(0, 3).map((id, i) => {
+                          const src = (getAvatar && getAvatar(id)) || '/placeholder.svg';
+                          return (
+                            <div key={i} className="h-4 w-4 rounded-full border border-white overflow-hidden bg-gray-300">
+                              <img src={src} alt="voter" className="h-full w-full object-cover" />
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                     <span>{count}</span>

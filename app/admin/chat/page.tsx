@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -653,6 +653,16 @@ export default function ChatPage() {
   const allMessages = selectedChat && selectedChat.id 
     ? { [selectedChat.id]: conversationMessages }
     : {};
+  // Avatar resolver for poll voters in this conversation
+  const selectedConvForAvatars = useMemo(() => {
+    if (!selectedChat?.id) return null;
+    return chatIntegration.conversations.find(c => String(c.id) === String(selectedChat.id)) || null;
+  }, [chatIntegration.conversations, selectedChat?.id]);
+  const getAvatarForUser = useCallback((userId: string) => {
+    const conv: any = selectedConvForAvatars as any;
+    const p = conv?.participants?.find((x: any) => x.user_id === userId);
+    return p?.profile_picture_url || '/placeholder.svg';
+  }, [selectedConvForAvatars]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -2750,6 +2760,7 @@ export default function ChatPage() {
                             poll={(message as any).poll}
                             mine={!!message.own}
                             theme="admin"
+                            getAvatar={getAvatarForUser}
                             onToggle={async (optionId, checked) => {
                               try {
                                 if (!selectedChat?.id) return;
