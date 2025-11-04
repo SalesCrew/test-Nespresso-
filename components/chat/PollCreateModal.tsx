@@ -16,6 +16,13 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
   const [allowMultiple, setAllowMultiple] = useState(true);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
+  // Local emoji picker for this modal
+  const [emojiPicker, setEmojiPicker] = useState<{
+    show: boolean;
+    anchor: { top: number; left: number } | null; // relative to container
+    target: { type: 'question' } | { type: 'option'; index: number } | null;
+    category: 'smileys' | 'symbols';
+  }>({ show: false, anchor: null, target: null, category: 'smileys' });
 
   useEffect(() => setMounted(true), []);
 
@@ -25,6 +32,12 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
       if (!open) return;
       const t = e.target as Element;
       if (containerRef.current && !containerRef.current.contains(t)) onClose();
+      // close emoji picker if clicking outside of it and not on triggers
+      const insidePicker = !!(t.closest('[data-modal-emoji-picker]'));
+      const isTrigger = !!(t.closest('[data-modal-emoji-trigger]'));
+      if (emojiPicker.show && !insidePicker && !isTrigger) {
+        setEmojiPicker(prev => ({ ...prev, show: false }));
+      }
     }
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
@@ -97,7 +110,22 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0"
               />
               {/* Emoji placeholder spot (open to the right) */}
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">🙂</div>
+              <button
+                type="button"
+                data-modal-emoji-trigger
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                onClick={(e) => {
+                  const host = containerRef.current?.getBoundingClientRect();
+                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  if (!host) return;
+                  setEmojiPicker({
+                    show: true,
+                    anchor: { top: r.top - host.top, left: r.right - host.left + 8 },
+                    target: { type: 'question' },
+                    category: 'smileys',
+                  });
+                }}
+              >🙂</button>
             </div>
           </div>
 
@@ -113,7 +141,22 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">🙂</div>
+                  <button
+                    type="button"
+                    data-modal-emoji-trigger
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={(e) => {
+                      const host = containerRef.current?.getBoundingClientRect();
+                      const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      if (!host) return;
+                      setEmojiPicker({
+                        show: true,
+                        anchor: { top: r.top - host.top, left: r.right - host.left + 8 },
+                        target: { type: 'option', index: idx },
+                        category: 'smileys',
+                      });
+                    }}
+                  >🙂</button>
                 </div>
               ))}
             </div>
@@ -125,6 +168,65 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
             <span className="text-sm text-gray-700">Mehrere Antworten erlauben</span>
           </label>
         </div>
+        {/* Local Emoji Picker - positioned relative to modal container */}
+        {emojiPicker.show && emojiPicker.anchor && (
+          <div
+            data-modal-emoji-picker
+            className="absolute bg-white rounded-lg shadow-lg border border-gray-200"
+            style={{
+              top: emojiPicker.anchor.top,
+              left: emojiPicker.anchor.left,
+              width: '260px',
+              height: '180px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="h-full flex flex-col">
+              <div
+                className="flex-1 p-2"
+                style={{ overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                <div className="grid grid-cols-8 gap-1">
+                  {(
+                    emojiPicker.category === 'smileys'
+                      ? ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🥳','😎']
+                      : ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💖','💘','💝','💟','✅','❌','⭕','💯','✨','⭐','🔥','⚡']
+                  ).map((emoji, i) => (
+                    <button
+                      key={i}
+                      className="text-xl p-1.5 rounded hover:bg-gray-100"
+                      onClick={() => {
+                        if (!emojiPicker.target) return;
+                        if (emojiPicker.target.type === 'question') {
+                          setQuestion(prev => prev + emoji);
+                        } else {
+                          setOptions(prev => {
+                            const next = [...prev];
+                            next[emojiPicker.target!.index] = (next[emojiPicker.target!.index] || '') + emoji;
+                            return next;
+                          });
+                        }
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-gray-200 p-1 bg-gray-50">
+                <div className="flex justify-around">
+                  {(['smileys','symbols'] as const).map(cat => (
+                    <button
+                      key={cat}
+                      className={`px-2 py-1 rounded text-xs ${emojiPicker.category===cat? 'bg-gray-200 text-gray-800':'hover:bg-gray-100 text-gray-600'}`}
+                      onClick={() => setEmojiPicker(prev => ({ ...prev, category: cat }))}
+                    >{cat}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-3 border-t border-gray-100">
