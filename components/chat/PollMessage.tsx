@@ -23,9 +23,11 @@ interface PollMessageProps {
   theme: "admin" | "promotor"; // controls gradient for fills and accents
   onToggle: (optionId: string, checked: boolean) => void;
   getAvatar?: (userId: string) => string | null | undefined; // optional mapping for voter avatars
+  onViewVotes?: () => void;
+  showViewButton?: boolean;
 }
 
-export default function PollMessage({ poll, mine, theme, onToggle, getAvatar }: PollMessageProps) {
+export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, onViewVotes, showViewButton }: PollMessageProps) {
   const totalVotes = useMemo(() => poll.options.reduce((s, o) => s + (o.count || 0), 0), [poll.options]);
   const isSelected = (id: string) => poll.my_votes.includes(id);
   const gradient = theme === "admin"
@@ -120,6 +122,21 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar }: 
           );
         })}
       </div>
+      {theme === 'admin' && showViewButton && onViewVotes && (
+        <div className="mt-3 pt-2 border-t">
+          <button
+            onClick={(e) => { e.stopPropagation(); onViewVotes(); }}
+            className="w-full text-sm rounded-lg px-3 py-2"
+            style={{
+              background: mine ? 'rgba(255,255,255,0.10)' : 'rgba(17,24,39,0.05)',
+              border: mine ? '1px solid rgba(255,255,255,0.25)' : '1px solid #E5E7EB',
+              color: mine ? '#fff' : '#111827',
+            }}
+          >
+            Stimmen ansehen
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import { useSocket } from "@/lib/socket/SocketContext";
 import { uploadGroupPicture } from "@/lib/chat/uploadGroupPicture";
 import PollCreateModal from "@/components/chat/PollCreateModal";
 import PollMessage from "@/components/chat/PollMessage";
+import PollVotesDrawer from "@/components/chat/PollVotesDrawer";
 
 interface Contact {
   id: string | number;  // Support both UUID strings and number IDs for compatibility
@@ -663,6 +664,17 @@ export default function ChatPage() {
     const p = conv?.participants?.find((x: any) => x.user_id === userId);
     return p?.profile_picture_url || '/placeholder.svg';
   }, [selectedConvForAvatars]);
+
+  // Resolve user name for votes drawer
+  const getNameForUser = useCallback((userId: string) => {
+    const conv: any = selectedConvForAvatars as any;
+    const p = conv?.participants?.find((x: any) => x.user_id === userId);
+    return p?.display_name || 'Unbekannt';
+  }, [selectedConvForAvatars]);
+
+  const [votesDrawer, setVotesDrawer] = useState<{ open: boolean; pollId: string | null; question: string; options: any[] }>(
+    { open: false, pollId: null, question: '', options: [] }
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -1480,8 +1492,21 @@ export default function ChatPage() {
                   </div>
                 )}
               </div>
+
             )}
           </div>
+
+          {/* Votes Drawer (admin only) */}
+          {votesDrawer.open && (
+            <PollVotesDrawer
+              open={votesDrawer.open}
+              onClose={() => setVotesDrawer({ open: false, pollId: null, question: '', options: [] })}
+              question={votesDrawer.question}
+              options={votesDrawer.options}
+              resolveUser={(userId: string) => ({ name: getNameForUser(userId), avatar: getAvatarForUser(userId) })}
+              theme="admin"
+            />
+          )}
 
           {/* Group Creation Popup */}
           {groupCreationPopup.show && (
@@ -2761,6 +2786,15 @@ export default function ChatPage() {
                             mine={!!message.own}
                             theme="admin"
                             getAvatar={getAvatarForUser}
+                            showViewButton
+                            onViewVotes={async () => {
+                              try {
+                                const data = await chatIntegration.getPollVotes((message as any).poll.id);
+                                setVotesDrawer({ open: true, pollId: (message as any).poll.id, question: data.poll.question, options: data.options });
+                              } catch (e) {
+                                console.error('Failed to load votes', e);
+                              }
+                            }}
                             onToggle={async (optionId, checked) => {
                               try {
                                 if (!selectedChat?.id) return;

@@ -236,6 +236,13 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     });
   }, [socket]);
 
+  // Fetch full poll votes (user_ids grouped by option)
+  const getPollVotes = useCallback(async (pollId: string) => {
+    const res = await fetch(`/api/chat/polls/${pollId}/votes`, { method: 'GET' });
+    if (!res.ok) throw new Error('Failed to load votes');
+    return await res.json();
+  }, []);
+
   // Mark conversation as read
   const markAsRead = useCallback((conversationId: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -969,6 +976,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     joinConversation,
     createPoll,
     votePoll,
+    getPollVotes,
     deleteMessage,
     editMessage,
     reactToMessage,
