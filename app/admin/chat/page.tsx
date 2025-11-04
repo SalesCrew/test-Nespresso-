@@ -4506,7 +4506,7 @@ export default function ChatPage() {
     {showPollModal && (
       <div className="fixed inset-0 z-[9999]" onClick={() => setShowPollModal(false)}>
         <div
-          className="absolute w-[560px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
+          className="absolute w-[520px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
           style={{ bottom: '96px', left: `calc(${sidebarOpen ? '14rem' : '3.5rem'} + 20rem + 16px)` }}
           onClick={(e) => e.stopPropagation()}
         >
