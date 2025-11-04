@@ -623,7 +623,7 @@ export default function ChatPage() {
     ? (chatIntegration.messages[String(selectedChat.id)] || []).map(msg => ({
         id: msg.id,
         sender: msg.sender_name,
-        content: msg.message_text,
+        content: msg.message_type === 'poll' ? '' : msg.message_text,
         time: new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
         own: msg.sender_id === currentUserId,
         edited: msg.edited,
@@ -636,6 +636,8 @@ export default function ChatPage() {
         pdf: msg.message_type === 'pdf' && msg.file_url ? msg.file_url : undefined,
         pdfName: msg.message_type === 'pdf' && msg.file_name ? msg.file_name : undefined,
         type: msg.message_type,
+        // attach poll payload so UI renders the poll bubble
+        ...(msg.message_type === 'poll' && msg.poll ? { poll: msg.poll } : {}),
         replyTo: msg.reply_to ? {
           id: msg.reply_to.id,
           sender: msg.reply_to.sender_name,
