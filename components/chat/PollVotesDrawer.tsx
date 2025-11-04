@@ -28,6 +28,19 @@ export default function PollVotesDrawer({
   const border = theme === "admin" ? "rgba(255,255,255,0.25)" : "#E5E7EB";
   const text = theme === "admin" ? "#fff" : "#111827";
 
+  // Calculate position: drawer sits inside chat area, to the left of the poll bubble
+  // anchorRect.left is the message row left edge; we want drawer right edge to be slightly left of poll bubble
+  const drawerWidth = 360;
+  const gap = 16;
+  let drawerLeft = 600; // fallback if no anchor
+  if (anchorRect) {
+    // Position drawer so its right edge is `gap` px to the left of the poll bubble's left edge
+    // Poll bubble sits inside the message row; for right-aligned messages the bubble is at the right side
+    // So we use anchorRect.left (which is actually where the message container starts in the chat)
+    // and position the drawer inside the chat area, well before the bubble
+    drawerLeft = anchorRect.left - drawerWidth - gap;
+  }
+
   return (
     <div 
       className="fixed inset-0 z-[9998]" 
@@ -40,11 +53,9 @@ export default function PollVotesDrawer({
           background: cardBg,
           border: `1px solid ${border}`,
           color: text,
-          width: '360px',
-          maxWidth: '90vw',
+          width: `${drawerWidth}px`,
           top: anchorRect ? `${anchorRect.top}px` : '80px',
-          right: anchorRect ? `calc(100vw - ${anchorRect.left}px + 16px)` : 'auto',
-          left: anchorRect ? 'auto' : '16px',
+          left: `${drawerLeft}px`,
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -52,7 +52,7 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, on
     );
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-poll-bubble>
       {/* Header */}
       <div className="mb-2">
         <div className="font-semibold text-base leading-tight" style={{ color: mine ? "#fff" : "#111827" }}>{poll.question}</div>

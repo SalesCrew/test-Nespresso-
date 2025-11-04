@@ -2792,8 +2792,9 @@ export default function ChatPage() {
                             onViewVotes={async () => {
                               try {
                                 const data = await chatIntegration.getPollVotes((message as any).poll.id);
-                                const el = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement | null;
-                                const r = el?.getBoundingClientRect();
+                                const messageRow = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement | null;
+                                const pollBubble = messageRow?.querySelector('[data-poll-bubble]') as HTMLElement | null;
+                                const r = pollBubble?.getBoundingClientRect();
                                 setVotesDrawer({ open: true, pollId: (message as any).poll.id, question: data.poll.question, options: data.options, anchorRect: r ? { top: r.top, left: r.left, width: r.width, height: r.height } : null });
                               } catch (e) {
                                 console.error('Failed to load votes', e);
