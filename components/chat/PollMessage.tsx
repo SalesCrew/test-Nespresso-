@@ -72,7 +72,7 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                   {selected ? '✓' : ''}
                 </div>
                 {/* Text & bar - fixed width for consistent alignment */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 relative">
                   <div className={`text-sm ${mine ? 'text-white' : 'text-gray-800'} break-words`}>{opt.text}</div>
                   {/* Progress - fixed width container */}
                   <div className="mt-1 h-2 rounded-full overflow-hidden w-full" style={{ background: trackBg }}>
@@ -86,19 +86,19 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                       }}
                     />
                   </div>
-                </div>
-                {/* Count + avatars */}
-                <div className="flex items-center gap-1 text-xs flex-shrink-0" style={{ color: mine ? '#F0FFF4' : '#6B7280' }}>
-                  {Math.min(3, (opt.voterIds || []).length) > 0 && (
-                    <div className="flex -space-x-2 mr-1">
-                      {(opt.voterIds || []).slice(0, 3).map((id, i) => (
-                        <div key={i} className="h-5 w-5 rounded-full border border-white overflow-hidden bg-gray-300">
-                          <img src="/placeholder-user.jpg" alt="voter" className="h-full w-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <span>{count}</span>
+                  {/* Count + avatars - positioned absolutely above progress bar */}
+                  <div className="absolute right-0 top-0 flex items-center gap-1 text-xs" style={{ color: mine ? '#F0FFF4' : '#6B7280' }}>
+                    {Math.min(3, (opt.voterIds || []).length) > 0 && (
+                      <div className="flex -space-x-1.5 mr-1">
+                        {(opt.voterIds || []).slice(0, 3).map((id, i) => (
+                          <div key={i} className="h-4 w-4 rounded-full border border-white overflow-hidden bg-gray-300">
+                            <img src="/placeholder-user.jpg" alt="voter" className="h-full w-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <span>{count}</span>
+                  </div>
                 </div>
               </div>
             </button>
