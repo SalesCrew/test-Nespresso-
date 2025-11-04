@@ -28,11 +28,18 @@ export default function PollVotesDrawer({
   const border = theme === "admin" ? "rgba(255,255,255,0.25)" : "#E5E7EB";
   const text = theme === "admin" ? "#fff" : "#111827";
   const drawerWidth = 360;
-  const gap = 12;
-  const top = Math.max(8, (anchorRect?.top ?? 80));
+  const gap = 16;
+  
+  // Position relative to viewport
+  const top = anchorRect ? anchorRect.top : 80;
+  
+  // Position to the left of the message bubble, but ensure it stays in the chat area
+  // The bubble is right-aligned in the chat, so we position drawer relative to its right edge
   let left = 16;
   if (anchorRect) {
-    left = Math.max(8, anchorRect.left - drawerWidth - gap);
+    // For right-aligned messages (own messages), position drawer to the left of the bubble
+    const drawerRightEdge = anchorRect.left - gap;
+    left = Math.max(16, drawerRightEdge - drawerWidth);
   }
 
   return (
