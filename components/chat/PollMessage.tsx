@@ -70,7 +70,15 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                   <div className={`text-sm ${mine ? 'text-white' : 'text-gray-800'} truncate`}>{opt.text}</div>
                   {/* Progress */}
                   <div className="mt-1 h-2 rounded-full bg-gray-200/70 overflow-hidden">
-                    <div className="h-full" style={{ width: `${percentage}%`, background: gradient }} />
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${percentage}%`,
+                        background: gradient,
+                        transition: 'width 280ms cubic-bezier(0.2, 0.85, 0.2, 1)',
+                        willChange: 'width',
+                      }}
+                    />
                   </div>
                 </div>
                 {/* Count + avatars */}
