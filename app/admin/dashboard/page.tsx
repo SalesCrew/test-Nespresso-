@@ -2861,7 +2861,7 @@ import AdminEddieAssistant from "@/components/AdminEddieAssistant";
                                     : 'bg-orange-100 text-orange-700'
                                 }`}
                               >
-                                {request.request_type === 'krankenstand' ? 'Krankenstand' : 'Notfall'}
+                                {request.request_type === 'krankenstand' ? 'Krankenstand' : 'Sonderfall'}
                               </Badge>
                           </div>
                             <p className="text-xs text-gray-500 mt-1">

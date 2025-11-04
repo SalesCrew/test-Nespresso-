@@ -1368,7 +1368,7 @@ export default function EinsatzplanPage() {
   };
 
   const getStatusOptions = () => {
-    return ["Verplant", "Buddy Tag", "Krankenstand", "Notfall", "Urlaub", "Zeitausgleich", "Markierte"];
+    return ["Verplant", "Buddy Tag", "Krankenstand", "Sonderfall", "Urlaub", "Zeitausgleich", "Markierte"];
   };
 
   const getStatusGradient = (status: string) => {
@@ -1376,7 +1376,7 @@ export default function EinsatzplanPage() {
       case "Verplant": return "from-white to-green-100/60";
       case "Buddy Tag": return "from-white to-purple-100/60";
       case "Krankenstand": return "from-white to-red-100/60";
-      case "Notfall": return "from-white to-orange-100/60";
+      case "Sonderfall": return "from-white to-orange-100/60";
       case "Urlaub": return "from-white to-blue-100/60";
       case "Zeitausgleich": return "from-white to-yellow-100/60";
       // Beendet: match dashboard gradient stops for text/dot; we only apply a soft row gradient
@@ -1391,7 +1391,7 @@ export default function EinsatzplanPage() {
       case "Verplant": return "hover:bg-green-100/50";
       case "Buddy Tag": return "hover:bg-purple-100/50";
       case "Krankenstand": return "hover:bg-red-100/50";
-      case "Notfall": return "hover:bg-orange-100/50";
+      case "Sonderfall": return "hover:bg-orange-100/50";
       case "Urlaub": return "hover:bg-blue-100/50";
       case "Zeitausgleich": return "hover:bg-yellow-100/50";
       case "Beendet": return "hover:bg-yellow-100/50";
@@ -2039,8 +2039,8 @@ export default function EinsatzplanPage() {
   // Memoize statistics to prevent repeated calculations
   const einsatzStats = useMemo(() => {
     const confirmed = filteredEinsatzplan.filter(item => ['bestätigt', 'Verplant', 'Buddy Tag'].includes(item.status)).length;
-    const cancelled = filteredEinsatzplan.filter(item => ['Krankenstand', 'Notfall'].includes(item.status)).length;
-    const planned = filteredEinsatzplan.filter(item => !['bestätigt', 'Verplant', 'Buddy Tag', 'Krankenstand', 'Notfall'].includes(item.status)).length;
+    const cancelled = filteredEinsatzplan.filter(item => ['Krankenstand', 'Sonderfall'].includes(item.status)).length;
+    const planned = filteredEinsatzplan.filter(item => !['bestätigt', 'Verplant', 'Buddy Tag', 'Krankenstand', 'Sonderfall'].includes(item.status)).length;
     const total = filteredEinsatzplan.length;
     
     return {
@@ -2101,7 +2101,7 @@ export default function EinsatzplanPage() {
           status: r.special_status ? 
                   // Map special statuses to UI format
                   (r.special_status === 'krankenstand' ? 'Krankenstand' :
-                   r.special_status === 'notfall' ? 'Notfall' :
+                   r.special_status === 'notfall' ? 'Sonderfall' :
                    r.special_status === 'urlaub' ? 'Urlaub' :
                    r.special_status === 'zeitausgleich' ? 'Zeitausgleich' :
                    r.special_status === 'markierte' ? 'Markierte' :
@@ -2998,7 +2998,7 @@ Import EP
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                    <span className="text-xs text-gray-600">Notfall</span>
+                                    <span className="text-xs text-gray-600">Sonderfall</span>
                                   </div>
                                   <span className={`text-xs font-medium text-orange-600 ${dayData.notfall === 0 ? 'opacity-30' : ''}`}>{dayData.notfall > 0 ? dayData.notfall : 'N/A'}</span>
                                 </div>
@@ -3179,7 +3179,7 @@ Import EP
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'text-green-500' :
                                     einsatz.status === 'Buddy Tag' ? 'text-purple-500' :
                                     einsatz.status === 'Krankenstand' ? 'text-red-500' :
-                                    einsatz.status === 'Notfall' ? 'text-orange-500' :
+                                    einsatz.status === 'Sonderfall' ? 'text-orange-500' :
                                     einsatz.status === 'Urlaub' ? 'text-blue-500' :
                                     einsatz.status === 'Zeitausgleich' ? 'text-yellow-600' :
                                     einsatz.status === 'Markierte' ? 'text-purple-500' :
@@ -3192,7 +3192,7 @@ Import EP
                                     einsatz.status === 'Verplant' || einsatz.status === 'bestätigt' ? 'bg-green-400' :
                                     einsatz.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                                     einsatz.status === 'Krankenstand' ? 'bg-red-400' :
-                                    einsatz.status === 'Notfall' ? 'bg-orange-400' :
+                                    einsatz.status === 'Sonderfall' ? 'bg-orange-400' :
                                     einsatz.status === 'Urlaub' ? 'bg-blue-400' :
                                     einsatz.status === 'Zeitausgleich' ? 'bg-yellow-400' :
                                     einsatz.status === 'Markierte' ? 'bg-purple-400' :
@@ -4477,7 +4477,7 @@ Import EP
                             promotion.status === 'Verplant' || promotion.status === 'bestätigt' ? 'bg-green-400' :
                             promotion.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                             promotion.status === 'Krankenstand' ? 'bg-red-400' :
-                            promotion.status === 'Notfall' ? 'bg-orange-400' :
+                            promotion.status === 'Sonderfall' ? 'bg-orange-400' :
                             promotion.status === 'Urlaub' ? 'bg-blue-400' :
                             promotion.status === 'Zeitausgleich' ? 'bg-yellow-400' :
                             'bg-gray-400'
@@ -4977,7 +4977,7 @@ Import EP
                         <SelectItem value="Krankenstand" className="focus:bg-red-100">Krankenstand</SelectItem>
                         <SelectItem value="Urlaub" className="focus:bg-blue-100">Urlaub</SelectItem>
                         <SelectItem value="Zeitausgleich" className="focus:bg-yellow-100">Zeitausgleich</SelectItem>
-                        <SelectItem value="Notfall" className="focus:bg-orange-100">Notfall</SelectItem>
+                        <SelectItem value="Notfall" className="focus:bg-orange-100">Sonderfall</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -5049,7 +5049,7 @@ Import EP
                           editingEinsatz.status === 'Verplant' || editingEinsatz.status === 'bestätigt' ? 'bg-green-400' :
                           editingEinsatz.status === 'Buddy Tag' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
                           editingEinsatz.status === 'Krankenstand' ? 'bg-red-400' :
-                          editingEinsatz.status === 'Notfall' ? 'bg-orange-400' :
+                          editingEinsatz.status === 'Sonderfall' ? 'bg-orange-400' :
                           editingEinsatz.status === 'Urlaub' ? 'bg-blue-400' :
                           editingEinsatz.status === 'Zeitausgleich' ? 'bg-yellow-400' :
                           'bg-gray-400'
@@ -5969,7 +5969,7 @@ Import EP
                     switch (status) {
                       case 'krankenstand': return { label: 'Krankenstand', color: 'bg-red-100 text-red-700 border-red-300' };
                       case 'urlaub': return { label: 'Urlaub', color: 'bg-blue-100 text-blue-700 border-blue-300' };
-                      case 'notfall': return { label: 'Notfall', color: 'bg-orange-100 text-orange-700 border-orange-300' };
+                      case 'notfall': return { label: 'Sonderfall', color: 'bg-orange-100 text-orange-700 border-orange-300' };
                       case 'zeitausgleich': return { label: 'Zeitausgleich', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' };
                       default: return null;
                     }

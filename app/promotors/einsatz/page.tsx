@@ -2094,7 +2094,7 @@ const loadProcessState = async () => {
                       icon: <AlertTriangle className="h-5 w-5 text-orange-500 mr-3 ml-0.5 flex-shrink-0 drop-shadow-sm" />,
                       titleColor: 'text-orange-700 dark:text-orange-300',
                       subtitleColor: 'text-orange-600/75 dark:text-orange-400/80',
-                      label: 'Notfall'
+                      label: 'Sonderfall'
                     };
                   case 'urlaub':
                     return {
@@ -2934,7 +2934,7 @@ const loadProcessState = async () => {
             >
               <div className="flex items-center justify-center">
                 <AlertCircle className="h-4 w-4 mr-2 ml-0.5" />
-                Notfall
+                Sonderfall
               </div>
               {activeTab === "notfall" && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"></div>
@@ -3039,12 +3039,12 @@ const loadProcessState = async () => {
               <div className="bg-white/80 dark:bg-gray-900/30 rounded-lg p-4 shadow-sm">
                 <div className="flex items-center mb-3 justify-center">
                   <AlertCircle className="h-5 w-5 text-orange-500 mr-2" />
-                  <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400">Notfall-Center</h3>
+                  <h3 className="text-sm font-medium text-orange-600 dark:text-orange-400">Sonderfall-Center</h3>
                 </div>
                 
                 <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 mb-3">
                   <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">
-                    <p className="mb-2">Im Notfall ruf bitte diese Nummer an:</p>
+                    <p className="mb-2">Im Sonderfall ruf bitte diese Nummer an:</p>
                     <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                       <div>Mo-Do 7:30-17:00</div>
                       <div>Fr 7:30-14:00</div>
@@ -3058,7 +3058,7 @@ const loadProcessState = async () => {
                     <span className="font-medium text-base text-orange-600 dark:text-orange-400">+43 699 141 630</span>
                   </a>
                   <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Nachdem du angerufen hast, drücke den Button, um einen Notfall zu beantragen.
+                    Nachdem du angerufen hast, drücke den Button, um einen Sonderfall zu beantragen.
                   </p>
                 </div>
                 
@@ -3070,7 +3070,7 @@ const loadProcessState = async () => {
                           <div className="absolute inset-0 rounded-full bg-green-200 dark:bg-green-700 animate-ping opacity-50"></div>
                           <CheckCircle2 className="h-4 w-4 relative" />
                         </div>
-                        <span>Aktiver Notfall</span>
+                        <span>Aktiver Sonderfall</span>
                       </div>
                     </div>
                     
@@ -3079,7 +3079,7 @@ const loadProcessState = async () => {
                       className="w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-md transition-colors flex items-center justify-center text-sm"
                     >
                       <AlertTriangle className="h-4 w-4 mr-1.5" />
-                      Notfall beenden
+                      Sonderfall beenden
                     </button>
                   </div>
                 ) : !isWaitingForEmergencyConfirmation ? (
@@ -3091,7 +3091,7 @@ const loadProcessState = async () => {
                     }}
                   >
                     <AlertTriangle className="h-4 w-4 mr-1.5" />
-                    Notfall anfordern
+                    Sonderfall anfordern
                   </button>
                 ) : (
                   <div className="w-full py-2 px-3 bg-gray-100 dark:bg-gray-800 text-orange-600 dark:text-orange-400 font-medium rounded-lg shadow-md flex items-center justify-center text-sm">
