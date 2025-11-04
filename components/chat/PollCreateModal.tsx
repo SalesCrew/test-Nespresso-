@@ -26,6 +26,12 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
 
   useEffect(() => setMounted(true), []);
 
+  useEffect(() => {
+    if (!open) {
+      setEmojiPicker({ show: false, anchor: null, target: null, category: 'smileys' });
+    }
+  }, [open]);
+
   // Close on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -89,7 +95,7 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]" style={{ zIndex: 999999 }}>
       <div
         ref={containerRef}
-        className="w-full sm:w-[560px] max-w-[92vw] rounded-2xl shadow-xl border border-gray-100"
+        className="relative w-full sm:w-[560px] max-w-[92vw] rounded-2xl shadow-xl border border-gray-100"
         style={{ backgroundColor: "rgba(255,255,255,0.96)" }}
       >
         {/* Header */}
@@ -115,12 +121,20 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                 data-modal-emoji-trigger
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 onClick={(e) => {
-                  const host = containerRef.current?.getBoundingClientRect();
-                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  if (!host) return;
+                  const hostRect = containerRef.current?.getBoundingClientRect();
+                  const triggerRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  if (!hostRect) return;
+                  const pickerWidth = 260;
+                  const padding = 12;
+                  const desiredLeft = triggerRect.right - hostRect.left + 8;
+                  const maxLeft = hostRect.width - pickerWidth - padding;
+                  const clampedLeft = Math.max(padding, Math.min(desiredLeft, maxLeft));
+                  const desiredTop = triggerRect.top - hostRect.top - 4;
+                  const maxTop = hostRect.height - 196; // picker height + margin
+                  const clampedTop = Math.max(padding, Math.min(desiredTop, maxTop));
                   setEmojiPicker({
                     show: true,
-                    anchor: { top: r.top - host.top, left: r.right - host.left + 8 },
+                    anchor: { top: clampedTop, left: clampedLeft },
                     target: { type: 'question' },
                     category: 'smileys',
                   });
@@ -146,12 +160,20 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                     data-modal-emoji-trigger
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     onClick={(e) => {
-                      const host = containerRef.current?.getBoundingClientRect();
-                      const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      if (!host) return;
+                      const hostRect = containerRef.current?.getBoundingClientRect();
+                      const triggerRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      if (!hostRect) return;
+                      const pickerWidth = 260;
+                      const padding = 12;
+                      const desiredLeft = triggerRect.right - hostRect.left + 8;
+                      const maxLeft = hostRect.width - pickerWidth - padding;
+                      const clampedLeft = Math.max(padding, Math.min(desiredLeft, maxLeft));
+                      const desiredTop = triggerRect.top - hostRect.top - 4;
+                      const maxTop = hostRect.height - 196;
+                      const clampedTop = Math.max(padding, Math.min(desiredTop, maxTop));
                       setEmojiPicker({
                         show: true,
-                        anchor: { top: r.top - host.top, left: r.right - host.left + 8 },
+                        anchor: { top: clampedTop, left: clampedLeft },
                         target: { type: 'option', index: idx },
                         category: 'smileys',
                       });
@@ -206,6 +228,7 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
                             return next;
                           });
                         }
+                        setEmojiPicker(prev => ({ ...prev, show: false }));
                       }}
                     >
                       {emoji}
