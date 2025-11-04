@@ -31,6 +31,12 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
     ? "linear-gradient(135deg, #22C55E, #105F2D)"
     : "linear-gradient(135deg, #1D4ED8, #0EA5E9)";
 
+  // Progress bar theming
+  const trackBg = theme === "admin" ? "rgba(255,255,255,0.15)" : "rgba(229,231,235,0.7)"; // admin: subtle white; promotor: gray
+  const fillBg = theme === "admin"
+    ? "linear-gradient(135deg, rgba(255,255,255,0.88), #FFFFFF)" // admin: white to pure white
+    : gradient; // promotor: blue gradient
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -69,12 +75,12 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                 <div className="flex-1 min-w-0">
                   <div className={`text-sm ${mine ? 'text-white' : 'text-gray-800'} truncate`}>{opt.text}</div>
                   {/* Progress */}
-                  <div className="mt-1 h-2 rounded-full bg-gray-200/70 overflow-hidden">
+                  <div className="mt-1 h-2 rounded-full overflow-hidden" style={{ background: trackBg }}>
                     <div
                       className="h-full"
                       style={{
                         width: `${percentage}%`,
-                        background: gradient,
+                        background: fillBg,
                         transition: 'width 280ms cubic-bezier(0.2, 0.85, 0.2, 1)',
                         willChange: 'width',
                       }}
