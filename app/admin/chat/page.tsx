@@ -97,6 +97,12 @@ export default function ChatPage() {
   }>>([]);
   const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' }>({ show: false, selectedCategory: 'smileys', context: 'input' });
 
+  // Refs for poll modal inputs
+  const pollQuestionRef = useRef<HTMLInputElement>(null);
+  const pollOption1Ref = useRef<HTMLInputElement>(null);
+  const pollOption2Ref = useRef<HTMLInputElement>(null);
+  const pollAllowMultipleRef = useRef<HTMLInputElement>(null);
+
   const [photoViewer, setPhotoViewer] = useState<{
     show: boolean;
     currentIndex: number;
@@ -4518,6 +4524,7 @@ export default function ChatPage() {
               <label className="text-sm text-gray-600 block mb-2">Frage</label>
               <div className="relative">
                 <input
+                  ref={pollQuestionRef}
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                 />
@@ -4529,6 +4536,7 @@ export default function ChatPage() {
               <div className="space-y-2">
                 <div className="relative group">
                   <input
+                    ref={pollOption1Ref}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                   />
@@ -4536,6 +4544,7 @@ export default function ChatPage() {
                 </div>
                 <div className="relative group">
                   <input
+                    ref={pollOption2Ref}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                   />
@@ -4544,7 +4553,7 @@ export default function ChatPage() {
               </div>
             </div>
             <label className="flex items-center gap-3 select-none cursor-default">
-              <input type="checkbox" className="accent-green-600" defaultChecked />
+              <input ref={pollAllowMultipleRef} type="checkbox" className="accent-green-600" defaultChecked />
               <span className="text-sm text-gray-700">Mehrere Antworten erlauben</span>
             </label>
           </div>
@@ -4554,8 +4563,26 @@ export default function ChatPage() {
               className="px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
             >Abbrechen</button>
             <button
-              disabled
-              className="h-10 w-12 rounded-lg text-white opacity-60 cursor-not-allowed"
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  if (!selectedChat?.id) return;
+                  const question = (pollQuestionRef.current?.value || '').trim();
+                  const option1 = (pollOption1Ref.current?.value || '').trim();
+                  const option2 = (pollOption2Ref.current?.value || '').trim();
+                  const options = [option1, option2].filter(Boolean);
+                  const allowMultiple = !!pollAllowMultipleRef.current?.checked;
+                  if (!question || options.length < 2) {
+                    console.warn('[Poll] Need question and at least two options');
+                    return;
+                  }
+                  await chatIntegration.createPoll(String(selectedChat.id), question, options, allowMultiple);
+                  setShowPollModal(false);
+                } catch (err) {
+                  console.error('Failed to create poll:', err);
+                }
+              }}
+              className="h-10 w-12 rounded-lg text-white"
               style={{ background: 'linear-gradient(135deg, #22C55E, #105F2D)' }}
               title="Senden"
             >
