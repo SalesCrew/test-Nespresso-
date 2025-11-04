@@ -24,9 +24,9 @@ export default function PollVotesDrawer({
 }) {
   if (!open) return null;
 
-  const cardBg = theme === "admin" ? "rgba(255,255,255,0.12)" : "#fff";
-  const border = theme === "admin" ? "rgba(255,255,255,0.25)" : "#E5E7EB";
-  const text = theme === "admin" ? "#fff" : "#111827";
+  const cardBg = theme === "admin" ? "rgba(255,255,255,0.96)" : "#fff";
+  const border = theme === "admin" ? "#E5E7EB" : "#E5E7EB";
+  const text = "#111827";
   const [mounted, setMounted] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -102,15 +102,15 @@ export default function PollVotesDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3 border-b" style={{ borderColor: border }}>
-          <div className="font-semibold text-white/95">{question}</div>
+          <div className="font-semibold" style={{ color: text }}>{question}</div>
         </div>
         <div className="max-h-[70vh] overflow-y-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {options.map((opt, idx) => (
             <div key={opt.id} className="mb-3">
-              {idx > 0 && <div className="my-2" style={{ borderTop: `1px solid ${theme === 'admin' ? 'rgba(255,255,255,0.12)' : '#E5E7EB'}` }} />}
+              {idx > 0 && <div className="my-2" style={{ borderTop: `1px solid ${theme === 'admin' ? 'rgba(17,24,39,0.08)' : '#E5E7EB'}` }} />}
               <div className="flex items-center justify-between mb-2">
-                <div className="font-medium text-sm text-white/95">{opt.text}</div>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: theme === 'admin' ? 'rgba(16,95,45,0.35)' : '#ECFDF5', border: `1px solid ${border}`, color: text }}>
+                <div className="font-medium text-sm" style={{ color: text }}>{opt.text}</div>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: '#ECFDF5', border: `1px solid #D1FAE5`, color: '#065F46' }}>
                   {opt.voters.length} Stimme{opt.voters.length === 1 ? '' : 'n'}
                 </span>
               </div>
@@ -118,12 +118,15 @@ export default function PollVotesDrawer({
                 {opt.voters.map((v) => {
                   const u = resolveUser(v.user_id);
                   return (
-                    <div key={v.user_id + v.created_at} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/10">
+                    <div key={v.user_id + v.created_at} className="flex items-center gap-3 rounded-lg px-2 py-1.5" style={{ background: 'transparent' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(17,24,39,0.04)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
                       <div className="h-7 w-7 rounded-full overflow-hidden border" style={{ borderColor: border }}>
                         <img src={u.avatar || '/placeholder.svg'} alt={u.name} className="h-full w-full object-cover" />
                       </div>
-                      <div className="flex-1 text-sm text-white/95 truncate">{u.name}</div>
-                      <div className="text-xs opacity-80 whitespace-nowrap">{new Date(v.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
+                      <div className="flex-1 text-sm truncate" style={{ color: text }}>{u.name}</div>
+                      <div className="text-xs whitespace-nowrap" style={{ opacity: 0.8, color: text }}>{new Date(v.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
                     </div>
                   );
                 })}
@@ -132,7 +135,7 @@ export default function PollVotesDrawer({
           ))}
         </div>
         <div className="px-4 py-3 border-t" style={{ borderColor: border }}>
-          <button onClick={onClose} className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2" style={{ background: theme === 'admin' ? 'rgba(255,255,255,0.10)' : '#F3F4F6', border: `1px solid ${border}`, color: text }}>
+          <button onClick={onClose} className="w-full text-sm rounded-lg px-3 py-2 focus:outline-none" style={{ background: '#F3F4F6', border: `1px solid ${border}`, color: text }}>
             Schließen
           </button>
         </div>
