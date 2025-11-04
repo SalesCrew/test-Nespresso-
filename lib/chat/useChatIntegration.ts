@@ -28,6 +28,14 @@ interface Message {
   my_reaction?: string | null;
   top_reaction?: { emoji: string; count: number } | null;
   total_reactions?: number;
+  // Poll payload (present when message_type === 'poll')
+  poll?: {
+    id: string;
+    question: string;
+    allow_multiple: boolean;
+    options: Array<{ id: string; text: string; count: number; voterIds?: string[] }>;
+    my_votes: string[];
+  };
   created_at: string;
   updated_at: string;
 }
@@ -158,6 +166,54 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
           }
         }
       );
+    });
+  }, [socket]);
+
+  // Create a poll (admin)
+  const createPoll = useCallback((
+    conversationId: string,
+    question: string,
+    options: string[],
+    allowMultiple: boolean
+  ) => {
+    return new Promise<Message>((resolve, reject) => {
+      if (!socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+      socket.emit(
+        'send_message',
+        {
+          conversationId,
+          messageText: question,
+          messageType: 'poll',
+          pollQuestion: question,
+          pollOptions: options,
+          allowMultiple,
+        },
+        (response: { success?: boolean; message?: Message; error?: string }) => {
+          if (response.success && response.message) {
+            resolve(response.message);
+          } else {
+            reject(new Error(response.error || 'Failed to create poll'));
+          }
+        }
+      );
+    });
+  }, [socket]);
+
+  // Vote / unvote on poll option
+  const votePoll = useCallback((
+    conversationId: string,
+    pollId: string,
+    optionId: string,
+    checked: boolean
+  ) => {
+    return new Promise<void>((resolve, reject) => {
+      if (!socket) { reject(new Error('Socket not connected')); return; }
+      socket.emit('vote_poll', { conversationId, pollId, optionId, checked }, (resp: { success?: boolean; error?: string }) => {
+        if (resp?.success) resolve(); else reject(new Error(resp?.error || 'Failed to vote'));
+      });
     });
   }, [socket]);
 
@@ -821,12 +877,45 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       }));
     };
 
+    const handlePollUpdated = (data: {
+      conversationId: string;
+      pollId: string;
+      totals: Array<{ optionId: string; count: number }>;
+      votersByOption: Record<string, string[]>;
+      myVotes: string[];
+    }) => {
+      setMessages(prev => {
+        const list = prev[data.conversationId] || [];
+        const updated = list.map(msg => {
+          if (msg.poll && msg.poll.id === data.pollId) {
+            const counts = new Map(data.totals.map(t => [t.optionId, t.count]));
+            const voters = data.votersByOption || {};
+            return {
+              ...msg,
+              poll: {
+                ...msg.poll,
+                options: msg.poll.options.map(o => ({
+                  ...o,
+                  count: counts.get(o.id) || 0,
+                  voterIds: (voters[o.id] || []).slice(0,3),
+                })),
+                my_votes: data.myVotes || msg.poll.my_votes,
+              },
+            } as Message;
+          }
+          return msg;
+        });
+        return { ...prev, [data.conversationId]: updated };
+      });
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stopped_typing', handleUserStoppedTyping);
     socket.on('message_deleted', handleMessageDeleted);
     socket.on('message_edited', handleMessageEdited);
     socket.on('reaction_updated', handleReactionUpdated);
+    socket.on('poll_updated', handlePollUpdated);
 
     return () => {
       socket.off('new_message', handleNewMessage);
@@ -835,6 +924,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       socket.off('message_deleted', handleMessageDeleted);
       socket.off('message_edited', handleMessageEdited);
       socket.off('reaction_updated', handleReactionUpdated);
+      socket.off('poll_updated', handlePollUpdated);
     };
   }, [socket, options]);
 
@@ -858,6 +948,8 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     stopTyping,
     createConversation,
     joinConversation,
+    createPoll,
+    votePoll,
     deleteMessage,
     editMessage,
     reactToMessage,

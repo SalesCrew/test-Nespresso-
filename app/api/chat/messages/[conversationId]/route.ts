@@ -139,7 +139,38 @@ export async function GET(
       repliedToMessages = replyData || [];
     }
 
-    // Enrich messages with sender info and reply data
+    // If there are poll messages, fetch poll headers/options/votes using service client
+    const pollMessageMap = new Map<string, any>();
+    const pollMessages = visibleMessages?.filter(m => m.message_type === 'poll' && !!(m as any).poll_id) || [];
+    const pollIds = [...new Set(pollMessages.map((m: any) => m.poll_id as string))];
+
+    let polls: any[] = [];
+    let pollOptions: any[] = [];
+    let pollVotes: any[] = [];
+    if (pollIds.length > 0) {
+      const { data: pollsData } = await svc
+        .from('chat_polls')
+        .select('id, question, allow_multiple')
+        .in('id', pollIds);
+      polls = pollsData || [];
+
+      const { data: optionsData } = await svc
+        .from('chat_poll_options')
+        .select('id, poll_id, option_text, order_index')
+        .in('poll_id', pollIds);
+      pollOptions = (optionsData || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+      const { data: votesData } = await svc
+        .from('chat_poll_votes')
+        .select('poll_id, option_id, user_id, created_at')
+        .in('poll_id', pollIds);
+      pollVotes = votesData || [];
+
+      // Build quick lookup by poll_id
+      polls.forEach(p => pollMessageMap.set(p.id, p));
+    }
+
+    // Enrich messages with sender info, reply data, and poll data
     const enrichedMessages = visibleMessages?.map(message => {
       const sender = senderProfiles?.find(p => p.user_id === message.sender_id);
       const replyTo = message.reply_to_id 
@@ -159,6 +190,43 @@ export async function GET(
         };
       }
 
+      // Attach poll details if applicable
+      let pollPayload: any = undefined;
+      if (message.message_type === 'poll' && (message as any).poll_id) {
+        const header = pollMessageMap.get((message as any).poll_id);
+        if (header) {
+          const optionsForPoll = pollOptions.filter(o => o.poll_id === header.id);
+          const votesForPoll = pollVotes.filter(v => v.poll_id === header.id);
+
+          const countsByOption = new Map<string, number>();
+          const votersByOption = new Map<string, string[]>();
+          optionsForPoll.forEach((opt: any) => {
+            countsByOption.set(opt.id, 0);
+            votersByOption.set(opt.id, []);
+          });
+          for (const v of votesForPoll) {
+            countsByOption.set(v.option_id, (countsByOption.get(v.option_id) || 0) + 1);
+            const arr = votersByOption.get(v.option_id) || [];
+            arr.push(v.user_id);
+            votersByOption.set(v.option_id, arr);
+          }
+          const myVotes = votesForPoll.filter(v => v.user_id === user.id).map(v => v.option_id);
+
+          pollPayload = {
+            id: header.id,
+            question: header.question,
+            allow_multiple: !!header.allow_multiple,
+            options: optionsForPoll.map((o: any) => ({
+              id: o.id,
+              text: o.option_text,
+              count: countsByOption.get(o.id) || 0,
+              voterIds: (votersByOption.get(o.id) || []).slice(0, 3),
+            })),
+            my_votes: myVotes,
+          };
+        }
+      }
+
       return {
         ...message,
         sender_name: sender?.display_name || 'Unknown',
@@ -168,6 +236,7 @@ export async function GET(
         my_reaction: myReactionsByMessage.get(message.id) || null,
         top_reaction: topReactionsByMessage.get(message.id) || null,
         total_reactions: reactionsByMessage.get(message.id)?.reduce((sum, r) => sum + r.count, 0) || 0,
+        poll: pollPayload,
       };
     }) || [];
 

@@ -95,10 +95,10 @@ app.prepare().then(() => {
       console.error('Error joining conversation rooms:', error);
     }
 
-    // Handle sending messages
+    // Handle sending messages (text, file, poll)
     socket.on('send_message', async (data, callback) => {
       try {
-        const { conversationId, messageText, messageType = 'text', fileUrl = null, fileName = null, replyToId = null } = data;
+        const { conversationId, messageText, messageType = 'text', fileUrl = null, fileName = null, replyToId = null, pollQuestion, pollOptions, allowMultiple } = data;
 
         // Validate that user is participant in conversation
         const { data: participant } = await supabase
@@ -123,8 +123,77 @@ app.prepare().then(() => {
           return callback({ error: 'Cannot send messages to read-only conversation' });
         }
 
-        // Insert message into database
-        const { data: newMessage, error } = await supabase
+        // Special handling for polls
+        let newMessage;
+        if (messageType === 'poll') {
+          // Only admins can create polls
+          const isAdmin = ['admin_staff','admin_of_admins'].includes(socket.userRole);
+          if (!isAdmin) {
+            return callback({ error: 'Only admins can create polls' });
+          }
+          const question = (pollQuestion || messageText || '').toString().trim();
+          const options = Array.isArray(pollOptions) ? pollOptions.filter(Boolean).map((s) => String(s).trim()) : [];
+          if (!question || options.length < 2) {
+            return callback({ error: 'Invalid poll payload' });
+          }
+          // Create poll
+          const { data: poll, error: pollErr } = await supabase
+            .from('chat_polls')
+            .insert({ conversation_id: conversationId, created_by: socket.userId, question, allow_multiple: !!allowMultiple })
+            .select('*')
+            .single();
+          if (pollErr || !poll) {
+            return callback({ error: 'Failed to create poll' });
+          }
+          // Options
+          const optionRows = options.map((text, idx) => ({ poll_id: poll.id, option_text: text, order_index: idx }));
+          const { data: createdOptions, error: optErr } = await supabase
+            .from('chat_poll_options')
+            .insert(optionRows)
+            .select('*');
+          if (optErr) {
+            return callback({ error: 'Failed to create poll options' });
+          }
+          // Create message referencing poll
+          const { data: msgRow, error: msgErr } = await supabase
+            .from('chat_messages')
+            .insert({
+              conversation_id: conversationId,
+              sender_id: socket.userId,
+              message_text: question,
+              message_type: 'poll',
+              poll_id: poll.id,
+              reply_to_id: replyToId,
+            })
+            .select('*')
+            .single();
+          if (msgErr || !msgRow) {
+            return callback({ error: 'Failed to create poll message' });
+          }
+          newMessage = msgRow;
+          // Build poll payload for broadcast
+          const pollPayload = {
+            id: poll.id,
+            question: poll.question,
+            allow_multiple: !!poll.allow_multiple,
+            options: (createdOptions || []).sort((a,b)=> (a.order_index||0)-(b.order_index||0)).map(o => ({ id: o.id, text: o.option_text, count: 0 })),
+            my_votes: [],
+          };
+          // Emit message including poll
+          const messageWithSender = {
+            ...newMessage,
+            sender_name: socket.userName,
+            sender_role: socket.userRole,
+            reply_to: null,
+            poll: pollPayload,
+          };
+          io.to(conversationId).emit('new_message', messageWithSender);
+          await supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
+          return callback({ success: true, message: messageWithSender });
+        }
+
+        // Insert standard message into database
+        const { data: insertedMessage, error } = await supabase
           .from('chat_messages')
           .insert({
             conversation_id: conversationId,
@@ -137,6 +206,7 @@ app.prepare().then(() => {
           })
           .select()
           .single();
+        newMessage = insertedMessage;
 
         if (error) {
           console.error('Error inserting message:', error);
@@ -187,6 +257,80 @@ app.prepare().then(() => {
       } catch (error) {
         console.error('Error sending message:', error);
         callback({ error: 'Failed to send message' });
+      }
+    });
+
+    // Vote on a poll
+    socket.on('vote_poll', async (data, callback) => {
+      const cb = typeof callback === 'function' ? callback : () => {};
+      try {
+        const { conversationId, pollId, optionId, checked } = data || {};
+        if (!conversationId || !pollId || !optionId) return cb({ error: 'Invalid payload' });
+
+        // Validate participant
+        const { data: participant } = await supabase
+          .from('chat_participants')
+          .select('conversation_id')
+          .eq('conversation_id', conversationId)
+          .eq('user_id', socket.userId)
+          .single();
+        if (!participant) return cb({ error: 'Not a participant' });
+
+        // Load poll header
+        const { data: poll } = await supabase
+          .from('chat_polls')
+          .select('id, allow_multiple, conversation_id')
+          .eq('id', pollId)
+          .single();
+        if (!poll || poll.conversation_id !== conversationId) return cb({ error: 'Poll not found' });
+
+        if (!checked) {
+          await supabase
+            .from('chat_poll_votes')
+            .delete()
+            .eq('poll_id', pollId)
+            .eq('option_id', optionId)
+            .eq('user_id', socket.userId);
+        } else {
+          if (!poll.allow_multiple) {
+            await supabase
+              .from('chat_poll_votes')
+              .delete()
+              .eq('poll_id', pollId)
+              .eq('user_id', socket.userId);
+          }
+          await supabase
+            .from('chat_poll_votes')
+            .insert({ poll_id: pollId, option_id: optionId, user_id: socket.userId });
+        }
+
+        // Tally fresh counts and voters
+        const { data: votes } = await supabase
+          .from('chat_poll_votes')
+          .select('option_id, user_id, created_at')
+          .eq('poll_id', pollId);
+
+        const tallyMap = new Map();
+        const votersMap = new Map();
+        (votes || []).forEach(v => {
+          tallyMap.set(v.option_id, (tallyMap.get(v.option_id) || 0) + 1);
+          const arr = votersMap.get(v.option_id) || [];
+          arr.push(v.user_id);
+          votersMap.set(v.option_id, arr);
+        });
+        const myVotes = (votes || []).filter(v => v.user_id === socket.userId).map(v => v.option_id);
+
+        io.to(conversationId).emit('poll_updated', {
+          conversationId,
+          pollId,
+          totals: Array.from(tallyMap.entries()).map(([optionId, count]) => ({ optionId, count })),
+          votersByOption: Object.fromEntries(Array.from(votersMap.entries()).map(([k,v]) => [k, v.slice(0,3)])),
+          myVotes,
+        });
+        cb({ success: true });
+      } catch (err) {
+        console.error('Error in vote_poll:', err);
+        cb({ error: 'Failed to vote' });
       }
     });
 

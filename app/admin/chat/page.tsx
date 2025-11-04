@@ -11,6 +11,8 @@ import AdminNavigation from "@/components/AdminNavigation";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
 import { useSocket } from "@/lib/socket/SocketContext";
 import { uploadGroupPicture } from "@/lib/chat/uploadGroupPicture";
+import PollCreateModal from "@/components/chat/PollCreateModal";
+import PollMessage from "@/components/chat/PollMessage";
 
 interface Contact {
   id: string | number;  // Support both UUID strings and number IDs for compatibility
@@ -76,6 +78,7 @@ export default function ChatPage() {
 
   const [messageInput, setMessageInput] = useState("");
   const [attachmentPopup, setAttachmentPopup] = useState(false);
+  const [showPollModal, setShowPollModal] = useState(false);
   const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null>(null);
   const [pdfEditor, setPdfEditor] = useState<{ show: boolean; file: File; caption: string } | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
@@ -2726,6 +2729,25 @@ export default function ChatPage() {
                           )}
                         </div>
                       )}
+
+                      {/* Poll Display */}
+                      {(message as any).poll && (
+                        <div className="mt-2 mb-2">
+                          <PollMessage
+                            poll={(message as any).poll}
+                            mine={!!message.own}
+                            theme="admin"
+                            onToggle={async (optionId, checked) => {
+                              try {
+                                if (!selectedChat?.id) return;
+                                await chatIntegration.votePoll(String(selectedChat.id), (message as any).poll.id, optionId, checked);
+                              } catch (err) {
+                                console.error('Failed to vote on poll:', err);
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
                       
                       {/* Photo Display */}
                       {message.photo && (
@@ -3480,6 +3502,16 @@ export default function ChatPage() {
                 >
                   <Image className="h-4 w-4" />
                   <span>Foto</span>
+                </button>
+                <button
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
+                  onClick={() => {
+                    setShowPollModal(true);
+                    setAttachmentPopup(false);
+                  }}
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  <span>Abstimmung</span>
                 </button>
                 <button
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3 rounded-b-lg"
@@ -4455,6 +4487,23 @@ export default function ChatPage() {
               <h2 className="text-2xl font-medium text-gray-700 mb-3">Willkommen im Chat</h2>
               <p className="text-gray-500 text-lg">Wähle einen Kontakt aus, um zu chatten</p>
             </div>
+
+            {/* Poll Create Modal */}
+            {showPollModal && (
+              <PollCreateModal
+                open={showPollModal}
+                onClose={() => setShowPollModal(false)}
+                theme="admin"
+                onSubmit={async ({ question, options, allowMultiple }) => {
+                  try {
+                    if (!selectedChat?.id) return;
+                    await chatIntegration.createPoll(String(selectedChat.id), question, options, allowMultiple);
+                  } catch (err) {
+                    console.error('Failed to create poll:', err);
+                  }
+                }}
+              />
+            )}
           </div>
          )}
        </div>

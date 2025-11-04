@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera, ChevronDown } from "lucide-react";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
+import PollMessage from "@/components/chat/PollMessage";
 import { useSocket } from "@/lib/socket/SocketContext";
 
 interface Contact {
@@ -1928,6 +1929,25 @@ export default function PromotorChatPage() {
                               </div>
                             )}
                             
+                            {/* Poll Display */}
+                            {(message as any).poll && (
+                              <div className="mt-2 mb-2">
+                                <PollMessage
+                                  poll={(message as any).poll}
+                                  mine={!!message.own}
+                                  theme="promotor"
+                                  onToggle={async (optionId, checked) => {
+                                    try {
+                                      if (!selectedChat?.id) return;
+                                      await chatIntegration.votePoll(String(selectedChat.id), (message as any).poll.id, optionId, checked);
+                                    } catch (err) {
+                                      console.error('Failed to vote on poll:', err);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+
                             {/* Photo Display */}
                             {message.photo && (
                               <div className="mt-2 mb-2">
