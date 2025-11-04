@@ -34,7 +34,7 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
   // Progress bar theming
   const trackBg = theme === "admin" ? "rgba(255,255,255,0.15)" : "rgba(229,231,235,0.7)"; // admin: subtle white; promotor: gray
   const fillBg = theme === "admin"
-    ? "linear-gradient(135deg, rgba(255,255,255,0.88), #FFFFFF)" // admin: white to pure white
+    ? "linear-gradient(135deg, rgba(255,255,255,0.60), #FFFFFF)" // admin: darker white to pure white for visible gradient
     : gradient; // promotor: blue gradient
 
   return (
