@@ -59,10 +59,10 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
               className={`w-full rounded-lg border text-left px-3 py-2 transition-colors ${mine ? 'bg-transparent border-white/20' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
               onClick={(e) => { e.stopPropagation(); onToggle(opt.id, !selected); }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 {/* Control */}
                 <div
-                  className="flex items-center justify-center rounded-full h-5 w-5 flex-shrink-0"
+                  className="flex items-center justify-center rounded-full h-5 w-5 flex-shrink-0 mt-0.5"
                   style={{
                     border: mine ? '2px solid rgba(255,255,255,0.9)' : '2px solid #D1D5DB',
                     background: selected ? gradient : 'transparent',
@@ -71,11 +71,11 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                 >
                   {selected ? '✓' : ''}
                 </div>
-                {/* Text & bar */}
+                {/* Text & bar - fixed width for consistent alignment */}
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm ${mine ? 'text-white' : 'text-gray-800'} truncate`}>{opt.text}</div>
-                  {/* Progress */}
-                  <div className="mt-1 h-2 rounded-full overflow-hidden" style={{ background: trackBg }}>
+                  <div className={`text-sm ${mine ? 'text-white' : 'text-gray-800'} break-words`}>{opt.text}</div>
+                  {/* Progress - fixed width container */}
+                  <div className="mt-1 h-2 rounded-full overflow-hidden w-full" style={{ background: trackBg }}>
                     <div
                       className="h-full"
                       style={{
@@ -88,7 +88,7 @@ export default function PollMessage({ poll, mine, theme, onToggle }: PollMessage
                   </div>
                 </div>
                 {/* Count + avatars */}
-                <div className="flex items-center gap-1 text-xs" style={{ color: mine ? '#F0FFF4' : '#6B7280' }}>
+                <div className="flex items-center gap-1 text-xs flex-shrink-0" style={{ color: mine ? '#F0FFF4' : '#6B7280' }}>
                   {Math.min(3, (opt.voterIds || []).length) > 0 && (
                     <div className="flex -space-x-2 mr-1">
                       {(opt.voterIds || []).slice(0, 3).map((id, i) => (
