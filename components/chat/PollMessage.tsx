@@ -38,6 +38,16 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar }: 
     ? "linear-gradient(135deg, rgba(255,255,255,0.60), #FFFFFF)" // admin: darker white to pure white for visible gradient
     : gradient; // promotor: blue gradient
 
+  // Grey silhouette placeholder (head + shoulders) as inline SVG data URI
+  const placeholderAvatar =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>` +
+        `<circle cx='12' cy='12' r='12' fill='#E5E7EB'/>` +
+        `<path d='M12 12c1.99 0 3.6-1.61 3.6-3.6S13.99 4.8 12 4.8 8.4 6.41 8.4 8.4 10.01 12 12 12zm0 2.4c-3.2 0-5.6 2.24-5.6 5.2h11.2c0-2.96-2.4-5.2-5.6-5.2z' fill='#9CA3AF'/>` +
+      `</svg>`
+    );
+
   return (
     <div className="w-full">
       {/* Header */}
@@ -92,7 +102,8 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar }: 
                     {Math.min(3, (opt.voterIds || []).length) > 0 && (
                       <div className="flex -space-x-1.5 mr-1">
                         {(opt.voterIds || []).slice(0, 3).map((id, i) => {
-                          const src = (getAvatar && getAvatar(id)) || '/placeholder.svg';
+                          const resolved = getAvatar ? getAvatar(id) : undefined;
+                          const src = resolved && !resolved.includes('placeholder') ? resolved : placeholderAvatar;
                           return (
                             <div key={i} className="h-4 w-4 rounded-full border border-white overflow-hidden bg-gray-300">
                               <img src={src} alt="voter" className="h-full w-full object-cover" />
