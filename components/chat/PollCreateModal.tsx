@@ -66,8 +66,14 @@ export default function PollCreateModal({ open, onClose, onSubmit, theme }: Poll
     onClose();
   };
 
+  useEffect(() => {
+    if (open) {
+      console.log('[PollModal] rendering via portal');
+    }
+  }, [open]);
+
   const node = (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]" style={{ zIndex: 999999 }}>
       <div
         ref={containerRef}
         className="w-full sm:w-[560px] max-w-[92vw] rounded-2xl shadow-xl border border-gray-100"
