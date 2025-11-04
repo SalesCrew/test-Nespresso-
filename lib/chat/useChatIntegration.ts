@@ -209,6 +209,25 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
     optionId: string,
     checked: boolean
   ) => {
+    // Optimistically update my_votes for the current user only
+    setMessages(prev => ({
+      ...prev,
+      [conversationId]: (prev[conversationId] || []).map(msg => {
+        if (msg.poll && msg.poll.id === pollId) {
+          const allowMultiple = !!msg.poll.allow_multiple;
+          const current = Array.isArray(msg.poll.my_votes) ? msg.poll.my_votes : [];
+          let next: string[] = current;
+          if (checked) {
+            next = allowMultiple ? Array.from(new Set([...current, optionId])) : [optionId];
+          } else {
+            next = current.filter(id => id !== optionId);
+          }
+          return { ...msg, poll: { ...msg.poll, my_votes: next } } as any;
+        }
+        return msg;
+      }),
+    }));
+
     return new Promise<void>((resolve, reject) => {
       if (!socket) { reject(new Error('Socket not connected')); return; }
       socket.emit('vote_poll', { conversationId, pollId, optionId, checked }, (resp: { success?: boolean; error?: string }) => {
@@ -899,7 +918,9 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
                   count: counts.get(o.id) || 0,
                   voterIds: (voters[o.id] || []).slice(0,3),
                 })),
-                my_votes: data.myVotes || msg.poll.my_votes,
+                // Do NOT overwrite my_votes from broadcast (it belongs to the voter).
+                // Keep the current user's selection; optimistic updates adjust it locally.
+                my_votes: msg.poll.my_votes,
               },
             } as Message;
           }
