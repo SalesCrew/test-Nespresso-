@@ -901,7 +901,6 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
       pollId: string;
       totals: Array<{ optionId: string; count: number }>;
       votersByOption: Record<string, string[]>;
-      myVotes: string[];
     }) => {
       setMessages(prev => {
         const list = prev[data.conversationId] || [];
@@ -918,8 +917,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
                   count: counts.get(o.id) || 0,
                   voterIds: (voters[o.id] || []).slice(0,3),
                 })),
-                // Do NOT overwrite my_votes from broadcast (it belongs to the voter).
-                // Keep the current user's selection; optimistic updates adjust it locally.
+                // Keep my_votes unchanged - only optimistic updates modify it
                 my_votes: msg.poll.my_votes,
               },
             } as Message;

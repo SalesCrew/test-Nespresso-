@@ -318,14 +318,13 @@ app.prepare().then(() => {
           arr.push(v.user_id);
           votersMap.set(v.option_id, arr);
         });
-        const myVotes = (votes || []).filter(v => v.user_id === socket.userId).map(v => v.option_id);
 
+        // Broadcast vote tallies to everyone (no myVotes - each client manages their own)
         io.to(conversationId).emit('poll_updated', {
           conversationId,
           pollId,
           totals: Array.from(tallyMap.entries()).map(([optionId, count]) => ({ optionId, count })),
           votersByOption: Object.fromEntries(Array.from(votersMap.entries()).map(([k,v]) => [k, v.slice(0,3)])),
-          myVotes,
         });
         cb({ success: true });
       } catch (err) {
