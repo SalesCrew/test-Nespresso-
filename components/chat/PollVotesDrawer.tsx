@@ -12,6 +12,7 @@ export default function PollVotesDrawer({
   options,
   resolveUser,
   theme = "admin",
+  anchorRect,
 }: {
   open: boolean;
   onClose: () => void;
@@ -19,18 +20,34 @@ export default function PollVotesDrawer({
   options: OptionDetail[];
   resolveUser: (userId: string) => { name: string; avatar?: string | null };
   theme?: "admin" | "promotor";
+  anchorRect?: { top: number; left: number; width: number; height: number } | null;
 }) {
   if (!open) return null;
 
   const cardBg = theme === "admin" ? "rgba(255,255,255,0.12)" : "#fff";
   const border = theme === "admin" ? "rgba(255,255,255,0.25)" : "#E5E7EB";
   const text = theme === "admin" ? "#fff" : "#111827";
+  const drawerWidth = 360;
+  const gap = 12;
+  const top = Math.max(8, (anchorRect?.top ?? 80));
+  let left = 16;
+  if (anchorRect) {
+    left = Math.max(8, anchorRect.left - drawerWidth - gap);
+  }
 
   return (
-    <div className="fixed inset-0 z-[9998] pointer-events-none">
+    <div className="fixed inset-0 z-[9998]" onClick={onClose}>
       <div
-        className="absolute left-4 top-16 w-[360px] rounded-xl shadow-xl pointer-events-auto"
-        style={{ background: cardBg, border: `1px solid ${border}`, color: text }}
+        className="absolute rounded-xl shadow-xl"
+        style={{
+          background: cardBg,
+          border: `1px solid ${border}`,
+          color: text,
+          width: `${drawerWidth}px`,
+          left,
+          top,
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3 border-b" style={{ borderColor: border }}>
           <div className="font-semibold">{question}</div>

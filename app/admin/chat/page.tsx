@@ -672,8 +672,8 @@ export default function ChatPage() {
     return p?.display_name || 'Unbekannt';
   }, [selectedConvForAvatars]);
 
-  const [votesDrawer, setVotesDrawer] = useState<{ open: boolean; pollId: string | null; question: string; options: any[] }>(
-    { open: false, pollId: null, question: '', options: [] }
+  const [votesDrawer, setVotesDrawer] = useState<{ open: boolean; pollId: string | null; question: string; options: any[]; anchorRect: { top: number; left: number; width: number; height: number } | null }>(
+    { open: false, pollId: null, question: '', options: [], anchorRect: null }
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -1500,11 +1500,12 @@ export default function ChatPage() {
           {votesDrawer.open && (
             <PollVotesDrawer
               open={votesDrawer.open}
-              onClose={() => setVotesDrawer({ open: false, pollId: null, question: '', options: [] })}
+              onClose={() => setVotesDrawer({ open: false, pollId: null, question: '', options: [], anchorRect: null })}
               question={votesDrawer.question}
               options={votesDrawer.options}
               resolveUser={(userId: string) => ({ name: getNameForUser(userId), avatar: getAvatarForUser(userId) })}
               theme="admin"
+              anchorRect={votesDrawer.anchorRect}
             />
           )}
 
@@ -2791,7 +2792,9 @@ export default function ChatPage() {
                             onViewVotes={async () => {
                               try {
                                 const data = await chatIntegration.getPollVotes((message as any).poll.id);
-                                setVotesDrawer({ open: true, pollId: (message as any).poll.id, question: data.poll.question, options: data.options });
+                                const el = document.querySelector(`[data-message-id="${message.id}"]`) as HTMLElement | null;
+                                const r = el?.getBoundingClientRect();
+                                setVotesDrawer({ open: true, pollId: (message as any).poll.id, question: data.poll.question, options: data.options, anchorRect: r ? { top: r.top, left: r.left, width: r.width, height: r.height } : null });
                               } catch (e) {
                                 console.error('Failed to load votes', e);
                               }
