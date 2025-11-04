@@ -96,7 +96,7 @@ export default function ChatPage() {
     photoEditor: { show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null;
     drawingPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }>;
   }>>([]);
-  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' }>({ show: false, selectedCategory: 'smileys', context: 'input' });
+  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' | 'poll_question' | 'poll_option1' | 'poll_option2'; anchor: { top: number; left: number } | null }>({ show: false, selectedCategory: 'smileys', context: 'input', anchor: null });
 
   // Refs for poll modal inputs
   const pollQuestionRef = useRef<HTMLInputElement>(null);
@@ -1242,7 +1242,7 @@ export default function ChatPage() {
         setPdfEditor(null);
       }
       if (emojiPicker.show && !target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-trigger]')) {
-        setEmojiPicker(prev => ({ ...prev, show: false }));
+        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
         setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -1302,7 +1302,7 @@ export default function ChatPage() {
         }
 
         if (emojiPicker.show) {
-          setEmojiPicker(prev => ({ ...prev, show: false }));
+          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
         }
         if (groupCreationPopup.show) {
           setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -3430,7 +3430,7 @@ export default function ChatPage() {
                   className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input' }));
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input', anchor: null }));
                   }}
                 />
                 <button 
@@ -3453,16 +3453,28 @@ export default function ChatPage() {
                 data-emoji-picker
                 className="absolute bg-white rounded-lg shadow-lg border border-gray-200 z-40"
                 style={{
-                  bottom: emojiPicker.context === 'input' ? '71px' : '96px',
-                  left: emojiPicker.context === 'input' ? '16px' : '320px',
-                  right: '16px',
-                  width: emojiPicker.context === 'input' ? 'auto' : 'auto',
-                  height: '160px',
-                  boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
-                  transform: 'translateY(0)',
-                  transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-                  animation: 'slideUpFromBottom 0.3s ease-out'
-                }}
+                  ...(emojiPicker.anchor
+                    ? {
+                        position: 'fixed' as const,
+                        top: `${emojiPicker.anchor.top}px`,
+                        left: `${emojiPicker.anchor.left}px`,
+                        right: 'auto',
+                        bottom: 'auto',
+                        width: '260px',
+                        height: '196px'
+                      }
+                    : {
+                        bottom: emojiPicker.context === 'input' ? '71px' : '96px',
+                        left: emojiPicker.context === 'input' ? '16px' : '320px',
+                        right: '16px',
+                        width: 'auto',
+                        height: '160px'
+                      }),
+                   boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
+                   transform: 'translateY(0)',
+                   transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                   animation: 'slideUpFromBottom 0.3s ease-out'
+                 }}
               >
                 {/* Emoji Grid */}
                 <div className="h-full flex flex-col">
@@ -3485,9 +3497,25 @@ export default function ChatPage() {
                               setPhotoEditor(prev => prev ? { ...prev, caption: prev.caption + emoji } : null);
                             } else if (emojiPicker.context === 'pdf') {
                               setPdfEditor(prev => prev ? { ...prev, caption: prev.caption + emoji } : null);
+                            } else if (emojiPicker.context === 'poll_question') {
+                              if (pollQuestionRef.current) {
+                                const input = pollQuestionRef.current;
+                                input.value = input.value + emoji;
+                              }
+                            } else if (emojiPicker.context === 'poll_option1') {
+                              if (pollOption1Ref.current) {
+                                const input = pollOption1Ref.current;
+                                input.value = input.value + emoji;
+                              }
+                            } else if (emojiPicker.context === 'poll_option2') {
+                              if (pollOption2Ref.current) {
+                                const input = pollOption2Ref.current;
+                                input.value = input.value + emoji;
+                              }
                             } else {
                               setMessageInput(prev => prev + emoji);
                             }
+                            setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
                           }}
                         >
                           {emoji}
@@ -4564,7 +4592,10 @@ export default function ChatPage() {
 
     {/* Poll Create Modal (global overlay, no hooks) */}
     {showPollModal && (
-      <div className="fixed inset-0 z-[9999]" onClick={() => setShowPollModal(false)}>
+      <div className="fixed inset-0 z-[9999]" onClick={() => {
+        setShowPollModal(false);
+        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+      }}>
         <div
           className="absolute w-[520px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
           style={{ bottom: '96px', left: `calc(${sidebarOpen ? '14rem' : '3.5rem'} + 20rem + 16px)` }}
@@ -4582,7 +4613,49 @@ export default function ChatPage() {
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                 />
-                <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" />
+                <button
+                  type="button"
+                  data-emoji-trigger
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const pickerWidth = 260;
+                    const pickerHeight = 196;
+                    const padding = 12;
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const desiredLeft = rect.right + 8 + window.scrollX;
+                    const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                    const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                    const desiredTop = rect.top - 4 + window.scrollY;
+                    const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                    const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                    setEmojiPicker(prev => {
+                      const pickerWidth = 260;
+                      const pickerHeight = 196;
+                      const padding = 12;
+                      const viewportWidth = window.innerWidth;
+                      const viewportHeight = window.innerHeight;
+                      const desiredLeft = rect.right + 8 + window.scrollX;
+                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const desiredTop = rect.top - 4 + window.scrollY;
+                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                      const isSameContext = prev.show && prev.context === 'poll_question';
+                      const nextShow = isSameContext ? !prev.show : true;
+                      return {
+                        show: nextShow,
+                        selectedCategory: prev.selectedCategory,
+                        context: 'poll_question' as const,
+                        anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                      };
+                    });
+                  }}
+                >
+                  <Smile className="h-5 w-5" />
+                </button>
               </div>
             </div>
             <div>
@@ -4594,7 +4667,49 @@ export default function ChatPage() {
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                   />
-                  <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <button
+                    type="button"
+                    data-emoji-trigger
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const pickerWidth = 260;
+                      const pickerHeight = 196;
+                      const padding = 12;
+                      const viewportWidth = window.innerWidth;
+                      const viewportHeight = window.innerHeight;
+                      const desiredLeft = rect.right + 8 + window.scrollX;
+                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const desiredTop = rect.top - 4 + window.scrollY;
+                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                      setEmojiPicker(prev => {
+                        const pickerWidth = 260;
+                        const pickerHeight = 196;
+                        const padding = 12;
+                        const viewportWidth = window.innerWidth;
+                        const viewportHeight = window.innerHeight;
+                        const desiredLeft = rect.right + 8 + window.scrollX;
+                        const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                        const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                        const desiredTop = rect.top - 4 + window.scrollY;
+                        const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                        const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                        const isSameContext = prev.show && prev.context === 'poll_option1';
+                        const nextShow = isSameContext ? !prev.show : true;
+                        return {
+                          show: nextShow,
+                          selectedCategory: prev.selectedCategory,
+                          context: 'poll_option1' as const,
+                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                        };
+                      });
+                    }}
+                  >
+                    <Smile className="h-5 w-5" />
+                  </button>
                 </div>
                 <div className="relative group">
                   <input
@@ -4602,7 +4717,49 @@ export default function ChatPage() {
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                   />
-                  <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <button
+                    type="button"
+                    data-emoji-trigger
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      const pickerWidth = 260;
+                      const pickerHeight = 196;
+                      const padding = 12;
+                      const viewportWidth = window.innerWidth;
+                      const viewportHeight = window.innerHeight;
+                      const desiredLeft = rect.right + 8 + window.scrollX;
+                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const desiredTop = rect.top - 4 + window.scrollY;
+                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                      setEmojiPicker(prev => {
+                        const pickerWidth = 260;
+                        const pickerHeight = 196;
+                        const padding = 12;
+                        const viewportWidth = window.innerWidth;
+                        const viewportHeight = window.innerHeight;
+                        const desiredLeft = rect.right + 8 + window.scrollX;
+                        const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                        const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                        const desiredTop = rect.top - 4 + window.scrollY;
+                        const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                        const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+                        const isSameContext = prev.show && prev.context === 'poll_option2';
+                        const nextShow = isSameContext ? !prev.show : true;
+                        return {
+                          show: nextShow,
+                          selectedCategory: prev.selectedCategory,
+                          context: 'poll_option2' as const,
+                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                        };
+                      });
+                    }}
+                  >
+                    <Smile className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -4613,7 +4770,10 @@ export default function ChatPage() {
           </div>
           <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-3 border-t border-gray-100 bg-white">
             <button
-              onClick={() => setShowPollModal(false)}
+              onClick={() => {
+                setShowPollModal(false);
+                setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+              }}
               className="px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
             >Abbrechen</button>
             <button
@@ -4632,6 +4792,7 @@ export default function ChatPage() {
                   }
                   await chatIntegration.createPoll(String(selectedChat.id), question, options, allowMultiple);
                   setShowPollModal(false);
+                  setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
                 } catch (err) {
                   console.error('Failed to create poll:', err);
                 }
