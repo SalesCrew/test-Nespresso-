@@ -3505,8 +3505,10 @@ export default function ChatPage() {
                 </button>
                 <button
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
-                  onClick={() => {
-                    setShowPollModal(true);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Defer opening to avoid any global click handlers closing immediately
+                    setTimeout(() => setShowPollModal(true), 0);
                     setAttachmentPopup(false);
                   }}
                 >
