@@ -2394,7 +2394,7 @@ export default function ChatPage() {
                           { name: "Martin Schneider", region: "salzburg" },
                           { name: "Nina Weiss", region: "oberoesterreich" },
                           { name: "Patrick Schwarz", region: "tirol" },
-                          { name: "Andrea Roth", region: "vorarlberg" },
+                          { name: "Andrea Rolth", region: "vorarlberg" },
                           { name: "Florian Braun", region: "kaernten" },
                           { name: "Jessica Grün", region: "wien-noe-bgl" },
                           { name: "Daniel Gelb", region: "steiermark" },
@@ -2787,6 +2787,7 @@ export default function ChatPage() {
                             theme="admin"
                             getAvatar={getAvatarForUser}
                             showViewButton
+                            timestamp={message.time}
                             onViewVotes={async () => {
                               try {
                                 const data = await chatIntegration.getPollVotes((message as any).poll.id);
@@ -2856,7 +2857,7 @@ export default function ChatPage() {
                       )}
                       
                       {/* Text Content */}
-                      {message.content && (
+                      {message.type !== 'poll' && message.content && (
                         <p 
                           className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
@@ -2868,9 +2869,11 @@ export default function ChatPage() {
                           {message.content}
                         </p>
                       )}
-                      <p className={`text-xs mt-1 ${message.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                        {message.edited && '(edited) '}{message.time}
-                      </p>
+                      {message.type !== 'poll' && (
+                        <p className={`text-xs mt-1 ${message.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                          {message.edited && '(edited) '}{message.time}
+                        </p>
+                      )}
                       
                       {/* Reaction Emoji */}
                       {message.topReaction && (

@@ -25,9 +25,10 @@ interface PollMessageProps {
   getAvatar?: (userId: string) => string | null | undefined; // optional mapping for voter avatars
   onViewVotes?: () => void;
   showViewButton?: boolean;
+  timestamp?: string;
 }
 
-export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, onViewVotes, showViewButton }: PollMessageProps) {
+export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, onViewVotes, showViewButton, timestamp }: PollMessageProps) {
   const totalVotes = useMemo(() => poll.options.reduce((s, o) => s + (o.count || 0), 0), [poll.options]);
   const isSelected = (id: string) => poll.my_votes.includes(id);
   const gradient = theme === "admin"
@@ -122,8 +123,15 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, on
           );
         })}
       </div>
+      {/* Timestamp (inside poll, above divider) */}
+      {timestamp && (
+        <p className={`text-xs mt-2 ${mine ? 'text-white/80 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+          {timestamp}
+        </p>
+      )}
+
       {theme === 'admin' && showViewButton && onViewVotes && (
-        <div className="mt-3 pt-2 border-t">
+        <div className="mt-2 pt-2" style={{ borderTop: theme === 'admin' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E5E7EB' }}>
           <button
             onClick={(e) => { e.stopPropagation(); onViewVotes(); }}
             className="w-full text-sm rounded-lg px-3 py-2"

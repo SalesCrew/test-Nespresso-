@@ -1949,6 +1949,7 @@ export default function PromotorChatPage() {
                                   mine={!!message.own}
                                   theme="promotor"
                                   getAvatar={getAvatarForUser}
+                                  timestamp={message.time}
                                   onToggle={async (optionId, checked) => {
                                     try {
                                       if (!selectedChat?.id) return;
@@ -2010,7 +2011,7 @@ export default function PromotorChatPage() {
                             )}
                             
                             {/* Text Content */}
-                            {message.content && (
+                            {message.type !== 'poll' && message.content && (
                               <p 
                                 className="text-sm"
                                 style={{ 
@@ -2024,6 +2025,7 @@ export default function PromotorChatPage() {
                             )}
                             
                             {/* Message Meta */}
+                            {message.type !== 'poll' && (
                             <div className="flex items-center justify-end mt-1 space-x-1">
                               {message.edited && (
                                 <span className={`text-xs ${message.own ? 'text-blue-200' : 'text-gray-400'} opacity-70`}>
@@ -2034,6 +2036,7 @@ export default function PromotorChatPage() {
                                 {message.time}
                               </span>
                             </div>
+                            )}
                           
                           {/* Reaction Emoji */}
                           {message.topReaction && (
