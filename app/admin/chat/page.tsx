@@ -79,6 +79,11 @@ export default function ChatPage() {
   const [messageInput, setMessageInput] = useState("");
   const [attachmentPopup, setAttachmentPopup] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
+  useEffect(() => {
+    if (showPollModal) {
+      console.log('[Poll] Modal open (admin)');
+    }
+  }, [showPollModal]);
   const [photoEditor, setPhotoEditor] = useState<{ show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null>(null);
   const [pdfEditor, setPdfEditor] = useState<{ show: boolean; file: File; caption: string } | null>(null);
   const [uploadProgress, setUploadProgress] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
@@ -3508,7 +3513,10 @@ export default function ChatPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     // Defer opening to avoid any global click handlers closing immediately
-                    setTimeout(() => setShowPollModal(true), 0);
+                    setTimeout(() => {
+                      console.log('[Poll] Open from attachment menu');
+                      setShowPollModal(true);
+                    }, 0);
                     setAttachmentPopup(false);
                   }}
                 >
