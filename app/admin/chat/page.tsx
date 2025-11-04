@@ -96,7 +96,7 @@ export default function ChatPage() {
     photoEditor: { show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null;
     drawingPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }>;
   }>>([]);
-  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' | 'poll_question' | 'poll_option1' | 'poll_option2'; anchor: { top: number; left: number } | null }>({ show: false, selectedCategory: 'smileys', context: 'input', anchor: null });
+  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' | 'poll_question' | 'poll_option1' | 'poll_option2'; anchor: { top: number; left: number } | null; dimensions: { width: number; height: number } | null }>({ show: false, selectedCategory: 'smileys', context: 'input', anchor: null, dimensions: null });
 
   // Refs for poll modal inputs
   const pollQuestionRef = useRef<HTMLInputElement>(null);
@@ -1242,7 +1242,7 @@ export default function ChatPage() {
         setPdfEditor(null);
       }
       if (emojiPicker.show && !target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-trigger]')) {
-        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
         setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -1302,7 +1302,7 @@ export default function ChatPage() {
         }
 
         if (emojiPicker.show) {
-          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
         }
         if (groupCreationPopup.show) {
           setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -3430,7 +3430,7 @@ export default function ChatPage() {
                   className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input', anchor: null }));
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input', anchor: null, dimensions: null }));
                   }}
                 />
                 <button 
@@ -3458,10 +3458,10 @@ export default function ChatPage() {
                         position: 'fixed' as const,
                         top: `${emojiPicker.anchor.top}px`,
                         left: `${emojiPicker.anchor.left}px`,
+                        width: `${emojiPicker.dimensions?.width ?? 260}px`,
+                        height: `${emojiPicker.dimensions?.height ?? 196}px`,
                         right: 'auto',
-                        bottom: 'auto',
-                        width: '260px',
-                        height: '196px'
+                        bottom: 'auto'
                       }
                     : {
                         bottom: emojiPicker.context === 'input' ? '71px' : '96px',
@@ -3515,7 +3515,7 @@ export default function ChatPage() {
                             } else {
                               setMessageInput(prev => prev + emoji);
                             }
-                            setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+                            setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
                           }}
                         >
                           {emoji}
@@ -4268,8 +4268,10 @@ export default function ChatPage() {
                         setEmojiPicker(prev => ({ 
                           ...prev, 
                           show: !prev.show, 
-                          context: 'photo' 
-                        }));
+                          context: 'photo',
+                          anchor: null,
+                          dimensions: null
+                         }));
                       }}
                     />
                     <input
@@ -4387,8 +4389,10 @@ export default function ChatPage() {
                         setEmojiPicker(prev => ({ 
                           ...prev, 
                           show: !prev.show, 
-                          context: 'pdf' 
-                        }));
+                          context: 'pdf',
+                          anchor: null,
+                          dimensions: null
+                         }));
                       }}
                     />
                     <input
@@ -4594,7 +4598,7 @@ export default function ChatPage() {
     {showPollModal && (
       <div className="fixed inset-0 z-[9999]" onClick={() => {
         setShowPollModal(false);
-        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
       }}>
         <div
           className="absolute w-[520px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
@@ -4607,7 +4611,7 @@ export default function ChatPage() {
           <div className="px-5 py-4 space-y-4 max-h-[70vh] outline-none focus:outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div>
               <label className="text-sm text-gray-600 block mb-2">Frage</label>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   ref={pollQuestionRef}
                   placeholder="Gib eine Frage ein."
@@ -4616,40 +4620,34 @@ export default function ChatPage() {
                 <button
                   type="button"
                   data-emoji-trigger
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    const pickerWidth = 260;
-                    const pickerHeight = 196;
                     const padding = 12;
                     const viewportWidth = window.innerWidth;
                     const viewportHeight = window.innerHeight;
                     const desiredLeft = rect.right + 8 + window.scrollX;
-                    const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                    const minWidth = 360;
+                    const maxWidth = 680;
+                    const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
+                    const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
+                    const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
+                    const maxLeft = viewportWidth + window.scrollX - padding - width;
                     const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                    const height = 232;
                     const desiredTop = rect.top - 4 + window.scrollY;
-                    const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                    const maxTop = viewportHeight + window.scrollY - padding - height;
                     const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                     setEmojiPicker(prev => {
-                      const pickerWidth = 260;
-                      const pickerHeight = 196;
-                      const padding = 12;
-                      const viewportWidth = window.innerWidth;
-                      const viewportHeight = window.innerHeight;
-                      const desiredLeft = rect.right + 8 + window.scrollX;
-                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
-                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                      const desiredTop = rect.top - 4 + window.scrollY;
-                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
-                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                       const isSameContext = prev.show && prev.context === 'poll_question';
                       const nextShow = isSameContext ? !prev.show : true;
                       return {
                         show: nextShow,
                         selectedCategory: prev.selectedCategory,
                         context: 'poll_question' as const,
-                        anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                        anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
+                        dimensions: nextShow ? { width, height } : null
                       };
                     });
                   }}
@@ -4674,36 +4672,30 @@ export default function ChatPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const pickerWidth = 260;
-                      const pickerHeight = 196;
                       const padding = 12;
                       const viewportWidth = window.innerWidth;
                       const viewportHeight = window.innerHeight;
                       const desiredLeft = rect.right + 8 + window.scrollX;
-                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const minWidth = 360;
+                      const maxWidth = 680;
+                      const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
+                      const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
+                      const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
+                      const maxLeft = viewportWidth + window.scrollX - padding - width;
                       const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const height = 232;
                       const desiredTop = rect.top - 4 + window.scrollY;
-                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const maxTop = viewportHeight + window.scrollY - padding - height;
                       const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                       setEmojiPicker(prev => {
-                        const pickerWidth = 260;
-                        const pickerHeight = 196;
-                        const padding = 12;
-                        const viewportWidth = window.innerWidth;
-                        const viewportHeight = window.innerHeight;
-                        const desiredLeft = rect.right + 8 + window.scrollX;
-                        const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
-                        const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                        const desiredTop = rect.top - 4 + window.scrollY;
-                        const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
-                        const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                         const isSameContext = prev.show && prev.context === 'poll_option1';
                         const nextShow = isSameContext ? !prev.show : true;
                         return {
                           show: nextShow,
                           selectedCategory: prev.selectedCategory,
                           context: 'poll_option1' as const,
-                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
+                          dimensions: nextShow ? { width, height } : null
                         };
                       });
                     }}
@@ -4724,36 +4716,30 @@ export default function ChatPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const pickerWidth = 260;
-                      const pickerHeight = 196;
                       const padding = 12;
                       const viewportWidth = window.innerWidth;
                       const viewportHeight = window.innerHeight;
                       const desiredLeft = rect.right + 8 + window.scrollX;
-                      const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
+                      const minWidth = 360;
+                      const maxWidth = 680;
+                      const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
+                      const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
+                      const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
+                      const maxLeft = viewportWidth + window.scrollX - padding - width;
                       const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
+                      const height = 232;
                       const desiredTop = rect.top - 4 + window.scrollY;
-                      const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
+                      const maxTop = viewportHeight + window.scrollY - padding - height;
                       const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                       setEmojiPicker(prev => {
-                        const pickerWidth = 260;
-                        const pickerHeight = 196;
-                        const padding = 12;
-                        const viewportWidth = window.innerWidth;
-                        const viewportHeight = window.innerHeight;
-                        const desiredLeft = rect.right + 8 + window.scrollX;
-                        const maxLeft = viewportWidth + window.scrollX - pickerWidth - padding;
-                        const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                        const desiredTop = rect.top - 4 + window.scrollY;
-                        const maxTop = viewportHeight + window.scrollY - pickerHeight - padding;
-                        const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
                         const isSameContext = prev.show && prev.context === 'poll_option2';
                         const nextShow = isSameContext ? !prev.show : true;
                         return {
                           show: nextShow,
                           selectedCategory: prev.selectedCategory,
                           context: 'poll_option2' as const,
-                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null
+                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
+                          dimensions: nextShow ? { width, height } : null
                         };
                       });
                     }}
@@ -4772,7 +4758,7 @@ export default function ChatPage() {
             <button
               onClick={() => {
                 setShowPollModal(false);
-                setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+                setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
               }}
               className="px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
             >Abbrechen</button>
@@ -4792,7 +4778,7 @@ export default function ChatPage() {
                   }
                   await chatIntegration.createPoll(String(selectedChat.id), question, options, allowMultiple);
                   setShowPollModal(false);
-                  setEmojiPicker(prev => ({ ...prev, show: false, anchor: null }));
+                  setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
                 } catch (err) {
                   console.error('Failed to create poll:', err);
                 }
