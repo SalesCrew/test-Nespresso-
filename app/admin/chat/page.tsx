@@ -4504,23 +4504,23 @@ export default function ChatPage() {
 
     {/* Poll Create Modal (global overlay, no hooks) */}
     {showPollModal && (
-      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-[2px]" onClick={() => setShowPollModal(false)}>
+      <div className="fixed inset-0 z-[9999]" onClick={() => setShowPollModal(false)}>
         <div
-          className="w-full sm:w-[560px] max-w-[92vw] rounded-2xl shadow-xl border border-gray-100"
-          style={{ backgroundColor: "rgba(255,255,255,0.96)" }}
+          className="absolute left-4 sm:left-6 w-[560px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
+          style={{ bottom: '96px' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-5 pt-4 pb-3 border-b border-gray-100 sticky top-0" style={{ backgroundColor: "rgba(255,255,255,0.96)" }}>
+          <div className="px-5 pt-4 pb-3 border-b border-gray-100 bg-white">
             <h3 className="text-base font-semibold text-gray-800">Abstimmung erstellen</h3>
           </div>
-          <div className="px-5 py-4 space-y-4 overflow-y-auto max-h-[70vh] outline-none focus:outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="px-5 py-4 space-y-4 max-h-[70vh] outline-none focus:outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div>
               <label className="text-sm text-gray-600 block mb-2">Frage</label>
               <div className="relative">
                 <input
                   value={""}
                   placeholder="Gib eine Frage ein."
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                   readOnly
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">🙂</div>
@@ -4533,7 +4533,7 @@ export default function ChatPage() {
                   <input
                     value={""}
                     placeholder="+ Füge eine Option hinzu."
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                     readOnly
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">🙂</div>
@@ -4542,7 +4542,7 @@ export default function ChatPage() {
                   <input
                     value={""}
                     placeholder="+ Füge eine Option hinzu."
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
                     readOnly
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">🙂</div>
@@ -4554,7 +4554,7 @@ export default function ChatPage() {
               <span className="text-sm text-gray-700">Mehrere Antworten erlauben</span>
             </label>
           </div>
-          <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-3 border-t border-gray-100">
+          <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-3 border-t border-gray-100 bg-white">
             <button
               onClick={() => setShowPollModal(false)}
               className="px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
