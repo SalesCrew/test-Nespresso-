@@ -4518,10 +4518,8 @@ export default function ChatPage() {
               <label className="text-sm text-gray-600 block mb-2">Frage</label>
               <div className="relative">
                 <input
-                  value={""}
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                  readOnly
                 />
                 <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
@@ -4531,19 +4529,15 @@ export default function ChatPage() {
               <div className="space-y-2">
                 <div className="relative group">
                   <input
-                    value={""}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                    readOnly
                   />
                   <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity" />
                 </div>
                 <div className="relative group">
                   <input
-                    value={""}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                    readOnly
                   />
                   <Smile className="h-5 w-5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity" />
                 </div>
