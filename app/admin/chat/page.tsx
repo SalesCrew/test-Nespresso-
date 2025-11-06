@@ -112,6 +112,7 @@ export default function ChatPage() {
     if (showPollModal) {
       setPollOptions(['', '']);
       pollEmojiBaseTopRef.current = { question: null, option: null };
+      // Store the initial control positions to keep emoji pickers anchored consistently.
       requestAnimationFrame(() => {
         const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
         if (firstOptionInput) {
