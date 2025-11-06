@@ -710,78 +710,56 @@ export default function EinsatzplanPage() {
       if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'details') return;
       
       try {
-        // Fetch tracking data from the same endpoint as dashboard
-        const response = await fetch('/api/assignments/today');
-        const data = await response.json();
-        
-        if (response.ok && data.assignments) {
-          // Find the tracking data for this specific assignment
-          const trackingForAssignment = data.assignments.find((a: any) => a.assignment_id === editingEinsatz.id);
-          
-          if (trackingForAssignment) {
-            // Fetch outside-break and TC status for this assignment
-            const [outsideBreakRes, tcRes] = await Promise.all([
-              fetch(`/api/admin/assignments/${trackingForAssignment.assignment_id}/outside-breaks`, { cache: 'no-store' }).catch(() => null),
-              fetch(`/api/admin/daily-checkin-status?date=${new Date().toISOString().split('T')[0]}`, { cache: 'no-store' }).catch(() => null)
-            ]);
-            const outsideBreakData = outsideBreakRes ? await outsideBreakRes.json().catch(() => ({ items: [] })) : { items: [] };
-            const tcData = tcRes ? await tcRes.json().catch(() => ({ checkins: [] })) : { checkins: [] };
-            
-            const hasOutsideBreak = Array.isArray(outsideBreakData.items) && outsideBreakData.items.length > 0;
-            const outsideBreakTimestamp = hasOutsideBreak ? outsideBreakData.items[0].reported_at : null;
-            const hasCheckedIn = Array.isArray(tcData.checkins) && tcData.checkins.some((c: any) => c.assignment_id === trackingForAssignment.assignment_id);
-            
-            // Transform to match the expected format
-            setAssignmentTrackingData({
-              id: trackingForAssignment.assignment_id,
-              market: trackingForAssignment.title || 'N/A',
-              address: trackingForAssignment.location_text || '',
-              plz: trackingForAssignment.postal_code || '',
-              city: trackingForAssignment.city || '',
-              promotor: trackingForAssignment.promotor_name || editingEinsatz.promotor || 'N/A',
-              buddyName: trackingForAssignment.buddy_name,
-              planStart: trackingForAssignment.planned_start ? trackingForAssignment.planned_start.substring(11, 16) : editingEinsatz.planStart,
-              planEnd: trackingForAssignment.planned_end ? trackingForAssignment.planned_end.substring(11, 16) : editingEinsatz.planEnd,
-              actualStart: trackingForAssignment.actual_start_time ? trackingForAssignment.actual_start_time.substring(11, 16) : null,
-              actualEnd: trackingForAssignment.actual_end_time ? trackingForAssignment.actual_end_time.substring(11, 16) : null,
-              status: trackingForAssignment.display_status || editingEinsatz.status,
-              tracking_status: trackingForAssignment.tracking_status,
-              notes: trackingForAssignment.notes || editingEinsatz.notes,
-              early_start_reason: trackingForAssignment.early_start_reason,
-              minutes_early_start: trackingForAssignment.minutes_early_start,
-              early_end_reason: trackingForAssignment.early_end_reason,
-              minutes_early_end: trackingForAssignment.minutes_early_end,
-              foto_maschine_url: trackingForAssignment.foto_maschine_url,
-              foto_kapsellade_url: trackingForAssignment.foto_kapsellade_url,
-              foto_pos_gesamt_url: trackingForAssignment.foto_pos_gesamt_url,
-              hasCheckedIn,
-              hasOutsideBreak,
-              outsideBreakTimestamp
-            });
-          } else {
-            // No tracking data yet, create basic structure from editingEinsatz
-            setAssignmentTrackingData({
-              id: editingEinsatz.id,
-              market: editingEinsatz.market || 'N/A',
-              address: editingEinsatz.address || '',
-              plz: editingEinsatz.plz || '',
-              city: editingEinsatz.city || '',
-              promotor: editingEinsatz.promotor || 'N/A',
-              buddyName: editingEinsatz.buddy_name,
-              planStart: editingEinsatz.planStart,
-              planEnd: editingEinsatz.planEnd,
-              actualStart: null,
-              actualEnd: null,
-              status: editingEinsatz.status,
-              notes: editingEinsatz.notes,
-            });
-          }
+        const response = await fetch(`/api/assignments/${editingEinsatz.id}/tracking`, { cache: 'no-store' });
+        if (!response.ok) {
+          setAssignmentTrackingData(null);
+          return;
         }
+        const data = await response.json();
+        const assignment = data.assignment || {};
+        const tracking = data.tracking || {};
+        const checkins: Array<{ checked_in_at: string }> = data.checkins || [];
+        const outsideBreaks: Array<{ reported_at: string }> = data.outsideBreaks || [];
+
+        const hasOutsideBreak = outsideBreaks.length > 0;
+        const outsideBreakTimestamp = hasOutsideBreak ? outsideBreaks[outsideBreaks.length - 1].reported_at : null;
+        const hasCheckedIn = checkins.length > 0;
+
+        const actualStart = tracking.actual_start_time ? tracking.actual_start_time.substring(11, 16) : null;
+        const actualEnd = tracking.actual_end_time ? tracking.actual_end_time.substring(11, 16) : null;
+
+        setAssignmentTrackingData({
+          id: assignment.id || editingEinsatz.id,
+          market: assignment.title || editingEinsatz.market || 'N/A',
+          address: assignment.location_text || editingEinsatz.address || '',
+          plz: assignment.postal_code || editingEinsatz.plz || '',
+          city: assignment.city || editingEinsatz.city || '',
+          promotor: assignment.lead_name || editingEinsatz.promotor || 'N/A',
+          buddyName: assignment.buddy_display_name || editingEinsatz.buddy_name || null,
+          planStart: assignment.start_ts ? assignment.start_ts.substring(11, 16) : editingEinsatz.planStart,
+          planEnd: assignment.end_ts ? assignment.end_ts.substring(11, 16) : editingEinsatz.planEnd,
+          actualStart,
+          actualEnd,
+          status: tracking.status || editingEinsatz.status,
+          tracking_status: tracking.status || null,
+          notes: tracking.notes || assignment.notes || editingEinsatz.notes || '',
+          early_start_reason: tracking.early_start_reason || null,
+          minutes_early_start: tracking.minutes_early_start ?? null,
+          early_end_reason: tracking.early_end_reason || null,
+          minutes_early_end: tracking.minutes_early_end ?? null,
+          foto_maschine_url: tracking.foto_maschine_url || null,
+          foto_kapsellade_url: tracking.foto_kapsellade_url || null,
+          foto_pos_gesamt_url: tracking.foto_pos_gesamt_url || null,
+          foto_extra_url: tracking.foto_extra_url || null,
+          hasCheckedIn,
+          hasOutsideBreak,
+          outsideBreakTimestamp,
+        });
       } catch (error) {
-        console.error('Error loading tracking data:', error);
+        console.error('Failed to load tracking data:', error);
+        setAssignmentTrackingData(null);
       }
     };
-    
     loadTrackingData();
   }, [showDetailModal, editingEinsatz?.id, detailModalTab]);
 
@@ -2087,6 +2065,42 @@ export default function EinsatzplanPage() {
         const timeEnd = endIso ? endIso.substring(11, 16) : ''
         const timeText = timeEnd ? `${timeStart}-${timeEnd}` : timeStart
 
+        const trackingStatus = (r.tracking_status || '').toLowerCase()
+        const actualStart = r.tracking_actual_start_time ? r.tracking_actual_start_time.substring(11, 16) : null
+        const actualEnd = r.tracking_actual_end_time ? r.tracking_actual_end_time.substring(11, 16) : null
+
+        const mapSpecialStatus = (value: string) => (
+          value === 'krankenstand' ? 'Krankenstand' :
+          value === 'notfall' ? 'Sonderfall' :
+          value === 'urlaub' ? 'Urlaub' :
+          value === 'zeitausgleich' ? 'Zeitausgleich' :
+          value === 'markierte' ? 'Markierte' :
+          value === 'bestätigt' ? 'Bestätigt' :
+          value === 'geplant' ? 'Geplant' :
+          value
+        )
+
+        const defaultStatus = (r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' :
+          (r.status === 'assigned' ? 'Verplant' :
+            r.status === 'buddy_tag' ? 'Buddy Tag' :
+              r.status === 'open' ? 'Offen' :
+                (r.status || 'Offen'))
+
+        let statusLabel: string
+        if (r.special_status) {
+          statusLabel = mapSpecialStatus(r.special_status)
+        } else if (['krankenstand', 'urlaub', 'zeitausgleich', 'notfall'].includes(trackingStatus)) {
+          statusLabel = mapSpecialStatus(trackingStatus)
+        } else if (trackingStatus === 'beendet') {
+          statusLabel = 'Beendet'
+        } else if (trackingStatus === 'gestartet') {
+          statusLabel = 'Gestartet'
+        } else if (trackingStatus === 'verspätet') {
+          statusLabel = 'Verspätet'
+        } else {
+          statusLabel = defaultStatus
+        }
+
         return {
           id: r.id,
           date: r.start_ts ? new Date(r.start_ts).toISOString().slice(0,10) : '',
@@ -2095,37 +2109,31 @@ export default function EinsatzplanPage() {
           address: r.location_text || '',
           planStart: timeStart,
           planEnd: timeEnd,
+          actualStart,
+          actualEnd,
           plz: r.postal_code || '',
           region: r.region || getRegionFromPLZ(String(r.postal_code || '')),
-          // Check special_status first, then regular status
-          status: r.special_status ? 
-                  // Map special statuses to UI format
-                  (r.special_status === 'krankenstand' ? 'Krankenstand' :
-                   r.special_status === 'notfall' ? 'Sonderfall' :
-                   r.special_status === 'urlaub' ? 'Urlaub' :
-                   r.special_status === 'zeitausgleich' ? 'Zeitausgleich' :
-                   r.special_status === 'markierte' ? 'Markierte' :
-                   r.special_status === 'bestätigt' ? 'Bestätigt' :
-                   r.special_status === 'geplant' ? 'Geplant' :
-                   r.special_status) :
-                  // Otherwise use regular status logic
-                  ((r.buddy_name || r.buddy_display_name || r.buddy_user_id) ? 'Buddy Tag' : 
-                  (r.status === 'assigned' ? 'Verplant' : 
-                   r.status === 'buddy_tag' ? 'Buddy Tag' : 
-                   r.status === 'open' ? 'Offen' :
-                    (r.status || 'Offen'))),
-          // Include buddy information
+          status: statusLabel,
+          tracking_status: trackingStatus || null,
           promotor: r.lead_name || (r.status === 'assigned' ? 'Verplant' : ''),
-          promotorId: r.lead_user_id, // Add lead_user_id for the Select dropdown
+          promotorId: r.lead_user_id,
           buddy_name: r.buddy_name || r.buddy_display_name,
           buddy_user_id: r.buddy_user_id,
           promotionCount: 1,
           promotorCount: 0,
           promotions: [{ id: r.id }],
-          notes: r.notes || '',
+          notes: r.tracking_notes || r.notes || '',
           special_status: r.special_status || null,
           market: r.location_text || '',
           matched_market_id: (r as any).matched_market_id || null,
+          early_start_reason: r.tracking_early_start_reason || null,
+          minutes_early_start: r.tracking_minutes_early_start ?? null,
+          early_end_reason: r.tracking_early_end_reason || null,
+          minutes_early_end: r.tracking_minutes_early_end ?? null,
+          foto_maschine_url: r.tracking_foto_maschine_url || null,
+          foto_kapsellade_url: r.tracking_foto_kapsellade_url || null,
+          foto_pos_gesamt_url: r.tracking_foto_pos_gesamt_url || null,
+          foto_extra_url: r.tracking_foto_extra_url || null,
         }
       });
       console.log('🟢 Mapped data:', mapped.length, 'items');
