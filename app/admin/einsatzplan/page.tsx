@@ -5424,7 +5424,7 @@ Import EP
           <div className="bg-white rounded-lg shadow-lg w-96 max-w-[90vw]">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Import EP</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{activeView === 'maerkte' ? 'Import POS' : 'Import EP'}</h3>
               <button
                 onClick={() => setShowImportModal(false)}
                 className="p-1 rounded hover:bg-gray-100 transition-colors"
@@ -5435,7 +5435,8 @@ Import EP
 
             {/* Modal Content */}
             <div className="p-6">
-              {/* Import Type Selection */}
+              {/* Import Type Selection - only for Einsatzplan */}
+              {activeView === 'einsatzplan' && (
                 <div className="mb-6">
                   <div className="flex space-x-2">
                     <button
@@ -5460,6 +5461,7 @@ Import EP
                     </button>
                   </div>
                 </div>
+              )}
 
               {/* Drag and Drop Area */}
               <div 
@@ -5482,7 +5484,7 @@ Import EP
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">
-                      Excel-Datei hier ablegen oder
+                      {activeView === 'maerkte' ? 'Märkte Excel hier importieren' : 'Excel-Datei hier ablegen oder'}
                     </p>
                     <button 
                       onClick={() => fileInputRef.current?.click()}
