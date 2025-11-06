@@ -6192,14 +6192,11 @@ Import EP
                     <div className="flex items-center justify-between border-b border-gray-200 pb-2">
                       <h4 className="text-sm font-medium text-gray-900">Markt Informationen</h4>
                       <div className="relative">
-                        <button
-                          type="button"
+                        <Clock
                           data-market-hours-trigger
                           onClick={() => setShowMarketHours((prev) => !prev)}
-                          className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
-                        >
-                          <Clock className="h-4 w-4" />
-                        </button>
+                          className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors"
+                        />
                         {showMarketHours && (
                           <div
                             ref={marketHoursRef}
