@@ -5658,12 +5658,23 @@ Import EP
                   <input
                     type="text"
                       value={hoveredMarket ? `${hoveredMarket.name}` : newAssignment.location_text}
-                    onChange={(e) => setNewAssignment(prev => ({ ...prev, location_text: e.target.value }))}
-                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
-                    placeholder="z.B. Interspar Graz"
-                    required
-                      style={hoveredMarket ? { opacity: 0.65 } : undefined}
-                    />
+                    onFocus={() => {
+                      setHoveredMarket(null);
+                      setMarketPickerSearch(newAssignment.location_text);
+                      setShowMarketPicker(true);
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNewAssignment(prev => ({ ...prev, location_text: value }));
+                      setHoveredMarket(null);
+                      setMarketPickerSearch(value);
+                      setShowMarketPicker(true);
+                    }}
+                     className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                     placeholder="z.B. Interspar Graz"
+                     required
+                       style={hoveredMarket ? { opacity: 0.65 } : undefined}
+                     />
                     {showMarketPicker && (
                       <div 
                         ref={marketPickerRef}
