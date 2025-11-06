@@ -1285,6 +1285,11 @@ export default function EinsatzplanPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showPromotorDropdown]);
+
+
+
+
+
   const weekOverviewData = [
     { 
       date: "Mo 25.11", 
@@ -3077,31 +3082,18 @@ Import EP
                               }
                             }}
                             
-                            className={`relative overflow-hidden p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
+                            className={`relative p-4 rounded-lg border transition-all duration-200 hover:shadow-sm cursor-pointer ${
                               selectedPromotions.includes(einsatz.id) 
                                 ? 'border-blue-300 bg-blue-50 shadow-md' 
                                 : (einsatz.status === 'Beendet' ? 'border-[#EFB54E]/30' : 'border-gray-100')
-                            } ${getStatusBackgroundColor(einsatz.status)} ${flashAssignmentId === einsatz.id ? 'ring-1 ring-emerald-400/40' : ''}`}
-                            style={einsatz.status === 'Beendet' ? { background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))' } : (
-                              flashAssignmentId === einsatz.id
-                                ? {
-                                    boxShadow: '0 12px 28px -16px rgba(16,185,129,0.45)'
-                                  }
-                                : ((selectedEinsatz?.id === einsatz.id && aiMode)
-                                  ? { boxShadow: '0 0 12px rgba(134, 239, 172, 0.5)' }
-                                  : undefined)
-                            )}
+                            } ${getStatusBackgroundColor(einsatz.status)} ${flashAssignmentId === einsatz.id ? '' : ''}`}
+                            style={einsatz.status === 'Beendet' ? { background: 'linear-gradient(to right, rgba(239, 181, 78, 0.05), rgba(255, 237, 150, 0.05), rgba(252, 217, 76, 0.05), rgba(249, 247, 147, 0.05), rgba(239, 185, 77, 0.05))' } : ((flashAssignmentId === einsatz.id || (selectedEinsatz?.id === einsatz.id && aiMode)) 
+                              ? { boxShadow: flashAssignmentId === einsatz.id 
+                                  ? '0 0 20px rgba(34,197,94,0.35)'
+                                  : '0 0 12px rgba(134, 239, 172, 0.5)' }
+                              : undefined)}
                           >
-                            {flashAssignmentId === einsatz.id && (
-                              <span
-                                className="pointer-events-none absolute inset-0 z-0"
-                                style={{
-                                  background: 'linear-gradient(135deg, rgba(134,239,172,0.34) 0%, rgba(16,185,129,0.18) 48%, rgba(134,239,172,0.26) 100%)',
-                                  boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.35)'
-                                }}
-                              />
-                            )}
-                            <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex items-center justify-between relative">
                               <div className="grid grid-cols-6 gap-4 flex-1 items-center">
                                 <div className="min-w-0">
                                   <h4 className="text-sm font-medium text-gray-900">{getDisplayName(einsatz)}</h4>
