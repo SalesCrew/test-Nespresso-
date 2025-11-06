@@ -1346,7 +1346,7 @@ export default function EinsatzplanPage() {
   };
 
   const getStatusOptions = () => {
-    return ["Verplant", "Buddy Tag", "Krankenstand", "Sonderfall", "Urlaub", "Zeitausgleich", "Markierte"];
+    return ["Verplant", "Buddy Tag", "Krankenstand", "Sonderfall", "Urlaub", "Zeitausgleich", "Beendet", "Markierte"];
   };
 
   const getStatusGradient = (status: string) => {
