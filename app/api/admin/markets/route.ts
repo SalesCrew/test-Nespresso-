@@ -104,6 +104,7 @@ export async function GET(req: NextRequest) {
         nextVisit: visits?.next_visit_date || null,
         internalNotes: market.internal_notes || '',
         promotorNotes: market.promotor_notes || '',
+        opening_hours: market.opening_hours || null,
         photosInternal: market.photos_internal || [],
         photosExterior: market.photos_exterior || [],
         photosInterior: market.photos_interior || [],
