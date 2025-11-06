@@ -1245,11 +1245,8 @@ export default function ChatPage() {
       const insideEmojiPicker = target.closest('[data-emoji-picker]');
       const isEmojiTrigger = target.closest('[data-emoji-trigger]');
       const insidePollModal = target.closest('[data-poll-modal]');
-      const isPollEmojiContext = emojiPicker.context === 'poll_question' || emojiPicker.context === 'poll_option1' || emojiPicker.context === 'poll_option2';
       if (emojiPicker.show && !insideEmojiPicker && !isEmojiTrigger) {
-        if (!(isPollEmojiContext && insidePollModal)) {
-          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
-        }
+        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
       }
       if (showPollModal && !insidePollModal && !insideEmojiPicker && !isEmojiTrigger) {
         setShowPollModal(false);
@@ -4662,6 +4659,7 @@ export default function ChatPage() {
                   ref={pollQuestionRef}
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
+                  onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
                 />
                 <button
                   type="button"
@@ -4685,6 +4683,7 @@ export default function ChatPage() {
                     ref={pollOption1Ref}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
+                    onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
                   />
                   <button
                     type="button"
@@ -4704,6 +4703,7 @@ export default function ChatPage() {
                     ref={pollOption2Ref}
                     placeholder="+ Füge eine Option hinzu."
                     className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
+                    onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
                   />
                   <button
                     type="button"
