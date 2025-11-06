@@ -113,7 +113,7 @@ export default function ChatPage() {
       setPollOptions(['', '']);
       pollEmojiBaseTopRef.current = { question: null, option: null };
       requestAnimationFrame(() => {
-        const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]`) as HTMLInputElement | null;
+        const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
         if (firstOptionInput) {
           pollEmojiBaseTopRef.current.option = firstOptionInput.getBoundingClientRect().top + window.scrollY;
         }
@@ -1458,7 +1458,7 @@ export default function ChatPage() {
       pollEmojiBaseTopRef.current.question = triggerRect.top + window.scrollY;
     }
     if (context === 'poll_option' && pollEmojiBaseTopRef.current.option == null) {
-      const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]`) as HTMLInputElement | null;
+      const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
       pollEmojiBaseTopRef.current.option = firstOptionInput ? firstOptionInput.getBoundingClientRect().top + window.scrollY : triggerRect.top + window.scrollY;
     }
     const baseTop = context === 'poll_question'
