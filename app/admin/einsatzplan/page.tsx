@@ -2599,9 +2599,9 @@ Import EP
                           
                           {showMarketDropdown && (
                             <div 
-                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-80 bg-white max-h-60 overflow-y-auto custom-scrollbar"
+                              className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-80 bg-white max-h-[220px] overflow-y-auto no-scrollbar"
                             >
-                              <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+                              <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto no-scrollbar">
                                 <button
                                   onClick={() => {
                                     setMarketFilter("");
@@ -3269,7 +3269,7 @@ Import EP
                                   </div>
 
                                   {/* Market dropdown */}
-                                  <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+                                  <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto no-scrollbar">
                                     {marketsData
                                       .filter((m: any) => {
                                         const q = (marketPickerSearch || newAssignment.location_text || '').trim().toLowerCase();
@@ -5674,7 +5674,7 @@ Import EP
                         className="absolute left-0 right-0 top-11 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+                        <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto no-scrollbar">
                           {marketsData
                             .filter((m: any) => {
                               const q = (marketPickerSearch || newAssignment.location_text || '').trim().toLowerCase();
@@ -6125,7 +6125,7 @@ Import EP
                               <SelectValue placeholder="Promotor wählen" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border border-gray-200">
-                              <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+                              <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto no-scrollbar">
                                 {marketsPromotorsList.map((p) => (
                                   <SelectItem
                                     key={p.id}
