@@ -69,13 +69,20 @@ export default function PollVotesDrawer({
   // anchorRect.left is the message row left edge; we want drawer right edge to be slightly left of poll bubble
   const drawerWidth = 360;
   const gap = 16;
-  let drawerLeft = 600; // fallback if no anchor
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
+  const padding = 16;
+  let drawerLeft = 600;
+  let drawerTop = anchorRect ? anchorRect.top : 80;
   if (anchorRect) {
-    // Position drawer so its right edge is `gap` px to the left of the poll bubble's left edge
-    // Poll bubble sits inside the message row; for right-aligned messages the bubble is at the right side
-    // So we use anchorRect.left (which is actually where the message container starts in the chat)
-    // and position the drawer inside the chat area, well before the bubble
-    drawerLeft = anchorRect.left - drawerWidth - gap;
+    const desiredLeft = anchorRect.left - drawerWidth - gap;
+    const maxLeft = viewportWidth ? viewportWidth - drawerWidth - padding : desiredLeft;
+    const minLeft = padding;
+    drawerLeft = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
+    const desiredTop = anchorRect.top;
+    const maxTop = viewportHeight ? viewportHeight - padding : desiredTop;
+    const minTop = padding;
+    drawerTop = Math.min(Math.max(desiredTop, minTop), maxTop);
   }
 
   return (
@@ -96,7 +103,7 @@ export default function PollVotesDrawer({
           border: `1px solid ${border}`,
           color: text,
           width: `${drawerWidth}px`,
-          top: anchorRect ? `${anchorRect.top}px` : '80px',
+          top: `${drawerTop}px`,
           left: `${drawerLeft}px`,
         }}
         onClick={(e) => e.stopPropagation()}
