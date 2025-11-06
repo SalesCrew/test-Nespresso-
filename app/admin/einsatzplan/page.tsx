@@ -3272,7 +3272,7 @@ Import EP
                                   <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                                     {marketsData
                                       .filter((m: any) => {
-                                        const q = (hoveredMarket ? hoveredMarket.name : newAssignment.location_text || '').trim().toLowerCase();
+                                        const q = (marketPickerSearch || newAssignment.location_text || '').trim().toLowerCase();
                                         if (!q) return true;
                                         const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase();
                                         return hay.includes(q);
@@ -5677,7 +5677,7 @@ Import EP
                         <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                           {marketsData
                             .filter((m: any) => {
-                              const q = (hoveredMarket ? hoveredMarket.name : newAssignment.location_text || '').trim().toLowerCase();
+                              const q = (marketPickerSearch || newAssignment.location_text || '').trim().toLowerCase();
                               if (!q) return true;
                               const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase();
                               return hay.includes(q);
