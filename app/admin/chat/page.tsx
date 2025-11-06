@@ -3546,16 +3546,19 @@ export default function ChatPage() {
                               if (pollQuestionRef.current) {
                                 const input = pollQuestionRef.current;
                                 input.value = input.value + emoji;
+                                input.focus();
                               }
                             } else if (emojiPicker.context === 'poll_option1') {
                               if (pollOption1Ref.current) {
                                 const input = pollOption1Ref.current;
                                 input.value = input.value + emoji;
+                                input.focus();
                               }
                             } else if (emojiPicker.context === 'poll_option2') {
                               if (pollOption2Ref.current) {
                                 const input = pollOption2Ref.current;
                                 input.value = input.value + emoji;
+                                input.focus();
                               }
                             } else {
                               setMessageInput(prev => prev + emoji);
