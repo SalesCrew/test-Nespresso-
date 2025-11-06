@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 
 type Voter = { user_id: string; created_at: string };
 type OptionDetail = { id: string; text: string; voters: Voter[] };
@@ -65,25 +65,33 @@ export default function PollVotesDrawer({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Calculate position: drawer sits inside chat area, to the left of the poll bubble
-  // anchorRect.left is the message row left edge; we want drawer right edge to be slightly left of poll bubble
   const drawerWidth = 360;
   const gap = 16;
-  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0;
-  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0;
   const padding = 16;
-  let drawerLeft = 600;
-  let drawerTop = anchorRect ? anchorRect.top : 80;
-  if (anchorRect) {
-    const desiredLeft = anchorRect.left - drawerWidth - gap;
-    const maxLeft = viewportWidth ? viewportWidth - drawerWidth - padding : desiredLeft;
+  const [position, setPosition] = useState<{ left: number; top: number }>({
+    left: anchorRect ? anchorRect.left - drawerWidth - gap : 600,
+    top: anchorRect ? anchorRect.top : 80,
+  });
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const rect = anchorRect ?? { top: 80, left: viewportWidth - gap, width: 0, height: 0 };
+    const desiredLeft = rect.left - drawerWidth - gap;
     const minLeft = padding;
-    drawerLeft = Math.min(Math.max(desiredLeft, minLeft), maxLeft);
-    const desiredTop = anchorRect.top;
-    const maxTop = viewportHeight ? viewportHeight - padding : desiredTop;
+    const maxLeft = viewportWidth - drawerWidth - padding;
+    const clampedLeft = Math.min(Math.max(desiredLeft, minLeft), Math.max(minLeft, maxLeft));
+    const desiredTop = rect.top;
+    const drawerHeight = dialogRef.current?.offsetHeight ?? 0;
     const minTop = padding;
-    drawerTop = Math.min(Math.max(desiredTop, minTop), maxTop);
-  }
+    const maxTop = viewportHeight - drawerHeight - padding;
+    const clampedTop = Math.min(
+      Math.max(desiredTop, minTop),
+      Math.max(minTop, maxTop)
+    );
+    setPosition({ left: clampedLeft, top: clampedTop });
+  }, [open, anchorRect?.top, anchorRect?.left, anchorRect?.height, anchorRect?.width, gap]);
 
   return (
     <div 
@@ -103,8 +111,8 @@ export default function PollVotesDrawer({
           border: `1px solid ${border}`,
           color: text,
           width: `${drawerWidth}px`,
-          top: `${drawerTop}px`,
-          left: `${drawerLeft}px`,
+          top: `${position.top}px`,
+          left: `${position.left}px`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
