@@ -3709,11 +3709,7 @@ export default function ChatPage() {
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3"
                   onClick={(e) => {
                     e.preventDefault();
-                    // Defer opening to avoid any global click handlers closing immediately
-                    setTimeout(() => {
-                      console.log('[Poll] Open from attachment menu');
-                      setShowPollModal(true);
-                    }, 0);
+                    document.getElementById('pdf-input')?.click();
                     setAttachmentPopup(false);
                   }}
                 >
@@ -3724,7 +3720,10 @@ export default function ChatPage() {
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3 rounded-b-lg"
                   onClick={(e) => {
                     e.preventDefault();
-                    document.getElementById('pdf-input')?.click();
+                    setTimeout(() => {
+                      console.log('[Poll] Open from attachment menu');
+                      setShowPollModal(true);
+                    }, 0);
                     setAttachmentPopup(false);
                   }}
                 >
