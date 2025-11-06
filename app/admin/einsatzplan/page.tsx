@@ -5647,6 +5647,11 @@ Import EP
                     type="text"
                       value={hoveredMarket ? `${hoveredMarket.name}` : newAssignment.location_text}
                     onFocus={() => {
+                      if ((newAssignment.location_text || '').trim().length === 0) {
+                        setHoveredMarket(null);
+                        setMarketPickerSearch('');
+                        return;
+                      }
                       setHoveredMarket(null);
                       setMarketPickerSearch(newAssignment.location_text);
                       setShowMarketPicker(true);
@@ -5656,7 +5661,7 @@ Import EP
                       setNewAssignment(prev => ({ ...prev, location_text: value }));
                       setHoveredMarket(null);
                       setMarketPickerSearch(value);
-                      setShowMarketPicker(true);
+                      setShowMarketPicker(value.trim().length > 0);
                     }}
                      className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
                      placeholder="z.B. Interspar Graz"
