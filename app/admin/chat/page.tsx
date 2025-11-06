@@ -115,10 +115,12 @@ export default function ChatPage() {
       requestAnimationFrame(() => {
         const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
         if (firstOptionInput) {
-          pollEmojiBaseTopRef.current.option = firstOptionInput.getBoundingClientRect().top + window.scrollY;
+          const top = firstOptionInput.getBoundingClientRect().top + window.scrollY;
+          pollEmojiBaseTopRef.current.option = top;
+          pollEmojiBaseTopRef.current.question = top;
         }
         const questionButton = pollModalRef.current?.querySelector('[data-question-emoji-trigger]') as HTMLElement | null;
-        if (questionButton) {
+        if (questionButton && pollEmojiBaseTopRef.current.question == null) {
           pollEmojiBaseTopRef.current.question = questionButton.getBoundingClientRect().top + window.scrollY;
         }
       });
@@ -1455,7 +1457,8 @@ export default function ChatPage() {
     const clampedLeft = Math.max(window.scrollX + padding, Math.min(baseLeft, maxLeft));
     const height = 204;
     if (context === 'poll_question' && pollEmojiBaseTopRef.current.question == null) {
-      pollEmojiBaseTopRef.current.question = triggerRect.top + window.scrollY;
+      const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
+      pollEmojiBaseTopRef.current.question = firstOptionInput ? firstOptionInput.getBoundingClientRect().top + window.scrollY : triggerRect.top + window.scrollY;
     }
     if (context === 'poll_option' && pollEmojiBaseTopRef.current.option == null) {
       const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]') as HTMLInputElement | null;
