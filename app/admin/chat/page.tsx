@@ -96,7 +96,7 @@ export default function ChatPage() {
     photoEditor: { show: boolean; image: string; caption: string; rotation: number; brightness: number; contrast: number; crop: { x: number; y: number; width: number; height: number } | null; cropMode: boolean } | null;
     drawingPaths: Array<{ color: string; points: Array<{ x: number; y: number }> }>;
   }>>([]);
-  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' | 'poll_question' | 'poll_option1' | 'poll_option2'; anchor: { top: number; left: number } | null; dimensions: { width: number; height: number } | null }>({ show: false, selectedCategory: 'smileys', context: 'input', anchor: null, dimensions: null });
+  const [emojiPicker, setEmojiPicker] = useState<{ show: boolean; selectedCategory: string; context: 'input' | 'photo' | 'pdf' | 'poll_question' | 'poll_option'; optionIndex: number | null; anchor: { top: number; left: number } | null; dimensions: { width: number; height: number } | null }>({ show: false, selectedCategory: 'smileys', context: 'input', optionIndex: null, anchor: null, dimensions: null });
 
   // Refs for poll modal inputs
   const pollQuestionRef = useRef<HTMLInputElement>(null);
@@ -104,6 +104,32 @@ export default function ChatPage() {
   const pollOption2Ref = useRef<HTMLInputElement>(null);
   const pollAllowMultipleRef = useRef<HTMLInputElement>(null);
   const pollModalRef = useRef<HTMLDivElement | null>(null);
+  const MAX_POLL_OPTIONS = 20;
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+
+  useEffect(() => {
+    if (showPollModal) {
+      setPollOptions(['', '']);
+    }
+  }, [showPollModal]);
+
+  const handleOptionChange = (index: number, value: string) => {
+    setPollOptions(prev => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const handleOptionFocus = (index: number) => {
+    setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
+    setPollOptions(prev => {
+      if (index === prev.length - 1 && prev[index].trim() === '' && prev.length < MAX_POLL_OPTIONS) {
+        return [...prev, ''];
+      }
+      return prev;
+    });
+  };
 
   const [photoViewer, setPhotoViewer] = useState<{
     show: boolean;
@@ -1246,11 +1272,11 @@ export default function ChatPage() {
       const isEmojiTrigger = target.closest('[data-emoji-trigger]');
       const insidePollModal = target.closest('[data-poll-modal]');
       if (emojiPicker.show && !insideEmojiPicker && !isEmojiTrigger) {
-        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+        setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
       }
       if (showPollModal && !insidePollModal && !insideEmojiPicker && !isEmojiTrigger) {
         setShowPollModal(false);
-        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+        setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
         setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -1310,7 +1336,7 @@ export default function ChatPage() {
         }
 
         if (emojiPicker.show) {
-          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+          setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
         }
         if (groupCreationPopup.show) {
           setGroupCreationPopup({ show: false, selectedContacts: [], searchQuery: '', step: 1, groupName: '', groupDescription: '', profileImage: null, profileImageFile: null, readOnly: false });
@@ -1399,7 +1425,7 @@ export default function ChatPage() {
     return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
   };
 
-  const openPollEmojiPicker = (triggerRect: DOMRect, context: 'poll_question' | 'poll_option1' | 'poll_option2') => {
+  const openPollEmojiPicker = (triggerRect: DOMRect, context: 'poll_question' | 'poll_option', optionIndex: number | null = null) => {
     const padding = 16;
     const gap = 14;
     const viewportWidth = window.innerWidth;
@@ -1420,13 +1446,14 @@ export default function ChatPage() {
     const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
 
     setEmojiPicker(prev => {
-      if (prev.show && prev.context === context) {
-        return { ...prev, show: false, anchor: null, dimensions: null };
+      if (prev.show && prev.context === context && (context !== 'poll_option' || prev.optionIndex === optionIndex)) {
+        return { ...prev, show: false, optionIndex: null, anchor: null, dimensions: null };
       }
       return {
         show: true,
         selectedCategory: prev.selectedCategory,
         context,
+        optionIndex: context === 'poll_option' ? optionIndex : null,
         anchor: { top: clampedTop, left: clampedLeft },
         dimensions: { width, height }
       };
@@ -3472,7 +3499,7 @@ export default function ChatPage() {
                   className="h-5 w-5 text-gray-600 cursor-pointer hover:text-gray-800" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input', anchor: null, dimensions: null }));
+                    setEmojiPicker(prev => ({ ...prev, show: !prev.show, context: 'input', optionIndex: null, anchor: null, dimensions: null }));
                   }}
                 />
                 <button 
@@ -3543,20 +3570,30 @@ export default function ChatPage() {
                               if (pollQuestionRef.current) {
                                 const input = pollQuestionRef.current;
                                 input.value = input.value + emoji;
-                                input.focus();
+                                const caret = input.value.length;
+                                requestAnimationFrame(() => {
+                                  input.focus();
+                                  input.setSelectionRange(caret, caret);
+                                });
                               }
-                            } else if (emojiPicker.context === 'poll_option1') {
-                              if (pollOption1Ref.current) {
-                                const input = pollOption1Ref.current;
-                                input.value = input.value + emoji;
-                                input.focus();
-                              }
-                            } else if (emojiPicker.context === 'poll_option2') {
-                              if (pollOption2Ref.current) {
-                                const input = pollOption2Ref.current;
-                                input.value = input.value + emoji;
-                                input.focus();
-                              }
+                            } else if (emojiPicker.context === 'poll_option' && emojiPicker.optionIndex !== null) {
+                              const idx = emojiPicker.optionIndex;
+                              setPollOptions(prev => {
+                                if (idx === null || idx >= prev.length) {
+                                  return prev;
+                                }
+                                const next = [...prev];
+                                next[idx] = next[idx] + emoji;
+                                return next;
+                              });
+                              requestAnimationFrame(() => {
+                                const inputEl = document.querySelector<HTMLInputElement>(`[data-poll-option-input="${idx}"]`);
+                                if (inputEl) {
+                                  const caret = inputEl.value.length;
+                                  inputEl.focus();
+                                  inputEl.setSelectionRange(caret, caret);
+                                }
+                              });
                             } else {
                               setMessageInput(prev => prev + emoji);
                             }
@@ -4314,6 +4351,7 @@ export default function ChatPage() {
                           ...prev, 
                           show: !prev.show, 
                           context: 'photo',
+                          optionIndex: null,
                           anchor: null,
                           dimensions: null
                          }));
@@ -4435,6 +4473,7 @@ export default function ChatPage() {
                           ...prev, 
                           show: !prev.show, 
                           context: 'pdf',
+                          optionIndex: null,
                           anchor: null,
                           dimensions: null
                          }));
@@ -4659,7 +4698,7 @@ export default function ChatPage() {
                   ref={pollQuestionRef}
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                  onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
+                  onFocus={() => setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }))}
                 />
                 <button
                   type="button"
@@ -4677,47 +4716,32 @@ export default function ChatPage() {
             </div>
             <div>
               <label className="text-sm text-gray-600 block mb-2">Optionen</label>
-              <div className="space-y-2">
-                <div className="relative group">
-                  <input
-                    ref={pollOption1Ref}
-                    placeholder="+ Füge eine Option hinzu."
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                    onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
-                  />
-                  <button
-                    type="button"
-                    data-emoji-trigger
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      openPollEmojiPicker(rect, 'poll_option1');
-                    }}
-                  >
-                    <Smile className="h-5 w-5" />
-                  </button>
-                </div>
-                <div className="relative group">
-                  <input
-                    ref={pollOption2Ref}
-                    placeholder="+ Füge eine Option hinzu."
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                    onMouseDown={() => setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }))}
-                  />
-                  <button
-                    type="button"
-                    data-emoji-trigger
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      openPollEmojiPicker(rect, 'poll_option2');
-                    }}
-                  >
-                    <Smile className="h-5 w-5" />
-                  </button>
-                </div>
+              <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {pollOptions.map((option, index) => (
+                  <div key={index} className="relative group">
+                    <input
+                      ref={index === 0 ? pollOption1Ref : index === 1 ? pollOption2Ref : undefined}
+                      data-poll-option-input={index}
+                      value={option}
+                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                      onFocus={() => handleOptionFocus(index)}
+                      placeholder="+ Füge eine Option hinzu."
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
+                    />
+                    <button
+                      type="button"
+                      data-emoji-trigger
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        openPollEmojiPicker(rect, 'poll_option', index);
+                      }}
+                    >
+                      <Smile className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
             <label className="flex items-center gap-3 select-none cursor-default">
@@ -4729,7 +4753,8 @@ export default function ChatPage() {
             <button
               onClick={() => {
                 setShowPollModal(false);
-                setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+                setPollOptions(['', '']);
+                setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
               }}
               className="px-4 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100"
             >Abbrechen</button>
@@ -4739,9 +4764,7 @@ export default function ChatPage() {
                 try {
                   if (!selectedChat?.id) return;
                   const question = (pollQuestionRef.current?.value || '').trim();
-                  const option1 = (pollOption1Ref.current?.value || '').trim();
-                  const option2 = (pollOption2Ref.current?.value || '').trim();
-                  const options = [option1, option2].filter(Boolean);
+                  const options = pollOptions.map(opt => opt.trim()).filter(Boolean);
                   const allowMultiple = !!pollAllowMultipleRef.current?.checked;
                   if (!question || options.length < 2) {
                     console.warn('[Poll] Need question and at least two options');
@@ -4749,7 +4772,8 @@ export default function ChatPage() {
                   }
                   await chatIntegration.createPoll(String(selectedChat.id), question, options, allowMultiple);
                   setShowPollModal(false);
-                  setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+                  setPollOptions(['', '']);
+                  setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
                 } catch (err) {
                   console.error('Failed to create poll:', err);
                 }
