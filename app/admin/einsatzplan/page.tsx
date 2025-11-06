@@ -5678,7 +5678,7 @@ Import EP
                     {showMarketPicker && (
                       <div 
                         ref={marketPickerRef}
-                        className="absolute right-0 top-11 z-50 w-[420px] bg-white border border-gray-200 rounded-lg shadow-xl p-3"
+                        className="absolute left-0 right-0 top-11 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="relative mb-2">
