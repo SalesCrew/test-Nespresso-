@@ -103,6 +103,7 @@ export default function ChatPage() {
   const pollOption1Ref = useRef<HTMLInputElement>(null);
   const pollOption2Ref = useRef<HTMLInputElement>(null);
   const pollAllowMultipleRef = useRef<HTMLInputElement>(null);
+  const pollModalRef = useRef<HTMLDivElement | null>(null);
 
   const [photoViewer, setPhotoViewer] = useState<{
     show: boolean;
@@ -1389,6 +1390,38 @@ export default function ChatPage() {
     const t2 = (-b + sqrt) / (2 * a);
 
     return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+  };
+
+  const openPollEmojiPicker = (triggerRect: DOMRect, context: 'poll_question' | 'poll_option1' | 'poll_option2') => {
+    const padding = 16;
+    const gap = 14;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const modalRect = pollModalRef.current?.getBoundingClientRect();
+    const baseLeft = (modalRect ? modalRect.right : triggerRect.right) + gap + window.scrollX;
+    const minWidth = 320;
+    const maxWidth = 560;
+    const availableWidth = viewportWidth + window.scrollX - padding - baseLeft;
+    const width = Math.max(minWidth, Math.min(maxWidth, availableWidth));
+    const maxLeft = viewportWidth + window.scrollX - padding - width;
+    const clampedLeft = Math.max(window.scrollX + padding, Math.min(baseLeft, maxLeft));
+    const height = 204;
+    const desiredTop = triggerRect.top + window.scrollY - 6;
+    const maxTop = viewportHeight + window.scrollY - padding - height;
+    const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
+
+    setEmojiPicker(prev => {
+      if (prev.show && prev.context === context) {
+        return { ...prev, show: false, anchor: null, dimensions: null };
+      }
+      return {
+        show: true,
+        selectedCategory: prev.selectedCategory,
+        context,
+        anchor: { top: clampedTop, left: clampedLeft },
+        dimensions: { width, height }
+      };
+    });
   };
 
   return (
@@ -4601,6 +4634,7 @@ export default function ChatPage() {
         setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
       }}>
         <div
+          ref={pollModalRef}
           className="absolute w-[520px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
           style={{ bottom: '96px', left: `calc(${sidebarOpen ? '14rem' : '3.5rem'} + 20rem + 16px)` }}
           onClick={(e) => e.stopPropagation()}
@@ -4624,32 +4658,7 @@ export default function ChatPage() {
                   onClick={(e) => {
                     e.stopPropagation();
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    const padding = 12;
-                    const viewportWidth = window.innerWidth;
-                    const viewportHeight = window.innerHeight;
-                    const desiredLeft = rect.right + 8 + window.scrollX;
-                    const minWidth = 320;
-                    const maxWidth = 600;
-                    const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
-                    const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
-                    const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
-                    const maxLeft = viewportWidth + window.scrollX - padding - width;
-                    const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                    const height = 208;
-                    const desiredTop = rect.top - 4 + window.scrollY;
-                    const maxTop = viewportHeight + window.scrollY - padding - height;
-                    const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
-                    setEmojiPicker(prev => {
-                      const isSameContext = prev.show && prev.context === 'poll_question';
-                      const nextShow = isSameContext ? !prev.show : true;
-                      return {
-                        show: nextShow,
-                        selectedCategory: prev.selectedCategory,
-                        context: 'poll_question' as const,
-                        anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
-                        dimensions: nextShow ? { width, height } : null
-                      };
-                    });
+                    openPollEmojiPicker(rect, 'poll_question');
                   }}
                 >
                   <Smile className="h-5 w-5" />
@@ -4672,32 +4681,7 @@ export default function ChatPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const padding = 12;
-                      const viewportWidth = window.innerWidth;
-                      const viewportHeight = window.innerHeight;
-                      const desiredLeft = rect.right + 8 + window.scrollX;
-                      const minWidth = 320;
-                      const maxWidth = 600;
-                      const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
-                      const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
-                      const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
-                      const maxLeft = viewportWidth + window.scrollX - padding - width;
-                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                      const height = 208;
-                      const desiredTop = rect.top - 4 + window.scrollY;
-                      const maxTop = viewportHeight + window.scrollY - padding - height;
-                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
-                      setEmojiPicker(prev => {
-                        const isSameContext = prev.show && prev.context === 'poll_option1';
-                        const nextShow = isSameContext ? !prev.show : true;
-                        return {
-                          show: nextShow,
-                          selectedCategory: prev.selectedCategory,
-                          context: 'poll_option1' as const,
-                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
-                          dimensions: nextShow ? { width, height } : null
-                        };
-                      });
+                      openPollEmojiPicker(rect, 'poll_option1');
                     }}
                   >
                     <Smile className="h-5 w-5" />
@@ -4716,32 +4700,7 @@ export default function ChatPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                      const padding = 12;
-                      const viewportWidth = window.innerWidth;
-                      const viewportHeight = window.innerHeight;
-                      const desiredLeft = rect.right + 8 + window.scrollX;
-                      const minWidth = 320;
-                      const maxWidth = 600;
-                      const availableWidth = viewportWidth + window.scrollX - padding - desiredLeft;
-                      const initialWidth = Math.max(minWidth, Math.min(maxWidth, availableWidth));
-                      const width = Number.isFinite(initialWidth) ? initialWidth : minWidth;
-                      const maxLeft = viewportWidth + window.scrollX - padding - width;
-                      const clampedLeft = Math.max(window.scrollX + padding, Math.min(desiredLeft, maxLeft));
-                      const height = 208;
-                      const desiredTop = rect.top - 4 + window.scrollY;
-                      const maxTop = viewportHeight + window.scrollY - padding - height;
-                      const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
-                      setEmojiPicker(prev => {
-                        const isSameContext = prev.show && prev.context === 'poll_option2';
-                        const nextShow = isSameContext ? !prev.show : true;
-                        return {
-                          show: nextShow,
-                          selectedCategory: prev.selectedCategory,
-                          context: 'poll_option2' as const,
-                          anchor: nextShow ? { top: clampedTop, left: clampedLeft } : null,
-                          dimensions: nextShow ? { width, height } : null
-                        };
-                      });
+                      openPollEmojiPicker(rect, 'poll_option2');
                     }}
                   >
                     <Smile className="h-5 w-5" />
