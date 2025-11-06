@@ -287,6 +287,8 @@ export default function EinsatzplanPage() {
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
+  const [showMarketHours, setShowMarketHours] = useState(false);
+  const marketHoursRef = useRef<HTMLDivElement | null>(null);
   // Photo navigation state (current index for each photo type)
   const [photoInternalIndex, setPhotoInternalIndex] = useState(0);
   const [photoExteriorIndex, setPhotoExteriorIndex] = useState(0);
@@ -313,7 +315,24 @@ export default function EinsatzplanPage() {
     document.addEventListener('mousedown', handleClickOutside, true);
     return () => document.removeEventListener('mousedown', handleClickOutside, true);
   }, [showMarketMatchPopup]);
-  // Create market modal state for Märkte view
+
+  useEffect(() => {
+    setShowMarketHours(false);
+  }, [editingMarket]);
+
+  useEffect(() => {
+    if (!showMarketHours) return;
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (marketHoursRef.current && marketHoursRef.current.contains(target)) return;
+      if (target.closest('[data-market-hours-trigger]')) return;
+      setShowMarketHours(false);
+    };
+    document.addEventListener('mousedown', handleClick, true);
+    return () => document.removeEventListener('mousedown', handleClick, true);
+  }, [showMarketHours]);
+
   // Photo preview overlay state
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [savingDetail, setSavingDetail] = useState(false);
@@ -581,7 +600,6 @@ export default function EinsatzplanPage() {
       alert('Fehler beim Hochladen des Fotos');
     }
   };
-  
   // Function to create new assignment
   const createNewAssignment = async () => {
     try {
@@ -761,30 +779,6 @@ export default function EinsatzplanPage() {
       }
     };
     loadTrackingData();
-  }, [showDetailModal, editingEinsatz?.id, detailModalTab]);
-
-  useEffect(() => {
-    const loadApplications = async () => {
-      if (!showDetailModal || promotionView !== 'applications' || !editingEinsatz?.id) return;
-      try {
-        console.log('Loading applications for assignment:', editingEinsatz.id);
-        const res = await fetch(`/api/assignments/${editingEinsatz.id}/applications`, { cache: 'no-store' });
-        const data = await res.json().catch(() => ({}));
-        const apps = Array.isArray(data?.applications) ? data.applications : [];
-        console.log('Loaded applications:', apps);
-        setApplicationsList(apps);
-      } catch (error) {
-        console.error('Error loading applications:', error);
-      }
-    };
-    
-    // Load immediately
-    loadApplications();
-    
-    // Refresh every 5 seconds when viewing applications tab
-    const interval = setInterval(loadApplications, 5000);
-    
-    return () => clearInterval(interval);
   }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
   useEffect(() => {
@@ -1218,7 +1212,6 @@ export default function EinsatzplanPage() {
       }
     }
   }, [showDateDropdown, dateViewMode]);
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1252,7 +1245,6 @@ export default function EinsatzplanPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showPlzDropdown]);
-
   // Close Status dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1378,6 +1370,103 @@ export default function EinsatzplanPage() {
     }
   };
 
+  const marketOpeningHours = useMemo(() => {
+    if (!editingMarket) return [] as Array<{ label: string; text: string; closed: boolean }>;
+
+    const days = [
+      { key: 'monday', label: 'Mo' },
+      { key: 'tuesday', label: 'Di' },
+      { key: 'wednesday', label: 'Mi' },
+      { key: 'thursday', label: 'Do' },
+      { key: 'friday', label: 'Fr' },
+      { key: 'saturday', label: 'Sa' },
+      { key: 'sunday', label: 'So' },
+    ] as const;
+
+    let hoursSource: any = editingMarket.openingHours ?? editingMarket.opening_hours ?? editingMarket.opening_hours_json ?? editingMarket.hours ?? null;
+
+    if (typeof hoursSource === 'string') {
+      try {
+        hoursSource = JSON.parse(hoursSource);
+      } catch (error) {
+        const normalized = hoursSource.trim();
+        if (!normalized) {
+          return days.map(({ label }) => ({ label, text: 'Geschlossen', closed: true }));
+        }
+        const lower = normalized.toLowerCase();
+        const formatted = lower === 'geschlossen' ? 'Geschlossen' : normalized.replace(/\s*-\s*/g, ' – ');
+        const closed = lower === 'geschlossen';
+        return days.map(({ label }) => ({ label, text: formatted, closed }));
+      }
+    }
+
+    const normalizeValue = (value: any): { text: string; closed: boolean } => {
+      if (value == null) {
+        return { text: 'Geschlossen', closed: true };
+      }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed || trimmed.toLowerCase() === 'geschlossen') {
+          return { text: 'Geschlossen', closed: true };
+        }
+        return { text: trimmed.replace(/\s*-\s*/g, ' – '), closed: false };
+      }
+      if (Array.isArray(value)) {
+        const segments = value.map(normalizeValue).filter(Boolean) as Array<{ text: string; closed: boolean }>;
+        const openSegments = segments.filter(segment => !segment.closed && segment.text);
+        if (openSegments.length > 0) {
+          return { text: openSegments.map(seg => seg.text).join(', '), closed: false };
+        }
+        if (segments.length > 0) {
+          return segments[0];
+        }
+        return { text: 'Geschlossen', closed: true };
+      }
+      if (typeof value === 'object') {
+        if (value.closed || value.isClosed) {
+          return { text: 'Geschlossen', closed: true };
+        }
+        if (Array.isArray(value.times)) {
+          return normalizeValue(value.times);
+        }
+        if (Array.isArray(value.slots)) {
+          return normalizeValue(value.slots);
+        }
+        if (typeof value.text === 'string') {
+          return normalizeValue(value.text);
+        }
+        const from = value.open ?? value.from ?? value.start ?? value.begin ?? value.opening ?? value.hourFrom ?? value.von ?? null;
+        const to = value.close ?? value.to ?? value.end ?? value.finish ?? value.closing ?? value.hourTo ?? value.bis ?? null;
+        if (from && to) {
+          return { text: `${from} – ${to}`, closed: false };
+        }
+        const nestedValues = Object.values(value);
+        if (nestedValues.length > 0) {
+          return normalizeValue(nestedValues[0]);
+        }
+      }
+      return { text: 'Geschlossen', closed: true };
+    };
+
+    return days.map(({ key, label }) => {
+      let rawValue: any = null;
+      if (Array.isArray(hoursSource)) {
+        rawValue = hoursSource.find((entry: any) => {
+          const day = (entry?.day || entry?.weekday || entry?.tag || '').toString().toLowerCase();
+          return day === key || day.startsWith(key.slice(0, 2));
+        }) ?? null;
+        if (rawValue && rawValue[key] !== undefined) {
+          rawValue = rawValue[key];
+        }
+      } else if (hoursSource && typeof hoursSource === 'object') {
+        rawValue = hoursSource[key] ?? hoursSource[key.slice(0, 3)] ?? hoursSource[key.toUpperCase()] ?? null;
+      }
+
+      const { text, closed } = normalizeValue(rawValue);
+      return { label, text, closed };
+    });
+  }, [editingMarket]);
+
   const openInGoogleMaps = (address: string, city: string) => {
     const query = encodeURIComponent(`${address}, ${city}`);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
@@ -1464,11 +1553,10 @@ export default function EinsatzplanPage() {
       setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
       setLastSelectedByIcon([]);
     } else {
-      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
+      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames)]);
       setLastSelectedByIcon(filteredNames);
     }
   };
-
   // PLZ to region mapping based on Austrian postal codes
   // Helper function to get tracking status color (for overview tab - same as dashboard)
   const getTrackingStatusColor = (einsatz: any) => {
@@ -1807,7 +1895,6 @@ export default function EinsatzplanPage() {
       console.error('Error sending replacement invites:', error);
       }
   };
-
   // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1842,7 +1929,6 @@ export default function EinsatzplanPage() {
       }
     }
   };
-
   // Generate day cards with status counts
   const generateDayCards = () => {
     const dayMap = new Map();
@@ -2247,7 +2333,6 @@ export default function EinsatzplanPage() {
       setPhotoProductsIndex(0);
     }
   }, [showMarketDetailModal]);
-
   return (
     <div className="min-h-screen bg-gray-50/30">
       <style jsx>{customScrollbarStyle}</style>
@@ -3521,7 +3606,7 @@ Import EP
                           })
                         ) : (
                           <div className="text-center py-8">
-                            <Brain className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                            <Brain className="h-8 w-8 text-gray-300 mx-auto mb-3 opacity-50" />
                             <p className="text-sm font-medium text-gray-600 mb-1">Einsatz auswählen</p>
                             <p className="text-xs text-gray-400">Klicken Sie auf eine Promotion für AI-Empfehlungen</p>
                           </div>
@@ -6103,7 +6188,38 @@ Import EP
                 <div className="space-y-6">
                   {/* Market Info */}
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Markt Informationen</h4>
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <h4 className="text-sm font-medium text-gray-900">Markt Informationen</h4>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          data-market-hours-trigger
+                          onClick={() => setShowMarketHours((prev) => !prev)}
+                          className="p-1.5 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors text-gray-600"
+                        >
+                          <Clock className="h-4 w-4" />
+                        </button>
+                        {showMarketHours && (
+                          <div
+                            ref={marketHoursRef}
+                            className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-xl p-3 z-20"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-900">Öffnungszeiten</span>
+                              <span className="text-xs text-gray-400">Mo – So</span>
+                            </div>
+                            <div className="space-y-2">
+                              {marketOpeningHours.map(({ label, text, closed }) => (
+                                <div key={label} className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600 font-medium">{label}</span>
+                                  <span className={closed ? "text-red-500 font-medium" : "text-gray-900"}>{text}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
