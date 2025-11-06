@@ -1242,7 +1242,17 @@ export default function ChatPage() {
       if (pdfEditor && !target.closest('[data-pdf-editor]')) {
         setPdfEditor(null);
       }
-      if (emojiPicker.show && !target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-trigger]')) {
+      const insideEmojiPicker = target.closest('[data-emoji-picker]');
+      const isEmojiTrigger = target.closest('[data-emoji-trigger]');
+      const insidePollModal = target.closest('[data-poll-modal]');
+      const isPollEmojiContext = emojiPicker.context === 'poll_question' || emojiPicker.context === 'poll_option1' || emojiPicker.context === 'poll_option2';
+      if (emojiPicker.show && !insideEmojiPicker && !isEmojiTrigger) {
+        if (!(isPollEmojiContext && insidePollModal)) {
+          setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+        }
+      }
+      if (showPollModal && !insidePollModal && !insideEmojiPicker && !isEmojiTrigger) {
+        setShowPollModal(false);
         setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
@@ -1250,11 +1260,11 @@ export default function ChatPage() {
       }
     };
 
-    if (contextMenu.show || contactContextMenu.show || attachmentPopup || photoEditor || pdfEditor || emojiPicker.show || groupCreationPopup.show) {
+    if (contextMenu.show || contactContextMenu.show || attachmentPopup || photoEditor || pdfEditor || emojiPicker.show || groupCreationPopup.show || showPollModal) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [contextMenu.show, contactContextMenu.show, attachmentPopup, photoEditor, pdfEditor, colorPalette.show, emojiPicker.show, groupCreationPopup.show]);
+  }, [contextMenu.show, contactContextMenu.show, attachmentPopup, photoEditor, pdfEditor, colorPalette.show, emojiPicker.show, groupCreationPopup.show, showPollModal]);
 
   // Handle escape key to cancel reply, edit, delete dialog, or photo editor
   useEffect(() => {
@@ -1314,11 +1324,11 @@ export default function ChatPage() {
       }
     };
 
-    if (photoEditor || replyingTo || editingMessage || deleteDialog.show || clearChatDialog.show || emojiPicker.show || groupCreationPopup.show) {
+    if (photoEditor || replyingTo || editingMessage || deleteDialog.show || clearChatDialog.show || emojiPicker.show || groupCreationPopup.show || showPollModal) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [photoEditor, replyingTo, editingMessage, deleteDialog, clearChatDialog, emojiPicker, groupCreationPopup]);
+  }, [photoEditor, replyingTo, editingMessage, deleteDialog, clearChatDialog, emojiPicker, groupCreationPopup, showPollModal]);
 
   // Fetch current user ID
   useEffect(() => {
@@ -4631,15 +4641,12 @@ export default function ChatPage() {
 
     {/* Poll Create Modal (global overlay, no hooks) */}
     {showPollModal && (
-      <div className="fixed inset-0 z-[9999]" onClick={() => {
-        setShowPollModal(false);
-        setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
-      }}>
+      <div className="fixed inset-0 z-[9999]" style={{ pointerEvents: 'none' }}>
         <div
           ref={pollModalRef}
           className="absolute w-[520px] max-w-[92vw] rounded-2xl overflow-hidden shadow-xl border border-gray-100 bg-white"
-          style={{ bottom: '96px', left: `calc(${sidebarOpen ? '14rem' : '3.5rem'} + 20rem + 16px)` }}
-          onClick={(e) => e.stopPropagation()}
+          data-poll-modal
+          style={{ bottom: '96px', left: `calc(${sidebarOpen ? '14rem' : '3.5rem'} + 20rem + 16px)`, pointerEvents: 'auto' }}
         >
           <div className="px-5 pt-4 pb-3 border-b border-gray-100 bg-white">
             <h3 className="text-base font-semibold text-gray-800">Abstimmung erstellen</h3>
