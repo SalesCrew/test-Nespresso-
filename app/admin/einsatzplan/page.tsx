@@ -1553,7 +1553,7 @@ export default function EinsatzplanPage() {
       setSelectedPromotors(prev => prev.filter(name => !lastSelectedByIcon.includes(name)));
       setLastSelectedByIcon([]);
     } else {
-      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames)]);
+      setSelectedPromotors(prev => [...new Set([...prev, ...filteredNames])]);
       setLastSelectedByIcon(filteredNames);
     }
   };
@@ -1578,7 +1578,6 @@ export default function EinsatzplanPage() {
     // Default gray for pending
     return 'gray';
   };
-
   const getRegionFromPLZ = (plz: string): string => {
     const plzNum = parseInt(plz);
     if (isNaN(plzNum)) return '';
