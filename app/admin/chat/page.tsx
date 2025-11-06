@@ -104,12 +104,26 @@ export default function ChatPage() {
   const pollOption2Ref = useRef<HTMLInputElement>(null);
   const pollAllowMultipleRef = useRef<HTMLInputElement>(null);
   const pollModalRef = useRef<HTMLDivElement | null>(null);
+  const pollEmojiBaseTopRef = useRef<{ question: number | null; option: number | null }>({ question: null, option: null });
   const MAX_POLL_OPTIONS = 20;
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
 
   useEffect(() => {
     if (showPollModal) {
       setPollOptions(['', '']);
+      pollEmojiBaseTopRef.current = { question: null, option: null };
+      requestAnimationFrame(() => {
+        const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]`) as HTMLInputElement | null;
+        if (firstOptionInput) {
+          pollEmojiBaseTopRef.current.option = firstOptionInput.getBoundingClientRect().top + window.scrollY;
+        }
+        const questionButton = pollModalRef.current?.querySelector('[data-question-emoji-trigger]') as HTMLElement | null;
+        if (questionButton) {
+          pollEmojiBaseTopRef.current.question = questionButton.getBoundingClientRect().top + window.scrollY;
+        }
+      });
+    } else {
+      pollEmojiBaseTopRef.current = { question: null, option: null };
     }
   }, [showPollModal]);
 
@@ -1276,6 +1290,7 @@ export default function ChatPage() {
       }
       if (showPollModal && !insidePollModal && !insideEmojiPicker && !isEmojiTrigger) {
         setShowPollModal(false);
+        setPollOptions(['', '']);
         setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
       }
       if (groupCreationPopup.show && !target.closest('[data-group-popup]') && !target.closest('[data-group-trigger]')) {
@@ -1439,9 +1454,17 @@ export default function ChatPage() {
     const maxLeft = viewportWidth + window.scrollX - padding - width;
     const clampedLeft = Math.max(window.scrollX + padding, Math.min(baseLeft, maxLeft));
     const height = 204;
-    const baselineRect = pollQuestionRef.current?.getBoundingClientRect();
-    const baselineTop = baselineRect ? baselineRect.top : triggerRect.top;
-    const desiredTop = baselineTop + window.scrollY - 6;
+    if (context === 'poll_question' && pollEmojiBaseTopRef.current.question == null) {
+      pollEmojiBaseTopRef.current.question = triggerRect.top + window.scrollY;
+    }
+    if (context === 'poll_option' && pollEmojiBaseTopRef.current.option == null) {
+      const firstOptionInput = pollModalRef.current?.querySelector('[data-poll-option-input="0"]`) as HTMLInputElement | null;
+      pollEmojiBaseTopRef.current.option = firstOptionInput ? firstOptionInput.getBoundingClientRect().top + window.scrollY : triggerRect.top + window.scrollY;
+    }
+    const baseTop = context === 'poll_question'
+      ? pollEmojiBaseTopRef.current.question ?? (triggerRect.top + window.scrollY)
+      : pollEmojiBaseTopRef.current.option ?? (triggerRect.top + window.scrollY);
+    const desiredTop = baseTop - 6;
     const maxTop = viewportHeight + window.scrollY - padding - height;
     const clampedTop = Math.max(window.scrollY + padding, Math.min(desiredTop, maxTop));
 
@@ -4703,6 +4726,7 @@ export default function ChatPage() {
                 <button
                   type="button"
                   data-emoji-trigger
+                  data-question-emoji-trigger
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
