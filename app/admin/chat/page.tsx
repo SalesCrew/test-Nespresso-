@@ -1439,7 +1439,7 @@ export default function ChatPage() {
     const maxLeft = viewportWidth + window.scrollX - padding - width;
     const clampedLeft = Math.max(window.scrollX + padding, Math.min(baseLeft, maxLeft));
     const height = 204;
-    const baselineRect = pollOption1Ref.current?.getBoundingClientRect();
+    const baselineRect = pollQuestionRef.current?.getBoundingClientRect();
     const baselineTop = baselineRect ? baselineRect.top : triggerRect.top;
     const desiredTop = baselineTop + window.scrollY - 6;
     const maxTop = viewportHeight + window.scrollY - padding - height;
