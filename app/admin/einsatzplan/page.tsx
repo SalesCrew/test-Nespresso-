@@ -2601,7 +2601,7 @@ Import EP
                             <div 
                               className="absolute top-full right-0 mt-1 border-0 rounded-lg shadow-lg z-10 w-80 bg-white max-h-60 overflow-y-auto custom-scrollbar"
                             >
-                              <div className="p-2">
+                              <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                                 <button
                                   onClick={() => {
                                     setMarketFilter("");
@@ -3268,26 +3268,9 @@ Import EP
                                     )}
                                   </div>
 
-                                  {/* Search bar */}
-                                  <div>
-                                    <input
-                                      type="text"
-                                      placeholder="Markt suchen..."
-                                      value={marketMatchSearch}
-                                      onChange={(e) => setMarketMatchSearch(e.target.value)}
-                                      className="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none"
-                                    />
-                                  </div>
-
                                   {/* Market dropdown */}
-                                  <div className="max-h-48 overflow-y-auto no-scrollbar border border-gray-200 rounded">
+                                  <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                                     {marketsData
-                                      .filter((m: any) => {
-                                        const q = marketMatchSearch.trim().toLowerCase()
-                                        if (!q) return true
-                                        const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase()
-                                        return hay.includes(q)
-                                      })
                                       .map((m: any) => (
                                         <div
                                           key={m.id}
@@ -3303,7 +3286,6 @@ Import EP
                                               }
                                             } finally {
                                               setShowMarketMatchPopup(null)
-                                              setMarketMatchSearch('')
                                             }
                                         }}
                                         className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
@@ -5681,24 +5663,8 @@ Import EP
                         className="absolute left-0 right-0 top-11 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="relative mb-2">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <input
-                            type="text"
-                            value={marketPickerSearch}
-                            onChange={(e) => setMarketPickerSearch(e.target.value)}
-                            placeholder="Markt suchen..."
-                            className="w-full pl-10 pr-3 h-9 text-sm border border-gray-200 rounded-md focus:outline-none"
-                          />
-                        </div>
                         <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
                           {marketsData
-                            .filter((m: any) => {
-                              const q = marketPickerSearch.trim().toLowerCase();
-                              if (!q) return true;
-                              const hay = `${m.name || ''} ${m.address || ''} ${m.plz || ''} ${m.city || ''}`.toLowerCase();
-                              return hay.includes(q);
-                            })
                             .map((m: any) => (
                               <button
                                 key={m.id}
@@ -6142,24 +6108,17 @@ Import EP
                               <SelectValue placeholder="Promotor wählen" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border border-gray-200">
-                              <div className="p-2 pb-1">
-                                <input
-                                  type="text"
-                                  value={stammSearch}
-                                  onChange={(e) => setStammSearch(e.target.value)}
-                                  placeholder="Suchen..."
-                                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-0"
-                                />
+                              <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto no-scrollbar">
+                                {marketsPromotorsList.map((p) => (
+                                  <SelectItem
+                                    key={p.id}
+                                    value={p.id}
+                                    className="focus:bg-transparent data-[highlighted]:bg-gray-100"
+                                  >
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
                               </div>
-                              {(stammSearch ? marketsPromotorsList.filter(p => p.name.toLowerCase().includes(stammSearch.toLowerCase())) : marketsPromotorsList).map((p) => (
-                                <SelectItem
-                                  key={p.id}
-                                  value={p.id}
-                                  className="focus:bg-transparent data-[highlighted]:bg-gray-100"
-                                >
-                                  {p.name}
-                                </SelectItem>
-                              ))}
                             </SelectContent>
                           </Select>
                         </div>
