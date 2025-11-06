@@ -3563,7 +3563,7 @@ export default function ChatPage() {
                             } else {
                               setMessageInput(prev => prev + emoji);
                             }
-                            setEmojiPicker(prev => ({ ...prev, show: false, anchor: null, dimensions: null }));
+                            setEmojiPicker(prev => ({ ...prev, show: true }));
                           }}
                         >
                           {emoji}
