@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2, ChevronDown } from "lucide-react";
+import { Search, SquarePen, Phone, Video, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, UserPlus, CheckSquare, Lock, Camera, Loader2, ChevronDown, BarChart2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -3717,18 +3717,19 @@ export default function ChatPage() {
                     setAttachmentPopup(false);
                   }}
                 >
-                  <CheckSquare className="h-4 w-4" />
-                  <span>Abstimmung</span>
+                  <FileText className="h-4 w-4" />
+                  <span>PDF</span>
                 </button>
                 <button
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-3 rounded-b-lg"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     document.getElementById('pdf-input')?.click();
                     setAttachmentPopup(false);
                   }}
                 >
-                  <FileText className="h-4 w-4" />
-                  <span>PDF</span>
+                  <BarChart2 className="h-4 w-4" />
+                  <span>Abstimmung</span>
                 </button>
               </div>
             )}
