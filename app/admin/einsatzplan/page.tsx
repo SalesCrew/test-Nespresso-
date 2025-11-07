@@ -281,6 +281,8 @@ export default function EinsatzplanPage() {
   const [marketsPromotorsList, setMarketsPromotorsList] = useState<Array<{ id: string; name: string }>>([]);
   const [stammSearch, setStammSearch] = useState("");
   const [marketSearch, setMarketSearch] = useState("");
+  // Debounced search value to avoid heavy re-filtering on every keystroke
+  const [marketSearchDebounced, setMarketSearchDebounced] = useState("");
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
   const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
   const [editingMarket, setEditingMarket] = useState<any>(null);
@@ -319,6 +321,14 @@ export default function EinsatzplanPage() {
   useEffect(() => {
     setShowMarketHours(false);
   }, [editingMarket]);
+
+  // Keep a light debounce for the Märkte search bar to prevent heavy list re-renders
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setMarketSearchDebounced((marketSearch || '').trim().toLowerCase());
+    }, 180);
+    return () => clearTimeout(id);
+  }, [marketSearch]);
 
   useEffect(() => {
     if (!showMarketHours) return;
@@ -4274,7 +4284,8 @@ Import EP
                         ))}
                       </div>
                     ) : (
-                    marketsData.filter(market => {
+                    (marketsData
+                    .filter(market => {
                       // Region filter using cluster mapping
                       const clusterMatch = regionFilter === "ALLE" || 
                         (regionFilter === "W/NÖ/BGL" && market.cluster === "wien-noe-bgl") ||
@@ -4289,7 +4300,7 @@ Import EP
                       const plzMatch = !plzFilter || market.plz === plzFilter;
 
                       // Text search across fields
-                      const search = marketSearch.trim().toLowerCase();
+                      const search = marketSearchDebounced;
                       const searchMatch =
                         !search ||
                         [
@@ -4305,7 +4316,8 @@ Import EP
                           .includes(search);
                       
                       return clusterMatch && plzMatch && searchMatch;
-                    }).map((market) => {
+                    }))
+                    .map((market) => {
                       const visitBg = getVisitsBg(market.visits)
                       const visitBorder = getVisitsBorder(market.visits)
 
