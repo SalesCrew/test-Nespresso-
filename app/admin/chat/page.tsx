@@ -140,7 +140,12 @@ export default function ChatPage() {
   };
 
   const handleOptionFocus = (index: number) => {
-    setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
+    // Keep poll emoji picker open while working inside the poll modal
+    setEmojiPicker(prev => (
+      prev.context === 'poll_question' || prev.context === 'poll_option'
+        ? prev
+        : { ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }
+    ));
     setPollOptions(prev => {
       if (index === prev.length - 1 && prev[index].trim() === '' && prev.length < MAX_POLL_OPTIONS) {
         return [...prev, ''];
