@@ -4726,21 +4726,24 @@ export default function ChatPage() {
                   
                   <div className="space-y-3">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (deleteDialog.isBulkDelete) {
-                          // Bulk delete for me
-                          if (selectedChat) {
-                            setAllMessages(prev => ({
-                              ...prev,
-                              [selectedChat.id]: (prev[selectedChat.id] || []).filter(msg => 
-                                !deleteDialog.selectedMessageIds.includes(msg.id)
-                              )
-                            }));
+                          // Bulk delete for me via API (hide for current user)
+                          if (selectedChat && deleteDialog.selectedMessageIds.length > 0) {
+                            try {
+                              await Promise.all(
+                                deleteDialog.selectedMessageIds.map((id) =>
+                                  chatIntegration.deleteMessage(String(selectedChat.id), String(id), false)
+                                )
+                              );
+                            } catch (e) {
+                              console.error('Bulk delete-for-me failed:', e);
+                            }
                             setIsSelectMode(false);
                             setSelectedMessages(new Set());
                           }
                         } else {
-                          handleDeleteForMe();
+                          await handleDeleteForMe();
                         }
                         // Close dialog (ignoring linter for now)
                         setDeleteDialog({ show: false, messageId: null, isOwnMessage: false } as any);
@@ -4769,23 +4772,27 @@ export default function ChatPage() {
                     {((deleteDialog.isBulkDelete && deleteDialog.hasOwnMessages && !deleteDialog.hasOtherMessages) || 
                       (!deleteDialog.isBulkDelete && deleteDialog.isOwnMessage)) && (
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           if (deleteDialog.isBulkDelete) {
                             // Bulk delete for everyone (only own messages)
-                            if (selectedChat) {
-                              setAllMessages(prev => ({
-                                ...prev,
-                                [selectedChat.id]: (prev[selectedChat.id] || []).map(msg => 
-                                  deleteDialog.selectedMessageIds.includes(msg.id) && msg.own
-                                    ? { ...msg, content: 'Diese Nachricht wurde gelöscht...', edited: false }
-                                    : msg
-                                )
-                              }));
+                            if (selectedChat && deleteDialog.selectedMessageIds.length > 0) {
+                              try {
+                                const ownIds = (allMessages[selectedChat.id] || [])
+                                  .filter(m => deleteDialog.selectedMessageIds.includes(m.id) && m.own)
+                                  .map(m => m.id);
+                                await Promise.all(
+                                  ownIds.map((id) =>
+                                    chatIntegration.deleteMessage(String(selectedChat.id), String(id), true)
+                                  )
+                                );
+                              } catch (e) {
+                                console.error('Bulk delete-for-everyone failed:', e);
+                              }
                               setIsSelectMode(false);
                               setSelectedMessages(new Set());
                             }
                           } else {
-                            handleDeleteForEveryone();
+                            await handleDeleteForEveryone();
                           }
                           // Close dialog (ignoring linter for now)
                           setDeleteDialog({ show: false, messageId: null, isOwnMessage: false } as any);
