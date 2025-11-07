@@ -1656,6 +1656,29 @@ export default function EinsatzplanPage() {
     return '';
   };
 
+  // Map the region code from getRegionFromPLZ to the markets cluster slug
+  const getClusterFromPLZ = (plz: string): string => {
+    const code = getRegionFromPLZ(plz);
+    switch (code) {
+      case 'W/NÖ/BGL':
+        return 'wien-noe-bgl';
+      case 'ST':
+        return 'steiermark';
+      case 'S':
+        return 'salzburg';
+      case 'OÖ':
+        return 'oberoesterreich';
+      case 'T':
+        return 'tirol';
+      case 'V':
+        return 'vorarlberg';
+      case 'K':
+        return 'kaernten';
+      default:
+        return 'wien-noe-bgl';
+    }
+  };
+
   // Parse German opening hours strings like "Mo-Fr 09:00-19:00, Sa 09:00-18:00"
   // into a normalized JSON object with weekday keys. Any missing day becomes "Geschlossen".
   const parseOpeningHoursFromText = (text: string | null | undefined) => {
@@ -1975,12 +1998,14 @@ export default function EinsatzplanPage() {
           const address = String(row[6] || '').trim(); // Col G
           const hoursText = String(row[7] || '').trim(); // Col H
           const openingHours = parseOpeningHoursFromText(hoursText);
+          const cluster = getClusterFromPLZ(plz);
 
           toInsert.push({
             name,
             address,
             plz,
             city,
+            cluster,
             marktleiter,
             marktleiterEmail: email,
             status: 'active',
