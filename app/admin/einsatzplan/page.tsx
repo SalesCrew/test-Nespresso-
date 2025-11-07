@@ -1477,8 +1477,9 @@ export default function EinsatzplanPage() {
     });
   }, [editingMarket]);
 
-  const openInGoogleMaps = (address: string, city: string) => {
-    const query = encodeURIComponent(`${address}, ${city}`);
+  const openInGoogleMaps = (address: string, city: string, plz?: string) => {
+    const location = `${address}, ${plz ? plz + ' ' : ''}${city}`.trim();
+    const query = encodeURIComponent(location);
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
@@ -3398,7 +3399,7 @@ Import EP
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      openInGoogleMaps(einsatz.address, einsatz.city);
+                                      openInGoogleMaps(einsatz.address, einsatz.city, einsatz.plz);
                                     }}
                                     className="text-xs text-gray-500 text-left cursor-pointer hover:text-blue-600"
                                   >
