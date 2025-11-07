@@ -686,7 +686,9 @@ export default function ChatPage() {
         replyTo: msg.reply_to ? {
           id: msg.reply_to.id,
           sender: msg.reply_to.sender_name,
-          content: msg.reply_to.message_text,
+          content: msg.reply_to.message_type === 'poll' 
+            ? `📊 ${msg.reply_to.message_text || ''}`
+            : msg.reply_to.message_text,
           photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
           pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
           pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
@@ -3283,6 +3285,20 @@ export default function ChatPage() {
                              }}>
                             {replyingTo.replyTo.content}
                           </p>
+                        </div>
+                      )}
+                      {/* Poll Display in reply overlay */}
+                      {(replyingTo as any).poll && (
+                        <div className="mt-2 mb-2">
+                          <PollMessage
+                            poll={(replyingTo as any).poll}
+                            mine={!!replyingTo.own}
+                            theme="admin"
+                            getAvatar={getAvatarForUser}
+                            timestamp={replyingTo.time}
+                            onToggle={() => { /* non-interactive in reply overlay */ }}
+                            showViewButton={false}
+                          />
                         </div>
                       )}
                       {/* Photo Display */}
