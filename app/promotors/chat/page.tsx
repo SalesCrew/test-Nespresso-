@@ -2533,9 +2533,11 @@ export default function PromotorChatPage() {
                           {replyingTo.content}
                         </p>
                       )}
-                      <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                        {replyingTo.edited && '(edited) '}{replyingTo.time}
-                      </p>
+                      {!(replyingTo as any).poll && (
+                        <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                          {replyingTo.edited && '(edited) '}{replyingTo.time}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
