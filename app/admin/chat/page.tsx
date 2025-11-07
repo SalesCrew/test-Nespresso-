@@ -3779,7 +3779,13 @@ export default function ChatPage() {
                             } else {
                               setMessageInput(prev => prev + emoji);
                             }
-                            setEmojiPicker(prev => ({ ...prev, show: true }));
+                            // Keep picker open and pinned to current poll context/option
+                            setEmojiPicker(prev => ({
+                              ...prev,
+                              show: true,
+                              context: emojiPicker.context,
+                              optionIndex: emojiPicker.context === 'poll_option' ? emojiPicker.optionIndex : null
+                            }));
                           }}
                         >
                           {emoji}
