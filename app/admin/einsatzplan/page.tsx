@@ -2910,11 +2910,11 @@ Import EP
                           setShowMarketDropdown(false);
                           setShowDateDropdown(false);
                         }}
-                        className="ml-1 px-2.5 py-1.5 bg-white border border-red-500/90 rounded-full hover:bg-gray-50 transition-all duration-200"
+                        className="ml-1 px-2.5 py-1.5 bg-white border border-red-500/75 rounded-full hover:bg-gray-50 transition-all duration-200"
                         title="Alle Filter deaktivieren"
                         aria-label="Alle Filter deaktivieren"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500 opacity-90" />
+                        <Trash2 className="h-4 w-4 text-red-500 opacity-75" />
                       </button>
                       </div>
                     </div>
