@@ -1645,6 +1645,79 @@ export default function EinsatzplanPage() {
     
     return '';
   };
+
+  // Parse German opening hours strings like "Mo-Fr 09:00-19:00, Sa 09:00-18:00"
+  // into a normalized JSON object with weekday keys. Any missing day becomes "Geschlossen".
+  const parseOpeningHoursFromText = (text: string | null | undefined) => {
+    const result: Record<string, string> = {
+      monday: 'Geschlossen',
+      tuesday: 'Geschlossen',
+      wednesday: 'Geschlossen',
+      thursday: 'Geschlossen',
+      friday: 'Geschlossen',
+      saturday: 'Geschlossen',
+      sunday: 'Geschlossen',
+    };
+    if (!text) return result;
+    const input = String(text).trim();
+    if (!input) return result;
+
+    const dayOrder = ['mo','di','mi','do','fr','sa','so'];
+    const keyByShort: Record<string, keyof typeof result> = {
+      mo: 'monday', di: 'tuesday', mi: 'wednesday', do: 'thursday', fr: 'friday', sa: 'saturday', so: 'sunday',
+    };
+
+    // Split by comma sections like "Mo-Fr 09:00-19:00" or "Sa 09:00-18:00" or "So geschlossen"
+    const segments = input
+      .replace(/\s+/g, ' ')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const setDays = (days: string[], value: string) => {
+      days.forEach(d => {
+        const k = keyByShort[d as keyof typeof keyByShort];
+        if (k) result[k] = value || 'Geschlossen';
+      });
+    };
+
+    const expandRange = (range: string) => {
+      // handle "mo-fr" style (allow various dashes)
+      const [startRaw, endRaw] = range.split(/[-–—]/).map(s => s.trim().toLowerCase());
+      const start = startRaw.slice(0,2);
+      const end = endRaw.slice(0,2);
+      const startIdx = dayOrder.indexOf(start);
+      const endIdx = dayOrder.indexOf(end);
+      if (startIdx === -1 || endIdx === -1) return [] as string[];
+      const days: string[] = [];
+      for (let i = startIdx; i <= endIdx; i++) days.push(dayOrder[i]);
+      return days;
+    };
+
+    for (const seg of segments) {
+      // Extract day part and time part
+      // Examples: "Mo-Fr 09:00-19:00", "Sa 09:00-18:00", "So geschlossen"
+      const m = seg.match(/^(Mo|Di|Mi|Do|Fr|Sa|So)(?:\s*[-–—]\s*(Mo|Di|Mi|Do|Fr|Sa|So))?\s*(.*)$/i);
+      if (!m) continue;
+      const startDay = (m[1] || '').toLowerCase();
+      const endDay = (m[2] || '').toLowerCase();
+      const rest = (m[3] || '').trim();
+      let value = 'Geschlossen';
+      if (rest) {
+        const lower = rest.toLowerCase();
+        if (lower.includes('geschlossen')) {
+          value = 'Geschlossen';
+        } else {
+          // Normalize time separator with en dash for display consistency later
+          value = rest.replace(/\s*-\s*/g, '–');
+        }
+      }
+      const days = endDay ? expandRange(`${startDay}-${endDay}`) : [startDay.slice(0,2)];
+      setDays(days, value);
+    }
+
+    return result;
+  };
   // Process Excel file for Roh Excel import
   const processRohExcel = (file: File) => {
     console.log('🔵 processRohExcel START - file:', file.name, 'size:', file.size);
@@ -1857,6 +1930,78 @@ export default function EinsatzplanPage() {
     reader.readAsArrayBuffer(file);
   };
 
+  // Process Excel file for Markets (POS) import
+  const processMarketsExcel = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rows2d: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        // Find the header row (contains 'Öffnungszeiten' somewhere and likely 'Markt')
+        let startRow = 2; // default after title rows
+        for (let i = 0; i < Math.min(rows2d.length, 10); i++) {
+          const row = (rows2d[i] || []).map((c: any) => String(c || ''));
+          const hasHours = row.some((c: string) => c.toLowerCase().includes('öffnungszeiten'));
+          const hasMarkt = row.some((c: string) => c.toLowerCase().includes('markt'));
+          if (hasHours && hasMarkt) {
+            startRow = i + 1; // data starts right after header
+            break;
+          }
+        }
+
+        const toInsert: any[] = [];
+        for (let r = startRow; r < rows2d.length; r++) {
+          const row = rows2d[r] || [];
+          const name = String(row[1] || '').trim(); // Col B
+          if (!name) continue;
+          const marktleiter = String(row[2] || '').trim(); // Col C
+          const email = String(row[3] || '').trim(); // Col D
+          const plz = String(row[4] || '').toString().trim(); // Col E
+          const city = String(row[5] || '').trim(); // Col F
+          const address = String(row[6] || '').trim(); // Col G
+          const hoursText = String(row[7] || '').trim(); // Col H
+          const openingHours = parseOpeningHoursFromText(hoursText);
+
+          toInsert.push({
+            name,
+            address,
+            plz,
+            city,
+            marktleiter,
+            marktleiterEmail: email,
+            status: 'active',
+            openingHours,
+          });
+        }
+
+        if (toInsert.length === 0) {
+          alert('Keine gültigen Markt-Zeilen gefunden');
+          return;
+        }
+
+        const res = await fetch('/api/admin/markets/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows: toInsert }),
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(`Import fehlgeschlagen: ${res.status} ${t}`);
+        }
+        setShowImportModal(false);
+        await loadMarkets();
+      } catch (error: any) {
+        console.error('Error processing Markets Excel file:', error);
+        alert(error?.message || 'Fehler beim Verarbeiten der Märkte Excel-Datei');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   // Handle replacement assignment selection
   const handleReplacementAssignmentSelect = (assignmentId: string) => {
     setSelectedReplacementAssignments(prev => 
@@ -1899,12 +2044,16 @@ export default function EinsatzplanPage() {
     const file = event.target.files?.[0];
     console.log('File selected:', file?.name, 'Import type:', importType);
     if (file) {
-      if (importType === 'roh') {
-        processRohExcel(file);
-      } else if (importType === 'intern') {
-        processInternExcel(file);
+      if (activeView === 'maerkte') {
+        processMarketsExcel(file);
       } else {
-        console.log('Unknown import type:', importType);
+        if (importType === 'roh') {
+          processRohExcel(file);
+        } else if (importType === 'intern') {
+          processInternExcel(file);
+        } else {
+          console.log('Unknown import type:', importType);
+        }
       }
     }
   };
@@ -1919,12 +2068,16 @@ export default function EinsatzplanPage() {
     const file = event.dataTransfer.files[0];
     console.log('File dropped:', file?.name, 'Import type:', importType);
     if (file) {
-      if (importType === 'roh') {
-        processRohExcel(file);
-      } else if (importType === 'intern') {
-        processInternExcel(file);
+      if (activeView === 'maerkte') {
+        processMarketsExcel(file);
       } else {
-        console.log('Unknown import type:', importType);
+        if (importType === 'roh') {
+          processRohExcel(file);
+        } else if (importType === 'intern') {
+          processInternExcel(file);
+        } else {
+          console.log('Unknown import type:', importType);
+        }
       }
     }
   };
