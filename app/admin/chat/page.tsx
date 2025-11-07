@@ -1294,7 +1294,13 @@ export default function ChatPage() {
       const insideEmojiPicker = target.closest('[data-emoji-picker]');
       const isEmojiTrigger = target.closest('[data-emoji-trigger]');
       const insidePollModal = target.closest('[data-poll-modal]');
-      if (emojiPicker.show && !insideEmojiPicker && !isEmojiTrigger) {
+      // For poll creation, keep picker open when clicking inside the poll modal; close only on true outside
+      if (
+        emojiPicker.show &&
+        !insideEmojiPicker &&
+        !isEmojiTrigger &&
+        !((emojiPicker.context === 'poll_question' || emojiPicker.context === 'poll_option') && insidePollModal)
+      ) {
         setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }));
       }
       if (showPollModal && !insidePollModal && !insideEmojiPicker && !isEmojiTrigger) {
@@ -4876,7 +4882,11 @@ export default function ChatPage() {
                   ref={pollQuestionRef}
                   placeholder="Gib eine Frage ein."
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:outline-none focus:ring-0 bg-white"
-                  onFocus={() => setEmojiPicker(prev => ({ ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }))}
+                  onFocus={() => setEmojiPicker(prev => (
+                    prev.context === 'poll_question' || prev.context === 'poll_option'
+                      ? prev
+                      : { ...prev, show: false, optionIndex: null, anchor: null, dimensions: null }
+                  ))}
                 />
                 <button
                   type="button"
