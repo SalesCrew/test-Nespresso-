@@ -26,9 +26,10 @@ interface PollMessageProps {
   onViewVotes?: () => void;
   showViewButton?: boolean;
   timestamp?: string;
+  viewButtonDisabled?: boolean; // when true, keep button visible but non-interactive
 }
 
-export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, onViewVotes, showViewButton, timestamp }: PollMessageProps) {
+export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, onViewVotes, showViewButton, timestamp, viewButtonDisabled }: PollMessageProps) {
   const totalVotes = useMemo(() => poll.options.reduce((s, o) => s + (o.count || 0), 0), [poll.options]);
   const isSelected = (id: string) => poll.my_votes.includes(id);
   const gradient = theme === "admin"
@@ -130,16 +131,19 @@ export default function PollMessage({ poll, mine, theme, onToggle, getAvatar, on
         </p>
       )}
 
-      {theme === 'admin' && showViewButton && onViewVotes && (
+      {theme === 'admin' && showViewButton && (onViewVotes || viewButtonDisabled) && (
         <div className="mt-2 pt-2" style={{ borderTop: theme === 'admin' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #E5E7EB' }}>
           <button
-            onClick={(e) => { e.stopPropagation(); onViewVotes(); }}
+            onClick={(e) => { if (viewButtonDisabled) return; e.stopPropagation(); onViewVotes && onViewVotes(); }}
             className="w-full text-sm rounded-lg px-3 py-2"
             style={{
               background: mine ? 'rgba(255,255,255,0.10)' : 'rgba(17,24,39,0.05)',
               border: mine ? '1px solid rgba(255,255,255,0.25)' : '1px solid #E5E7EB',
               color: mine ? '#fff' : '#111827',
+              pointerEvents: viewButtonDisabled ? 'none' : 'auto'
             }}
+            aria-disabled={viewButtonDisabled ? true : undefined}
+            disabled={!!viewButtonDisabled}
           >
             Stimmen ansehen
           </button>

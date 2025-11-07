@@ -3336,6 +3336,7 @@ export default function ChatPage() {
                             getAvatar={getAvatarForUser}
                             timestamp={replyingTo.time}
                             showViewButton
+                            viewButtonDisabled
                             onViewVotes={async () => {
                               try {
                                 const poll = (replyingTo as any).poll;
