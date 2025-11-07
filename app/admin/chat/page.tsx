@@ -2870,7 +2870,7 @@ export default function ChatPage() {
                                 <div className={`text-xs mt-1 flex items-center gap-1 ${message.own ? 'text-green-50' : 'text-gray-700'}`}>
                                   <BarChart2 className="w-3.5 h-3.5" />
                                   <span 
-                                    className={`${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                                    className={`${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                                     style={{ 
                                       wordBreak: 'break-word',
                                       overflow: 'hidden',
@@ -2883,7 +2883,7 @@ export default function ChatPage() {
                                   </span>
                                 </div>
                               ) : (
-                                <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
                                    style={{ 
                                      wordBreak: 'break-word',
                                      overflow: 'hidden',
@@ -2983,7 +2983,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {message.type !== 'poll' && message.content && (
                         <p 
-                          className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                          className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -3298,7 +3298,7 @@ export default function ChatPage() {
                           {replyingTo.replyTo.messageType === 'poll' ? (
                             <div className={`text-xs mt-1 flex items-center gap-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'}`}>
                               <BarChart2 className="w-3.5 h-3.5" />
-                              <span className={`${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                              <span className={`${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                                 style={{ 
                                   hyphens: 'auto',
                                   wordBreak: 'break-word',
@@ -3313,7 +3313,7 @@ export default function ChatPage() {
                               </span>
                             </div>
                           ) : (
-                            <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                            <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
                                style={{ 
                                  hyphens: 'auto',
                                  wordBreak: 'break-word',
@@ -3413,7 +3413,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {replyingTo.content && (
                         <p 
-                          className={`text-sm ${replyingTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                          className={`text-sm ${replyingTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -3487,7 +3487,7 @@ export default function ChatPage() {
                           {editingMessage.replyTo.messageType === 'poll' ? (
                             <div className={`text-xs mt-1 flex items-center gap-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'}`}>
                               <BarChart2 className="w-3.5 h-3.5" />
-                              <span className={`${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                              <span className={`${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                                 style={{ 
                                   hyphens: 'auto',
                                   wordBreak: 'break-word',
@@ -3502,7 +3502,7 @@ export default function ChatPage() {
                               </span>
                             </div>
                           ) : (
-                            <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                            <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
                                style={{ 
                                  hyphens: 'auto',
                                  wordBreak: 'break-word',
@@ -3602,7 +3602,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {editingMessage.content && (
                         <p 
-                          className={`text-sm ${editingMessage.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                          className={`text-sm ${editingMessage.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
