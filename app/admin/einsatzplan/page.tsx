@@ -2890,6 +2890,32 @@ Import EP
                           </div>
                         )}
                       </div>
+                      {/* Disable all filters */}
+                      <button
+                        onClick={() => {
+                          setRegionFilter("ALLE");
+                          setPlzFilter("");
+                          setPromotorFilter("");
+                          setStatusFilter("");
+                          setMarketFilter("");
+                          setMatchedOnly(false);
+                          setHideVerplant(false);
+                          setSelectedWeeks([]);
+                          setSelectedDates([]);
+                          setDateRange({ start: null, end: null });
+                          setDateFilter("");
+                          setShowPlzDropdown(false);
+                          setShowPromotorDropdown(false);
+                          setShowStatusDropdown(false);
+                          setShowMarketDropdown(false);
+                          setShowDateDropdown(false);
+                        }}
+                        className="ml-1 p-1.5 bg-white/90 border border-gray-200 rounded-full shadow hover:bg-gray-50"
+                        title="Alle Filter deaktivieren"
+                        aria-label="Alle Filter deaktivieren"
+                      >
+                        <Trash2 className="h-5 w-5 text-red-500" />
+                      </button>
                       </div>
                     </div>
                   </div>
