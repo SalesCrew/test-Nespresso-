@@ -725,6 +725,8 @@ export default function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const scrollButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Ref for poll bubble inside reply overlay (for anchoring votes drawer)
+  const replyOverlayPollRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -3289,15 +3291,39 @@ export default function ChatPage() {
                       )}
                       {/* Poll Display in reply overlay */}
                       {(replyingTo as any).poll && (
-                        <div className="mt-2 mb-2">
+                        <div className="mt-2 mb-2" ref={replyOverlayPollRef}>
                           <PollMessage
                             poll={(replyingTo as any).poll}
                             mine={!!replyingTo.own}
                             theme="admin"
                             getAvatar={getAvatarForUser}
                             timestamp={replyingTo.time}
-                            onToggle={() => { /* non-interactive in reply overlay */ }}
-                            showViewButton={false}
+                            showViewButton
+                            onViewVotes={async () => {
+                              try {
+                                const poll = (replyingTo as any).poll;
+                                const container = replyOverlayPollRef.current;
+                                const bubble = container?.querySelector('[data-poll-bubble]') as HTMLElement | null;
+                                const r = bubble?.getBoundingClientRect();
+                                setVotesDrawer({
+                                  open: true,
+                                  pollId: poll.id,
+                                  question: poll.question,
+                                  options: poll.options,
+                                  anchorRect: r ? { top: r.top, left: r.left, width: r.width, height: r.height } : null
+                                });
+                              } catch (e) {
+                                console.error('Failed to open votes drawer from overlay', e);
+                              }
+                            }}
+                            onToggle={async (optionId, checked) => {
+                              try {
+                                if (!selectedChat?.id) return;
+                                await chatIntegration.votePoll(String(selectedChat.id), (replyingTo as any).poll.id, optionId, checked);
+                              } catch (err) {
+                                console.error('Failed to vote on poll:', err);
+                              }
+                            }}
                           />
                         </div>
                       )}
