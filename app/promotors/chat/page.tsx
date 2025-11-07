@@ -2033,7 +2033,7 @@ export default function PromotorChatPage() {
                             {/* Text Content */}
                             {message.type !== 'poll' && message.content && (
                               <p 
-                                className="text-sm"
+                                className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                                 style={{ 
                                   hyphens: 'auto',
                                   wordBreak: 'break-word',
