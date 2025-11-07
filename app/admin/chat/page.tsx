@@ -727,6 +727,8 @@ export default function ChatPage() {
   const scrollButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
   // Ref for poll bubble inside reply overlay (for anchoring votes drawer)
   const replyOverlayPollRef = useRef<HTMLDivElement | null>(null);
+  // Ref for poll bubble inside edit overlay (for anchoring votes drawer)
+  const editOverlayPollRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -3515,6 +3517,45 @@ export default function ChatPage() {
                           )}
                         </div>
                       )}
+                      {/* Poll Display in edit overlay */}
+                      {(editingMessage as any).poll && (
+                        <div className="mt-2 mb-2" ref={editOverlayPollRef}>
+                          <PollMessage
+                            poll={(editingMessage as any).poll}
+                            mine={!!editingMessage.own}
+                            theme="admin"
+                            getAvatar={getAvatarForUser}
+                            timestamp={editingMessage.time}
+                            showViewButton
+                            viewButtonDisabled
+                            onViewVotes={async () => {
+                              try {
+                                const poll = (editingMessage as any).poll;
+                                const container = editOverlayPollRef.current;
+                                const bubble = container?.querySelector('[data-poll-bubble]') as HTMLElement | null;
+                                const r = bubble?.getBoundingClientRect();
+                                setVotesDrawer({
+                                  open: true,
+                                  pollId: poll.id,
+                                  question: poll.question,
+                                  options: poll.options,
+                                  anchorRect: r ? { top: r.top, left: r.left, width: r.width, height: r.height } : null
+                                });
+                              } catch (e) {
+                                console.error('Failed to open votes drawer from edit overlay', e);
+                              }
+                            }}
+                            onToggle={async (optionId, checked) => {
+                              try {
+                                if (!selectedChat?.id) return;
+                                await chatIntegration.votePoll(String(selectedChat.id), (editingMessage as any).poll.id, optionId, checked);
+                              } catch (err) {
+                                console.error('Failed to vote on poll:', err);
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
                                                                    {/* Photo Display */}
                       {editingMessage.photo && (
                         <div className="mt-2 mb-2">
@@ -3571,9 +3612,11 @@ export default function ChatPage() {
                           {editingMessage.content}
                         </p>
                       )}
-                                             <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                         {editingMessage.edited && '(edited) '}{editingMessage.time}
-                       </p>
+                      {!(editingMessage as any).poll && (
+                        <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                          {editingMessage.edited && '(edited) '}{editingMessage.time}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
