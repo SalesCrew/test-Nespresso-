@@ -54,6 +54,7 @@ interface Message {
     id: string | number;
     sender: string;
     content: string;
+    messageType?: string;
     photo?: string;
     pdf?: string;
     pdfName?: string;
@@ -686,9 +687,8 @@ export default function ChatPage() {
         replyTo: msg.reply_to ? {
           id: msg.reply_to.id,
           sender: msg.reply_to.sender_name,
-          content: msg.reply_to.message_type === 'poll' 
-            ? `📊 ${msg.reply_to.message_text || ''}`
-            : msg.reply_to.message_text,
+          content: msg.reply_to.message_text || '',
+          messageType: msg.reply_to.message_type,
           photo: msg.reply_to.message_type === 'photo' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
           pdf: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_url ? msg.reply_to.file_url : undefined,
           pdfName: msg.reply_to.message_type === 'pdf' && msg.reply_to.file_name ? msg.reply_to.file_name : undefined,
@@ -2864,16 +2864,34 @@ export default function ChatPage() {
                               <p className={`text-xs font-medium ${message.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
                                 {message.replyTo.sender}
                               </p>
-                              <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
-                                 style={{ 
-                                   wordBreak: 'break-word',
-                                   overflow: 'hidden',
-                                   display: '-webkit-box',
-                                   WebkitLineClamp: 2,
-                                   WebkitBoxOrient: 'vertical'
-                                 }}>
-                                {message.replyTo.content}
-                              </p>
+                              {message.replyTo.messageType === 'poll' ? (
+                                <div className={`text-xs mt-1 flex items-center gap-1 ${message.own ? 'text-green-50' : 'text-gray-700'}`}>
+                                  <BarChart2 className="w-3.5 h-3.5" />
+                                  <span 
+                                    className={`${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                                    style={{ 
+                                      wordBreak: 'break-word',
+                                      overflow: 'hidden',
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: 'vertical'
+                                    }}
+                                  >
+                                    {message.replyTo.content}
+                                  </span>
+                                </div>
+                              ) : (
+                                <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                   style={{ 
+                                     wordBreak: 'break-word',
+                                     overflow: 'hidden',
+                                     display: '-webkit-box',
+                                     WebkitLineClamp: 2,
+                                     WebkitBoxOrient: 'vertical'
+                                   }}>
+                                  {message.replyTo.content}
+                                </p>
+                              )}
                             </>
                           )}
                         </div>
@@ -3275,18 +3293,37 @@ export default function ChatPage() {
                           <p className={`text-xs font-medium ${replyingTo.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
                             {replyingTo.replyTo.sender}
                           </p>
-                          <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
-                             style={{ 
-                               hyphens: 'auto',
-                               wordBreak: 'break-word',
-                               overflowWrap: 'break-word',
-                               overflow: 'hidden',
-                               display: '-webkit-box',
-                               WebkitLineClamp: 2,
-                               WebkitBoxOrient: 'vertical'
-                             }}>
-                            {replyingTo.replyTo.content}
-                          </p>
+                          {replyingTo.replyTo.messageType === 'poll' ? (
+                            <div className={`text-xs mt-1 flex items-center gap-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'}`}>
+                              <BarChart2 className="w-3.5 h-3.5" />
+                              <span className={`${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                                style={{ 
+                                  hyphens: 'auto',
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  overflow: 'hidden',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical'
+                                }}
+                              >
+                                {replyingTo.replyTo.content}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                               style={{ 
+                                 hyphens: 'auto',
+                                 wordBreak: 'break-word',
+                                 overflowWrap: 'break-word',
+                                 overflow: 'hidden',
+                                 display: '-webkit-box',
+                                 WebkitLineClamp: 2,
+                                 WebkitBoxOrient: 'vertical'
+                               }}>
+                              {replyingTo.replyTo.content}
+                            </p>
+                          )}
                         </div>
                       )}
                       {/* Poll Display in reply overlay */}
@@ -3442,18 +3479,37 @@ export default function ChatPage() {
                           <p className={`text-xs font-medium ${editingMessage.own ? 'text-green-100' : 'text-gray-600'} opacity-50`}>
                             {editingMessage.replyTo.sender}
                           </p>
-                                                                               <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
-                             style={{ 
-                               hyphens: 'auto',
-                               wordBreak: 'break-word',
-                               overflowWrap: 'break-word',
-                               overflow: 'hidden',
-                               display: '-webkit-box',
-                               WebkitLineClamp: 2,
-                               WebkitBoxOrient: 'vertical'
-                             }}>
-                            {editingMessage.replyTo.content}
-                          </p>
+                          {editingMessage.replyTo.messageType === 'poll' ? (
+                            <div className={`text-xs mt-1 flex items-center gap-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'}`}>
+                              <BarChart2 className="w-3.5 h-3.5" />
+                              <span className={`${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
+                                style={{ 
+                                  hyphens: 'auto',
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  overflow: 'hidden',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical'
+                                }}
+                              >
+                                {editingMessage.replyTo.content}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                               style={{ 
+                                 hyphens: 'auto',
+                                 wordBreak: 'break-word',
+                                 overflowWrap: 'break-word',
+                                 overflow: 'hidden',
+                                 display: '-webkit-box',
+                                 WebkitLineClamp: 2,
+                                 WebkitBoxOrient: 'vertical'
+                               }}>
+                              {editingMessage.replyTo.content}
+                            </p>
+                          )}
                         </div>
                       )}
                                                                    {/* Photo Display */}
