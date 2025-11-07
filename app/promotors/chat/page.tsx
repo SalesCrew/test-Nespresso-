@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera, ChevronDown } from "lucide-react";
+import { Search, Info, Send, Paperclip, Smile, Reply, Edit, Copy, Check, Heart, Trash2, MessageCircle, Image, FileText, RotateCw, Crop, Palette, X, Pen, Eraser, Pin, MessageCircleX, CircleDot, ArrowLeft, CheckSquare, Lock, Camera, ChevronDown, BarChart2 } from "lucide-react";
 import { useChatIntegration } from "@/lib/chat/useChatIntegration";
 import PollMessage from "@/components/chat/PollMessage";
 import { useSocket } from "@/lib/socket/SocketContext";

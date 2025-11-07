@@ -2870,7 +2870,7 @@ export default function ChatPage() {
                                 <div className={`text-xs mt-1 flex items-center gap-1 ${message.own ? 'text-green-50' : 'text-gray-700'}`}>
                                   <BarChart2 className="w-3.5 h-3.5" />
                                   <span 
-                                    className={`${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                                    className={`${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                                     style={{ 
                                       wordBreak: 'break-word',
                                       overflow: 'hidden',
@@ -2883,16 +2883,16 @@ export default function ChatPage() {
                                   </span>
                                 </div>
                               ) : (
-                                <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
-                                   style={{ 
-                                     wordBreak: 'break-word',
-                                     overflow: 'hidden',
-                                     display: '-webkit-box',
-                                     WebkitLineClamp: 2,
-                                     WebkitBoxOrient: 'vertical'
-                                   }}>
-                                  {message.replyTo.content}
-                                </p>
+                              <p className={`text-xs mt-1 ${message.own ? 'text-green-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                 style={{ 
+                                   wordBreak: 'break-word',
+                                   overflow: 'hidden',
+                                   display: '-webkit-box',
+                                   WebkitLineClamp: 2,
+                                   WebkitBoxOrient: 'vertical'
+                                 }}>
+                                {message.replyTo.content}
+                              </p>
                               )}
                             </>
                           )}
@@ -2983,7 +2983,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {message.type !== 'poll' && message.content && (
                         <p 
-                          className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                          className={`text-sm ${message.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -2994,9 +2994,9 @@ export default function ChatPage() {
                         </p>
                       )}
                       {message.type !== 'poll' && (
-                        <p className={`text-xs mt-1 ${message.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                          {message.edited && '(edited) '}{message.time}
-                        </p>
+                      <p className={`text-xs mt-1 ${message.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                        {message.edited && '(edited) '}{message.time}
+                      </p>
                       )}
                       
                       {/* Reaction Emoji */}
@@ -3298,7 +3298,7 @@ export default function ChatPage() {
                           {replyingTo.replyTo.messageType === 'poll' ? (
                             <div className={`text-xs mt-1 flex items-center gap-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'}`}>
                               <BarChart2 className="w-3.5 h-3.5" />
-                              <span className={`${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                              <span className={`${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                                 style={{ 
                                   hyphens: 'auto',
                                   wordBreak: 'break-word',
@@ -3313,18 +3313,18 @@ export default function ChatPage() {
                               </span>
                             </div>
                           ) : (
-                            <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
-                               style={{ 
-                                 hyphens: 'auto',
-                                 wordBreak: 'break-word',
-                                 overflowWrap: 'break-word',
-                                 overflow: 'hidden',
-                                 display: '-webkit-box',
-                                 WebkitLineClamp: 2,
-                                 WebkitBoxOrient: 'vertical'
-                               }}>
-                              {replyingTo.replyTo.content}
-                            </p>
+                          <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                             style={{ 
+                               hyphens: 'auto',
+                               wordBreak: 'break-word',
+                               overflowWrap: 'break-word',
+                               overflow: 'hidden',
+                               display: '-webkit-box',
+                               WebkitLineClamp: 2,
+                               WebkitBoxOrient: 'vertical'
+                             }}>
+                            {replyingTo.replyTo.content}
+                          </p>
                           )}
                         </div>
                       )}
@@ -3413,7 +3413,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {replyingTo.content && (
                         <p 
-                          className={`text-sm ${replyingTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                          className={`text-sm ${replyingTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -3424,9 +3424,9 @@ export default function ChatPage() {
                         </p>
                       )}
                       {!(replyingTo as any).poll && (
-                        <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                          {replyingTo.edited && '(edited) '}{replyingTo.time}
-                        </p>
+                      <p className={`text-xs mt-1 ${replyingTo.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                        {replyingTo.edited && '(edited) '}{replyingTo.time}
+                      </p>
                       )}
                     </div>
                   </div>
@@ -3487,7 +3487,7 @@ export default function ChatPage() {
                           {editingMessage.replyTo.messageType === 'poll' ? (
                             <div className={`text-xs mt-1 flex items-center gap-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'}`}>
                               <BarChart2 className="w-3.5 h-3.5" />
-                              <span className={`${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                              <span className={`${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                                 style={{ 
                                   hyphens: 'auto',
                                   wordBreak: 'break-word',
@@ -3502,18 +3502,18 @@ export default function ChatPage() {
                               </span>
                             </div>
                           ) : (
-                            <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`} 
-                               style={{ 
-                                 hyphens: 'auto',
-                                 wordBreak: 'break-word',
-                                 overflowWrap: 'break-word',
-                                 overflow: 'hidden',
-                                 display: '-webkit-box',
-                                 WebkitLineClamp: 2,
-                                 WebkitBoxOrient: 'vertical'
-                               }}>
-                              {editingMessage.replyTo.content}
-                            </p>
+                                                                               <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-50' : 'text-gray-700'} ${editingMessage.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                             style={{ 
+                               hyphens: 'auto',
+                               wordBreak: 'break-word',
+                               overflowWrap: 'break-word',
+                               overflow: 'hidden',
+                               display: '-webkit-box',
+                               WebkitLineClamp: 2,
+                               WebkitBoxOrient: 'vertical'
+                             }}>
+                            {editingMessage.replyTo.content}
+                          </p>
                           )}
                         </div>
                       )}
@@ -3602,7 +3602,7 @@ export default function ChatPage() {
                       {/* Text Content */}
                       {editingMessage.content && (
                         <p 
-                          className={`text-sm ${editingMessage.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-50' : ''}`}
+                          className={`text-sm ${editingMessage.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`}
                           style={{ 
                             hyphens: 'auto',
                             wordBreak: 'break-word',
@@ -3613,9 +3613,9 @@ export default function ChatPage() {
                         </p>
                       )}
                       {!(editingMessage as any).poll && (
-                        <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                          {editingMessage.edited && '(edited) '}{editingMessage.time}
-                        </p>
+                                             <p className={`text-xs mt-1 ${editingMessage.own ? 'text-green-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                         {editingMessage.edited && '(edited) '}{editingMessage.time}
+                       </p>
                       )}
                     </div>
                   </div>
@@ -3704,17 +3704,17 @@ export default function ChatPage() {
                         bottom: 'auto'
                       }
                     : {
-                        bottom: emojiPicker.context === 'input' ? '71px' : '96px',
-                        left: emojiPicker.context === 'input' ? '16px' : '320px',
-                        right: '16px',
+                  bottom: emojiPicker.context === 'input' ? '71px' : '96px',
+                  left: emojiPicker.context === 'input' ? '16px' : '320px',
+                  right: '16px',
                         width: 'auto',
                         height: '160px'
                       }),
-                   boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
-                   transform: 'translateY(0)',
-                   transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
-                   animation: 'slideUpFromBottom 0.3s ease-out'
-                 }}
+                  boxShadow: '0 -4px 25px rgba(0, 0, 0, 0.15)',
+                  transform: 'translateY(0)',
+                  transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
+                  animation: 'slideUpFromBottom 0.3s ease-out'
+                }}
               >
                 {/* Emoji Grid */}
                 <div className="h-full flex flex-col">
@@ -4525,7 +4525,7 @@ export default function ChatPage() {
                           optionIndex: null,
                           anchor: null,
                           dimensions: null
-                         }));
+                        }));
                       }}
                     />
                     <input
@@ -4647,7 +4647,7 @@ export default function ChatPage() {
                           optionIndex: null,
                           anchor: null,
                           dimensions: null
-                         }));
+                        }));
                       }}
                     />
                     <input
@@ -4734,7 +4734,7 @@ export default function ChatPage() {
                               await Promise.all(
                                 deleteDialog.selectedMessageIds.map((id) =>
                                   chatIntegration.deleteMessage(String(selectedChat.id), String(id), false)
-                                )
+                              )
                               );
                             } catch (e) {
                               console.error('Bulk delete-for-me failed:', e);
@@ -4852,9 +4852,9 @@ export default function ChatPage() {
               <p className="text-gray-500 text-lg">Wähle einen Kontakt aus, um zu chatten</p>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+         )}
+       </div>
+     </div>
 
     {/* Poll Create Modal (global overlay, no hooks) */}
     {showPollModal && (
@@ -4968,289 +4968,289 @@ export default function ChatPage() {
       </div>
     )}
 
-    {/* Photo Viewer */}
-    {photoViewer.show && (
-      <div 
-        className="fixed inset-0 bg-black flex flex-col z-[9999]"
-        onClick={closePhotoViewer}
-        style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'black'
-        }}
-      >
-        {/* Main photo display */}
-        <div className="flex-1 flex items-center justify-center relative">
-          {/* Previous arrow */}
-          {photoViewer.photos.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigatePhotoViewer('prev');
-              }}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-
-          {/* Current photo */}
-          <img
-            src={photoViewer.photos[photoViewer.currentIndex]}
-            alt="Full size photo"
-            className="object-contain"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: 'calc(100vw - 160px)',
-              maxHeight: 'calc(100vh - 160px)',
-              width: 'auto',
-              height: 'auto'
-            }}
-          />
-
-          {/* Next arrow */}
-          {photoViewer.photos.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigatePhotoViewer('next');
-              }}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
-
-          {/* Close button */}
-          <button
-            onClick={closePhotoViewer}
-            className="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Thumbnail footer */}
-        <div className="h-24 bg-black bg-opacity-50 flex items-center justify-center px-4">
-          <div className="flex gap-2 overflow-x-auto max-w-full">
-            {photoViewer.photos.map((photo, index) => (
-              <button
-                key={index}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setPhotoViewer(prev => ({ ...prev, currentIndex: index }));
-                }}
-                className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${
-                  index === photoViewer.currentIndex
-                    ? 'border-white'
-                    : 'border-transparent opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img
-                  src={photo}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover rounded"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Clear Chat Confirmation Dialog */}
-    {clearChatDialog.show && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Chat leeren
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Sind Sie sicher, dass Sie diesen Chat leeren möchten? Alle Nachrichten werden dauerhaft gelöscht.
-          </p>
-          
-          <div className="space-y-3">
-           <button
-             onClick={async () => {
-               if (clearChatDialog.contactId) {
-                 const conversationId = String(clearChatDialog.contactId);
-                 try {
-                   await chatIntegration.clearConversationForMe(conversationId);
-                 } catch (error) {
-                   console.error('Error clearing chat:', error);
-                 }
-               }
-               setClearChatDialog({ show: false, contactId: null });
-             }}
-             className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
-             style={{
-               borderColor: 'rgba(250, 12, 12, 0.85)'
-             }}
-             onMouseEnter={(e) => {
-               e.currentTarget.style.backgroundColor = 'rgba(250, 12, 12, 0.05)';
-             }}
-             onMouseLeave={(e) => {
-               e.currentTarget.style.backgroundColor = 'transparent';
-             }}
-           >
-             <div className="font-medium">Chat leeren</div>
-             <div className="text-xs text-gray-500">
-               Alle Nachrichten werden gelöscht
-             </div>
-           </button>
-          </div>
-          
-          <button
-            onClick={() => setClearChatDialog({ show: false, contactId: null })}
-            className="w-full mt-4 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            Abbrechen
-          </button>
-        </div>
-      </div>
-    )}
-
-     {/* Reaction Details Popup */}
-     {reactionDetails.show && (
+     {/* Photo Viewer */}
+     {photoViewer.show && (
        <div 
-         className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center"
-         onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
+         className="fixed inset-0 bg-black flex flex-col z-[9999]"
+         onClick={closePhotoViewer}
+         style={{ 
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0,
+           width: '100vw',
+           height: '100vh',
+           backgroundColor: 'black'
+         }}
        >
-         <div 
-           className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4"
-           onClick={(e) => e.stopPropagation()}
-         >
-           {/* Header with emoji tabs */}
-           <div className="p-4 border-b border-gray-200">
-             <div className="flex items-center justify-between mb-3">
-               <h3 className="text-lg font-semibold text-gray-900">Reaktionen</h3>
-               <button 
-                 onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
-                 className="text-gray-400 hover:text-gray-600"
-               >
-                 <X className="h-5 w-5" />
-               </button>
-             </div>
-             
-             {/* Emoji filter tabs */}
-             <div className="flex items-center space-x-2 overflow-x-auto">
+         {/* Main photo display */}
+         <div className="flex-1 flex items-center justify-center relative">
+           {/* Previous arrow */}
+           {photoViewer.photos.length > 1 && (
+             <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 navigatePhotoViewer('prev');
+               }}
+               className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
+             >
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+               </svg>
+             </button>
+           )}
+
+           {/* Current photo */}
+           <img
+             src={photoViewer.photos[photoViewer.currentIndex]}
+             alt="Full size photo"
+             className="object-contain"
+             onClick={(e) => e.stopPropagation()}
+             style={{
+               maxWidth: 'calc(100vw - 160px)',
+               maxHeight: 'calc(100vh - 160px)',
+               width: 'auto',
+               height: 'auto'
+             }}
+           />
+
+           {/* Next arrow */}
+           {photoViewer.photos.length > 1 && (
+             <button
+               onClick={(e) => {
+                 e.stopPropagation();
+                 navigatePhotoViewer('next');
+               }}
+               className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all z-10"
+             >
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+               </svg>
+             </button>
+           )}
+
+           {/* Close button */}
+           <button
+             onClick={closePhotoViewer}
+             className="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition-all"
+           >
+             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+             </svg>
+           </button>
+         </div>
+
+         {/* Thumbnail footer */}
+         <div className="h-24 bg-black bg-opacity-50 flex items-center justify-center px-4">
+           <div className="flex gap-2 overflow-x-auto max-w-full">
+             {photoViewer.photos.map((photo, index) => (
                <button
-                 onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: null }))}
-                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                   reactionDetails.selectedEmoji === null
-                     ? 'bg-green-100 text-green-700'
-                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                 key={index}
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   setPhotoViewer(prev => ({ ...prev, currentIndex: index }));
+                 }}
+                 className={`flex-shrink-0 w-16 h-16 rounded border-2 transition-all ${
+                   index === photoViewer.currentIndex
+                     ? 'border-white'
+                     : 'border-transparent opacity-70 hover:opacity-100'
                  }`}
                >
-                 Alle {Object.values(reactionDetails.reactions).reduce((sum, users) => sum + users.length, 0)}
+                 <img
+                   src={photo}
+                   alt={`Thumbnail ${index + 1}`}
+                   className="w-full h-full object-cover rounded"
+                 />
                </button>
-               {Object.entries(reactionDetails.reactions).map(([emoji, users]) => (
-                 <button
-                   key={emoji}
-                   onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: emoji }))}
-                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                     reactionDetails.selectedEmoji === emoji
-                       ? 'bg-green-100 text-green-700'
-                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                   }`}
-                 >
-                   {emoji} {users.length}
-                 </button>
-               ))}
-             </div>
-           </div>
-           
-           {/* User list */}
-           <div className="p-4 max-h-80 overflow-y-auto">
-             <div className="space-y-3">
-               {(() => {
-                 const usersToShow = reactionDetails.selectedEmoji
-                   ? reactionDetails.reactions[reactionDetails.selectedEmoji] || []
-                   : Object.values(reactionDetails.reactions).flat();
-                 
-                 return usersToShow.map((user, index) => (
-                   <div key={index} className="flex items-center space-x-3">
-                     <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                       <span className="text-white font-medium text-sm">{user.display_name.charAt(0)}</span>
-                     </div>
-                     <div className="flex-1">
-                       <p className="text-sm font-medium text-gray-900">{user.display_name}</p>
-                     </div>
-                     {reactionDetails.selectedEmoji === null && (() => {
-                       const userEmoji = Object.entries(reactionDetails.reactions).find(([_, users]) => 
-                         users.some(u => u.user_id === user.user_id)
-                       )?.[0];
-                       return userEmoji ? <span className="text-lg">{userEmoji}</span> : null;
-                     })()}
-                   </div>
-                 ));
-               })()}
-             </div>
+             ))}
            </div>
          </div>
        </div>
      )}
 
-     {/* Hidden file input for editing group picture */}
-     <input
-       ref={groupPictureInputRef}
-       type="file"
-       accept="image/*"
-       className="hidden"
-       onChange={async (e) => {
-         const file = e.target.files?.[0];
-         if (file && selectedChat?.isGroup) {
-           try {
-             // Upload the new picture
-             const newPictureUrl = await uploadGroupPicture(file, selectedChat.id);
-             
-             // Update via API
-             const response = await fetch(`/api/chat/conversations/${selectedChat.id}/picture`, {
-               method: 'PATCH',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({ profilePictureUrl: newPictureUrl }),
-             });
+     {/* Clear Chat Confirmation Dialog */}
+     {clearChatDialog.show && (
+       <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center">
+         <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+           <h3 className="text-lg font-semibold text-gray-900 mb-4">
+             Chat leeren
+           </h3>
+           <p className="text-gray-600 mb-6">
+             Sind Sie sicher, dass Sie diesen Chat leeren möchten? Alle Nachrichten werden dauerhaft gelöscht.
+           </p>
+           
+           <div className="space-y-3">
+            <button
+              onClick={async () => {
+                if (clearChatDialog.contactId) {
+                  const conversationId = String(clearChatDialog.contactId);
+                  try {
+                    await chatIntegration.clearConversationForMe(conversationId);
+                  } catch (error) {
+                    console.error('Error clearing chat:', error);
+                  }
+                }
+                setClearChatDialog({ show: false, contactId: null });
+              }}
+              className="w-full px-4 py-3 text-center text-sm text-gray-700 rounded-lg transition-colors border"
+              style={{
+                borderColor: 'rgba(250, 12, 12, 0.85)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(250, 12, 12, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <div className="font-medium">Chat leeren</div>
+              <div className="text-xs text-gray-500">
+                Alle Nachrichten werden gelöscht
+              </div>
+            </button>
+           </div>
+           
+           <button
+             onClick={() => setClearChatDialog({ show: false, contactId: null })}
+             className="w-full mt-4 px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+           >
+             Abbrechen
+           </button>
+         </div>
+       </div>
+     )}
 
-             if (response.ok) {
-               // Refresh conversations to get updated picture
-               await chatIntegration.fetchConversations();
-               
-               // Update selected chat state
-               setSelectedChat(prev => prev ? { ...prev, profileImage: newPictureUrl } : null);
-             } else {
-               console.error('Failed to update group picture');
-             }
-           } catch (error) {
-             console.error('Error updating group picture:', error);
-           }
-         }
-         // Reset input
-         if (e.target) {
-           e.target.value = '';
-         }
-       }}
-     />
+      {/* Reaction Details Popup */}
+      {reactionDetails.show && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[9999] flex items-center justify-center"
+          onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with emoji tabs */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-900">Reaktionen</h3>
+                <button 
+                  onClick={() => setReactionDetails({ show: false, messageId: null, reactions: {}, selectedEmoji: null })}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              {/* Emoji filter tabs */}
+              <div className="flex items-center space-x-2 overflow-x-auto">
+                <button
+                  onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: null }))}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    reactionDetails.selectedEmoji === null
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  Alle {Object.values(reactionDetails.reactions).reduce((sum, users) => sum + users.length, 0)}
+                </button>
+                {Object.entries(reactionDetails.reactions).map(([emoji, users]) => (
+                  <button
+                    key={emoji}
+                    onClick={() => setReactionDetails(prev => ({ ...prev, selectedEmoji: emoji }))}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      reactionDetails.selectedEmoji === emoji
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {emoji} {users.length}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* User list */}
+            <div className="p-4 max-h-80 overflow-y-auto">
+              <div className="space-y-3">
+                {(() => {
+                  const usersToShow = reactionDetails.selectedEmoji
+                    ? reactionDetails.reactions[reactionDetails.selectedEmoji] || []
+                    : Object.values(reactionDetails.reactions).flat();
+                  
+                  return usersToShow.map((user, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-white font-medium text-sm">{user.display_name.charAt(0)}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{user.display_name}</p>
+                      </div>
+                      {reactionDetails.selectedEmoji === null && (() => {
+                        const userEmoji = Object.entries(reactionDetails.reactions).find(([_, users]) => 
+                          users.some(u => u.user_id === user.user_id)
+                        )?.[0];
+                        return userEmoji ? <span className="text-lg">{userEmoji}</span> : null;
+                      })()}
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-     <style jsx global>{`
-       .animate-skeleton-fade {
-         animation: skeleton-fade 0.7s ease-in-out infinite alternate;
-       }
-       @keyframes skeleton-fade {
-         0% { opacity: 0.4; }
-         100% { opacity: 0.8; }
-       }
-     `}</style>
+      {/* Hidden file input for editing group picture */}
+      <input
+        ref={groupPictureInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (file && selectedChat?.isGroup) {
+            try {
+              // Upload the new picture
+              const newPictureUrl = await uploadGroupPicture(file, selectedChat.id);
+              
+              // Update via API
+              const response = await fetch(`/api/chat/conversations/${selectedChat.id}/picture`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profilePictureUrl: newPictureUrl }),
+              });
+
+              if (response.ok) {
+                // Refresh conversations to get updated picture
+                await chatIntegration.fetchConversations();
+                
+                // Update selected chat state
+                setSelectedChat(prev => prev ? { ...prev, profileImage: newPictureUrl } : null);
+              } else {
+                console.error('Failed to update group picture');
+              }
+            } catch (error) {
+              console.error('Error updating group picture:', error);
+            }
+          }
+          // Reset input
+          if (e.target) {
+            e.target.value = '';
+          }
+        }}
+      />
+
+      <style jsx global>{`
+        .animate-skeleton-fade {
+          animation: skeleton-fade 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes skeleton-fade {
+          0% { opacity: 0.4; }
+          100% { opacity: 0.8; }
+        }
+      `}</style>
   </div>
   );
 }
