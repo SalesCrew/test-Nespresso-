@@ -2914,7 +2914,7 @@ Import EP
                         title="Alle Filter deaktivieren"
                         aria-label="Alle Filter deaktivieren"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500 opacity-75" />
+                        <Trash2 className="h-4 w-4 text-red-500 opacity-75" strokeWidth={1.5} />
                       </button>
                       </div>
                     </div>
