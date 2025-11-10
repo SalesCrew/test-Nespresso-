@@ -1024,14 +1024,37 @@ export default function ProfilPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Mock statistics data
-  const stats = {
-    totalEinsaetze: 47,
-    missedEinsaetzeDueSickness: 3,
-    buddyTage: 12,
-    completedSchulungen: 8,
-    completedQuizzes: 15
-  }
+  // Statistics state (replaces mock)
+  const [stats, setStats] = useState({
+    totalEinsaetze: 0,
+    missedEinsaetzeDueSickness: 0,
+    buddyTage: 0,
+    completedSchulungen: 0,
+    completedQuizzes: 0,
+    attendanceRate: 0
+  })
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/me/profile-stats', { cache: 'no-store' })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok) {
+          const totalEinsaetze = Number(data?.completed || 0)
+          const missedEinsaetzeDueSickness = Number(data?.krankenstand || 0)
+          const buddyTage = Number(data?.buddyDays || 0)
+          const attendanceRate = Number(data?.attendanceRate || 0)
+          setStats(s => ({
+            ...s,
+            totalEinsaetze,
+            missedEinsaetzeDueSickness,
+            buddyTage,
+            attendanceRate
+          }))
+        }
+      } catch {}
+    })()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -2181,7 +2204,7 @@ export default function ProfilPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-500/50 ring-2 ring-red-500/20"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Verpasst (Krankheit)</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Krankenstandstage</span>
                 </div>
                 <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
                   {stats.missedEinsaetzeDueSickness}
@@ -2220,22 +2243,22 @@ export default function ProfilPage() {
                 </CardTitle>
               </CardHeader>
                           <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between opacity-50">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-500/50 ring-2 ring-green-500/20"></div>
                   <span className="text-sm text-gray-600 dark:text-gray-300">Abgeschlossene Schulungen</span>
                 </div>
                 <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
-                  {stats.completedSchulungen}
+                  —
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between opacity-50">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50 ring-2 ring-blue-500/20"></div>
                   <span className="text-sm text-gray-600 dark:text-gray-300">Abgeschlossene Quizzes</span>
                 </div>
                 <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
-                  {stats.completedQuizzes}
+                  —
                 </span>
               </div>
             </CardContent>
@@ -2259,9 +2282,9 @@ export default function ProfilPage() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {stats.completedSchulungen + stats.completedQuizzes}
+                      {stats.missedEinsaetzeDueSickness}
                     </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">Lernaktivitäten</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Krankenstand</div>
                   </div>
                 </div>
               </CardContent>
