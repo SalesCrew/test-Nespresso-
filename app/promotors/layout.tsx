@@ -3,6 +3,7 @@ import { getCurrentUserAndProfile } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
 import { SocketProvider } from "@/lib/socket/SocketContext";
 import TagesCheckProvider from "@/components/TagesCheckProvider";
+import PromotorUnreadBridge from "@/components/promotors/PromotorUnreadBridge";
 
 interface PromotorLayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,10 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
   if (!profile) {
     return (
       <SiteLayout>
-        <SocketProvider>{children}</SocketProvider>
+        <SocketProvider>
+          <PromotorUnreadBridge />
+          {children}
+        </SocketProvider>
       </SiteLayout>
     );
   }
@@ -28,6 +32,7 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     return (
       <SiteLayout>
         <SocketProvider>
+          <PromotorUnreadBridge />
           <TagesCheckProvider />
           {children}
         </SocketProvider>

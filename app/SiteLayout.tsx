@@ -34,6 +34,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   const [isFooterVisible, setIsFooterVisible] = useState(true);
   const [isInChat, setIsInChat] = useState(false);
   const lastScrollY = useRef(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   
   // KI Assistant states
   const [chatOpen, setChatOpen] = useState(false);
@@ -214,6 +215,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
 
       const isInChatMode = localStorage.getItem('isInChatMode') === 'true'
       setIsInChat(isInChatMode)
+
+      // Read unread count bridge from promotor chat integration
+      const unreadRaw = localStorage.getItem('promotorUnreadCount');
+      const nextUnread = unreadRaw ? parseInt(unreadRaw, 10) || 0 : 0;
+      setUnreadCount(nextUnread);
     }
 
     // Check on mount
@@ -539,7 +545,14 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               style={{ backgroundColor: 'transparent' }}
               onClick={() => handleNavigation("/promotors/chat")}
             >
-              <MessagesSquare className="h-6 w-6" />
+              <div className="relative">
+                <MessagesSquare className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4 px-1.5 rounded-full bg-red-500 text-white text-[10px] leading-none flex items-center justify-center font-semibold shadow">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
             </Button>
             <Button
               ref={el => { footerButtonRefs.current[3] = el; }}
