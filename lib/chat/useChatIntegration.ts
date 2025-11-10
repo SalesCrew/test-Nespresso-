@@ -257,11 +257,19 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
         (response: { success?: boolean; error?: string }) => {
           if (response.success) {
             // Update local conversation unread count
-            setConversations(prev =>
-              prev.map(conv =>
+            setConversations(prev => {
+              const updated = prev.map(conv =>
                 conv.id === conversationId ? { ...conv, unread_count: 0, marked_unread: false } : conv
-              )
-            );
+              );
+              // Broadcast updated total unread for realtime pill update
+              try {
+                const totalUnread = updated.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+                localStorage.setItem('promotorUnreadCount', String(totalUnread));
+                window.dispatchEvent(new CustomEvent('promotorUnreadChanged', { detail: totalUnread }));
+                window.dispatchEvent(new Event('storage'));
+              } catch {}
+              return updated;
+            });
             resolve();
           } else {
             reject(new Error(response.error || 'Failed to mark as read'));
