@@ -334,25 +334,25 @@ export default function KrankenstandHistoryPopover({
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-500">Cluster</div>
-                    {(() => {
-                      const slug = getClusterFromPLZ(selected.postal_code);
-                      const short = getClusterShort(slug);
-                      return (
-                        <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs border ${getClusterPillClasses(slug)}`}>
-                          {short}
-                        </span>
-                      );
-                    })()}
+                    <div className="flex items-center justify-between gap-3">
+                      {(() => {
+                        const slug = getClusterFromPLZ(selected.postal_code);
+                        const short = getClusterShort(slug);
+                        return (
+                          <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs border ${getClusterPillClasses(slug)} shrink-0`}>
+                            {short}
+                          </span>
+                        );
+                      })()}
+                      <button
+                        className="shrink-0 h-6 px-2 rounded-full border border-gray-200 bg-white text-xs text-gray-700 hover:bg-gray-50"
+                        onClick={() => setSelected(null)}
+                        title="Zurück"
+                      >
+                        Zurück
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="h-px bg-gray-100" />
-                <div className="flex justify-end">
-                  <button
-                    className="h-8 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1"
-                    onClick={() => setSelected(null)}
-                  >
-                    Zurück
-                  </button>
                 </div>
               </div>
             )}
