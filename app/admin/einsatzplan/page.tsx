@@ -727,6 +727,8 @@ export default function EinsatzplanPage() {
   
   // Tracking data for overview tab
   const [assignmentTrackingData, setAssignmentTrackingData] = useState<any>(null);
+  // Loading state for Details tab
+  const [trackingLoading, setTrackingLoading] = useState(false);
   
   // Photo lightbox state
   const [showPhotoLightbox, setShowPhotoLightbox] = useState(false);
@@ -737,6 +739,7 @@ export default function EinsatzplanPage() {
     if (!editingEinsatz?.id) return;
       
       try {
+        setTrackingLoading(true);
         const response = await fetch(`/api/assignments/${editingEinsatz.id}/tracking`, { cache: 'no-store' });
         if (!response.ok) {
           setAssignmentTrackingData(null);
@@ -785,6 +788,8 @@ export default function EinsatzplanPage() {
       } catch (error) {
         console.error('Failed to load tracking data:', error);
         setAssignmentTrackingData(null);
+      } finally {
+        setTrackingLoading(false);
       }
   }, [editingEinsatz]);
 
@@ -4872,7 +4877,70 @@ Import EP
               </div>
             </div>
             {/* Modal Content */}
-            <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+            <div className="relative flex-1 p-6 overflow-y-auto custom-scrollbar">
+              {detailModalTab === 'details' && trackingLoading && (
+                <div className="absolute inset-0 z-10 p-6 bg-white/60">
+                  <div className="space-y-6">
+                    {/* Basic Info Skeleton */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-24 animate-skeleton-fade"></div>
+                        <div className="h-3 bg-gray-100 rounded w-3/4 animate-skeleton-fade"></div>
+                        <div className="h-3 bg-gray-100 rounded w-2/3 animate-skeleton-fade"></div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-28 animate-skeleton-fade"></div>
+                        <div className="h-3 bg-gray-100 rounded w-1/2 animate-skeleton-fade"></div>
+                      </div>
+                    </div>
+                    {/* Status and Indicators Skeleton */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-20 animate-skeleton-fade"></div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                          <div className="h-3 bg-gray-100 rounded w-24 animate-skeleton-fade"></div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-24 animate-skeleton-fade"></div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                            <div className="h-3 bg-gray-100 rounded w-14 animate-skeleton-fade"></div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-gray-200 rounded-full animate-skeleton-fade"></div>
+                            <div className="h-3 bg-gray-100 rounded w-20 animate-skeleton-fade"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Actual Times Skeleton */}
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-28 animate-skeleton-fade"></div>
+                      <div className="bg-gray-100 rounded-lg p-4 space-y-3 animate-skeleton-fade">
+                        <div className="flex justify-between">
+                          <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                          <div className="h-3 bg-gray-200 rounded w-12 animate-skeleton-fade"></div>
+                        </div>
+                        <div className="flex justify-between">
+                          <div className="h-3 bg-gray-200 rounded w-16 animate-skeleton-fade"></div>
+                          <div className="h-3 bg-gray-200 rounded w-12 animate-skeleton-fade"></div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Photos Skeleton */}
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-20 animate-skeleton-fade"></div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="w-full h-32 bg-gray-100 rounded-lg animate-skeleton-fade"></div>
+                        <div className="w-full h-32 bg-gray-100 rounded-lg animate-skeleton-fade"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {detailModalTab === 'details' && assignmentTrackingData ? (
                 // DETAILS TAB - Tracking overview (same as dashboard's "Heutige Einsätze")
                 <div className="space-y-6">
