@@ -789,7 +789,7 @@ export default function EinsatzplanPage() {
       }
     };
     loadTrackingData();
-  }, [showDetailModal, promotionView, editingEinsatz?.id]);
+  }, [showDetailModal, promotionView, editingEinsatz?.id, detailModalTab]);
 
   useEffect(() => {
     (async () => {
