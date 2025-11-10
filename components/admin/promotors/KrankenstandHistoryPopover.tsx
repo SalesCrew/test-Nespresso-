@@ -65,6 +65,19 @@ export default function KrankenstandHistoryPopover({
       .filter((it) => it.assignments.length > 0);
   }, [data.items, query]);
 
+  const extractLocalHHMM = (ts?: string | null) => {
+    if (!ts) return '';
+    const s = String(ts);
+    const m = s.match(/T(\d{2}:\d{2})/);
+    if (m && m[1]) return m[1];
+    // Fallback: locale formatting if unexpected shape
+    try {
+      return new Date(s).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch {
+      return '';
+    }
+  };
+
   return (
     <div className="relative rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -143,13 +156,8 @@ export default function KrankenstandHistoryPopover({
                         {a.title || a.location_text || 'Promotion'}
                       </div>
                       <div className="text-[11px] text-gray-600 truncate">
-                        {(a.postal_code || '')} {(a.city || '')}{' '}
-                        {a.start_ts
-                          ? ` • ${new Date(a.start_ts).toLocaleTimeString('de-AT', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}`
-                          : ''}
+                        {(a.postal_code || '')} {(a.city || '')}
+                        {a.start_ts ? ` • ${extractLocalHHMM(a.start_ts)}` : ''}
                       </div>
                     </div>
                     <button
