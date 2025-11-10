@@ -548,7 +548,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               <div className="relative">
                 <MessagesSquare className="h-6 w-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-4 px-1.5 rounded-full bg-red-500 text-white text-[10px] leading-none flex items-center justify-center font-semibold shadow">
+                  <span className="absolute -top-2 -right-2 min-w-[20px] h-4 px-1.5 rounded-full bg-red-500 text-white text-[10px] leading-none flex items-center justify-center font-semibold shadow">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
