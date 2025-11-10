@@ -345,7 +345,7 @@ export default function KrankenstandHistoryPopover({
                         );
                       })()}
                       <button
-                        className="shrink-0 h-6 px-2 rounded-full border border-gray-200 bg-white text-xs text-gray-700 hover:bg-gray-50"
+                        className="shrink-0 h-6 px-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-700 hover:bg-gray-50"
                         onClick={() => setSelected(null)}
                         title="Zurück"
                       >
