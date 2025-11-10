@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Bell,
@@ -1130,6 +1130,44 @@ Dein Nespresso Team`;
       borderColor: category.borderColor,
       boxShadow: `0 1px 3px 0 ${category.borderColor}40, 0 1px 2px 0 ${category.borderColor}60`
     };
+  };
+
+  // Admin-side stats for detailed view (completed, krankenstand, attendance)
+  const [promotorStats, setPromotorStats] = useState<Record<number, { completed: number; krankenstand: number; attendanceRate: number }>>({});
+  const [promotorStatsLoading, setPromotorStatsLoading] = useState<Record<number, boolean>>({});
+
+  const loadPromotorStats = useCallback(async (promotorId: number) => {
+    try {
+      setPromotorStatsLoading(prev => ({ ...prev, [promotorId]: true }));
+      const res = await fetch(`/api/admin/promotors/${promotorId}/profile-stats`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setPromotorStats(prev => ({
+          ...prev,
+          [promotorId]: {
+            completed: Number(data.completed || 0),
+            krankenstand: Number(data.krankenstand || 0),
+            attendanceRate: Number(data.attendanceRate || 0),
+          }
+        }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setPromotorStatsLoading(prev => ({ ...prev, [promotorId]: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (detailedViewOpen) {
+      loadPromotorStats(detailedViewOpen);
+    }
+  }, [detailedViewOpen, loadPromotorStats]);
+
+  const getAttendanceColor = (rate: number) => {
+    if (rate >= 80) return "text-green-600";
+    if (rate >= 60) return "text-[#FD7E14]";
+    return "text-red-600";
   };
 
   // Status indicator
@@ -3538,23 +3576,35 @@ Dein Nespresso Team`;
                                <div className="space-y-3 text-sm">
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Gesamte Einsätze</span>
-                                   <span className="font-bold text-blue-600">{promotor.assignments}</span>
+                                   <span className="font-bold text-blue-600">
+                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
+                                       ? '…'
+                                       : (promotorStats[promotor.id]?.completed ?? 0)}
+                                   </span>
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Abgeschlossene Schulungen</span>
-                                   <span className="font-bold text-green-600">{promotor.completedTrainings}</span>
+                                   <span className="font-bold text-gray-400">—</span>
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Krankenstand</span>
-                                   <span className="font-bold text-red-600">{promotor.ausfaelle.krankenstand}</span>
+                                   <span className="font-bold text-red-600">
+                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
+                                       ? '…'
+                                       : (promotorStats[promotor.id]?.krankenstand ?? 0)}
+                                   </span>
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Notfälle</span>
-                                   <span className="font-bold text-orange-500">{promotor.ausfaelle.notfaelle}</span>
+                                   <span className="font-bold text-gray-400">—</span>
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                   <span className="font-medium">Letzte Aktivität</span>
-                                   <span className="text-gray-600">{formatLastActivity(promotor.lastActivity)}</span>
+                                   <span className="font-medium">Anwesenheitsrate</span>
+                                   <span className={`font-bold ${getAttendanceColor(promotorStats[promotor.id]?.attendanceRate ?? 0)}`}>
+                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
+                                       ? '…'
+                                       : `${promotorStats[promotor.id]?.attendanceRate ?? 0}%`}
+                                   </span>
                                  </div>
                                </div>
                              </CardContent>
