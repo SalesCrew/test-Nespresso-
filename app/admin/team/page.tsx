@@ -45,7 +45,8 @@ import {
   Edit2,
   Key,
   ExternalLink,
-  ClipboardList
+  ClipboardList,
+  Thermometer
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -60,7 +61,7 @@ import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import KrankenstandHistorySheet from "@/components/admin/promotors/KrankenstandHistorySheet";
+import KrankenstandHistoryPopover from "@/components/admin/promotors/KrankenstandHistoryPopover";
 
 function TooltipButton({ tooltip, isActive, onClick, children }: { tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -2655,7 +2656,7 @@ Dein Nespresso Team`;
                           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                           title="Freigegebene Einsätze (Krankenstand)"
                         >
-                          <ClipboardList className="h-5 w-5" />
+                          <Thermometer className="h-5 w-5 text-white" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -2692,16 +2693,15 @@ Dein Nespresso Team`;
                         <X className="h-5 w-5" />
                       </button>
                       </div>
-                      {/* Krankenstand History Sheet */}
+                      {/* Krankenstand History Popover */}
                       {openKrankenstandFor === promotor.id && (
-                        <KrankenstandHistorySheet
-                          userId={String(promotor.id)}
-                          displayName={promotor.name}
-                          open={openKrankenstandFor === promotor.id}
-                          onOpenChange={(v) => {
-                            if (!v) setOpenKrankenstandFor(null);
-                          }}
-                        />
+                        <div className="absolute top-14 right-6 z-[80] w-[420px] max-w-[90vw]">
+                          <KrankenstandHistoryPopover
+                            userId={String(promotor.id)}
+                            displayName={promotor.name}
+                            onClose={() => setOpenKrankenstandFor(null)}
+                          />
+                        </div>
                       )}
                       
                       {/* Dropdown-like Stammdaten preview */}
