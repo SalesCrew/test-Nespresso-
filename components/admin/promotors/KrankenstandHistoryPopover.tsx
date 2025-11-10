@@ -271,7 +271,7 @@ export default function KrankenstandHistoryPopover({
                   {(item.assignments || []).map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-gradient-to-r from-white to-red-50 transition-colors"
+                      className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-gradient-to-r from-white to-red-100/60 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-gray-900 truncate">
