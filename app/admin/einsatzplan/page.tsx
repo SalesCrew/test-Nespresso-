@@ -735,7 +735,8 @@ export default function EinsatzplanPage() {
   // Load tracking data for Details tab (tracking overview)
   useEffect(() => {
     const loadTrackingData = async () => {
-      if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'details') return;
+      // Fetch whenever the detail modal is open for a selected assignment.
+      if (!showDetailModal || !editingEinsatz?.id) return;
       
       try {
         const response = await fetch(`/api/assignments/${editingEinsatz.id}/tracking`, { cache: 'no-store' });
@@ -789,7 +790,7 @@ export default function EinsatzplanPage() {
       }
     };
     loadTrackingData();
-  }, [showDetailModal, promotionView, editingEinsatz?.id, detailModalTab]);
+  }, [showDetailModal, promotionView, editingEinsatz?.id]);
 
   useEffect(() => {
     (async () => {
