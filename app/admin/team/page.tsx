@@ -44,7 +44,8 @@ import {
   Ruler,
   Edit2,
   Key,
-  ExternalLink
+  ExternalLink,
+  ClipboardList
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import KrankenstandHistorySheet from "@/components/admin/promotors/KrankenstandHistorySheet";
 
 function TooltipButton({ tooltip, isActive, onClick, children }: { tooltip: string; isActive: boolean; onClick: () => void; children: React.ReactNode }) {
   const [showTooltip, setShowTooltip] = useState(false);
@@ -261,6 +263,7 @@ export default function PromotorenPage() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [promotorStammdaten, setPromotorStammdaten] = useState<Record<number, any>>({});
   const [openStammdatenPreviewFor, setOpenStammdatenPreviewFor] = useState<number | null>(null);
+  const [openKrankenstandFor, setOpenKrankenstandFor] = useState<number | null>(null);
   
   // Access credentials modal
   const [showAccessCredentials, setShowAccessCredentials] = useState(false);
@@ -2647,6 +2650,16 @@ Dein Nespresso Team`;
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            setOpenKrankenstandFor(promotor.id);
+                          }}
+                          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                          title="Freigegebene Einsätze (Krankenstand)"
+                        >
+                          <ClipboardList className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setOpenStammdatenPreviewFor(prev => prev === promotor.id ? null : promotor.id);
                           }}
                           className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -2679,6 +2692,17 @@ Dein Nespresso Team`;
                         <X className="h-5 w-5" />
                       </button>
                       </div>
+                      {/* Krankenstand History Sheet */}
+                      {openKrankenstandFor === promotor.id && (
+                        <KrankenstandHistorySheet
+                          userId={String(promotor.id)}
+                          displayName={promotor.name}
+                          open={openKrankenstandFor === promotor.id}
+                          onOpenChange={(v) => {
+                            if (!v) setOpenKrankenstandFor(null);
+                          }}
+                        />
+                      )}
                       
                       {/* Dropdown-like Stammdaten preview */}
                       {openStammdatenPreviewFor === promotor.id && (

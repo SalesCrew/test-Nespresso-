@@ -558,7 +558,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
               onClick={() => handleNavigation("/promotors/chat")}
             >
               <div className="relative">
-                <MessagesSquare className="h-6 w-6" />
+              <MessagesSquare className="h-6 w-6" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-3 -right-3 min-w-[20px] h-4 px-1.5 rounded-full bg-red-500 text-white text-[10px] leading-none flex items-center justify-center font-semibold shadow">
                     {unreadCount > 99 ? '99+' : unreadCount}

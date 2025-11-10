@@ -43,8 +43,8 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
             <PromotorUnreadBridge />
             <PromotorToastListener currentUserId={user.id} />
             <PromotorNotificationStack />
-            <TagesCheckProvider />
-            {children}
+          <TagesCheckProvider />
+          {children}
           </NotificationCenterProvider>
         </SocketProvider>
       </SiteLayout>

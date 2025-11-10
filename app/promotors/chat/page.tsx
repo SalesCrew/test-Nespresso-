@@ -1945,16 +1945,16 @@ export default function PromotorChatPage() {
                                         </span>
                                       </div>
                                     ) : (
-                                      <p className={`text-xs mt-1 ${message.own ? 'text-blue-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
-                                         style={{ 
-                                           wordBreak: 'break-word',
-                                           overflow: 'hidden',
-                                           display: '-webkit-box',
-                                           WebkitLineClamp: 2,
-                                           WebkitBoxOrient: 'vertical'
-                                         }}>
-                                        {message.replyTo.content}
-                                      </p>
+                                    <p className={`text-xs mt-1 ${message.own ? 'text-blue-50' : 'text-gray-700'} ${message.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                                       style={{ 
+                                         wordBreak: 'break-word',
+                                         overflow: 'hidden',
+                                         display: '-webkit-box',
+                                         WebkitLineClamp: 2,
+                                         WebkitBoxOrient: 'vertical'
+                                       }}>
+                                      {message.replyTo.content}
+                                    </p>
                                     )}
                                   </>
                                 )}
@@ -1981,7 +1981,7 @@ export default function PromotorChatPage() {
                                 />
                               </div>
                             )}
-
+                            
                             {/* Photo Display */}
                             {message.photo && (
                               <div className="mt-2 mb-2">
@@ -2449,18 +2449,18 @@ export default function PromotorChatPage() {
                               </span>
                             </div>
                           ) : (
-                            <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
-                               style={{ 
-                                 hyphens: 'auto',
-                                 wordBreak: 'break-word',
-                                 overflowWrap: 'break-word',
-                                 overflow: 'hidden',
-                                 display: '-webkit-box',
-                                 WebkitLineClamp: 2,
-                                 WebkitBoxOrient: 'vertical'
-                               }}>
-                              {replyingTo.replyTo.content}
-                            </p>
+                          <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-50' : 'text-gray-700'} ${replyingTo.replyTo.content === 'Diese Nachricht wurde gelöscht...' ? 'italic opacity-60' : ''}`} 
+                             style={{ 
+                               hyphens: 'auto',
+                               wordBreak: 'break-word',
+                               overflowWrap: 'break-word',
+                               overflow: 'hidden',
+                               display: '-webkit-box',
+                               WebkitLineClamp: 2,
+                               WebkitBoxOrient: 'vertical'
+                             }}>
+                            {replyingTo.replyTo.content}
+                          </p>
                           )}
                         </div>
                       )}
@@ -2534,9 +2534,9 @@ export default function PromotorChatPage() {
                         </p>
                       )}
                       {!(replyingTo as any).poll && (
-                        <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
-                          {replyingTo.edited && '(edited) '}{replyingTo.time}
-                        </p>
+                      <p className={`text-xs mt-1 ${replyingTo.own ? 'text-blue-100 text-right' : 'text-gray-500'}`} style={{ fontSize: '0.5775rem' }}>
+                        {replyingTo.edited && '(edited) '}{replyingTo.time}
+                      </p>
                       )}
                     </div>
                   </div>
@@ -2694,7 +2694,7 @@ export default function PromotorChatPage() {
                               await Promise.all(
                                 deleteDialog.selectedMessageIds.map((id) =>
                                   chatIntegration.deleteMessage(String(selectedChat.id), String(id), false)
-                                )
+                              )
                               );
                             } catch (e) {
                               console.error('Bulk delete-for-me failed:', e);
