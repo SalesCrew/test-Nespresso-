@@ -224,7 +224,7 @@ export default function KrankenstandHistoryPopover({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Nach Markt / PLZ / Ort suchen…"
-            className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
+            className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:border-gray-300"
           />
         </div>
       </div>
