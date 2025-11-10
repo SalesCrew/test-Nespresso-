@@ -11,7 +11,7 @@ export async function GET() {
 
     const svc = createSupabaseServiceClient();
 
-    // Tracking rows for this user
+    // Tracking rows for this user (completed assignments in the past have an actual_end_time)
     const { data: trackingRows } = await svc
       .from('assignment_tracking')
       .select('assignment_id, actual_end_time, status')
@@ -23,20 +23,13 @@ export async function GET() {
         .map((t: any) => String(t.assignment_id))
     );
 
-    const krankFromTracking = new Set<string>(
-      (trackingRows || [])
-        .filter((t: any) => (t.status || '').toLowerCase() === 'krankenstand')
-        .map((t: any) => String(t.assignment_id))
-    );
+    // Sum of missed assignments from freed_assignments_log (Krankenstand releases)
+    const { data: freedLogs } = await svc
+      .from('freed_assignments_log')
+      .select('released_count')
+      .eq('user_id', userId);
 
-    // Special status from assignments (lead rows)
-    const { data: krankAssignments } = await svc
-      .from('assignments_with_buddy_info')
-      .select('id')
-      .eq('lead_user_id', userId)
-      .eq('special_status', 'Krankenstand');
-
-    (krankAssignments || []).forEach((row: any) => krankFromTracking.add(String(row.id)));
+    const freedCount = (freedLogs || []).reduce((sum: number, row: any) => sum + (Number(row.released_count) || 0), 0);
 
     // Buddy day count: lead assignments with buddy, completed
     const { data: buddyEligible } = await svc
@@ -52,8 +45,8 @@ export async function GET() {
     });
 
     const completed = completedSet.size;
-    const krankenstand = krankFromTracking.size;
-    const denom = completed + krankenstand;
+    const krankenstand = freedCount;
+    const denom = completed + freedCount;
     const attendanceRate = denom > 0 ? Math.round((completed / denom) * 100) : 0;
 
     return NextResponse.json({
