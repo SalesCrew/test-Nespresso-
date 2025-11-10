@@ -1135,6 +1135,8 @@ Dein Nespresso Team`;
   // Admin-side stats for detailed view (completed, krankenstand, attendance)
   const [promotorStats, setPromotorStats] = useState<Record<number, { completed: number; krankenstand: number; attendanceRate: number }>>({});
   const [promotorStatsLoading, setPromotorStatsLoading] = useState<Record<number, boolean>>({});
+  const [kpiByPromotor, setKpiByPromotor] = useState<Record<number, { mcet: number; tma: number; vlshare: number }>>({});
+  const [kpiLoading, setKpiLoading] = useState<Record<number, boolean>>({});
 
   const loadPromotorStats = useCallback(async (promotorId: number) => {
     try {
@@ -1169,6 +1171,39 @@ Dein Nespresso Team`;
     if (rate >= 60) return "text-[#FD7E14]";
     return "text-red-600";
   };
+
+  // Load KPI (all-time) for promotors (used in both list and detailed view)
+  const loadPromotorKpi = useCallback(async (promotorId: number) => {
+    try {
+      setKpiLoading(prev => ({ ...prev, [promotorId]: true }));
+      const res = await fetch(`/api/admin/promotors/${promotorId}/kpi`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setKpiByPromotor(prev => ({
+          ...prev,
+          [promotorId]: {
+            mcet: Number(data.mcet || 0),
+            tma: Number(data.tma || 0),
+            vlshare: Number(data.vlshare || 0),
+          }
+        }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setKpiLoading(prev => ({ ...prev, [promotorId]: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!promotors.length) return;
+    // Load KPIs for visible cards (basic approach: fetch for all current list)
+    promotors.forEach(p => {
+      if (kpiByPromotor[p.id] === undefined && !kpiLoading[p.id]) {
+        loadPromotorKpi(p.id);
+      }
+    });
+  }, [promotors, loadPromotorKpi]); 
 
   // Status indicator
   const getStatusIcon = (status: string) => {
@@ -2513,28 +2548,28 @@ Dein Nespresso Team`;
                       <div className="relative grid grid-cols-3 gap-3">
                         <div className="text-center">
                           <p 
-                            className={`text-sm font-semibold transition-colors ${getKpiColor("mcet", promotor.performance.mcet)}`}
-                            style={getKpiStyle(getKpiColor("mcet", promotor.performance.mcet))}
+                            className={`text-sm font-semibold transition-colors ${getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0)}`}
+                            style={getKpiStyle(getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0))}
                           >
-                            {promotor.performance.mcet.toFixed(1)}
+                            {(kpiByPromotor[promotor.id]?.mcet ?? 0).toFixed(1)}
                           </p>
                           <p className="text-xs text-gray-500 font-medium">MC/ET</p>
                         </div>
                         <div className="text-center border-l border-r border-slate-200/40">
                           <p 
-                            className={`text-sm font-semibold transition-colors ${getKpiColor("tma", promotor.performance.tma)}`}
-                            style={getKpiStyle(getKpiColor("tma", promotor.performance.tma))}
+                            className={`text-sm font-semibold transition-colors ${getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0)}`}
+                            style={getKpiStyle(getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0))}
                           >
-                            {promotor.performance.tma}%
+                            {(kpiByPromotor[promotor.id]?.tma ?? 0)}%
                           </p>
                           <p className="text-xs text-gray-500 font-medium">TMA</p>
                         </div>
                         <div className="text-center">
                           <p 
-                            className={`text-sm font-semibold transition-colors ${getKpiColor("vlshare", promotor.performance.vlshare)}`}
-                            style={getKpiStyle(getKpiColor("vlshare", promotor.performance.vlshare))}
+                            className={`text-sm font-semibold transition-colors ${getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0)}`}
+                            style={getKpiStyle(getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0))}
                           >
-                            {promotor.performance.vlshare}%
+                            {(kpiByPromotor[promotor.id]?.vlshare ?? 0)}%
                           </p>
                           <p className="text-xs text-gray-500 font-medium">VL Share</p>
                         </div>
@@ -3210,35 +3245,46 @@ Dein Nespresso Team`;
                                 <BarChart2 className="h-4 w-4 mr-2 text-purple-500" />
                                 Performance KPIs
                               </h3>
-                              <div className="grid grid-cols-3 gap-4">
-                                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                  <p 
-                                    className={`text-lg font-bold ${getKpiColor("mcet", promotor.performance.mcet)}`}
-                                    style={getKpiStyle(getKpiColor("mcet", promotor.performance.mcet))}
-                                  >
-                                    {promotor.performance.mcet.toFixed(1)}
-                                  </p>
-                                  <p className="text-xs text-gray-500 font-medium">MC/ET</p>
+                              {kpiLoading[promotor.id] && !kpiByPromotor[promotor.id] ? (
+                                <div className="grid grid-cols-3 gap-4">
+                                  {[0,1,2].map(i => (
+                                    <div key={i} className="text-center p-3 bg-gray-50 rounded-lg">
+                                      <div className="mx-auto h-6 w-10 bg-gray-200 rounded animate-skeleton-fade mb-1.5"></div>
+                                      <p className="text-xs text-gray-400 font-medium">—</p>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                  <p 
-                                    className={`text-lg font-bold ${getKpiColor("tma", promotor.performance.tma)}`}
-                                    style={getKpiStyle(getKpiColor("tma", promotor.performance.tma))}
-                                  >
-                                    {promotor.performance.tma}%
-                                  </p>
-                                  <p className="text-xs text-gray-500 font-medium">TMA</p>
+                              ) : (
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p 
+                                      className={`text-lg font-bold ${getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0)}`}
+                                      style={getKpiStyle(getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0))}
+                                    >
+                                      {(kpiByPromotor[promotor.id]?.mcet ?? 0).toFixed(1)}
+                                    </p>
+                                    <p className="text-xs text-gray-500 font-medium">MC/ET</p>
+                                  </div>
+                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p 
+                                      className={`text-lg font-bold ${getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0)}`}
+                                      style={getKpiStyle(getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0))}
+                                    >
+                                      {(kpiByPromotor[promotor.id]?.tma ?? 0)}%
+                                    </p>
+                                    <p className="text-xs text-gray-500 font-medium">TMA</p>
+                                  </div>
+                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p 
+                                      className={`text-lg font-bold ${getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0)}`}
+                                      style={getKpiStyle(getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0))}
+                                    >
+                                      {(kpiByPromotor[promotor.id]?.vlshare ?? 0)}%
+                                    </p>
+                                    <p className="text-xs text-gray-500 font-medium">VL Share</p>
+                                  </div>
                                 </div>
-                                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                  <p 
-                                    className={`text-lg font-bold ${getKpiColor("vlshare", promotor.performance.vlshare)}`}
-                                    style={getKpiStyle(getKpiColor("vlshare", promotor.performance.vlshare))}
-                                  >
-                                    {promotor.performance.vlshare}%
-                                  </p>
-                                  <p className="text-xs text-gray-500 font-medium">VL Share</p>
-                                </div>
-                              </div>
+                              )}
                             </CardContent>
                           </Card>
 
