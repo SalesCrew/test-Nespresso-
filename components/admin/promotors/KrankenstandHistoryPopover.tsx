@@ -284,7 +284,7 @@ export default function KrankenstandHistoryPopover({
                       </div>
                       <button
                         title="Details öffnen"
-                        className="ml-3 h-7 w-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center"
+                        className="ml-3 h-7 w-7 rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelected(a);
