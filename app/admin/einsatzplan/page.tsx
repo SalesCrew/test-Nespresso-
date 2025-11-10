@@ -2,7 +2,7 @@
 // noop: non-reactive comment (no functional effect)
 // no-op comment to mark minor update; functional behavior unchanged
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -733,9 +733,8 @@ export default function EinsatzplanPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<{url: string, title: string} | null>(null);
 
   // Load tracking data for Details tab (tracking overview)
-  useEffect(() => {
-    const loadTrackingData = async () => {
-      if (!showDetailModal || !editingEinsatz?.id || detailModalTab !== 'details') return;
+  const loadTrackingData = useCallback(async () => {
+    if (!editingEinsatz?.id) return;
       
       try {
         const response = await fetch(`/api/assignments/${editingEinsatz.id}/tracking`, { cache: 'no-store' });
@@ -787,9 +786,7 @@ export default function EinsatzplanPage() {
         console.error('Failed to load tracking data:', error);
         setAssignmentTrackingData(null);
       }
-    };
-    loadTrackingData();
-  }, [showDetailModal, promotionView, editingEinsatz?.id, detailModalTab]);
+  }, [editingEinsatz?.id]);
 
   useEffect(() => {
     (async () => {
@@ -4860,7 +4857,10 @@ Import EP
                   Übersicht
                 </button>
                 <button
-                  onClick={() => setDetailModalTab('details')}
+                  onClick={() => {
+                    setDetailModalTab('details');
+                    loadTrackingData();
+                  }}
                   className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     detailModalTab === 'details'
                       ? 'text-gray-900'
