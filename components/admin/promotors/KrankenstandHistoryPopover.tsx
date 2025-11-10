@@ -206,7 +206,7 @@ export default function KrankenstandHistoryPopover({
             Freigegebene Einsätze – {displayName || 'Promotor'}
           </h3>
           <div className="mt-1 flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
               {data.total} insgesamt
             </span>
           </div>
@@ -224,7 +224,7 @@ export default function KrankenstandHistoryPopover({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Nach Markt / PLZ / Ort suchen…"
-            className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-0 focus:border-gray-300"
           />
         </div>
       </div>
@@ -263,7 +263,7 @@ export default function KrankenstandHistoryPopover({
                       timeStyle: 'short'
                     })}
                   </div>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
                     {item.released_count} {item.released_count === 1 ? 'Einsatz' : 'Einsätze'}
                   </span>
                 </div>
@@ -271,7 +271,7 @@ export default function KrankenstandHistoryPopover({
                   {(item.assignments || []).map((a) => (
                     <div
                       key={a.id}
-                      className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-gradient-to-r from-white to-red-50 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="text-sm font-medium text-gray-900 truncate">
