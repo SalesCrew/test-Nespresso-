@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, CalendarDays, Search, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { X, CalendarDays, Search, Link as LinkIcon, ArrowLeft, Thermometer } from 'lucide-react';
 
 interface KrankenstandHistoryPopoverProps {
   userId: string;
@@ -179,12 +179,29 @@ export default function KrankenstandHistoryPopover({
       default: return '—';
     }
   };
+  const getClusterPillClasses = (cluster: string): string => {
+    switch (cluster) {
+      case 'wien-noe-bgl': return 'bg-[#E8F0FE] text-gray-700 border-[#CBD7F5]';
+      case 'steiermark': return 'bg-[#E7F5ED] text-gray-700 border-[#CFECDD]';
+      case 'salzburg': return 'bg-[#F0E9FF] text-gray-700 border-[#DDD4FF]';
+      case 'oberoesterreich': return 'bg-[#FFF3E6] text-gray-700 border-[#FFE3C7]';
+      case 'tirol': return 'bg-[#FFF0F0] text-gray-700 border-[#FFD9D9]';
+      case 'vorarlberg': return 'bg-[#EAF8FF] text-gray-700 border-[#CFEFFF]';
+      case 'kaernten': return 'bg-[#EAF6FF] text-gray-700 border-[#D6ECFF]';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
+  };
 
   return (
     <div className="relative rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         <div className="min-w-0">
-          <p className="text-xs text-gray-500">Krankenstand</p>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-50 border border-gray-200">
+              <Thermometer className="h-3.5 w-3.5 text-gray-500" />
+            </span>
+            <span>Krankenstand</span>
+          </div>
           <h3 className="text-sm font-semibold truncate">
             Freigegebene Einsätze – {displayName || 'Promotor'}
           </h3>
@@ -317,9 +334,15 @@ export default function KrankenstandHistoryPopover({
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-500">Cluster</div>
-                    <div className="text-sm text-gray-900">
-                      {getClusterShort(getClusterFromPLZ(selected.postal_code))}
-                    </div>
+                    {(() => {
+                      const slug = getClusterFromPLZ(selected.postal_code);
+                      const short = getClusterShort(slug);
+                      return (
+                        <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs border ${getClusterPillClasses(slug)}`}>
+                          {short}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="h-px bg-gray-100" />
