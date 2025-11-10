@@ -227,7 +227,7 @@ export default function KrankenstandHistoryPopover({
       {/* Content area with list and details layers */}
       <div className="relative" style={{ maxHeight: '480px' }}>
         {/* List Layer */}
-        <div className={`p-4 overflow-y-auto [&::-webkit-scrollbar]:hidden transition-opacity transform duration-200 ease-out ${selected ? 'opacity-0 pointer-events-none -translate-y-1' : 'opacity-100 translate-y-0'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className={`p-4 max-h-[480px] overflow-y-auto [&::-webkit-scrollbar]:hidden transition-opacity transform duration-200 ease-out ${selected ? 'opacity-0 pointer-events-none -translate-y-1' : 'opacity-100 translate-y-0'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {loading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
