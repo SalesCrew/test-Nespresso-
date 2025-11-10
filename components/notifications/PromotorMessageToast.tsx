@@ -200,7 +200,7 @@ export default function PromotorMessageToast({ notification, onClose }: Promotor
               )}
             </div>
           </div>
-          <p className="text-sm text-gray-700 truncate mt-1">
+          <p className="text-sm text-gray-700 truncate mt-1 pr-16">
             {notification.preview}
           </p>
         </div>
