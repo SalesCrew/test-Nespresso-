@@ -16,7 +16,8 @@ export default function PromotorUnreadBridge() {
       const prev = Number.parseInt(localStorage.getItem("promotorUnreadCount") || "0", 10);
       if (prev !== totalUnread) {
         localStorage.setItem("promotorUnreadCount", String(totalUnread));
-        // Let SiteLayout know about the update (same-tab)
+        // Notify SiteLayout in same tab (custom event) and keep storage event as fallback
+        window.dispatchEvent(new CustomEvent("promotorUnreadChanged", { detail: totalUnread }));
         window.dispatchEvent(new Event("storage"));
       }
     } catch {}

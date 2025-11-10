@@ -167,6 +167,18 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
     };
   }, [isInChat]);
 
+  // Realtime unread updates via custom event bridge
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail;
+      if (typeof detail === 'number' && !Number.isNaN(detail)) {
+        setUnreadCount(detail);
+      }
+    };
+    window.addEventListener('promotorUnreadChanged' as any, handler as any);
+    return () => window.removeEventListener('promotorUnreadChanged' as any, handler as any);
+  }, []);
+
   // KI Assistant chat functions
   useEffect(() => {
     if (chatOpen) {
