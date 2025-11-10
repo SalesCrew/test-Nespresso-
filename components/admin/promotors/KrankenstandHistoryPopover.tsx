@@ -258,7 +258,7 @@ export default function KrankenstandHistoryPopover({
               <div key={item.id} className="rounded-lg border border-gray-200 p-3 bg-white space-y-2 mb-3">
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-gray-600">
-                    {new Date(item.created_at).toLocaleString('de-AT', {
+                    Abgewählt am: {new Date(item.created_at).toLocaleString('de-AT', {
                       dateStyle: 'medium',
                       timeStyle: 'short'
                     })}
