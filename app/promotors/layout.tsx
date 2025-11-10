@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { SocketProvider } from "@/lib/socket/SocketContext";
 import TagesCheckProvider from "@/components/TagesCheckProvider";
 import PromotorUnreadBridge from "@/components/promotors/PromotorUnreadBridge";
+import { NotificationCenterProvider } from "@/lib/notifications/NotificationCenterContext";
+import PromotorToastListener from "@/components/notifications/PromotorToastListener";
+import PromotorNotificationStack from "@/components/notifications/PromotorNotificationStack";
 
 interface PromotorLayoutProps {
   children: React.ReactNode;
@@ -21,8 +24,12 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     return (
       <SiteLayout>
         <SocketProvider>
-          <PromotorUnreadBridge />
-          {children}
+          <NotificationCenterProvider>
+            <PromotorUnreadBridge />
+            <PromotorToastListener currentUserId={user.id} />
+            <PromotorNotificationStack />
+            {children}
+          </NotificationCenterProvider>
         </SocketProvider>
       </SiteLayout>
     );
@@ -32,9 +39,13 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     return (
       <SiteLayout>
         <SocketProvider>
-          <PromotorUnreadBridge />
-          <TagesCheckProvider />
-          {children}
+          <NotificationCenterProvider>
+            <PromotorUnreadBridge />
+            <PromotorToastListener currentUserId={user.id} />
+            <PromotorNotificationStack />
+            <TagesCheckProvider />
+            {children}
+          </NotificationCenterProvider>
         </SocketProvider>
       </SiteLayout>
     );
