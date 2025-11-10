@@ -4864,7 +4864,9 @@ Import EP
                 <button
                   onClick={() => {
                     setDetailModalTab('details');
-                    loadTrackingData();
+                    if (!assignmentTrackingData || assignmentTrackingData.id !== editingEinsatz.id) {
+                      loadTrackingData();
+                    }
                   }}
                   className={`relative z-10 flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     detailModalTab === 'details'
@@ -4878,7 +4880,7 @@ Import EP
             </div>
             {/* Modal Content */}
             <div className="relative flex-1 p-6 overflow-y-auto custom-scrollbar">
-              {detailModalTab === 'details' && trackingLoading && (
+              {detailModalTab === 'details' && trackingLoading && (!assignmentTrackingData || assignmentTrackingData.id !== editingEinsatz.id) && (
                 <div className="absolute inset-0 z-10 p-6 bg-white/60">
                   <div className="space-y-6">
                     {/* Basic Info Skeleton */}
