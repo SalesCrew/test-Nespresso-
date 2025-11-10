@@ -160,7 +160,7 @@ export default function PromotorMessageToast({ notification, onClose }: Promotor
       aria-live="polite"
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="promotor-toast-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+      className="promotor-toast-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative"
       style={{
         width: '92vw',
         maxWidth: '420px',
@@ -199,20 +199,20 @@ export default function PromotorMessageToast({ notification, onClose }: Promotor
                 <p className="text-xs text-gray-500 truncate">{notification.subtitle}</p>
               )}
             </div>
-            {!isReplyMode && (
-              <button
-                onClick={handleReplyClick}
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors opacity-60 hover:opacity-100 flex-shrink-0"
-              >
-                antworten
-              </button>
-            )}
           </div>
           <p className="text-sm text-gray-700 truncate mt-1">
             {notification.preview}
           </p>
         </div>
       </div>
+      {!isReplyMode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleReplyClick(e); }}
+          className="absolute bottom-2 right-3 text-xs text-gray-500 hover:text-gray-700 transition-colors opacity-60 hover:opacity-100"
+        >
+          antworten
+        </button>
+      )}
 
       {/* Reply Input Area */}
       {isReplyMode && (
