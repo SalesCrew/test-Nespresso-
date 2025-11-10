@@ -194,26 +194,21 @@ export default function KrankenstandHistoryPopover({
 
   return (
     <div className="relative rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-50 border border-gray-200">
-              <Thermometer className="h-3.5 w-3.5 text-gray-500" />
-            </span>
-            <span>Krankenstand</span>
-          </div>
-          <h3 className="text-sm font-semibold truncate">
-            Freigegebene Einsätze – {displayName || 'Promotor'}
-          </h3>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-              {data.total} insgesamt
-            </span>
-          </div>
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3">
+        <div className="min-w-0 flex items-center gap-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-50 border border-gray-200">
+            <Thermometer className="h-4 w-4 text-gray-500" />
+          </span>
+          <span className="text-base font-semibold text-gray-900 truncate">Krankenstand</span>
         </div>
-        <button className="p-1.5 rounded-md hover:bg-gray-50" onClick={onClose}>
-          <X className="h-4 w-4 text-gray-500" />
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+            {data.total} insgesamt
+          </span>
+          <button className="p-1.5 rounded-md hover:bg-gray-50" onClick={onClose}>
+            <X className="h-4 w-4 text-gray-500" />
+          </button>
+        </div>
       </div>
 
       {/* Search */}
