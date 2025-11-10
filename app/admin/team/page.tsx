@@ -3576,11 +3576,13 @@ Dein Nespresso Team`;
                                <div className="space-y-3 text-sm">
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Gesamte Einsätze</span>
-                                   <span className="font-bold text-blue-600">
-                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
-                                       ? '…'
-                                       : (promotorStats[promotor.id]?.completed ?? 0)}
-                                   </span>
+                                   {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined ? (
+                                     <span className="inline-block h-4 w-6 bg-gray-200 rounded animate-skeleton-fade" />
+                                   ) : (
+                                     <span className="font-bold text-blue-600">
+                                       {promotorStats[promotor.id]?.completed ?? 0}
+                                     </span>
+                                   )}
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Abgeschlossene Schulungen</span>
@@ -3588,11 +3590,13 @@ Dein Nespresso Team`;
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Krankenstand</span>
-                                   <span className="font-bold text-red-600">
-                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
-                                       ? '…'
-                                       : (promotorStats[promotor.id]?.krankenstand ?? 0)}
-                                   </span>
+                                   {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined ? (
+                                     <span className="inline-block h-4 w-6 bg-gray-200 rounded animate-skeleton-fade" />
+                                   ) : (
+                                     <span className="font-bold text-red-600">
+                                       {promotorStats[promotor.id]?.krankenstand ?? 0}
+                                     </span>
+                                   )}
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Notfälle</span>
@@ -3600,11 +3604,13 @@ Dein Nespresso Team`;
                                  </div>
                                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                    <span className="font-medium">Anwesenheitsrate</span>
-                                   <span className={`font-bold ${getAttendanceColor(promotorStats[promotor.id]?.attendanceRate ?? 0)}`}>
-                                     {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined
-                                       ? '…'
-                                       : `${promotorStats[promotor.id]?.attendanceRate ?? 0}%`}
-                                   </span>
+                                   {promotorStatsLoading[promotor.id] && promotorStats[promotor.id] === undefined ? (
+                                     <span className="inline-block h-4 w-10 bg-gray-200 rounded animate-skeleton-fade" />
+                                   ) : (
+                                     <span className={`font-bold ${getAttendanceColor(promotorStats[promotor.id]?.attendanceRate ?? 0)}`}>
+                                       {(promotorStats[promotor.id]?.attendanceRate ?? 0)}%
+                                     </span>
+                                   )}
                                  </div>
                                </div>
                              </CardContent>

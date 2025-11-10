@@ -65,7 +65,8 @@ export async function GET(
     const completed = completedSet.size;
     const krankenstand = freedCount;
     const denom = completed + freedCount;
-    const attendanceRate = denom > 0 ? Math.round((completed / denom) * 100) : 0;
+    // Allow negative when Krankenstand > completed by using (completed - krankenstand) / (completed + krankenstand)
+    const attendanceRate = denom > 0 ? Math.round(((completed - krankenstand) / denom) * 100) : 0;
 
     return NextResponse.json({
       completed,
