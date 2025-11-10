@@ -208,7 +208,7 @@ export default function PromotorMessageToast({ notification, onClose }: Promotor
       {!isReplyMode && (
         <button
           onClick={(e) => { e.stopPropagation(); handleReplyClick(e); }}
-          className="absolute bottom-2 right-3 text-xs text-gray-500 hover:text-gray-700 transition-colors opacity-60 hover:opacity-100"
+          className="absolute bottom-3 right-3 text-xs text-gray-500 hover:text-gray-700 transition-colors opacity-60 hover:opacity-100"
         >
           antworten
         </button>
