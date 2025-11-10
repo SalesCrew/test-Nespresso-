@@ -140,6 +140,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Sneaky logging: when releasing due to Krankenstand, store freed assignment IDs for auditing
+    try {
+      if (reason && String(reason).toLowerCase().includes('krank')) {
+        await service
+          .from('freed_assignments_log')
+          .insert({
+            user_id,
+            reason,
+            assignment_ids: assignment_ids, // stored as JSONB
+            released_count: releasedCount
+          });
+      }
+    } catch (e) {
+      console.warn('Non-blocking: failed to log freed assignments:', e);
+    }
+
     return NextResponse.json({ 
       released_count: releasedCount,
       failed: failed.length > 0 ? failed : undefined
