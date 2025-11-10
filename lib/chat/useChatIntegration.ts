@@ -259,7 +259,7 @@ export const useChatIntegration = (options: UseChatIntegrationOptions = {}) => {
             // Update local conversation unread count
             setConversations(prev =>
               prev.map(conv =>
-                conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+                conv.id === conversationId ? { ...conv, unread_count: 0, marked_unread: false } : conv
               )
             );
             resolve();
