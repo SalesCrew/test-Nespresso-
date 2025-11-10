@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, CalendarDays, Search, Link as LinkIcon } from 'lucide-react';
+import { X, CalendarDays, Search, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 
 interface KrankenstandHistoryPopoverProps {
   userId: string;
@@ -34,6 +34,7 @@ export default function KrankenstandHistoryPopover({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{ total: number; items: FreedItem[] }>({ total: 0, items: [] });
   const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<FreedItem['assignments'][number] | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -78,6 +79,31 @@ export default function KrankenstandHistoryPopover({
     }
   };
 
+  const formatLocalDate = (ts?: string | null) => {
+    if (!ts) return '';
+    try {
+      return new Date(String(ts)).toLocaleDateString('de-AT', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  // Allow Esc to go back from details
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selected) {
+        setSelected(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected]);
+
   return (
     <div className="relative rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -110,74 +136,136 @@ export default function KrankenstandHistoryPopover({
         </div>
       </div>
 
-      <div className="p-4 max-h-[520px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="rounded-lg border border-gray-200 p-3 bg-white">
-                <div className="h-3 bg-gray-100 rounded w-1/3 mb-2 animate-pulse"></div>
-                <div className="grid grid-cols-1 gap-2">
-                  {[...Array(3)].map((__, j) => (
-                    <div key={j} className="h-7 bg-gray-100 rounded animate-pulse"></div>
+      {/* Content area with list and details layers */}
+      <div className="relative" style={{ maxHeight: '520px' }}>
+        {/* List Layer */}
+        <div className={`p-4 overflow-y-auto [&::-webkit-scrollbar]:hidden transition-opacity transform duration-200 ease-out ${selected ? 'opacity-0 pointer-events-none -translate-y-1' : 'opacity-100 translate-y-0'}`} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="rounded-lg border border-gray-200 p-3 bg-white">
+                  <div className="h-3 bg-gray-100 rounded w-1/3 mb-2 animate-pulse"></div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[...Array(3)].map((__, j) => (
+                      <div key={j} className="h-7 bg-gray-100 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="mx-auto mb-2 h-10 w-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
+                <CalendarDays className="h-5 w-5" />
+              </div>
+              <p className="text-sm text-gray-600">Keine freigegebenen Einsätze</p>
+            </div>
+          ) : (
+            filteredItems.map((item) => (
+              <div key={item.id} className="rounded-lg border border-gray-200 p-3 bg-white space-y-2 mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-gray-600">
+                    {new Date(item.created_at).toLocaleString('de-AT', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short'
+                    })}
+                  </div>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                    {item.released_count} {item.released_count === 1 ? 'Einsatz' : 'Einsätze'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {(item.assignments || []).map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {a.title || a.location_text || 'Promotion'}
+                        </div>
+                        <div className="text-[11px] text-gray-600 truncate">
+                          {(a.postal_code || '')} {(a.city || '')}
+                          {a.start_ts ? ` • ${extractLocalHHMM(a.start_ts)}` : ''}
+                        </div>
+                      </div>
+                      <button
+                        title="Details öffnen"
+                        className="ml-3 h-7 w-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelected(a);
+                        }}
+                      >
+                        <LinkIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
-            ))}
+            ))
+          )}
+        </div>
+
+        {/* Details Layer */}
+        <div className={`absolute inset-0 transition-opacity transform duration-200 ease-out ${selected ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none -translate-y-1'}`}>
+          {/* Sticky mini header */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10 flex items-center justify-between">
+            <div className="text-sm font-semibold text-gray-900">Einsatzdetails</div>
+            <button
+              className="h-8 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+              onClick={() => setSelected(null)}
+              title="Zurück"
+            >
+              <ArrowLeft className="h-4 w-4" /> Zurück
+            </button>
           </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="text-center py-10">
-            <div className="mx-auto mb-2 h-10 w-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
-              <CalendarDays className="h-5 w-5" />
-            </div>
-            <p className="text-sm text-gray-600">Keine freigegebenen Einsätze</p>
-          </div>
-        ) : (
-          filteredItems.map((item) => (
-            <div key={item.id} className="rounded-lg border border-gray-200 p-3 bg-white space-y-2 mb-3">
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-600">
-                  {new Date(item.created_at).toLocaleString('de-AT', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short'
-                  })}
+
+          <div className="p-4 overflow-y-auto h-full [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {selected && (
+              <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-4 space-y-3">
+                <div className="text-base font-semibold text-gray-900 truncate">
+                  {selected.title || selected.location_text || 'Promotion'}
                 </div>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-700 border border-gray-200">
-                  {item.released_count} {item.released_count === 1 ? 'Einsatz' : 'Einsätze'}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-1.5">
-                {(item.assignments || []).map((a) => (
-                  <div
-                    key={a.id}
-                    className="flex items-center justify-between px-2 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
-                        {a.title || a.location_text || 'Promotion'}
-                      </div>
-                      <div className="text-[11px] text-gray-600 truncate">
-                        {(a.postal_code || '')} {(a.city || '')}
-                        {a.start_ts ? ` • ${extractLocalHHMM(a.start_ts)}` : ''}
-                      </div>
-                    </div>
-                    <button
-                      title="Details öffnen"
-                      className="ml-3 h-7 w-7 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <LinkIcon className="h-3.5 w-3.5" />
-                    </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] text-gray-500">Datum</div>
+                    <div className="text-sm text-gray-900">{formatLocalDate(selected.start_ts) || '—'}</div>
                   </div>
-                ))}
+                  <div>
+                    <div className="text-[11px] text-gray-500">Geplante Zeit</div>
+                    <div className="text-sm text-gray-900">
+                      {selected.start_ts ? extractLocalHHMM(selected.start_ts) : '—'}
+                      {selected.end_ts ? ` – ${extractLocalHHMM(selected.end_ts)}` : ''}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-gray-500">Adresse</div>
+                    <div className="text-sm text-gray-900">
+                      {(selected.postal_code || '')} {(selected.city || '') || '—'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-gray-500">Cluster</div>
+                    <div className="text-sm text-gray-900">—</div>
+                  </div>
+                </div>
+                <div className="h-px bg-gray-100" />
+                <div className="flex justify-end">
+                  <button
+                    className="h-8 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1"
+                    onClick={() => setSelected(null)}
+                  >
+                    Zurück
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="px-4 py-2 border-t border-gray-100 text-[11px] text-gray-500 bg-white">
+      <div className="px-4 py-2 border-t border-gray-100 text-[11px] text-gray-500 bg-white text-center">
         Einsätze, die aufgrund von Krankenstand freigegeben wurden.
       </div>
     </div>
