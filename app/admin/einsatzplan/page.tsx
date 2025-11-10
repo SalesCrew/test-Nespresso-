@@ -786,7 +786,7 @@ export default function EinsatzplanPage() {
         console.error('Failed to load tracking data:', error);
         setAssignmentTrackingData(null);
       }
-  }, [editingEinsatz?.id]);
+  }, [editingEinsatz]);
 
   useEffect(() => {
     (async () => {
