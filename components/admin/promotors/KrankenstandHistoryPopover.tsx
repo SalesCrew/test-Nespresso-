@@ -104,6 +104,82 @@ export default function KrankenstandHistoryPopover({
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
+  // Cluster helpers (mirrors einsatzplan rules)
+  const getRegionFromPLZ = (plz?: string | null): string => {
+    if (!plz) return '';
+    const digits = String(plz).match(/\d{4}/)?.[0];
+    if (!digits) return '';
+    const plzNum = parseInt(digits, 10);
+    if (Number.isNaN(plzNum)) return '';
+    // Vienna
+    if (plzNum >= 1000 && plzNum <= 1610) return 'W/NÖ/BGL';
+    // NÖ / mixed
+    if (plzNum >= 2000 && plzNum <= 3999) {
+      if ((plzNum >= 2421 && plzNum <= 2425) || (plzNum >= 2473 && plzNum <= 2475) || plzNum === 2491) return 'W/NÖ/BGL';
+      if (plzNum >= 3334 && plzNum <= 3335) return 'OÖ';
+      return 'W/NÖ/BGL';
+    }
+    // OÖ
+    if (plzNum >= 4000 && plzNum <= 4999) {
+      if (plzNum === 4300 || plzNum === 4303 || (plzNum >= 4431 && plzNum <= 4432) ||
+          plzNum === 4441 || plzNum === 4482 || plzNum === 4392) return 'W/NÖ/BGL';
+      return 'OÖ';
+    }
+    // Salzburg / OÖ
+    if (plzNum >= 5000 && plzNum <= 5999) {
+      if ((plzNum >= 5120 && plzNum <= 5145) || plzNum === 5166 ||
+          (plzNum >= 5211 && plzNum <= 5283) || plzNum === 5310 || plzNum === 5311 || plzNum === 5360) return 'OÖ';
+      return 'S';
+    }
+    // Tirol / Vorarlberg
+    if (plzNum >= 6000 && plzNum <= 6999) {
+      if (plzNum >= 6700) return 'V';
+      return 'T';
+    }
+    // Burgenland
+    if (plzNum >= 7000 && plzNum <= 7999) {
+      if (plzNum === 7421) return 'ST';
+      return 'W/NÖ/BGL';
+    }
+    // Steiermark
+    if (plzNum >= 8000 && plzNum <= 8999) {
+      if (plzNum >= 8380 && plzNum <= 8385) return 'W/NÖ/BGL';
+      return 'ST';
+    }
+    // Kärnten / Tirol
+    if (plzNum >= 9000 && plzNum <= 9999) {
+      if (plzNum === 9323) return 'ST';
+      if (plzNum === 9782 || plzNum >= 9900) return 'T';
+      return 'K';
+    }
+    return '';
+  };
+  const getClusterFromPLZ = (plz?: string | null): string => {
+    const code = getRegionFromPLZ(plz);
+    switch (code) {
+      case 'W/NÖ/BGL': return 'wien-noe-bgl';
+      case 'ST': return 'steiermark';
+      case 'S': return 'salzburg';
+      case 'OÖ': return 'oberoesterreich';
+      case 'T': return 'tirol';
+      case 'V': return 'vorarlberg';
+      case 'K': return 'kaernten';
+      default: return '';
+    }
+  };
+  const getClusterShort = (cluster: string): string => {
+    switch (cluster) {
+      case 'wien-noe-bgl': return 'W/NÖ/BGL';
+      case 'steiermark': return 'ST';
+      case 'salzburg': return 'S';
+      case 'oberoesterreich': return 'OÖ';
+      case 'tirol': return 'T';
+      case 'vorarlberg': return 'V';
+      case 'kaernten': return 'K';
+      default: return '—';
+    }
+  };
+
   return (
     <div className="relative rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -212,13 +288,7 @@ export default function KrankenstandHistoryPopover({
           {/* Sticky mini header */}
           <div className="px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10 flex items-center justify-between">
             <div className="text-sm font-semibold text-gray-900">Einsatzdetails</div>
-            <button
-              className="h-8 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1"
-              onClick={() => setSelected(null)}
-              title="Zurück"
-            >
-              <ArrowLeft className="h-4 w-4" /> Zurück
-            </button>
+            <div />
           </div>
 
           <div className="p-4 overflow-y-auto h-full [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -247,7 +317,9 @@ export default function KrankenstandHistoryPopover({
                   </div>
                   <div>
                     <div className="text-[11px] text-gray-500">Cluster</div>
-                    <div className="text-sm text-gray-900">—</div>
+                    <div className="text-sm text-gray-900">
+                      {getClusterShort(getClusterFromPLZ(selected.postal_code))}
+                    </div>
                   </div>
                 </div>
                 <div className="h-px bg-gray-100" />
