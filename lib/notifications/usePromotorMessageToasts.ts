@@ -109,6 +109,7 @@ export function usePromotorMessageToasts(currentUserId: string) {
         preview,
         avatarUrl,
         timestamp: new Date(message.created_at),
+        isGroup: !!conversation?.is_group,
       };
 
       push(notification);

@@ -12,6 +12,7 @@ export interface MessageNotification {
   avatarUrl?: string | null;
   timestamp: Date;
   sticky?: boolean;
+  isGroup?: boolean;
 }
 
 interface NotificationCenterContextType {
@@ -24,10 +25,9 @@ interface NotificationCenterContextType {
 
 const NotificationCenterContext = createContext<NotificationCenterContextType | undefined>(undefined);
 
-const MAX_VISIBLE = 3;
 const AUTO_DISMISS_MS = 7000;
 
-export function NotificationCenterProvider({ children }: { children: React.ReactNode }) {
+export function NotificationCenterProvider({ children, maxVisible = 3 }: { children: React.ReactNode; maxVisible?: number }) {
   const [notifications, setNotifications] = useState<MessageNotification[]>([]);
   const timersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
@@ -79,12 +79,12 @@ export function NotificationCenterProvider({ children }: { children: React.React
 
       let updated = [notification, ...prev];
 
-      // Keep only MAX_VISIBLE, but prefer removing non-sticky toasts
-      if (updated.length > MAX_VISIBLE) {
+      // Keep only maxVisible, but prefer removing non-sticky toasts
+      if (updated.length > maxVisible) {
         // Find first non-sticky toast to replace
-        const nonStickyIndex = updated.slice(MAX_VISIBLE).findIndex(n => !n.sticky);
+        const nonStickyIndex = updated.slice(maxVisible).findIndex(n => !n.sticky);
         if (nonStickyIndex >= 0) {
-          const indexToRemove = MAX_VISIBLE + nonStickyIndex;
+          const indexToRemove = maxVisible + nonStickyIndex;
           const removed = updated[indexToRemove];
           const timer = timersRef.current.get(removed.id);
           if (timer) {

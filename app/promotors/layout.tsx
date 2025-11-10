@@ -24,7 +24,7 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     return (
       <SiteLayout>
         <SocketProvider>
-          <NotificationCenterProvider>
+          <NotificationCenterProvider maxVisible={1}>
             <PromotorUnreadBridge />
             <PromotorToastListener currentUserId={user.id} />
             <PromotorNotificationStack />
@@ -39,7 +39,7 @@ export default async function PromotorLayout({ children }: PromotorLayoutProps) 
     return (
       <SiteLayout>
         <SocketProvider>
-          <NotificationCenterProvider>
+          <NotificationCenterProvider maxVisible={1}>
             <PromotorUnreadBridge />
             <PromotorToastListener currentUserId={user.id} />
             <PromotorNotificationStack />

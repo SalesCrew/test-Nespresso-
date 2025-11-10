@@ -205,7 +205,7 @@ export default function PromotorMessageToast({ notification, onClose }: Promotor
           </p>
         </div>
       </div>
-      {!isReplyMode && (
+      {!isReplyMode && !notification.isGroup && (
         <button
           onClick={(e) => { e.stopPropagation(); handleReplyClick(e); }}
           className="absolute bottom-3 right-3 text-xs text-gray-500 hover:text-gray-700 transition-colors opacity-60 hover:opacity-100"
