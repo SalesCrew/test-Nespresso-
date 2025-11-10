@@ -41,29 +41,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Create Socket.IO connection
       const rawUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
       if (!rawUrl) {
-        console.error('[Socket.IO] NEXT_PUBLIC_SOCKET_URL is not defined! Using fallback.');
-        // Temporary fallback - remove once Vercel env var issue is resolved
-        const fallbackUrl = 'https://socketio-server-production-55e5.up.railway.app';
-        const socketInstance = io(fallbackUrl, {
-          auth: { token: session.access_token },
-          autoConnect: true,
-          transports: ['websocket', 'polling'],
-          withCredentials: true,
-        });
-        
-        socketInstance.on('connect', () => {
-          console.log('Socket.IO connected');
-          setIsConnected(true);
-        });
-        socketInstance.on('disconnect', () => {
-          console.log('Socket.IO disconnected');
-          setIsConnected(false);
-        });
-        socketInstance.on('connect_error', (error) => {
-          console.error('Socket.IO connection error:', error);
-          setIsConnected(false);
-        });
-        setSocket(socketInstance);
+        console.error('[Socket.IO] NEXT_PUBLIC_SOCKET_URL is not defined! Socket will not initialize.');
+        setIsConnected(false);
+        setSocket(null);
         return;
       }
       const socketUrl = rawUrl.replace(/\/$/, '');
