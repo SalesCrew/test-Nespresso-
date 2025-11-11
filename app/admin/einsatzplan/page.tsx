@@ -2762,7 +2762,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[120px] truncate whitespace-nowrap">{plzFilter || 'PLZ'}</span>
+                            <span className="block max-w-[80px] truncate whitespace-nowrap">{plzFilter || 'PLZ'}</span>
                           </button>
                           
                           {showPlzDropdown && (
@@ -2811,7 +2811,7 @@ Import EP
                             }`}
                             title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                           >
-                            <span className="block max-w-[140px] truncate whitespace-nowrap">Nicht zugeordnet</span>
+                            <span className="block max-w-[110px] truncate whitespace-nowrap">Nicht zugeordnet</span>
                           </button>
                         </div>
                         
@@ -2825,7 +2825,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[160px] truncate whitespace-nowrap">{promotorFilter || 'Promotor'}</span>
+                            <span className="block max-w-[120px] truncate whitespace-nowrap">{promotorFilter || 'Promotor'}</span>
                           </button>
                           
                           {showPromotorDropdown && (
@@ -2892,7 +2892,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[120px] truncate whitespace-nowrap">{statusFilter || 'Status'}</span>
+                            <span className="block max-w-[100px] truncate whitespace-nowrap">{statusFilter || 'Status'}</span>
                           </button>
                           
                           {showStatusDropdown && (
@@ -2941,7 +2941,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[180px] truncate whitespace-nowrap">{marketFilter || 'Market'}</span>
+                            <span className="block max-w-[120px] truncate whitespace-nowrap">{marketFilter || 'Market'}</span>
                           </button>
                           
                           {showMarketDropdown && (
@@ -2989,7 +2989,7 @@ Import EP
                               : 'text-gray-500'
                           }`}
                         >
-                          <span className="block max-w-[180px] truncate whitespace-nowrap">{getFilterDisplayText()}</span>
+                          <span className="block max-w-[120px] truncate whitespace-nowrap">{getFilterDisplayText()}</span>
                         </button>
                         
                         {showDateDropdown && (
