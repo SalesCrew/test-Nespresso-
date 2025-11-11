@@ -2756,13 +2756,13 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowPlzDropdown(!showPlzDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 max-w-[160px] ${
                               plzFilter
                                 ? 'text-gray-700 scale-110' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            {plzFilter || 'PLZ'}
+                            <span className="inline-block truncate">{plzFilter || 'PLZ'}</span>
                           </button>
                           
                           {showPlzDropdown && (
