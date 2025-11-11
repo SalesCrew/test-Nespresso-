@@ -3697,7 +3697,7 @@ Import EP
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className="px-2 py-1 text-xs rounded-md border border-green-200 text-white bg-green-600 hover:bg-green-700"
+                                                  className="px-2 py-1 text-xs rounded-md border border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
                                                   onClick={async () => {
                                                     try {
                                                       const res = await fetch(`/api/assignments/${einsatz.id}`, {
