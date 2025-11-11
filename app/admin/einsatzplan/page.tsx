@@ -40,12 +40,15 @@ import {
   Plus,
   Dumbbell,
   Trash2,
-  Link2
+  Link2,
+  Crosshair,
+  Copy
 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import AdminNavigation from "@/components/AdminNavigation";
 import AdminEddieAssistant from "@/components/AdminEddieAssistant";
+import { normalizeForMatch } from "@/lib/matchers/marketMatcher";
 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
@@ -286,6 +289,13 @@ export default function EinsatzplanPage() {
   const [selectedMarket, setSelectedMarket] = useState<any>(null);
   const [showMarketDetailModal, setShowMarketDetailModal] = useState(false);
   const [editingMarket, setEditingMarket] = useState<any>(null);
+  // Acceptance addresses UI state
+  const [showAcceptancePopover, setShowAcceptancePopover] = useState(false);
+  const acceptancePopoverRef = useRef<HTMLDivElement | null>(null);
+  const acceptanceAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [acceptanceRaw, setAcceptanceRaw] = useState('');
+  const [acceptancePlz, setAcceptancePlz] = useState('');
+  const [acceptanceCity, setAcceptanceCity] = useState('');
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
@@ -2523,6 +2533,74 @@ export default function EinsatzplanPage() {
       setPhotoProductsIndex(0);
     }
   }, [showMarketDetailModal]);
+
+  // Close acceptance popover on outside click
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!showAcceptancePopover) return;
+      const target = e.target as Node;
+      if (acceptancePopoverRef.current && acceptancePopoverRef.current.contains(target)) return;
+      if (acceptanceAnchorRef.current && acceptanceAnchorRef.current.contains(target as Node)) return;
+      setShowAcceptancePopover(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [showAcceptancePopover]);
+
+  // Helpers to add/remove acceptance addresses
+  const addAcceptanceAddress = async () => {
+    if (!editingMarket?.id) return;
+    const raw = acceptanceRaw.trim();
+    if (!raw || raw.split(/\s+/).length < 2) return;
+    const fingerprint = normalizeForMatch([raw].join(' ').trim());
+    const current: any[] = Array.isArray(editingMarket.acceptance_addresses) ? editingMarket.acceptance_addresses : [];
+    if (current.some((e: any) => (e?.fingerprint || '') === fingerprint)) {
+      // Reset input quietly
+      setAcceptanceRaw(''); setAcceptancePlz(''); setAcceptanceCity('');
+      return;
+    }
+    const optimistic = [{ raw, fingerprint, plz: acceptancePlz || null, city: acceptanceCity || null, source: 'manual', added_at: new Date().toISOString() }, ...current].slice(0, 30);
+    setEditingMarket({ ...editingMarket, acceptance_addresses: optimistic });
+    setAcceptanceRaw(''); setAcceptancePlz(''); setAcceptanceCity('');
+    try {
+      const res = await fetch(`/api/admin/markets/${editingMarket.id}/acceptance-addresses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raw, plz: acceptancePlz || null, city: acceptanceCity || null })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: Array.isArray(j.acceptance_addresses) ? j.acceptance_addresses : prev.acceptance_addresses } : prev);
+      } else {
+        // revert on error
+        setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: current } : prev);
+      }
+    } catch {
+      setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: current } : prev);
+    }
+  };
+
+  const removeAcceptanceAddress = async (fingerprint: string) => {
+    if (!editingMarket?.id) return;
+    const current: any[] = Array.isArray(editingMarket.acceptance_addresses) ? editingMarket.acceptance_addresses : [];
+    const optimistic = current.filter((e: any) => (e?.fingerprint || '') !== fingerprint);
+    setEditingMarket({ ...editingMarket, acceptance_addresses: optimistic });
+    try {
+      const res = await fetch(`/api/admin/markets/${editingMarket.id}/acceptance-addresses`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fingerprint })
+      });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: Array.isArray(j.acceptance_addresses) ? j.acceptance_addresses : optimistic } : prev);
+      } else {
+        setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: current } : prev);
+      }
+    } catch {
+      setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: current } : prev);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-50/30">
       <style jsx>{customScrollbarStyle}</style>
@@ -6725,8 +6803,126 @@ Import EP
                 {/* Right Column */}
                 <div className="space-y-6 flex flex-col h-full">
                   {/* Photos Section */}
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Fotos</h4>
+                  <div className="space-y-3 relative">
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <h4 className="text-sm font-medium text-gray-900">Fotos</h4>
+                      <button
+                        ref={acceptanceAnchorRef}
+                        type="button"
+                        title="Akzeptanzbereich"
+                        className="text-gray-800/80 hover:text-gray-900 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowAcceptancePopover(prev => !prev);
+                        }}
+                      >
+                        <Crosshair className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Acceptance Popover */}
+                    {showAcceptancePopover && (
+                      <div
+                        ref={acceptancePopoverRef}
+                        className="absolute right-0 top-8 z-20 w-[360px] max-w-[90vw] rounded-lg border border-gray-200 bg-white shadow-xl"
+                      >
+                        <div className="p-3 border-b border-gray-100 flex items-center justify-between">
+                          <div className="min-w-0">
+                            <p className="text-xs text-gray-500">Akzeptanz‑Adressen</p>
+                            <h5 className="text-sm font-semibold text-gray-900 truncate">{editingMarket?.name || 'Markt'}</h5>
+                          </div>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
+                            {(editingMarket?.acceptance_addresses || []).length}
+                          </span>
+                        </div>
+
+                        {/* Primary address */}
+                        <div className="px-3 pt-3">
+                          <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-600">Primär</span>
+                            </div>
+                            <div className="text-sm text-gray-900 truncate">{editingMarket?.address || '—'}</div>
+                            <div className="text-xs text-gray-500">{[editingMarket?.plz, editingMarket?.city].filter(Boolean).join(' ')}</div>
+                          </div>
+                        </div>
+
+                        {/* List */}
+                        <div className="p-3 pt-2 max-h-[260px] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                          {(editingMarket?.acceptance_addresses || []).length === 0 ? (
+                            <div className="text-center text-xs text-gray-500 py-6">
+                              Noch keine zusätzlichen Adressen
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {(editingMarket?.acceptance_addresses || []).map((item: any) => (
+                                <div key={item.fingerprint || item.raw} className="flex items-start justify-between gap-2 rounded-md border border-gray-200 bg-gradient-to-r from-white to-indigo-50/20 p-2">
+                                  <div className="min-w-0">
+                                    <div className="text-sm text-gray-900 truncate">{item.raw || '—'}</div>
+                                    <div className="text-[11px] text-gray-500">{item.city || ''} {item.plz || ''}</div>
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      className="h-6 w-6 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center"
+                                      title="Kopieren"
+                                      onClick={() => navigator.clipboard?.writeText(item.raw || '')}
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      className="h-6 w-6 rounded-md border border-gray-200 bg-white text-red-600 hover:bg-red-50 flex items-center justify-center"
+                                      title="Entfernen"
+                                      onClick={() => removeAcceptanceAddress(item.fingerprint || normalizeForMatch(String(item.raw || '')))}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Add form */}
+                        <div className="p-3 border-t border-gray-100 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={acceptanceRaw}
+                              onChange={(e) => setAcceptanceRaw(e.target.value)}
+                              placeholder="Adresse, PLZ, Ort…"
+                              className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-0"
+                            />
+                            <button
+                              onClick={addAcceptanceAddress}
+                              disabled={!acceptanceRaw.trim()}
+                              className="px-3 py-1.5 text-sm rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
+                            >
+                              Hinzufügen
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={acceptancePlz}
+                              onChange={(e) => setAcceptancePlz(e.target.value)}
+                              placeholder="PLZ"
+                              className="w-24 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-0"
+                            />
+                            <input
+                              type="text"
+                              value={acceptanceCity}
+                              onChange={(e) => setAcceptanceCity(e.target.value)}
+                              placeholder="Ort"
+                              className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-0"
+                            />
+                          </div>
+                          <div className="text-[11px] text-gray-500">
+                            Maximal 30 Einträge. Doppelte werden ignoriert.
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Exterior Photo */}
                     <div className="space-y-2">
