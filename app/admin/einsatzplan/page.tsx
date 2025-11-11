@@ -2737,13 +2737,13 @@ Import EP
                             <button
                               key={region}
                               onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
-                              className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
+                              className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 w-[80px] inline-flex items-center justify-center overflow-hidden ${
                                 isSelected 
                                   ? 'bg-gray-100 text-gray-700 scale-110' 
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
                               }`}
                             >
-                              {region}
+                              <span className="truncate whitespace-nowrap w-full text-center">{region}</span>
                             </button>
                           );
                         })}
@@ -2756,13 +2756,13 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowPlzDropdown(!showPlzDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 w-[90px] inline-flex items-center justify-center overflow-hidden ${
                               plzFilter
                                 ? 'text-gray-700 scale-110' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[80px] truncate whitespace-nowrap">{plzFilter || 'PLZ'}</span>
+                            <span className="block truncate whitespace-nowrap w-full text-center">{plzFilter || 'PLZ'}</span>
                           </button>
                           
                           {showPlzDropdown && (
@@ -2804,14 +2804,14 @@ Import EP
                           {/* Matched filter pill */}
                           <button
                             onClick={() => setMatchedOnly(prev => !prev)}
-                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 w-[140px] inline-flex items-center justify-center overflow-hidden ${
                               matchedOnly
                                 ? 'bg-red-100 text-red-700 border-red-300 scale-110'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
                             }`}
                             title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                           >
-                            <span className="block max-w-[110px] truncate whitespace-nowrap">Nicht zugeordnet</span>
+                            <span className="block truncate whitespace-nowrap w-full text-center">Nicht zugeordnet</span>
                           </button>
                         </div>
                         
@@ -2819,13 +2819,13 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowPromotorDropdown(!showPromotorDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 w-[120px] inline-flex items-center justify-center overflow-hidden ${
                               promotorFilter
                                 ? 'text-gray-700 scale-110' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[120px] truncate whitespace-nowrap">{promotorFilter || 'Promotor'}</span>
+                            <span className="block truncate whitespace-nowrap w-full text-center">{promotorFilter || 'Promotor'}</span>
                           </button>
                           
                           {showPromotorDropdown && (
@@ -2884,7 +2884,7 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r w-[100px] inline-flex items-center justify-center overflow-hidden ${
                               statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'
                             } border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${
                               statusFilter
@@ -2892,7 +2892,7 @@ Import EP
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[100px] truncate whitespace-nowrap">{statusFilter || 'Status'}</span>
+                            <span className="block truncate whitespace-nowrap w-full text-center">{statusFilter || 'Status'}</span>
                           </button>
                           
                           {showStatusDropdown && (
@@ -2935,13 +2935,13 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowMarketDropdown(!showMarketDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 w-[180px] inline-flex items-center justify-center overflow-hidden ${
                               marketFilter
                                 ? 'text-gray-700 scale-110' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[120px] truncate whitespace-nowrap">{marketFilter || 'Market'}</span>
+                            <span className="block truncate whitespace-nowrap w-full text-center">{marketFilter || 'Market'}</span>
                           </button>
                           
                           {showMarketDropdown && (
@@ -2983,13 +2983,13 @@ Import EP
                         <div className="relative">
                         <button
                           onClick={() => setShowDateDropdown(!showDateDropdown)}
-                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 ${
+                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 w-[120px] inline-flex items-center justify-center overflow-hidden ${
                             selectedWeeks.length > 0 || dateRange.start || dateFilter
                               ? 'text-black scale-110' 
                               : 'text-gray-500'
                           }`}
                         >
-                          <span className="block max-w-[120px] truncate whitespace-nowrap">{getFilterDisplayText()}</span>
+                          <span className="block truncate whitespace-nowrap w-full text-center">{getFilterDisplayText()}</span>
                         </button>
                         
                         {showDateDropdown && (
