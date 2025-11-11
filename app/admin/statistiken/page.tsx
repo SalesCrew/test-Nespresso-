@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Settings, Send, FileText, Download, Phone, Crown, Check, Zap, Mail, ChevronDown, Copy, Edit, X, TrendingUp, PieChart, Percent, ChevronUp } from "lucide-react";
+import { Settings, Send, FileText, Download, Phone, Crown, Check, Zap, Mail, ChevronDown, Copy, Edit, X, TrendingUp, PieChart, Percent, ChevronUp, Gift, Upload, Table } from "lucide-react";
 import { IoColorWandOutline } from "react-icons/io5";
 import { FiSliders, FiSmile, FiThumbsUp, FiTrendingUp, FiMessageSquare, FiTrendingDown } from 'react-icons/fi';
 import { CgSpinner } from 'react-icons/cg';
@@ -71,6 +71,12 @@ export default function StatistikenPage() {
   const [chartTimeFilter, setChartTimeFilter] = useState<"3months" | "6months" | "1year" | "all">("all");
   const [kpiHistory, setKpiHistory] = useState<any[]>([]);
   const [kpiHistoryLoading, setKpiHistoryLoading] = useState(false);
+  // Prämien UI state
+  const [showPraemienModal, setShowPraemienModal] = useState(false);
+  const [praemienWave, setPraemienWave] = useState<string | null>(null);
+  const [praemienHighlight, setPraemienHighlight] = useState(false);
+  const [praemienSummary, setPraemienSummary] = useState<{items: any[]; totals: { brutto: number; netto: number}} | null>(null);
+  const [praemienLoading, setPraemienLoading] = useState(false);
 
   // Unique promoter names that actually appear in history
   const historyPromoterNames = useMemo(() => {
@@ -1659,6 +1665,36 @@ Liebe Grüße, dein Nespresso Team`;
                 <Download className="h-4 w-4" />
                 <span>Import</span>
               </button>
+              {/* Prämien button */}
+              <button
+                onClick={async () => {
+                  setShowPraemienModal(true);
+                  setPraemienLoading(true);
+                  try {
+                    const waveRes = await fetch('/api/admin/kpi-praemien/latest-summary', { cache: 'no-store' });
+                    if (waveRes.ok) {
+                      const s = await waveRes.json();
+                      setPraemienWave(s.waveMonth || null);
+                      setPraemienHighlight(Boolean(s.highlight));
+                      if (s.waveMonth) {
+                        const res = await fetch(`/api/admin/kpi-praemien?waveMonth=${s.waveMonth}`, { cache: 'no-store' });
+                        if (res.ok) setPraemienSummary(await res.json());
+                      } else {
+                        setPraemienSummary(null);
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Failed to load prämien', e);
+                  } finally {
+                    setPraemienLoading(false);
+                  }
+                }}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${praemienHighlight ? 'bg-purple-50 text-purple-700 border-purple-200 shadow-[0_0_0_3px_rgba(168,85,247,0.12)]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                title="Prämien importieren & ansehen"
+              >
+                <Gift className="h-4 w-4" />
+                <span>Prämien</span>
+              </button>
               <button 
                 onClick={() => setShowCallsModal(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-white text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
@@ -1699,6 +1735,145 @@ Liebe Grüße, dein Nespresso Team`;
         <main className="p-8">
           {selectedMenu === "overview" && (
             <>
+              {/* Prämien Modal */}
+              {showPraemienModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowPraemienModal(false)}>
+                  <div className="absolute inset-0 bg-black/30" />
+                  <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    {/* Header */}
+                    <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
+                          <Table className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Prämien – Übersicht</h3>
+                          <p className="text-xs text-gray-500">Werte für Gutscheine, TMA, Vertuo, Vertuo Pop+, Aeroccino, Vorteilsbox</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">{praemienWave ? `Wave: ${praemienWave}` : '—'}</span>
+                        <label className="inline-flex items-center px-2 py-1 rounded-md text-xs border border-gray-200 bg-gray-50 cursor-pointer">
+                          <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !praemienWave) return;
+                          const wb = await file.arrayBuffer().then(buf => XLSX.read(buf));
+                          const sheet = wb.Sheets[wb.SheetNames[0]];
+                          const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[];
+                              const header = rows[0] || [];
+                              const dataRows = rows.slice(1);
+                              const emailIdx = header.findIndex((h: any) => String(h || '').toLowerCase().includes('mail'));
+                              const get = (r: any[], idx: number) => Number.isFinite(Number(r[idx])) ? Number(r[idx]) : parseInt(String(r[idx] || 0), 10) || 0;
+                              const mapped = dataRows
+                                .filter(r => r && (r[emailIdx >= 0 ? emailIdx : 0] || '').toString().includes('@'))
+                                .map(r => ({
+                                  email: (r[emailIdx >= 0 ? emailIdx : 0] || '').toString().trim(),
+                                  tma: get(r, 6),           // G
+                                  gutscheine: get(r, 7),    // H
+                                  vertuo: get(r, 14),       // O
+                                  aeroccino: get(r, 15),    // P
+                                  vertuo_pop: get(r, 17),   // R
+                                  vorteilsbox: get(r, 23),  // X (optional)
+                                }));
+                              try {
+                                const res = await fetch('/api/admin/kpi-praemien/import', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ waveMonth: praemienWave, rows: mapped }),
+                                });
+                                if (res.ok) {
+                                  const ref = await fetch(`/api/admin/kpi-praemien?waveMonth=${praemienWave}`, { cache: 'no-store' });
+                                  if (ref.ok) setPraemienSummary(await ref.json());
+                                }
+                              } catch (err) {
+                                console.error('Import failed', err);
+                              } finally {
+                                e.currentTarget.value = '';
+                              }
+                            }}
+                          />
+                          <Upload className="h-3.5 w-3.5 mr-1 text-purple-600" />
+                          <span>Excel importieren</span>
+                        </label>
+                      </div>
+                    </div>
+                    {/* Summary */}
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="text-xs text-gray-500">Brutto Gesamt</div>
+                          <div className="text-lg font-semibold text-gray-900">
+                            {praemienSummary ? `${praemienSummary.totals.brutto.toFixed(2)} €` : '—'}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="text-xs text-gray-500">Netto Gesamt</div>
+                          <div className="text-lg font-semibold text-gray-900">
+                            {praemienSummary ? `${praemienSummary.totals.netto.toFixed(2)} €` : '—'}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="text-xs text-gray-500">Datensatzanzahl</div>
+                          <div className="text-lg font-semibold text-gray-900">
+                            {praemienSummary ? praemienSummary.items.length : '—'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Table */}
+                    <div className="p-4 max-h-[60vh] overflow-y-auto">
+                      {praemienLoading ? (
+                        <div className="text-sm text-gray-500">Lade Prämien…</div>
+                      ) : !praemienSummary ? (
+                        <div className="text-sm text-gray-500">Keine Daten vorhanden.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-10 text-xs text-gray-500 px-2">
+                            <div className="col-span-3">Promotor</div>
+                            <div>Gutscheine</div>
+                            <div>TMA</div>
+                            <div>Vertuo</div>
+                            <div>Pop+</div>
+                            <div>Aeroc.</div>
+                            <div>Brutto</div>
+                            <div>Netto</div>
+                          </div>
+                          <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                            {praemienSummary.items.map((it: any) => (
+                              <div key={it.id || `${it.user_id}-${it.wave_month}`} className="grid grid-cols-10 items-center text-sm px-2 py-2 hover:bg-gray-50">
+                                <div className="col-span-3">
+                                  <div className="text-gray-900 font-medium">{it.promotor_name || '—'}</div>
+                                  <div className="text-[11px] text-gray-500">{String(it.wave_month).slice(0, 7)}</div>
+                                </div>
+                                <div className="text-right">{it.gutscheine}</div>
+                                <div className="text-right">{it.tma}</div>
+                                <div className="text-right">{it.vertuo}</div>
+                                <div className="text-right">{it.vertuo_pop}</div>
+                                <div className="text-right">{it.aeroccino}</div>
+                                <div className="text-right font-medium text-gray-900">{it.brutto.toFixed(2)} €</div>
+                                <div className="text-right font-medium text-gray-900">{it.netto.toFixed(2)} €</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {/* Footer */}
+                    <div className="p-3 border-t border-gray-100 text-right">
+                      <button
+                        onClick={() => setShowPraemienModal(false)}
+                        className="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Schließen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Promoter Cards Grid */}
               <div className="grid grid-cols-5 gap-4">
                 {cardData.map((card) => (

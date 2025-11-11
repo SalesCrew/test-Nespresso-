@@ -3255,35 +3255,35 @@ Dein Nespresso Team`;
                                   ))}
                                 </div>
                               ) : (
-                                <div className="grid grid-cols-3 gap-4">
-                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                    <p 
+                              <div className="grid grid-cols-3 gap-4">
+                                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                  <p 
                                       className={`text-lg font-bold ${getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0)}`}
                                       style={getKpiStyle(getKpiColor("mcet", kpiByPromotor[promotor.id]?.mcet ?? 0))}
-                                    >
+                                  >
                                       {(kpiByPromotor[promotor.id]?.mcet ?? 0).toFixed(1)}
-                                    </p>
-                                    <p className="text-xs text-gray-500 font-medium">MC/ET</p>
-                                  </div>
-                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                    <p 
+                                  </p>
+                                  <p className="text-xs text-gray-500 font-medium">MC/ET</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                  <p 
                                       className={`text-lg font-bold ${getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0)}`}
                                       style={getKpiStyle(getKpiColor("tma", kpiByPromotor[promotor.id]?.tma ?? 0))}
-                                    >
+                                  >
                                       {(kpiByPromotor[promotor.id]?.tma ?? 0)}%
-                                    </p>
-                                    <p className="text-xs text-gray-500 font-medium">TMA</p>
-                                  </div>
-                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                    <p 
+                                  </p>
+                                  <p className="text-xs text-gray-500 font-medium">TMA</p>
+                                </div>
+                                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                  <p 
                                       className={`text-lg font-bold ${getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0)}`}
                                       style={getKpiStyle(getKpiColor("vlshare", kpiByPromotor[promotor.id]?.vlshare ?? 0))}
-                                    >
+                                  >
                                       {(kpiByPromotor[promotor.id]?.vlshare ?? 0)}%
-                                    </p>
-                                    <p className="text-xs text-gray-500 font-medium">VL Share</p>
-                                  </div>
+                                  </p>
+                                  <p className="text-xs text-gray-500 font-medium">VL Share</p>
                                 </div>
+                              </div>
                               )}
                             </CardContent>
                           </Card>
