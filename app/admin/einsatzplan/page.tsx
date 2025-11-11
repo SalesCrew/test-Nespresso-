@@ -2737,7 +2737,7 @@ Import EP
                             <button
                               key={region}
                               onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
-                              className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 inline-flex items-center justify-center max-w-[80px] ${
+                              className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 inline-flex items-center justify-center ${region === 'W/NÖ/BGL' ? 'max-w-[110px]' : 'max-w-[80px]'} ${
                                 isSelected 
                                   ? 'bg-gray-100 text-gray-700 font-medium' 
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
