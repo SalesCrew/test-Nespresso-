@@ -1827,31 +1827,68 @@ Liebe Grüße, dein Nespresso Team`;
                     </div>
                     {/* Summary */}
                     <div className="p-4 border-b border-gray-100">
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <div className="text-xs text-gray-500">Brutto Gesamt</div>
-                          <div className="text-lg font-semibold text-gray-900">
-                            {praemienSummary ? `${praemienSummary.totals.brutto.toFixed(2)} €` : '—'}
+                      {praemienLoading ? (
+                        <div className="grid grid-cols-3 gap-3">
+                          {[0,1,2].map(i => (
+                            <div key={i} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <div className="h-3 w-24 bg-gray-200 rounded animate-skeleton-fade mb-2"></div>
+                              <div className="h-6 w-20 bg-gray-200 rounded animate-skeleton-fade"></div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <div className="text-xs text-gray-500">Brutto Gesamt</div>
+                            <div className="text-lg font-semibold text-gray-900">
+                              {praemienSummary ? `${praemienSummary.totals.brutto.toFixed(2)} €` : '—'}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <div className="text-xs text-gray-500">Netto Gesamt</div>
+                            <div className="text-lg font-semibold text-gray-900">
+                              {praemienSummary ? `${praemienSummary.totals.netto.toFixed(2)} €` : '—'}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                            <div className="text-xs text-gray-500">Datensatzanzahl</div>
+                            <div className="text-lg font-semibold text-gray-900">
+                              {praemienSummary ? praemienSummary.items.length : '—'}
+                            </div>
                           </div>
                         </div>
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <div className="text-xs text-gray-500">Netto Gesamt</div>
-                          <div className="text-lg font-semibold text-gray-900">
-                            {praemienSummary ? `${praemienSummary.totals.netto.toFixed(2)} €` : '—'}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                          <div className="text-xs text-gray-500">Datensatzanzahl</div>
-                          <div className="text-lg font-semibold text-gray-900">
-                            {praemienSummary ? praemienSummary.items.length : '—'}
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                     {/* Table */}
                     <div className="p-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
                       {praemienLoading ? (
-                        <div className="text-sm text-gray-500">Lade Prämien…</div>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-10 text-xs text-gray-500 px-2">
+                            <div className="col-span-3">Promotor</div>
+                            <div className="text-right">Gutscheine</div>
+                            <div className="text-right">TMA</div>
+                            <div className="text-right">Vertuo</div>
+                            <div className="text-right">Pop+</div>
+                            <div className="text-right">Aeroc.</div>
+                            <div className="text-right">Brutto</div>
+                            <div className="text-right">Netto</div>
+                          </div>
+                          <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
+                            {[0,1,2,3,4,5].map(i => (
+                              <div key={i} className="grid grid-cols-10 items-center px-2 py-2">
+                                <div className="col-span-3">
+                                  <div className="h-4 w-40 bg-gray-200 rounded animate-skeleton-fade mb-1"></div>
+                                  <div className="h-3 w-32 bg-gray-200 rounded animate-skeleton-fade"></div>
+                                </div>
+                                {[...Array(7)].map((_, j) => (
+                                  <div key={j} className="text-right">
+                                    <div className="h-4 w-10 ml-auto bg-gray-200 rounded animate-skeleton-fade"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       ) : !praemienSummary ? (
                         <div className="text-sm text-gray-500">Keine Daten vorhanden.</div>
                       ) : (
