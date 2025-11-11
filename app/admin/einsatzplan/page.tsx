@@ -2498,33 +2498,7 @@ export default function EinsatzplanPage() {
     loadPromotorsList();
   }, []);
 
-  // Auto-match unmatched assignments after both lists load
-  useEffect(() => {
-    const runAutoMatch = async () => {
-      if (assignmentsLoading || marketsLoading) return;
-      if (!marketsData.length || !einsatzplanData.length) return;
-      const unmatched = einsatzplanData.filter((e: any) => !e.matched_market_id);
-      const concurrency = 5;
-      let i = 0;
-      const next = async () => {
-        if (i >= unmatched.length) return;
-        const batch = unmatched.slice(i, i + concurrency);
-        i += concurrency;
-        await Promise.all(batch.map(async (e: any) => {
-          try {
-            const res = await fetch(`/api/assignments/${e.id}/match-market`, { method: 'POST' });
-            const j = await res.json().catch(() => ({}));
-            if (res.ok && j.matched_market_id) {
-              setEinsatzplanData(prev => prev.map(p => p.id === e.id ? { ...p, matched_market_id: j.matched_market_id } : p));
-            }
-          } catch {}
-        }));
-        await next();
-      };
-      await next();
-    };
-    runAutoMatch();
-  }, [assignmentsLoading, marketsLoading, marketsData, einsatzplanData]);
+  // (Batch auto-match effect below handles matching on refresh)
 
   // Reset photo indices when market detail modal opens
   useEffect(() => {
@@ -2535,6 +2509,24 @@ export default function EinsatzplanPage() {
       setPhotoProductsIndex(0);
     }
   }, [showMarketDetailModal]);
+
+  // Try to auto-match all unmatched assignments once after data loads (per refresh)
+  const hasRunAutoMatchRef = useRef(false);
+  useEffect(() => {
+    const runBatchAutoMatch = async () => {
+      if (hasRunAutoMatchRef.current) return;
+      if (assignmentsLoading || marketsLoading) return;
+      hasRunAutoMatchRef.current = true;
+      try {
+        await fetch('/api/assignments/auto-match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ unmatchedOnly: true })
+        });
+      } catch {}
+    };
+    runBatchAutoMatch();
+  }, [assignmentsLoading, marketsLoading]);
 
   // Close acceptance popover on outside click
   useEffect(() => {
