@@ -1759,26 +1759,51 @@ Liebe Grüße, dein Nespresso Team`;
                             accept=".xlsx,.xls"
                             className="hidden"
                             onChange={async (e) => {
-                              const file = e.target.files?.[0];
+                              const inputEl = e.currentTarget as HTMLInputElement;
+                              const file = inputEl.files?.[0];
                               if (!file || !praemienWave) return;
                           const wb = await file.arrayBuffer().then(buf => XLSX.read(buf));
                           const sheet = wb.Sheets[wb.SheetNames[0]];
                           const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[];
                               const header = rows[0] || [];
                               const dataRows = rows.slice(1);
-                              const emailIdx = header.findIndex((h: any) => String(h || '').toLowerCase().includes('mail'));
+                              let emailIdx = header.findIndex((h: any) => String(h || '').toLowerCase().includes('mail'));
+                              if (emailIdx < 0) {
+                                // Heuristic: choose the column with the most '@' occurrences among first 20 cols
+                                const maxCols = Math.min(20, header.length || 20);
+                                const counts = new Array(maxCols).fill(0);
+                                for (const r of dataRows) {
+                                  for (let i = 0; i < Math.min(maxCols, r.length || 0); i++) {
+                                    if ((r[i] || '').toString().includes('@')) counts[i]++;
+                                  }
+                                }
+                                let best = -1, bestCount = 0;
+                                counts.forEach((c, i) => { if (c > bestCount) { best = i; bestCount = c; } });
+                                emailIdx = best >= 0 && bestCount > 0 ? best : -1;
+                              }
+                              const findEmailInRow = (r: any[]) => {
+                                const maxCols = Math.min(20, r.length || 0);
+                                for (let i = 0; i < maxCols; i++) {
+                                  const val = (r[i] || '').toString().trim();
+                                  if (val.includes('@')) return val;
+                                }
+                                return '';
+                              };
                               const get = (r: any[], idx: number) => Number.isFinite(Number(r[idx])) ? Number(r[idx]) : parseInt(String(r[idx] || 0), 10) || 0;
-                              const mapped = dataRows
-                                .filter(r => r && (r[emailIdx >= 0 ? emailIdx : 0] || '').toString().includes('@'))
-                                .map(r => ({
-                                  email: (r[emailIdx >= 0 ? emailIdx : 0] || '').toString().trim(),
+                              const mapped = dataRows.map(r => {
+                                const emailCell = emailIdx >= 0 ? r[emailIdx] : findEmailInRow(r);
+                                const email = (emailCell || '').toString().trim();
+                                if (!email || !email.includes('@')) return null;
+                                return {
+                                  email,
                                   tma: get(r, 6),           // G
                                   gutscheine: get(r, 7),    // H
                                   vertuo: get(r, 14),       // O
                                   aeroccino: get(r, 15),    // P
                                   vertuo_pop: get(r, 17),   // R
                                   vorteilsbox: get(r, 23),  // X (optional)
-                                }));
+                                };
+                              }).filter(Boolean) as any[];
                               try {
                                 const res = await fetch('/api/admin/kpi-praemien/import', {
                                   method: 'POST',
@@ -1792,7 +1817,7 @@ Liebe Grüße, dein Nespresso Team`;
                               } catch (err) {
                                 console.error('Import failed', err);
                               } finally {
-                                e.currentTarget.value = '';
+                                if (inputEl) inputEl.value = '';
                               }
                             }}
                           />
