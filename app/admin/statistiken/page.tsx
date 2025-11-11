@@ -1858,13 +1858,13 @@ Liebe Grüße, dein Nespresso Team`;
                         <div className="space-y-2">
                           <div className="grid grid-cols-10 text-xs text-gray-500 px-2">
                             <div className="col-span-3">Promotor</div>
-                            <div>Gutscheine</div>
-                            <div>TMA</div>
-                            <div>Vertuo</div>
-                            <div>Pop+</div>
-                            <div>Aeroc.</div>
-                            <div>Brutto</div>
-                            <div>Netto</div>
+                            <div className="text-right">Gutscheine</div>
+                            <div className="text-right">TMA</div>
+                            <div className="text-right">Vertuo</div>
+                            <div className="text-right">Pop+</div>
+                            <div className="text-right">Aeroc.</div>
+                            <div className="text-right">Brutto</div>
+                            <div className="text-right">Netto</div>
                           </div>
                           <div className="divide-y divide-gray-100 rounded-lg border border-gray-100">
                             {praemienSummary.items.map((it: any) => (
@@ -1892,13 +1892,13 @@ Liebe Grüße, dein Nespresso Team`;
                               <div className="rounded-lg border border-amber-200 bg-amber-50/50">
                                 <div className="grid grid-cols-10 text-xs text-gray-600 px-3 py-2 border-b border-amber-200/60">
                                   <div className="col-span-3">Name / Email</div>
-                                  <div>Gutscheine</div>
-                                  <div>TMA</div>
-                                  <div>Vertuo</div>
-                                  <div>Pop+</div>
-                                  <div>Aeroc.</div>
-                                  <div>Brutto</div>
-                                  <div>Netto</div>
+                                  <div className="text-right">Gutscheine</div>
+                                  <div className="text-right">TMA</div>
+                                  <div className="text-right">Vertuo</div>
+                                  <div className="text-right">Pop+</div>
+                                  <div className="text-right">Aeroc.</div>
+                                  <div className="text-right">Brutto</div>
+                                  <div className="text-right">Netto</div>
                                 </div>
                                 {praemienUnmatched.map((u, idx) => {
                                   const totals = computePraemieTotals(u);
