@@ -2829,7 +2829,7 @@ Import EP
                             }`}
                             style={promotorFilter ? { transform: 'scale(1.05)' } : undefined}
                           >
-                            <span className="truncate whitespace-nowrap block w-full">{promotorFilter || 'Promotor'}</span>
+                            <span className="truncate whitespace-nowrap block" style={{ maxWidth: '6ch' }}>{promotorFilter || 'Promotor'}</span>
                           </button>
                           
                           {showPromotorDropdown && (
@@ -2897,7 +2897,7 @@ Import EP
                             }`}
                             style={statusFilter ? { transform: 'scale(1.05)' } : undefined}
                           >
-                            <span className="truncate whitespace-nowrap block w-full">{statusFilter || 'Status'}</span>
+                            <span className="truncate whitespace-nowrap block" style={{ maxWidth: '6ch' }}>{statusFilter || 'Status'}</span>
                           </button>
                           
                           {showStatusDropdown && (
