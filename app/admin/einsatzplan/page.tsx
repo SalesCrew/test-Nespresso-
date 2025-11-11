@@ -296,6 +296,8 @@ export default function EinsatzplanPage() {
   const [acceptanceRaw, setAcceptanceRaw] = useState('');
   const [acceptancePlz, setAcceptancePlz] = useState('');
   const [acceptanceCity, setAcceptanceCity] = useState('');
+  const [copiedAcceptanceKey, setCopiedAcceptanceKey] = useState<string | null>(null);
+  const [pendingAcceptanceDelete, setPendingAcceptanceDelete] = useState<Record<string, boolean>>({});
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
@@ -6855,8 +6857,12 @@ Import EP
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              {(editingMarket?.acceptance_addresses || []).map((item: any) => (
-                                <div key={item.fingerprint || item.raw} className="flex items-start justify-between gap-2 rounded-md border border-gray-200 bg-gradient-to-r from-white to-indigo-50/20 p-2">
+                              {(editingMarket?.acceptance_addresses || []).map((item: any) => {
+                                const fp = item.fingerprint || normalizeForMatch(String(item.raw || ''));
+                                const isCopied = copiedAcceptanceKey === fp;
+                                const isPendingDelete = !!pendingAcceptanceDelete[fp];
+                                return (
+                                <div key={fp} className="flex items-start justify-between gap-2 rounded-md border border-gray-200 bg-gradient-to-r from-white to-indigo-50/20 p-2">
                                   <div className="min-w-0">
                                     <div className="text-sm text-gray-900 truncate">{item.raw || '—'}</div>
                                     <div className="text-[11px] text-gray-500">{item.city || ''} {item.plz || ''}</div>
@@ -6865,20 +6871,34 @@ Import EP
                                     <button
                                       className="h-6 w-6 rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center"
                                       title="Kopieren"
-                                      onClick={() => navigator.clipboard?.writeText(item.raw || '')}
+                                      onClick={async () => {
+                                        try {
+                                          await navigator.clipboard?.writeText(item.raw || '');
+                                          setCopiedAcceptanceKey(fp);
+                                          setTimeout(() => setCopiedAcceptanceKey(null), 1000);
+                                        } catch {}
+                                      }}
                                     >
-                                      <Copy className="h-3.5 w-3.5" />
+                                      {isCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
                                     </button>
                                     <button
-                                      className="h-6 w-6 rounded-md border border-gray-200 bg-white text-red-600 hover:bg-red-50 flex items-center justify-center"
+                                      className={`h-6 w-6 rounded-md border ${isPendingDelete ? 'border-red-300 wobble' : 'border-gray-200'} bg-white text-red-600 hover:bg-red-50 flex items-center justify-center`}
                                       title="Entfernen"
-                                      onClick={() => removeAcceptanceAddress(item.fingerprint || normalizeForMatch(String(item.raw || '')))}
+                                      onClick={() => {
+                                        if (!isPendingDelete) {
+                                          setPendingAcceptanceDelete(prev => ({ ...prev, [fp]: true }));
+                                          setTimeout(() => setPendingAcceptanceDelete(prev => ({ ...prev, [fp]: false })), 2000);
+                                          return;
+                                        }
+                                        removeAcceptanceAddress(fp);
+                                        setPendingAcceptanceDelete(prev => ({ ...prev, [fp]: false }));
+                                      }}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                   </div>
                                 </div>
-                              ))}
+                              )})}
                             </div>
                           )}
                         </div>
