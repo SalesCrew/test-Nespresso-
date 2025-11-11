@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServiceClient } from '@/lib/supabase/service'
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +59,40 @@ export async function POST(req: Request) {
     }
     
     const selectedMood = moodMap[category] || ''
-    const historicalContextString = 'Noch keine historischen Daten verfügbar.'
+    // Default: no historical context
+    let historicalContextString = 'Noch keine historischen Daten verfügbar.'
+
+    // Try to fetch latest historical feedback (KPIs + full email text) for this promotor by email
+    try {
+      if (email) {
+        const svc = createSupabaseServiceClient()
+        // Resolve user by email from user_profiles (case-insensitive)
+        const { data: profile } = await svc
+          .from('user_profiles')
+          .select('user_id, email')
+          .ilike('email', email)
+          .single()
+
+        if (profile?.user_id) {
+          const { data: latest } = await svc
+            .from('kpi_feedback')
+            .select('mc_et, tma, vl_value, feedback_text, created_at')
+            .eq('user_id', profile.user_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+
+          if (latest) {
+            const when = new Date(latest.created_at).toLocaleDateString('de-AT')
+            historicalContextString =
+              `Letztes Feedback vom ${when} – KPIs: MC/ET ${String(latest.mc_et ?? '')}, TMA ${String(latest.tma ?? '')}%, VL Share ${String(latest.vl_value ?? '')}%. ` +
+              `Gesendeter Text (Auszug): "${(latest.feedback_text || '').slice(0, 600)}"`
+          }
+        }
+      }
+    } catch (e) {
+      // Keep default string if anything fails
+    }
 
     const systemPrompt = `Du bist Teil einer Webapp, die automatisch E‑Mails an unsere externen Promotoren verschickt. Deine Aufgabe ist es, den E‑Mail-Text zu verfassen. Dabei beachtest du folgende Grundregeln:
 
