@@ -1892,7 +1892,6 @@ Liebe Grüße, dein Nespresso Team`;
                               <div className="rounded-lg border border-amber-200 bg-amber-50/50">
                                 <div className="grid grid-cols-10 text-xs text-gray-600 px-3 py-2 border-b border-amber-200/60">
                                   <div className="col-span-3">Name / Email</div>
-                                  <div>Promotor</div>
                                   <div>Gutscheine</div>
                                   <div>TMA</div>
                                   <div>Vertuo</div>
@@ -1905,30 +1904,22 @@ Liebe Grüße, dein Nespresso Team`;
                                   const totals = computePraemieTotals(u);
                                   return (
                                   <div key={idx} className="grid grid-cols-10 items-center px-3 py-2 border-t border-amber-100 text-sm relative">
-                                    <div className="col-span-3">
-                                      <div className="text-gray-900">{u.name || '—'}</div>
+                                    <button
+                                      onClick={(ev) => {
+                                        const r = (ev.currentTarget as HTMLElement).getBoundingClientRect();
+                                        const container = praemienModalRef.current?.getBoundingClientRect();
+                                        const top = (r.bottom - (container?.top || 0)) + 6;
+                                        const left = (r.left - (container?.left || 0));
+                                        setPraemienMatcherIndex(idx);
+                                        setPraemienMatcherQuery('');
+                                        setPraemienMatcherPos({ top, left });
+                                      }}
+                                      className="col-span-3 text-left"
+                                      title="Promotor zuordnen"
+                                    >
+                                      <div className="text-gray-900 underline decoration-dotted underline-offset-2">{u.name || '—'}</div>
                                       <div className="text-xs text-gray-500">{u.email || '—'}</div>
-                                    </div>
-                                    <div>
-                                      <button
-                                        onClick={(ev) => {
-                                          const target = ev.currentTarget as HTMLElement;
-                                          const r = target.getBoundingClientRect();
-                                          const container = praemienModalRef.current?.getBoundingClientRect();
-                                          const top = (r.bottom - (container?.top || 0)) + 6;
-                                          const left = (r.left - (container?.left || 0));
-                                          setPraemienMatcherIndex(idx);
-                                          setPraemienMatcherQuery('');
-                                          setPraemienMatcherPos({ top, left });
-                                        }}
-                                        className="px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-                                        title="Promotor zuordnen"
-                                      >
-                                        {praemienManualMap[idx]
-                                          ? (availablePromotersData.find(p => p.user_id === praemienManualMap[idx])?.name || 'Ausgewählt')
-                                          : (u.name || '— auswählen —')}
-                                      </button>
-                                    </div>
+                                    </button>
                                     <div className="text-right">{u.gutscheine || 0}</div>
                                     <div className="text-right">{u.tma || 0}</div>
                                     <div className="text-right">{u.vertuo || 0}</div>
@@ -1949,7 +1940,7 @@ Liebe Grüße, dein Nespresso Team`;
                     {praemienMatcherIndex !== null && praemienMatcherPos && (
                       <div
                         className="absolute z-50"
-                        style={{ top: praemienMatcherPos.top, left: praemienMatcherPos.left, minWidth: 320 }}
+                        style={{ top: praemienMatcherPos.top, left: praemienMatcherPos.left, minWidth: 240 }}
                       >
                         <div className="rounded-xl border border-gray-200 bg-white shadow-2xl">
                           <div className="p-2 border-b border-gray-100">
@@ -1960,7 +1951,7 @@ Liebe Grüße, dein Nespresso Team`;
                               className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md bg-white placeholder:text-gray-400 outline-none ring-0 focus:ring-0 focus:outline-none"
                             />
                           </div>
-                          <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                          <div className="max-h-56 overflow-y-auto scrollbar-hide">
                             {(availablePromotersData || [])
                               .filter(p => {
                                 if (!praemienMatcherQuery) return true;
