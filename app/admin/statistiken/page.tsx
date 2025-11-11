@@ -96,6 +96,20 @@ export default function StatistikenPage() {
     return { brutto: Number(brutto.toFixed(2)), netto: Number(netto.toFixed(2)) };
   };
 
+  // Prefetch prämien button highlight on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const waveRes = await fetch('/api/admin/kpi-praemien/latest-summary', { cache: 'no-store' });
+        if (waveRes.ok) {
+          const s = await waveRes.json();
+          setPraemienWave(s.waveMonth || null);
+          setPraemienHighlight(Boolean(s.highlight));
+        }
+      } catch {}
+    })();
+  }, []);
+
   // Unique promoter names that actually appear in history
   const historyPromoterNames = useMemo(() => {
     const names = historyCards.map(c => c.name).filter(Boolean) as string[];
@@ -1762,7 +1776,7 @@ Liebe Grüße, dein Nespresso Team`;
                     <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
-                          <Table className="h-4 w-4" />
+                          <Gift className="h-4 w-4" />
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">Prämien – Übersicht</h3>
