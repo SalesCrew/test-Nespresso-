@@ -2739,7 +2739,7 @@ Import EP
                               onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
                               className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
                                 isSelected 
-                                  ? 'bg-gray-100 text-gray-700 scale-110' 
+                                  ? 'bg-gray-100 text-gray-700' 
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
                               }`}
                             >
@@ -2806,7 +2806,7 @@ Import EP
                             onClick={() => setMatchedOnly(prev => !prev)}
                             className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
                               matchedOnly
-                                ? 'bg-red-100 text-red-700 border-red-300 scale-110'
+                                ? 'bg-red-100 text-red-700 border-red-300'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
                             }`}
                             title="Nur Einsätze ohne zugeordneten Markt anzeigen"
@@ -2821,7 +2821,7 @@ Import EP
                             onClick={() => setShowPromotorDropdown(!showPromotorDropdown)}
                             className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
                               promotorFilter
-                                ? 'text-gray-700 scale-110' 
+                                ? 'text-gray-700' 
                                 : 'text-gray-500'
                             }`}
                           >
@@ -2884,13 +2884,7 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${
-                              statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'
-                            } border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${
-                              statusFilter
-                                ? 'text-gray-700 scale-110' 
-                                : 'text-gray-500'
-                            }`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'} border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${statusFilter ? 'text-gray-700' : 'text-gray-500'}`}
                           >
                             {statusFilter || 'Status'}
                           </button>
@@ -2937,7 +2931,7 @@ Import EP
                             onClick={() => setShowMarketDropdown(!showMarketDropdown)}
                             className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
                               marketFilter
-                                ? 'text-gray-700 scale-110' 
+                                ? 'text-gray-700' 
                                 : 'text-gray-500'
                             }`}
                           >
@@ -2985,7 +2979,7 @@ Import EP
                           onClick={() => setShowDateDropdown(!showDateDropdown)}
                           className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 ${
                             selectedWeeks.length > 0 || dateRange.start || dateFilter
-                              ? 'text-black scale-110' 
+                              ? 'text-black' 
                               : 'text-gray-500'
                           }`}
                         >
@@ -4294,7 +4288,7 @@ Import EP
                               onClick={() => setRegionFilter(regionFilter === region ? "ALLE" : region)}
                               className={`px-3 py-1.5 rounded-full text-xs transition-all duration-200 border border-gray-200 ${
                                 isSelected 
-                                  ? 'bg-gray-100 text-gray-700 scale-110' 
+                                  ? 'bg-gray-100 text-gray-700' 
                                   : 'bg-white text-gray-500 hover:bg-gray-50'
                               }`}
                             >
@@ -4311,7 +4305,7 @@ Import EP
                             onClick={() => setShowPlzDropdown(!showPlzDropdown)}
                             className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
                               plzFilter
-                                ? 'text-gray-700 scale-110' 
+                                ? 'text-gray-700' 
                                 : 'text-gray-500'
                             }`}
                           >
@@ -4708,57 +4702,43 @@ Import EP
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("wien-noe-bgl")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("wien-noe-bgl")} ${getRegionBorder("wien-noe-bgl")} ${
-                        activeRegionFilter === "wien-noe-bgl" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("wien-noe-bgl")} ${getRegionBorder("wien-noe-bgl")}`}
                     >
                       W/NÖ/BGL
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("steiermark")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("steiermark")} ${getRegionBorder("steiermark")} ${
-                        activeRegionFilter === "steiermark" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("steiermark")} ${getRegionBorder("steiermark")}`}
                     >
                       ST
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("salzburg")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("salzburg")} ${getRegionBorder("salzburg")} ${
-                        activeRegionFilter === "salzburg" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("salzburg")} ${getRegionBorder("salzburg")}`}
                     >
                       SBG
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("oberoesterreich")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("oberoesterreich")} ${getRegionBorder("oberoesterreich")} ${
-                        activeRegionFilter === "oberoesterreich" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("oberoesterreich")} ${getRegionBorder("oberoesterreich")}`}
                     >
                       OÖ
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("tirol")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("tirol")} ${getRegionBorder("tirol")} ${
-                        activeRegionFilter === "tirol" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("tirol")} ${getRegionBorder("tirol")}`}
                     >
                       T
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("vorarlberg")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("vorarlberg")} ${getRegionBorder("vorarlberg")} ${
-                        activeRegionFilter === "vorarlberg" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("vorarlberg")} ${getRegionBorder("vorarlberg")}`}
                     >
                       V
                     </button>
                     <button
                       onClick={() => setActiveRegionFilter("kaernten")}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("kaernten")} ${getRegionBorder("kaernten")} ${
-                        activeRegionFilter === "kaernten" ? "scale-110" : ""
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border text-gray-700 hover:bg-gray-200/80 ${getRegionGradient("kaernten")} ${getRegionBorder("kaernten")}`}
                     >
                       K
                     </button>
