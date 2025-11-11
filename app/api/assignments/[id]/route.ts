@@ -146,6 +146,35 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             .update({ acceptance_addresses: updatedList })
             .eq('id', newMarketId)
         }
+
+        // Cascade match: find other assignments with exactly same normalized address (still unmatched) and set matched_market_id
+        try {
+          if (fingerprint) {
+            let q = svc
+              .from('assignments')
+              .select('id, location_text, postal_code, city, matched_market_id')
+              .is('matched_market_id', null)
+
+            if (before?.postal_code) q = q.eq('postal_code', String(before.postal_code))
+            if (before?.city) q = q.eq('city', String(before.city))
+
+            const { data: similar } = await q
+            const toUpdate = (similar || []).filter((row: any) => {
+              const parts = [
+                String(row.location_text || '').trim(),
+                [String(row.postal_code || '').trim(), String(row.city || '').trim()].filter(Boolean).join(' ')
+              ].filter(Boolean)
+              const cand = normalizeForMatch(parts.join(', ').trim())
+              return cand === fingerprint && row.id !== before?.id
+            }).map((row: any) => row.id)
+
+            if (toUpdate.length > 0) {
+              await svc.from('assignments').update({ matched_market_id: newMarketId }).in('id', toUpdate)
+            }
+          }
+        } catch (e) {
+          console.warn('Non-blocking: failed to cascade manual match to similar assignments', e)
+        }
       }
     } catch (e) {
       console.warn('Non-blocking: failed to append acceptance address', e)

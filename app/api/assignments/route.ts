@@ -90,6 +90,43 @@ export async function POST(req: Request) {
     const svc = createSupabaseServiceClient()
     const { data, error } = await svc.from('assignments').insert(body).select('*').single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Immediately try to auto-match this new assignment using market acceptance memory
+    try {
+      const assignment = data as any
+      // Load markets (minimal fields)
+      const { data: markets } = await svc
+        .from('markets')
+        .select('id, name, address, plz, city, acceptance_addresses')
+
+      if (markets && markets.length > 0) {
+        // Build helpers similar to auto-match route
+        const normalizeForMatch = (input: string) =>
+          input.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim()
+
+        const parts = [
+          String(assignment.location_text || '').trim(),
+          [String(assignment.postal_code || '').trim(), String(assignment.city || '').trim()].filter(Boolean).join(' ')
+        ].filter(Boolean)
+        const aFp = normalizeForMatch(parts.join(', ').trim())
+
+        // Fast path: exact acceptance match
+        let chosen: any = null
+        for (const m of markets) {
+          const primaryParts = [String((m as any).address || '').trim(), [String((m as any).plz || '').trim(), String((m as any).city || '').trim()].filter(Boolean).join(' ')].filter(Boolean)
+          const primaryFp = normalizeForMatch(primaryParts.join(', ').trim())
+          const acc = Array.isArray((m as any).acceptance_addresses) ? (m as any).acceptance_addresses : []
+          const set = new Set<string>([primaryFp, ...acc.map((a: any) => normalizeForMatch(String(a?.fingerprint || a?.raw || '')))])
+          if (aFp && set.has(aFp)) { chosen = m; break; }
+        }
+
+        // If fast path found, update
+        if (chosen) {
+          await svc.from('assignments').update({ matched_market_id: (chosen as any).id }).eq('id', assignment.id)
+        }
+      }
+    } catch { /* non-blocking */ }
+
     return NextResponse.json({ assignment: data }, { status: 201 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })
