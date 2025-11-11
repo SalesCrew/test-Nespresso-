@@ -1903,7 +1903,7 @@ Liebe Grüße, dein Nespresso Team`;
                                 {praemienUnmatched.map((u, idx) => {
                                   const totals = computePraemieTotals(u);
                                   return (
-                                  <div key={idx} className="grid grid-cols-10 items-start px-3 py-2 border-t border-amber-100 text-sm relative">
+                                  <div key={idx} className="grid grid-cols-10 items-center px-3 py-2 border-t border-amber-100 text-sm relative">
                                     <button
                                       onClick={(ev) => {
                                         const r = (ev.currentTarget as HTMLElement).getBoundingClientRect();
