@@ -25,7 +25,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (assignmentPlz) {
       const { data: byPlz, error: plzErr } = await svc
         .from('markets')
-        .select('id, name, address, plz, city')
+        .select('id, name, address, plz, city, acceptance_addresses')
         .eq('plz', assignmentPlz)
       if (plzErr) return NextResponse.json({ error: plzErr.message }, { status: 500 })
       candidates = byPlz || []
@@ -48,7 +48,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       if (cityKey) {
         const { data: byCity, error: cityErr } = await svc
           .from('markets')
-          .select('id, name, address, plz, city')
+          .select('id, name, address, plz, city, acceptance_addresses')
           .ilike('city', '%') // fetch all; we'll normalize in JS quickly
         if (cityErr) return NextResponse.json({ error: cityErr.message }, { status: 500 })
         candidates = (byCity || []).filter((m: any) => normalizeForMatch(String(m.city || '')) === cityKey)
@@ -57,7 +57,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (candidates.length === 0) {
       const { data: allMarkets, error: mErr } = await svc
         .from('markets')
-        .select('id, name, address, plz, city')
+        .select('id, name, address, plz, city, acceptance_addresses')
       if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
       candidates = allMarkets || []
     }

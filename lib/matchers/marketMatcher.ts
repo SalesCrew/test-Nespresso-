@@ -11,6 +11,8 @@ export type MarketLike = {
   address?: string | null
   plz?: string | null
   city?: string | null
+  // Optional memory of additional acceptable addresses
+  acceptance_addresses?: Array<{ raw?: string; fingerprint?: string }> | null
 }
 
 export function normalizeForMatch(input: string): string {
@@ -66,9 +68,31 @@ export function computeBestMarket(
   assignment: AssignmentLike,
   markets: MarketLike[],
 ): { market: MarketLike | null; score: number } {
+  // Build a simple fingerprint for exact-match fast path
+  const parts = [
+    String(assignment.location_text || '').trim(),
+    [String(assignment.postal_code || '').trim(), String(assignment.city || '').trim()].filter(Boolean).join(' ')
+  ].filter(Boolean)
+  const assignmentRaw = parts.join(', ').trim()
+  const assignmentFp = normalizeForMatch(assignmentRaw)
+
   let best: MarketLike | null = null
   let bestScore = -1
   for (const m of markets) {
+    // Fast path: if acceptance list (or primary) matches by fingerprint, prefer strongly
+    const primaryRaw = [String(m.address || '').trim(), [String(m.plz || '').trim(), String(m.city || '').trim()].filter(Boolean).join(' ')].filter(Boolean).join(', ').trim()
+    const primaryFp = normalizeForMatch(primaryRaw)
+    const acceptance = Array.isArray(m.acceptance_addresses) ? m.acceptance_addresses : []
+    const acceptanceSet = new Set<string>([primaryFp, ...acceptance.map(a => normalizeForMatch(String(a?.fingerprint || a?.raw || '')))])
+    if (assignmentFp && acceptanceSet.has(assignmentFp)) {
+      const s = 1000 // dominant score for exact remembered match
+      if (s > bestScore) {
+        best = m
+        bestScore = s
+        continue
+      }
+    }
+
     const s = scoreAssignmentToMarket(assignment, m)
     if (s > bestScore) {
       best = m

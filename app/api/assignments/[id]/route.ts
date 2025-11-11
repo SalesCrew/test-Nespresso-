@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase/service'
+import { normalizeForMatch } from '@/lib/matchers/marketMatcher'
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json().catch(() => ({} as any))
     console.log('🟢 [API] PATCH /assignments/[id] received body:', body)
     const svc = createSupabaseServiceClient()
+
+    // Load previous state to detect manual market link
+    const { data: before } = await svc
+      .from('assignments')
+      .select('id, location_text, postal_code, city, matched_market_id')
+      .eq('id', params.id)
+      .single()
 
     const updates: Record<string, any> = {}
 
@@ -101,6 +109,48 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     console.log('🟢 Assignment updated successfully:', data)
+
+    // Best-effort: if matched_market_id was set manually here, remember address on market
+    try {
+      const newMarketId = body?.matched_market_id
+      const wasUnmatched = !before?.matched_market_id
+      if (newMarketId && wasUnmatched) {
+        const rawParts = [
+          String(before?.location_text || '').trim(),
+          [String(before?.postal_code || '').trim(), String(before?.city || '').trim()].filter(Boolean).join(' ')
+        ].filter(Boolean)
+        const raw = rawParts.join(', ').trim()
+        const fingerprint = normalizeForMatch(raw)
+
+        // Fetch current acceptance list
+        const { data: marketRow } = await svc
+          .from('markets')
+          .select('id, acceptance_addresses')
+          .eq('id', newMarketId)
+          .single()
+
+        const list: any[] = Array.isArray((marketRow as any)?.acceptance_addresses) ? (marketRow as any).acceptance_addresses : []
+        const exists = list.some((e: any) => (e?.fingerprint || '') === fingerprint)
+        if (!exists && fingerprint) {
+          const entry = {
+            raw,
+            fingerprint,
+            plz: String(before?.postal_code || '').trim() || null,
+            city: String(before?.city || '').trim() || null,
+            source: 'manual',
+            added_at: new Date().toISOString()
+          }
+          const updatedList = [entry, ...list].slice(0, 30)
+          await svc
+            .from('markets')
+            .update({ acceptance_addresses: updatedList })
+            .eq('id', newMarketId)
+        }
+      }
+    } catch (e) {
+      console.warn('Non-blocking: failed to append acceptance address', e)
+    }
+
     return NextResponse.json({ assignment: data })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Server error' }, { status: 500 })

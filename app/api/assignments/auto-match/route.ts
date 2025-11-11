@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     // Load all markets once
     const { data: markets, error: mErr } = await svc
       .from('markets')
-      .select('id, name, address, plz, city')
+      .select('id, name, address, plz, city, acceptance_addresses')
     if (mErr) return NextResponse.json({ error: mErr.message }, { status: 500 })
 
     const normalizedCityToMarkets = new Map<string, any[]>()
@@ -90,6 +90,8 @@ export async function POST(req: Request) {
     // Compute matches
     const updates: { id: string; matched_market_id: string }[] = []
     for (const a of assignments) {
+      // Skip if already matched
+      if (a.matched_market_id) continue
       const cityKey = normalizeForMatch(String(a.city || a.location_text || ''))
       const byPlz = plzToMarkets.get(String(a.postal_code || '').trim()) || []
       if (byPlz.length === 1) {
@@ -105,7 +107,7 @@ export async function POST(req: Request) {
           postal_code: a.postal_code,
           city: a.city,
         },
-        candidates.map(m => ({ id: m.id, name: m.name, address: m.address, plz: m.plz, city: m.city }))
+        candidates.map(m => ({ id: m.id, name: m.name, address: m.address, plz: m.plz, city: m.city, acceptance_addresses: m.acceptance_addresses }))
       )
       if (market && score >= threshold) {
         updates.push({ id: a.id, matched_market_id: market.id })
