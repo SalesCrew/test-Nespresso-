@@ -3612,7 +3612,7 @@ Import EP
                             {showMarketMatchPopup === einsatz.id && (
                               <div
                                 ref={marketMatchPopupRef}
-                                className="absolute top-full right-0 mt-2 w-[520px] max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl z-50"
+                                className="absolute top-full right-0 mt-2 w-[520px] max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl z-[1000]"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {/* Header */}
@@ -3679,14 +3679,22 @@ Import EP
                                           m.cluster === 'tirol' ? 'T' :
                                           m.cluster === 'vorarlberg' ? 'V' :
                                           m.cluster === 'kaernten' ? 'K' : '—';
+                                        const clusterClass =
+                                          m.cluster === 'wien-noe-bgl' ? 'bg-[#E8F0FE] text-gray-700 border-[#CBD7F5]' :
+                                          m.cluster === 'steiermark' ? 'bg-[#E7F5ED] text-gray-700 border-[#CFECDD]' :
+                                          m.cluster === 'salzburg' ? 'bg-[#F0E9FF] text-gray-700 border-[#DDD4FF]' :
+                                          m.cluster === 'oberoesterreich' ? 'bg-[#FFF3E6] text-gray-700 border-[#FFE3C7]' :
+                                          m.cluster === 'tirol' ? 'bg-[#FFF0F0] text-gray-700 border-[#FFD9D9]' :
+                                          m.cluster === 'vorarlberg' ? 'bg-[#EAF8FF] text-gray-700 border-[#CFEFFF]' :
+                                          m.cluster === 'kaernten' ? 'bg-[#EAF6FF] text-gray-700 border-[#D6ECFF]' : 'bg-gray-50 text-gray-700 border-gray-200';
                                         return (
                                           <div key={m.id} className="flex items-center justify-between gap-3 p-2.5 mb-2 rounded-lg border border-gray-100 hover:bg-gray-50">
                                             <div className="min-w-0">
                                               <div className="text-sm font-medium text-gray-900 truncate">{m.name}</div>
                                               <div className="text-xs text-gray-500 truncate">{[m.plz, m.city].filter(Boolean).join(' ')} • {m.address}</div>
                                             </div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${clusterClass}`}>
                                                 {short}
                                               </span>
                                               {isSelected ? (
@@ -3695,7 +3703,7 @@ Import EP
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className="px-2 py-1 text-xs rounded-md border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                                                  className="px-2 py-1 text-xs rounded-md border border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
                                                   onClick={async () => {
                                                     try {
                                                       const res = await fetch(`/api/assignments/${einsatz.id}`, {
