@@ -2947,7 +2947,7 @@ Import EP
                             }`}
                             style={marketFilter ? { transform: 'scale(1.05)' } : undefined}
                           >
-                            <span className="truncate whitespace-nowrap block w-full">{marketFilter || 'Market'}</span>
+                            <span className="truncate whitespace-nowrap block" style={{ maxWidth: '6ch' }}>{marketFilter || 'Market'}</span>
                           </button>
                           
                           {showMarketDropdown && (
