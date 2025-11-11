@@ -3686,7 +3686,7 @@ Import EP
                                               <div className="text-xs text-gray-500 truncate">{[m.plz, m.city].filter(Boolean).join(' ')} • {m.address}</div>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
-                                              <div className="flex flex-col items-center justify-center">
+                                              <div className="w-16 flex items-center justify-center">
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${getRegionGradient(m.cluster)} ${getRegionBorder(m.cluster)} text-gray-700`}>
                                                   {short}
                                                 </span>
