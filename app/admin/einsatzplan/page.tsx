@@ -6937,7 +6937,7 @@ Import EP
                               className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-0"
                             />
                           </div>
-                          <div className="text-[11px] text-gray-500">
+                          <div className="text-[11px] text-gray-500 text-center">
                             Maximal 30 Einträge. Doppelte werden ignoriert.
                           </div>
                         </div>
