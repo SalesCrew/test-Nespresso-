@@ -77,6 +77,8 @@ export default function StatistikenPage() {
   const [praemienHighlight, setPraemienHighlight] = useState(false);
   const [praemienSummary, setPraemienSummary] = useState<{items: any[]; totals: { brutto: number; netto: number}} | null>(null);
   const [praemienLoading, setPraemienLoading] = useState(false);
+  const [praemienUnmatched, setPraemienUnmatched] = useState<any[]>([]);
+  const [praemienManualMap, setPraemienManualMap] = useState<Record<number, string>>({});
 
   // Unique promoter names that actually appear in history
   const historyPromoterNames = useMemo(() => {
@@ -1767,43 +1769,21 @@ Liebe Grüße, dein Nespresso Team`;
                           const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[];
                               const header = rows[0] || [];
                               const dataRows = rows.slice(1);
-                              let emailIdx = header.findIndex((h: any) => String(h || '').toLowerCase().includes('mail'));
-                              if (emailIdx < 0) {
-                                // Heuristic: choose the column with the most '@' occurrences among first 20 cols
-                                const maxCols = Math.min(20, header.length || 20);
-                                const counts = new Array(maxCols).fill(0);
-                                for (const r of dataRows) {
-                                  for (let i = 0; i < Math.min(maxCols, r.length || 0); i++) {
-                                    if ((r[i] || '').toString().includes('@')) counts[i]++;
-                                  }
-                                }
-                                let best = -1, bestCount = 0;
-                                counts.forEach((c, i) => { if (c > bestCount) { best = i; bestCount = c; } });
-                                emailIdx = best >= 0 && bestCount > 0 ? best : -1;
-                              }
-                              const findEmailInRow = (r: any[]) => {
-                                const maxCols = Math.min(20, r.length || 0);
-                                for (let i = 0; i < maxCols; i++) {
-                                  const val = (r[i] || '').toString().trim();
-                                  if (val.includes('@')) return val;
-                                }
-                                return '';
-                              };
                               const get = (r: any[], idx: number) => Number.isFinite(Number(r[idx])) ? Number(r[idx]) : parseInt(String(r[idx] || 0), 10) || 0;
-                              const mapped = dataRows.map(r => {
-                                const emailCell = emailIdx >= 0 ? r[emailIdx] : findEmailInRow(r);
-                                const email = (emailCell || '').toString().trim();
-                                if (!email || !email.includes('@')) return null;
-                                return {
-                                  email,
-                                  tma: get(r, 6),           // G
-                                  gutscheine: get(r, 7),    // H
-                                  vertuo: get(r, 14),       // O
-                                  aeroccino: get(r, 15),    // P
-                                  vertuo_pop: get(r, 17),   // R
-                                  vorteilsbox: get(r, 23),  // X (optional)
-                                };
-                              }).filter(Boolean) as any[];
+                              // Explicit column mapping per spec:
+                              // A: Name (0), B: Email (1), G: TMA (6), H: Gutscheine (7), O: Vertuo (14), P: Aeroccino (15), R: Vertuo Pop+ (17), X: Vorteilsbox (23 optional)
+                              const mapped = dataRows
+                                .filter(r => r && (r[0] || r[1]))
+                                .map(r => ({
+                                  name: (r[0] || '').toString().trim(),
+                                  email: (r[1] || '').toString().trim(),
+                                  tma: get(r, 6),
+                                  gutscheine: get(r, 7),
+                                  vertuo: get(r, 14),
+                                  aeroccino: get(r, 15),
+                                  vertuo_pop: get(r, 17),
+                                  vorteilsbox: get(r, 23),
+                                })) as any[];
                               try {
                                 const res = await fetch('/api/admin/kpi-praemien/import', {
                                   method: 'POST',
@@ -1811,8 +1791,11 @@ Liebe Grüße, dein Nespresso Team`;
                                   body: JSON.stringify({ waveMonth: praemienWave, rows: mapped }),
                                 });
                                 if (res.ok) {
+                                  const result = await res.json().catch(() => ({}));
                                   const ref = await fetch(`/api/admin/kpi-praemien?waveMonth=${praemienWave}`, { cache: 'no-store' });
                                   if (ref.ok) setPraemienSummary(await ref.json());
+                                  setPraemienUnmatched(Array.isArray(result?.unmatched) ? result.unmatched : []);
+                                  setPraemienManualMap({});
                                 }
                               } catch (err) {
                                 console.error('Import failed', err);
@@ -1884,6 +1867,87 @@ Liebe Grüße, dein Nespresso Team`;
                               </div>
                             ))}
                           </div>
+                          {/* Manual matching for unmatched rows */}
+                          {praemienUnmatched.length > 0 && (
+                            <div className="mt-6">
+                              <div className="mb-2 flex items-center justify-between">
+                                <h4 className="text-sm font-semibold text-gray-900">Nicht zugeordnete Zeilen</h4>
+                                <button
+                                  onClick={async () => {
+                                    // Build rows with selected user_ids
+                                    const rows = praemienUnmatched
+                                      .map((u, idx) => {
+                                        const user_id = praemienManualMap[idx];
+                                        if (!user_id) return null;
+                                        return {
+                                          user_id,
+                                          gutscheine: u.gutscheine || 0,
+                                          tma: u.tma || 0,
+                                          vertuo: u.vertuo || 0,
+                                          vertuo_pop: u.vertuo_pop || 0,
+                                          aeroccino: u.aeroccino || 0,
+                                          vorteilsbox: u.vorteilsbox || 0,
+                                        };
+                                      })
+                                      .filter(Boolean);
+                                    if (!rows.length || !praemienWave) return;
+                                    try {
+                                      const res = await fetch('/api/admin/kpi-praemien/import', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ waveMonth: praemienWave, rows }),
+                                      });
+                                      if (res.ok) {
+                                        const ref = await fetch(`/api/admin/kpi-praemien?waveMonth=${praemienWave}`, { cache: 'no-store' });
+                                        if (ref.ok) setPraemienSummary(await ref.json());
+                                        setPraemienUnmatched([]);
+                                        setPraemienManualMap({});
+                                      }
+                                    } catch (e) {
+                                      console.error('Manual match import failed', e);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                  disabled={!Object.values(praemienManualMap).some(Boolean)}
+                                >
+                                  Zuordnungen importieren
+                                </button>
+                              </div>
+                              <div className="rounded-lg border border-amber-200 bg-amber-50/50">
+                                <div className="grid grid-cols-6 text-xs text-gray-600 px-3 py-2 border-b border-amber-200/60">
+                                  <div className="col-span-2">Name / Email</div>
+                                  <div className="col-span-2">Promotor zuordnen</div>
+                                  <div>Gutscheine</div>
+                                  <div>TMA</div>
+                                </div>
+                                {praemienUnmatched.map((u, idx) => (
+                                  <div key={idx} className="grid grid-cols-6 items-center px-3 py-2 border-t border-amber-100 text-sm">
+                                    <div className="col-span-2">
+                                      <div className="text-gray-900">{u.name || '—'}</div>
+                                      <div className="text-xs text-gray-500">{u.email || '—'}</div>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <select
+                                        value={praemienManualMap[idx] || ''}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          setPraemienManualMap(prev => ({ ...prev, [idx]: v }));
+                                        }}
+                                        className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
+                                      >
+                                        <option value="">— auswählen —</option>
+                                        {availablePromotersData.map(p => (
+                                          <option key={p.user_id} value={p.user_id}>{p.name}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div className="text-right">{u.gutscheine || 0}</div>
+                                    <div className="text-right">{u.tma || 0}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
