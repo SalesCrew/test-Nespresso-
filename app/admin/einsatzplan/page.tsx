@@ -2804,14 +2804,14 @@ Import EP
                           {/* Matched filter pill */}
                           <button
                             onClick={() => setMatchedOnly(prev => !prev)}
-                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 ${
+                            className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 max-w-[180px] ${
                               matchedOnly
                                 ? 'bg-red-100 text-red-700 border-red-300'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
                             }`}
                             title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                           >
-                            Nicht zugeordnet
+                            <span className="block max-w-[140px] leading-tight break-words text-center">Nicht zugeordnet</span>
                           </button>
                         </div>
                         
@@ -2819,13 +2819,13 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowPromotorDropdown(!showPromotorDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[200px] ${
                               promotorFilter
                                 ? 'text-gray-700' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            {promotorFilter || 'Promotor'}
+                            <span className="block max-w-[160px] leading-tight break-words text-center">{promotorFilter || 'Promotor'}</span>
                           </button>
                           
                           {showPromotorDropdown && (
@@ -2884,9 +2884,9 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'} border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${statusFilter ? 'text-gray-700' : 'text-gray-500'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'} border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${statusFilter ? 'text-gray-700' : 'text-gray-500'} max-w-[180px]`}
                           >
-                            {statusFilter || 'Status'}
+                            <span className="block max-w-[140px] leading-tight break-words text-center">{statusFilter || 'Status'}</span>
                           </button>
                           
                           {showStatusDropdown && (
@@ -2929,13 +2929,15 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowMarketDropdown(!showMarketDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 ${
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[240px] ${
                               marketFilter
                                 ? 'text-gray-700' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            {marketFilter ? (marketFilter.length > 15 ? marketFilter.substring(0, 15) + '...' : marketFilter) : 'Market'}
+                            <span className="block max-w-[200px] leading-tight break-words text-center">
+                              {marketFilter || 'Market'}
+                            </span>
                           </button>
                           
                           {showMarketDropdown && (
@@ -2977,13 +2979,13 @@ Import EP
                         <div className="relative">
                         <button
                           onClick={() => setShowDateDropdown(!showDateDropdown)}
-                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 ${
+                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 max-w-[200px] ${
                             selectedWeeks.length > 0 || dateRange.start || dateFilter
                               ? 'text-black' 
                               : 'text-gray-500'
                           }`}
                         >
-                          {getFilterDisplayText()}
+                          <span className="block max-w-[160px] leading-tight break-words text-center">{getFilterDisplayText()}</span>
                         </button>
                         
                         {showDateDropdown && (
