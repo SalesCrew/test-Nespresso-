@@ -1903,7 +1903,7 @@ Liebe Grüße, dein Nespresso Team`;
                                 {praemienUnmatched.map((u, idx) => {
                                   const totals = computePraemieTotals(u);
                                   return (
-                                  <div key={idx} className="grid grid-cols-10 items-center px-3 py-2 border-t border-amber-100 text-sm relative">
+                                  <div key={idx} className="grid grid-cols-10 items-start px-3 py-2 border-t border-amber-100 text-sm relative">
                                     <button
                                       onClick={(ev) => {
                                         const r = (ev.currentTarget as HTMLElement).getBoundingClientRect();
@@ -1940,7 +1940,7 @@ Liebe Grüße, dein Nespresso Team`;
                     {praemienMatcherIndex !== null && praemienMatcherPos && (
                       <div
                         className="absolute z-50"
-                        style={{ top: praemienMatcherPos.top, left: praemienMatcherPos.left, minWidth: 240 }}
+                        style={{ top: praemienMatcherPos.top, left: praemienMatcherPos.left, width: 220 }}
                       >
                         <div className="rounded-xl border border-gray-200 bg-white shadow-2xl">
                           <div className="p-2 border-b border-gray-100">
