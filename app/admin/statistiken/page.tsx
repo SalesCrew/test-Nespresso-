@@ -79,6 +79,22 @@ export default function StatistikenPage() {
   const [praemienLoading, setPraemienLoading] = useState(false);
   const [praemienUnmatched, setPraemienUnmatched] = useState<any[]>([]);
   const [praemienManualMap, setPraemienManualMap] = useState<Record<number, string>>({});
+  const [praemienMatcherIndex, setPraemienMatcherIndex] = useState<number | null>(null);
+  const [praemienMatcherQuery, setPraemienMatcherQuery] = useState('');
+  const [praemienMatcherPos, setPraemienMatcherPos] = useState<{top: number; left: number} | null>(null);
+  const praemienModalRef = useRef<HTMLDivElement>(null);
+
+  const computePraemieTotals = (u: { gutscheine?: number; tma?: number; vertuo?: number; vertuo_pop?: number; aeroccino?: number; vorteilsbox?: number }) => {
+    const g = Number(u.gutscheine || 0);
+    const t = Number(u.tma || 0);
+    const v = Number(u.vertuo || 0);
+    const vp = Number(u.vertuo_pop || 0);
+    const a = Number(u.aeroccino || 0);
+    const vb = Number(u.vorteilsbox || 0);
+    const brutto = t*7.5 + g*3.5 + v*7.5 + vp*7.5 + a*3.5 + vb*0;
+    const netto  = t*6.19 + g*2.89 + v*6.19 + vp*6.19 + a*2.89 + vb*0;
+    return { brutto: Number(brutto.toFixed(2)), netto: Number(netto.toFixed(2)) };
+  };
 
   // Unique promoter names that actually appear in history
   const historyPromoterNames = useMemo(() => {
@@ -1741,7 +1757,7 @@ Liebe Grüße, dein Nespresso Team`;
               {showPraemienModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowPraemienModal(false)}>
                   <div className="absolute inset-0 bg-black/30" />
-                  <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()} ref={praemienModalRef}>
                     {/* Header */}
                     <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -1833,7 +1849,7 @@ Liebe Grüße, dein Nespresso Team`;
                       </div>
                     </div>
                     {/* Table */}
-                    <div className="p-4 max-h-[60vh] overflow-y-auto">
+                    <div className="p-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
                       {praemienLoading ? (
                         <div className="text-sm text-gray-500">Lade Prämien…</div>
                       ) : !praemienSummary ? (
@@ -1872,85 +1888,131 @@ Liebe Grüße, dein Nespresso Team`;
                             <div className="mt-6">
                               <div className="mb-2 flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-gray-900">Nicht zugeordnete Zeilen</h4>
-                                <button
-                                  onClick={async () => {
-                                    // Build rows with selected user_ids
-                                    const rows = praemienUnmatched
-                                      .map((u, idx) => {
-                                        const user_id = praemienManualMap[idx];
-                                        if (!user_id) return null;
-                                        return {
-                                          user_id,
-                                          gutscheine: u.gutscheine || 0,
-                                          tma: u.tma || 0,
-                                          vertuo: u.vertuo || 0,
-                                          vertuo_pop: u.vertuo_pop || 0,
-                                          aeroccino: u.aeroccino || 0,
-                                          vorteilsbox: u.vorteilsbox || 0,
-                                        };
-                                      })
-                                      .filter(Boolean);
-                                    if (!rows.length || !praemienWave) return;
-                                    try {
-                                      const res = await fetch('/api/admin/kpi-praemien/import', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ waveMonth: praemienWave, rows }),
-                                      });
-                                      if (res.ok) {
-                                        const ref = await fetch(`/api/admin/kpi-praemien?waveMonth=${praemienWave}`, { cache: 'no-store' });
-                                        if (ref.ok) setPraemienSummary(await ref.json());
-                                        setPraemienUnmatched([]);
-                                        setPraemienManualMap({});
-                                      }
-                                    } catch (e) {
-                                      console.error('Manual match import failed', e);
-                                    }
-                                  }}
-                                  className="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                                  disabled={!Object.values(praemienManualMap).some(Boolean)}
-                                >
-                                  Zuordnungen importieren
-                                </button>
-                              </div>
+                                </div>
                               <div className="rounded-lg border border-amber-200 bg-amber-50/50">
-                                <div className="grid grid-cols-6 text-xs text-gray-600 px-3 py-2 border-b border-amber-200/60">
-                                  <div className="col-span-2">Name / Email</div>
-                                  <div className="col-span-2">Promotor zuordnen</div>
+                                <div className="grid grid-cols-10 text-xs text-gray-600 px-3 py-2 border-b border-amber-200/60">
+                                  <div className="col-span-3">Name / Email</div>
+                                  <div>Promotor</div>
                                   <div>Gutscheine</div>
                                   <div>TMA</div>
+                                  <div>Vertuo</div>
+                                  <div>Pop+</div>
+                                  <div>Aeroc.</div>
+                                  <div>Brutto</div>
+                                  <div>Netto</div>
                                 </div>
-                                {praemienUnmatched.map((u, idx) => (
-                                  <div key={idx} className="grid grid-cols-6 items-center px-3 py-2 border-t border-amber-100 text-sm">
-                                    <div className="col-span-2">
+                                {praemienUnmatched.map((u, idx) => {
+                                  const totals = computePraemieTotals(u);
+                                  return (
+                                  <div key={idx} className="grid grid-cols-10 items-center px-3 py-2 border-t border-amber-100 text-sm relative">
+                                    <div className="col-span-3">
                                       <div className="text-gray-900">{u.name || '—'}</div>
                                       <div className="text-xs text-gray-500">{u.email || '—'}</div>
                                     </div>
-                                    <div className="col-span-2">
-                                      <select
-                                        value={praemienManualMap[idx] || ''}
-                                        onChange={(e) => {
-                                          const v = e.target.value;
-                                          setPraemienManualMap(prev => ({ ...prev, [idx]: v }));
+                                    <div>
+                                      <button
+                                        onClick={(ev) => {
+                                          const target = ev.currentTarget as HTMLElement;
+                                          const r = target.getBoundingClientRect();
+                                          const container = praemienModalRef.current?.getBoundingClientRect();
+                                          const top = (r.bottom - (container?.top || 0)) + 6;
+                                          const left = (r.left - (container?.left || 0));
+                                          setPraemienMatcherIndex(idx);
+                                          setPraemienMatcherQuery('');
+                                          setPraemienMatcherPos({ top, left });
                                         }}
-                                        className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm bg-white"
+                                        className="px-2 py-1 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                        title="Promotor zuordnen"
                                       >
-                                        <option value="">— auswählen —</option>
-                                        {availablePromotersData.map(p => (
-                                          <option key={p.user_id} value={p.user_id}>{p.name}</option>
-                                        ))}
-                                      </select>
+                                        {praemienManualMap[idx]
+                                          ? (availablePromotersData.find(p => p.user_id === praemienManualMap[idx])?.name || 'Ausgewählt')
+                                          : (u.name || '— auswählen —')}
+                                      </button>
                                     </div>
                                     <div className="text-right">{u.gutscheine || 0}</div>
                                     <div className="text-right">{u.tma || 0}</div>
+                                    <div className="text-right">{u.vertuo || 0}</div>
+                                    <div className="text-right">{u.vertuo_pop || 0}</div>
+                                    <div className="text-right">{u.aeroccino || 0}</div>
+                                    <div className="text-right font-medium text-gray-900">{totals.brutto.toFixed(2)} €</div>
+                                    <div className="text-right font-medium text-gray-900">{totals.netto.toFixed(2)} €</div>
                                   </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}
                         </div>
                       )}
                     </div>
+                    {/* Floating matcher popover */}
+                    {praemienMatcherIndex !== null && praemienMatcherPos && (
+                      <div
+                        className="absolute z-50"
+                        style={{ top: praemienMatcherPos.top, left: praemienMatcherPos.left, minWidth: 320 }}
+                      >
+                        <div className="rounded-xl border border-gray-200 bg-white shadow-2xl">
+                          <div className="p-2 border-b border-gray-100">
+                            <input
+                              value={praemienMatcherQuery}
+                              onChange={(e) => setPraemienMatcherQuery(e.target.value)}
+                              placeholder="Promotor suchen…"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md bg-white placeholder:text-gray-400 outline-none ring-0 focus:ring-0 focus:outline-none"
+                            />
+                          </div>
+                          <div className="max-h-60 overflow-y-auto scrollbar-hide">
+                            {(availablePromotersData || [])
+                              .filter(p => {
+                                if (!praemienMatcherQuery) return true;
+                                const q = praemienMatcherQuery.toLowerCase();
+                                return p.name.toLowerCase().includes(q);
+                              })
+                              .map(p => (
+                                <button
+                                  key={p.user_id}
+                                  onClick={async () => {
+                                    if (praemienMatcherIndex === null || !praemienWave) return;
+                                    const u = praemienUnmatched[praemienMatcherIndex];
+                                    if (!u) return;
+                                    try {
+                                      const res = await fetch('/api/admin/kpi-praemien/import', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          waveMonth: praemienWave,
+                                          rows: [{
+                                            user_id: p.user_id,
+                                            gutscheine: u.gutscheine || 0,
+                                            tma: u.tma || 0,
+                                            vertuo: u.vertuo || 0,
+                                            vertuo_pop: u.vertuo_pop || 0,
+                                            aeroccino: u.aeroccino || 0,
+                                            vorteilsbox: u.vorteilsbox || 0,
+                                          }]
+                                        }),
+                                      });
+                                      if (res.ok) {
+                                        const ref = await fetch(`/api/admin/kpi-praemien?waveMonth=${praemienWave}`, { cache: 'no-store' });
+                                        if (ref.ok) setPraemienSummary(await ref.json());
+                                        setPraemienUnmatched(prev => prev.filter((_, i) => i !== praemienMatcherIndex));
+                                      }
+                                    } catch (e) {
+                                      console.error('Assign failed', e);
+                                    } finally {
+                                      setPraemienMatcherIndex(null);
+                                      setPraemienMatcherPos(null);
+                                      setPraemienMatcherQuery('');
+                                    }
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                >
+                                  {p.name}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* Footer */}
                     <div className="p-3 border-t border-gray-100 text-right">
                       <button
