@@ -3612,12 +3612,8 @@ Import EP
                             {showMarketMatchPopup === einsatz.id && (
                               <div
                                 ref={marketMatchPopupRef}
-                                className="fixed mt-2 w-[520px] max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl z-[9999]"
+                                className="absolute top-full right-0 mt-2 w-[520px] max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl z-50"
                                 onClick={(e) => e.stopPropagation()}
-                                style={{
-                                  top: `${(document.querySelector(`[data-market-match-icon]`) as HTMLElement)?.getBoundingClientRect().bottom + window.scrollY + 8 || 0}px`,
-                                  left: `${Math.max(16, ((document.querySelector(`[data-market-match-icon]`) as HTMLElement)?.getBoundingClientRect().right || 0) - 520)}px`
-                                }}
                               >
                                 {/* Header */}
                                 <div className="p-3 border-b border-gray-100 flex items-center justify-between gap-3">
@@ -3690,9 +3686,11 @@ Import EP
                                               <div className="text-xs text-gray-500 truncate">{[m.plz, m.city].filter(Boolean).join(' ')} • {m.address}</div>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
-                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${getRegionGradient(m.cluster)} ${getRegionBorder(m.cluster)} text-gray-700`}>
-                                                {short}
-                                              </span>
+                                              <div className="flex flex-col items-center justify-center">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${getRegionGradient(m.cluster)} ${getRegionBorder(m.cluster)} text-gray-700`}>
+                                                  {short}
+                                                </span>
+                                              </div>
                                               {isSelected ? (
                                                 <span className="inline-flex items-center px-2 py-1 rounded-md text-xs text-green-600 border border-green-200 bg-green-50">
                                                   <Check className="h-3.5 w-3.5 mr-1" /> Ausgewählt
