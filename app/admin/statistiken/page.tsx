@@ -1721,7 +1721,7 @@ Liebe Grüße, dein Nespresso Team`;
                     setPraemienLoading(false);
                   }
                 }}
-                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${praemienHighlight ? 'bg-purple-50 text-purple-700 border-transparent shadow-[0_0_10px_2px_rgba(168,85,247,0.25)]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-lg transition-all duration-200 ${praemienHighlight ? 'bg-purple-50 text-purple-700 border-purple-500/40 shadow-[0_0_10px_2px_rgba(168,85,247,0.25)]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
                 title="Prämien importieren & ansehen"
               >
                 <Gift className="h-4 w-4" />
