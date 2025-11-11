@@ -2927,7 +2927,7 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowMarketDropdown(!showMarketDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[240px] ${marketFilter ? 'text-gray-700 scale-105' : 'text-gray-500'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 w-[240px] ${marketFilter ? 'text-gray-700 scale-105' : 'text-gray-500'}`}
                           >
                             <span className="inline-block max-w-[200px] truncate whitespace-nowrap text-center">{marketFilter || 'Market'}</span>
                           </button>
@@ -2971,13 +2971,13 @@ Import EP
                         <div className="relative">
                         <button
                           onClick={() => setShowDateDropdown(!showDateDropdown)}
-                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 max-w-[200px] ${
+                          className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 w-[160px] ${
                             selectedWeeks.length > 0 || dateRange.start || dateFilter
                               ? 'text-black scale-105' 
                               : 'text-gray-500'
                           }`}
                         >
-                          <span className="block max-w-[160px] leading-tight break-words text-center">{getFilterDisplayText()}</span>
+                          <span className="inline-block max-w-[140px] truncate whitespace-nowrap text-center">{getFilterDisplayText()}</span>
                         </button>
                         
                         {showDateDropdown && (
