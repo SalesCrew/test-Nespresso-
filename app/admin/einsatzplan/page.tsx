@@ -1890,7 +1890,6 @@ export default function EinsatzplanPage() {
     };
     reader.readAsArrayBuffer(file);
   };
-
   // Process Excel file for EP intern import
   const processInternExcel = (file: File) => {
     const reader = new FileReader();
@@ -2540,7 +2539,6 @@ export default function EinsatzplanPage() {
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, [showAcceptancePopover]);
-
   // Helpers to add/remove acceptance addresses
   const addAcceptanceAddress = async () => {
     if (!editingMarket?.id) return;
@@ -2806,12 +2804,12 @@ Import EP
                             onClick={() => setMatchedOnly(prev => !prev)}
                             className={`px-3 py-1.5 rounded-full text-xs border transition-all duration-200 max-w-[180px] ${
                               matchedOnly
-                                ? 'bg-red-100 text-red-700 border-red-300'
+                                ? 'bg-red-100 text-red-700 border-red-300 scale-105'
                                 : 'bg-white text-gray-500 border-gray-200 hover:bg-red-50'
                             }`}
                             title="Nur Einsätze ohne zugeordneten Markt anzeigen"
                           >
-                            <span className="block max-w-[140px] leading-tight break-words text-center">Nicht zugeordnet</span>
+                            <span className="inline-block max-w-[140px] truncate whitespace-nowrap text-center">Nicht zugeordnet</span>
                           </button>
                         </div>
                         
@@ -2821,11 +2819,11 @@ Import EP
                             onClick={() => setShowPromotorDropdown(!showPromotorDropdown)}
                             className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[200px] ${
                               promotorFilter
-                                ? 'text-gray-700' 
+                                ? 'text-gray-700 scale-105' 
                                 : 'text-gray-500'
                             }`}
                           >
-                            <span className="block max-w-[160px] leading-tight break-words text-center">{promotorFilter || 'Promotor'}</span>
+                            <span className="inline-block max-w-[160px] truncate whitespace-nowrap text-center">{promotorFilter || 'Promotor'}</span>
                           </button>
                           
                           {showPromotorDropdown && (
@@ -2884,9 +2882,9 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'} border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${statusFilter ? 'text-gray-700' : 'text-gray-500'} max-w-[180px]`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r ${statusFilter ? getStatusGradient(statusFilter) : 'from-white to-white'} border border-gray-200 transition-all duration-200 hover:bg-gray-50 ${statusFilter ? 'text-gray-700 scale-105' : 'text-gray-500'} max-w-[180px]`}
                           >
-                            <span className="block max-w-[140px] leading-tight break-words text-center">{statusFilter || 'Status'}</span>
+                            <span className="inline-block max-w-[140px] truncate whitespace-nowrap text-center">{statusFilter || 'Status'}</span>
                           </button>
                           
                           {showStatusDropdown && (
@@ -2929,15 +2927,9 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowMarketDropdown(!showMarketDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[240px] ${
-                              marketFilter
-                                ? 'text-gray-700' 
-                                : 'text-gray-500'
-                            }`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-purple-100/60 border border-gray-200 transition-all duration-200 hover:to-purple-100/80 max-w-[240px] ${marketFilter ? 'text-gray-700 scale-105' : 'text-gray-500'}`}
                           >
-                            <span className="block max-w-[200px] leading-tight break-words text-center">
-                              {marketFilter || 'Market'}
-                            </span>
+                            <span className="inline-block max-w-[200px] truncate whitespace-nowrap text-center">{marketFilter || 'Market'}</span>
                           </button>
                           
                           {showMarketDropdown && (
@@ -2981,7 +2973,7 @@ Import EP
                           onClick={() => setShowDateDropdown(!showDateDropdown)}
                           className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-orange-50/30 border border-gray-200 transition-all duration-200 hover:to-orange-50/50 max-w-[200px] ${
                             selectedWeeks.length > 0 || dateRange.start || dateFilter
-                              ? 'text-black' 
+                              ? 'text-black scale-105' 
                               : 'text-gray-500'
                           }`}
                         >
@@ -3178,7 +3170,6 @@ Import EP
                       </div>
                     </div>
                   </div>
-                  
                   <div className="mb-4">
                     <div className="space-y-2">
                       {/* Progress bar */}
@@ -4305,13 +4296,9 @@ Import EP
                         <div className="relative">
                           <button
                             onClick={() => setShowPlzDropdown(!showPlzDropdown)}
-                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${
-                              plzFilter
-                                ? 'text-gray-700' 
-                                : 'text-gray-500'
-                            }`}
+                            className={`px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-white to-blue-100/60 border border-gray-200 transition-all duration-200 hover:to-blue-100/80 ${plzFilter ? 'text-gray-700 scale-105' : 'text-gray-500'} max-w-[160px]`}
                           >
-                            {plzFilter || 'PLZ'}
+                            <span className="inline-block truncate whitespace-nowrap">{plzFilter || 'PLZ'}</span>
                           </button>
                           
                           {showPlzDropdown && (
@@ -7159,7 +7146,6 @@ Import EP
                       </div>
                     </div>
                   </div>
-
                   {/* Notes Section */}
                   <div className="space-y-3 flex flex-col flex-1">
                     <div className="flex items-center border-b border-gray-200 pb-2">
