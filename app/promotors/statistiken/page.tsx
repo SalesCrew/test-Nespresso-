@@ -1332,7 +1332,7 @@ Mario`
                         ) : (
                           <div className="space-y-3">
                             <div className="text-xs text-amber-700 dark:text-amber-200">
-                              deine besten werte aus der vergangenheit
+                              Theoretischer Wert: deine besten Einzelleistungen aus der Vergangenheit kombiniert, zu deinem theoretischen perfekten Monat.
                             </div>
                             {/* Totals */}
                             <div className="grid grid-cols-2 gap-2">
