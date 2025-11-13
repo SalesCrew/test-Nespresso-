@@ -80,6 +80,8 @@ export default function StatistikenPage() {
   const [praemienMe, setPraemienMe] = useState<any>(null)
   const [praemienMeLoading, setPraemienMeLoading] = useState(true)
   const [benchmarkMode, setBenchmarkMode] = useState<'netto' | 'brutto'>('netto')
+  const [avgData, setAvgData] = useState<any>(null)
+  const [avgLoading, setAvgLoading] = useState(false)
 
   useEffect(() => {
     const fetchPraemien = async () => {
@@ -97,6 +99,26 @@ export default function StatistikenPage() {
     }
     fetchPraemien()
   }, [])
+
+  // Fetch average for the same wave as the user's latest prämien
+  useEffect(() => {
+    const fetchAverage = async () => {
+      if (!praemienMe?.waveMonth) return
+      try {
+        setAvgLoading(true)
+        const res = await fetch(`/api/me/kpi-praemien/average?waveMonth=${encodeURIComponent(praemienMe.waveMonth)}`, { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setAvgData(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch prämien average:', e)
+      } finally {
+        setAvgLoading(false)
+      }
+    }
+    fetchAverage()
+  }, [praemienMe?.waveMonth])
 
   // Fetch unread KPI feedback and all history on mount
   useEffect(() => {
@@ -1160,7 +1182,7 @@ Mario`
                           </div>
                         </div>
                         {/* Body */}
-                        {praemienMeLoading ? (
+                        {praemienMeLoading || avgLoading ? (
                           <div className="space-y-3">
                             <div className="h-7 w-40 bg-white/60 dark:bg-gray-800/50 rounded-md animate-skeleton-fade" />
                             <div className="space-y-2">
@@ -1176,8 +1198,8 @@ Mario`
                           (() => {
                             // User values from prämienMe (mode-aware)
                             const your = Number(praemienMe?.totals?.[benchmarkMode] || 0)
-                            // Mock cluster average for now
-                            const clusterAvg = 134.0
+                            // Average from backend
+                            const clusterAvg = Number(avgData?.avg?.[benchmarkMode] || 0)
                             const deltaEur = your - clusterAvg
                             const deltaPct = clusterAvg > 0 ? (deltaEur / clusterAvg) * 100 : 0
                             const positive = deltaEur >= 0
