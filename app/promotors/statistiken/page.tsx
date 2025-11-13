@@ -1197,7 +1197,7 @@ Mario`
                               <div className="space-y-3">
                                 {/* Delta pill + microcopy */}
                                 <div className="flex items-center gap-3">
-                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] leading-none whitespace-nowrap font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
                                     {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} Durchschnitt
                                   </span>
                                   <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -1224,7 +1224,7 @@ Mario`
                                 {/* Drivers */}
                                 <div className="flex items-center gap-2 flex-wrap">
                                   {drivers.map((d, i) => (
-                                    <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${d.eur >= 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                    <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] leading-none whitespace-nowrap font-medium border ${d.eur >= 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
                                       {d.label} {d.eur >= 0 ? '+' : '−'}{fmt(Math.abs(d.eur))}
                                     </span>
                                   ))}
