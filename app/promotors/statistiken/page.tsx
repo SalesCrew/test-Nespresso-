@@ -1332,7 +1332,7 @@ Mario`
                         ) : (
                           <div className="space-y-3">
                             <div className="text-xs text-amber-700 dark:text-amber-200">
-                              Theoretischer Wert: beste Einzelleistungen aus der Vergangenheit kombiniert.
+                              deine besten werte aus der vergangenheit
                             </div>
                             {/* Totals */}
                             <div className="grid grid-cols-2 gap-2">
