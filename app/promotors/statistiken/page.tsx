@@ -79,6 +79,7 @@ export default function StatistikenPage() {
   // Prämien (me) latest data
   const [praemienMe, setPraemienMe] = useState<any>(null)
   const [praemienMeLoading, setPraemienMeLoading] = useState(true)
+  const [benchmarkMode, setBenchmarkMode] = useState<'netto' | 'brutto'>('netto')
 
   useEffect(() => {
     const fetchPraemien = async () => {
@@ -1135,10 +1136,6 @@ Mario`
                       </div>
 
                       {/* Benchmark (replaces Tipps) */}
-                      {(() => {
-                        const [benchmarkMode, setBenchmarkMode] = [undefined, undefined] as any // placeholder to avoid scope errors in static parse
-                        return null
-                      })()}
                       <div className="rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-gradient-to-br from-blue-50/40 to-indigo-50/40 dark:from-blue-900/15 dark:to-indigo-900/15 p-4">
                         {/* Header */}
                         <div className="flex items-center justify-between gap-3 mb-3">
@@ -1151,15 +1148,15 @@ Mario`
                               <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                                 {(() => {
                                   const wave = praemienMe?.waveMonth ? new Date(praemienMe.waveMonth).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }) : '—'
-                                  return <>Welle {wave} · Netto</>
+                                  return <>Welle {wave} · {benchmarkMode === 'netto' ? 'Netto' : 'Brutto'}</>
                                 })()}
                               </div>
                             </div>
                           </div>
-                          {/* Toggle pill mock (visual only for now) */}
+                          {/* Toggle pill */}
                           <div className="inline-flex items-center text-[11px] bg-white dark:bg-gray-900 border border-blue-200/60 dark:border-blue-800/60 rounded-full p-0.5">
-                            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Netto</span>
-                            <span className="px-2 py-0.5 text-gray-500">Brutto</span>
+                            <button onClick={() => setBenchmarkMode('netto')} className={`px-2 py-0.5 rounded-full transition-colors ${benchmarkMode === 'netto' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'text-gray-500'}`}>Netto</button>
+                            <button onClick={() => setBenchmarkMode('brutto')} className={`px-2 py-0.5 rounded-full transition-colors ${benchmarkMode === 'brutto' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'text-gray-500'}`}>Brutto</button>
                           </div>
                         </div>
                         {/* Body */}
@@ -1177,8 +1174,8 @@ Mario`
                           </div>
                         ) : (
                           (() => {
-                            // User values from prämienMe (Netto default)
-                            const your = Number(praemienMe?.totals?.netto || 0)
+                            // User values from prämienMe (mode-aware)
+                            const your = Number(praemienMe?.totals?.[benchmarkMode] || 0)
                             // Mock cluster average for now
                             const clusterAvg = 134.0
                             const deltaEur = your - clusterAvg
