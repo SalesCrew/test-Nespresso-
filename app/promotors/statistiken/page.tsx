@@ -1335,10 +1335,14 @@ Mario`
                       </div>
 
                       {/* Lifetime totals - compact card (between Benchmark and Perfekter Monat) */}
-                      <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-3">
+                      <div
+                        className="mt-2 rounded-lg p-[1px]"
+                        style={{ background: 'linear-gradient(to right, rgba(236,72,153,0.18), rgba(147,51,234,0.18))' }}
+                      >
+                        <div className="rounded-lg bg-gradient-to-r from-pink-500/5 to-purple-500/5 dark:from-pink-500/10 dark:to-purple-500/10 p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center">
+                            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 text-white flex items-center justify-center">
                               <Coins className="h-3.5 w-3.5" />
                             </span>
                             <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Gesamte Prämien (All‑Time)</div>
@@ -1350,7 +1354,7 @@ Mario`
                         {lifetimeLoading ? (
                           <div className="grid grid-cols-2 gap-2">
                             {[0,1].map(i => (
-                              <div key={i} className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2">
+                              <div key={i} className="rounded-md border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2">
                                 <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-skeleton-fade mb-1"></div>
                                 <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-skeleton-fade"></div>
                               </div>
@@ -1358,13 +1362,13 @@ Mario`
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                            <div className="rounded-md border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
                               <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto gesamt</div>
                               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {lifetimeTotals ? lifetimeTotals.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
                               </div>
                             </div>
-                            <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                            <div className="rounded-md border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
                               <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto gesamt</div>
                               <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                                 {lifetimeTotals ? lifetimeTotals.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
@@ -1372,6 +1376,7 @@ Mario`
                             </div>
                           </div>
                         )}
+                        </div>
                       </div>
 
                       <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-700" style={{background: 'linear-gradient(to right, rgba(238, 179, 75, 0.10), rgba(255, 237, 153, 0.10))'}}>
