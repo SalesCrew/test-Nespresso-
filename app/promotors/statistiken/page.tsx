@@ -76,6 +76,27 @@ export default function StatistikenPage() {
   const [realLeaderboardData, setRealLeaderboardData] = useState<any[]>([])
   const [currentUserData, setCurrentUserData] = useState<any>(null)
 
+  // Prämien (me) latest data
+  const [praemienMe, setPraemienMe] = useState<any>(null)
+  const [praemienMeLoading, setPraemienMeLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPraemien = async () => {
+      try {
+        const res = await fetch('/api/me/kpi-praemien', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setPraemienMe(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch prämien (me):', e)
+      } finally {
+        setPraemienMeLoading(false)
+      }
+    }
+    fetchPraemien()
+  }, [])
+
   // Fetch unread KPI feedback and all history on mount
   useEffect(() => {
     const fetchKPIData = async () => {
@@ -1023,38 +1044,66 @@ Mario`
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-gray-100">Deine Prämien</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Welle Nov 2025 · Stand 13.11.2025</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {praemienMe?.waveMonth
+                                ? (() => {
+                                    const d = new Date(praemienMe.waveMonth)
+                                    const wave = d.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
+                                    const stand = praemienMe.updatedAt ? new Date(praemienMe.updatedAt).toLocaleDateString('de-DE') : '—'
+                                    return <>Welle {wave} · Stand {stand}</>
+                                  })()
+                                : 'Welle — · Stand —'}
+                            </div>
                           </div>
                         </div>
                         {/* Summary strip */}
                         <div className="grid grid-cols-3 gap-2">
                           <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto Gesamt</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">182,50 €</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              {praemienMe ? `${praemienMe.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
+                            </div>
                           </div>
                           <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto Gesamt</div>
-                            <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">150,12 €</div>
+                            <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                              {praemienMe ? `${praemienMe.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
+                            </div>
                           </div>
                           <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Deine Einträge</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">6</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              {(() => {
+                                const values = praemienMe?.values || {}
+                                const cnt = ['gutscheine','tma','vertuo','vertuo_pop','aeroccino','vorteilsbox']
+                                  .map(k => Number(values[k as keyof typeof values] || 0))
+                                  .filter(n => n > 0).length
+                                return praemienMe ? cnt : '—'
+                              })()}
+                            </div>
                           </div>
                         </div>
                         {/* Breakdown grid */}
                         {(() => {
-                          const metrics = [
-                            { key: 'gutscheine', label: 'Gutscheine', count: 5, rateB: 3.5, rateN: 2.89, chip: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 dark:border-purple-800/60' },
-                            { key: 'tma', label: 'TMA', count: 7, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border border-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:text-indigo-300 dark:border-indigo-800/60' },
-                            { key: 'vertuo', label: 'Vertuo', count: 4, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 dark:border-blue-800/60' },
-                            { key: 'vertuo_pop', label: 'Vertuo Pop+', count: 3, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border border-cyan-200 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:text-cyan-300 dark:border-cyan-800/60' },
-                            { key: 'aeroccino', label: 'Aeroccino', count: 6, rateB: 3.5, rateN: 2.89, chip: 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 border border-teal-200 dark:from-teal-900/20 dark:to-teal-800/20 dark:text-teal-300 dark:border-teal-800/60' },
-                            { key: 'vorteilsbox', label: 'Vorteilsbox', count: 1, rateB: 39, rateN: 32.18, chip: 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:text-emerald-300 dark:border-emerald-800/60' },
-                          ]
+                          const metrics = (() => {
+                            const price = praemienMe?.price || {
+                              brutto: { tma: 7.5, gutscheine: 3.5, vertuo: 7.5, vertuo_pop: 7.5, aeroccino: 3.5, vorteilsbox: 0 },
+                              netto: { tma: 6.19, gutscheine: 2.89, vertuo: 6.19, vertuo_pop: 6.19, aeroccino: 2.89, vorteilsbox: 0 },
+                            }
+                            const values = praemienMe?.values || { gutscheine: 0, tma: 0, vertuo: 0, vertuo_pop: 0, aeroccino: 0, vorteilsbox: 0 }
+                            return [
+                              { key: 'gutscheine', label: 'Gutscheine', count: Number(values.gutscheine || 0), rateB: price.brutto.gutscheine, rateN: price.netto.gutscheine, chip: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 dark:border-purple-800/60' },
+                              { key: 'tma', label: 'TMA', count: Number(values.tma || 0), rateB: price.brutto.tma, rateN: price.netto.tma, chip: 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border border-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:text-indigo-300 dark:border-indigo-800/60' },
+                              { key: 'vertuo', label: 'Vertuo', count: Number(values.vertuo || 0), rateB: price.brutto.vertuo, rateN: price.netto.vertuo, chip: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 dark:border-blue-800/60' },
+                              { key: 'vertuo_pop', label: 'Vertuo Pop+', count: Number(values.vertuo_pop || 0), rateB: price.brutto.vertuo_pop, rateN: price.netto.vertuo_pop, chip: 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border border-cyan-200 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:text-cyan-300 dark:border-cyan-800/60' },
+                              { key: 'aeroccino', label: 'Aeroccino', count: Number(values.aeroccino || 0), rateB: price.brutto.aeroccino, rateN: price.netto.aeroccino, chip: 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 border border-teal-200 dark:from-teal-900/20 dark:to-teal-800/20 dark:text-teal-300 dark:border-teal-800/60' },
+                              { key: 'vorteilsbox', label: 'Vorteilsbox', count: Number(values.vorteilsbox || 0), rateB: price.brutto.vorteilsbox, rateN: price.netto.vorteilsbox, chip: 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:text-emerald-300 dark:border-emerald-800/60' },
+                            ]
+                          })()
                           const format = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
                           return (
                             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {metrics.map((m) => {
+                              {metrics.filter(m => m.count > 0).map((m) => {
                                 const brutto = m.count * m.rateB
                                 const netto = m.count * m.rateN
                                 const has = m.count > 0
