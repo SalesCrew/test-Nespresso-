@@ -1036,7 +1036,7 @@ Mario`
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
                     <div className="space-y-4">
-                      <div className="rounded-lg border border-transparent ring-1 ring-purple-200/40 dark:ring-purple-900/30 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4">
+                      <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4">
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-3">
                           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
@@ -1058,19 +1058,19 @@ Mario`
                         </div>
                         {/* Summary strip */}
                         <div className="grid grid-cols-3 gap-2">
-                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto Gesamt</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                               {praemienMe ? `${praemienMe.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto Gesamt</div>
                             <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
                               {praemienMe ? `${praemienMe.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-[11px] text-gray-500 dark:text-gray-400">Deine Einträge</div>
                             <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                               {(() => {
