@@ -1015,7 +1015,7 @@ Mario`
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
                     <div className="space-y-4">
-                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-4">
+                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/15 dark:to-indigo-900/15 p-4">
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-3">
                           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
@@ -1044,12 +1044,12 @@ Mario`
                         {/* Breakdown grid */}
                         {(() => {
                           const metrics = [
-                            { key: 'gutscheine', label: 'Gutscheine', count: 5, rateB: 3.5, rateN: 2.89, chip: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
-                            { key: 'tma', label: 'TMA', count: 7, rateB: 7.5, rateN: 6.19, chip: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' },
-                            { key: 'vertuo', label: 'Vertuo', count: 4, rateB: 7.5, rateN: 6.19, chip: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-                            { key: 'vertuo_pop', label: 'Vertuo Pop+', count: 3, rateB: 7.5, rateN: 6.19, chip: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300' },
-                            { key: 'aeroccino', label: 'Aeroccino', count: 6, rateB: 3.5, rateN: 2.89, chip: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' },
-                            { key: 'vorteilsbox', label: 'Vorteilsbox', count: 1, rateB: 39, rateN: 32.18, chip: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
+                            { key: 'gutscheine', label: 'Gutscheine', count: 5, rateB: 3.5, rateN: 2.89, chip: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 dark:border-purple-800/60' },
+                            { key: 'tma', label: 'TMA', count: 7, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border border-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:text-indigo-300 dark:border-indigo-800/60' },
+                            { key: 'vertuo', label: 'Vertuo', count: 4, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 dark:border-blue-800/60' },
+                            { key: 'vertuo_pop', label: 'Vertuo Pop+', count: 3, rateB: 7.5, rateN: 6.19, chip: 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border border-cyan-200 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:text-cyan-300 dark:border-cyan-800/60' },
+                            { key: 'aeroccino', label: 'Aeroccino', count: 6, rateB: 3.5, rateN: 2.89, chip: 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 border border-teal-200 dark:from-teal-900/20 dark:to-teal-800/20 dark:text-teal-300 dark:border-teal-800/60' },
+                            { key: 'vorteilsbox', label: 'Vorteilsbox', count: 1, rateB: 39, rateN: 32.18, chip: 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 border border-emerald-200 dark:from-emerald-900/20 dark:to-emerald-800/20 dark:text-emerald-300 dark:border-emerald-800/60' },
                           ]
                           const format = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
                           return (
