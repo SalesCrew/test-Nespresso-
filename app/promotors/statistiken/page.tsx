@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown, Coins } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -84,6 +84,8 @@ export default function StatistikenPage() {
   const [avgLoading, setAvgLoading] = useState(false)
   const [bestData, setBestData] = useState<any>(null)
   const [bestLoading, setBestLoading] = useState(true)
+  const [lifetimeTotals, setLifetimeTotals] = useState<any>(null)
+  const [lifetimeLoading, setLifetimeLoading] = useState(true)
 
   useEffect(() => {
     const fetchPraemien = async () => {
@@ -100,6 +102,25 @@ export default function StatistikenPage() {
       }
     }
     fetchPraemien()
+  }, [])
+
+  // Fetch lifetime totals
+  useEffect(() => {
+    const fetchTotals = async () => {
+      try {
+        setLifetimeLoading(true)
+        const res = await fetch('/api/me/kpi-praemien/total', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setLifetimeTotals(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch lifetime prämien totals:', e)
+      } finally {
+        setLifetimeLoading(false)
+      }
+    }
+    fetchTotals()
   }, [])
 
   // Fetch average for the same wave as the user's latest prämien
@@ -960,6 +981,46 @@ Mario`
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      {/* Lifetime totals - compact card */}
+                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center">
+                              <Coins className="h-3.5 w-3.5" />
+                            </span>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Gesamte Prämien (All‑Time)</div>
+                          </div>
+                          {lifetimeTotals?.count !== undefined && (
+                            <span className="text-[11px] text-gray-500 dark:text-gray-400">{lifetimeTotals.count} Wellen</span>
+                          )}
+                        </div>
+                        {lifetimeLoading ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {[0,1].map(i => (
+                              <div key={i} className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2">
+                                <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-skeleton-fade mb-1"></div>
+                                <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-skeleton-fade"></div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto gesamt</div>
+                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {lifetimeTotals ? lifetimeTotals.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
+                              </div>
+                            </div>
+                            <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto gesamt</div>
+                              <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                                {lifetimeTotals ? lifetimeTotals.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* TMA */}
