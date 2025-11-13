@@ -1078,7 +1078,7 @@ Mario`
               
               <CardContent className="p-4">
                 <ScrollArea className="h-[280px] pr-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3">
                     <div className="space-y-4">
                       <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4">
                         {/* Header */}
@@ -1336,13 +1336,13 @@ Mario`
                             </div>
                             {/* Totals */}
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/80 dark:bg-gray-900/60 p-2 text-center">
+                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/90 dark:bg-gray-900/70 p-2 text-center ring-1 ring-amber-300/60 shadow-[0_2px_8px_rgba(251,191,36,0.25)]">
                                 <div className="text-[11px] text-amber-700/90 dark:text-amber-300">Brutto perfekt</div>
                                 <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                                   {bestData ? (bestData.totals.brutto).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
                                 </div>
                               </div>
-                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/80 dark:bg-gray-900/60 p-2 text-center">
+                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/90 dark:bg-gray-900/70 p-2 text-center ring-1 ring-amber-300/60 shadow-[0_2px_8px_rgba(16,185,129,0.18)]">
                                 <div className="text-[11px] text-amber-700/90 dark:text-amber-300">Netto perfekt</div>
                                 <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                                   {bestData ? (bestData.totals.netto).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
