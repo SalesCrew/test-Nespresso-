@@ -82,6 +82,8 @@ export default function StatistikenPage() {
   const [benchmarkMode, setBenchmarkMode] = useState<'netto' | 'brutto'>('netto')
   const [avgData, setAvgData] = useState<any>(null)
   const [avgLoading, setAvgLoading] = useState(false)
+  const [bestData, setBestData] = useState<any>(null)
+  const [bestLoading, setBestLoading] = useState(true)
 
   useEffect(() => {
     const fetchPraemien = async () => {
@@ -119,6 +121,25 @@ export default function StatistikenPage() {
     }
     fetchAverage()
   }, [praemienMe?.waveMonth])
+
+  // Fetch per-metric bests for "Nächstes Ziel" card
+  useEffect(() => {
+    const fetchBest = async () => {
+      try {
+        setBestLoading(true)
+        const res = await fetch('/api/me/kpi-praemien/best', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setBestData(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch best prämien:', e)
+      } finally {
+        setBestLoading(false)
+      }
+    }
+    fetchBest()
+  }, [])
 
   // Fetch unread KPI feedback and all history on mount
   useEffect(() => {
@@ -1297,11 +1318,56 @@ Mario`
                           </svg>
                           🎯 Nächstes Ziel
                         </h4>
-                        <p className="text-sm text-amber-700 dark:text-amber-200 leading-relaxed">
-                          Erreiche in den nächsten 30 Tagen einen <strong>kombinierten Score von 85%</strong> 
-                          (MC/ET + TMA + VL Share) und qualifiziere dich für den 
-                          <strong className="text-amber-800 dark:text-amber-300"> Exzellenz-Bonus von 200€</strong>.
-                        </p>
+                        {bestLoading ? (
+                          <div className="space-y-2">
+                            <div className="h-3 w-48 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="h-10 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
+                              <div className="h-10 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
+                            </div>
+                            <div className="h-6 w-full bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="text-sm text-amber-700 dark:text-amber-200">
+                              Perfekter Monat (theoretisch) basierend auf deinen Bestwerten
+                            </div>
+                            {/* Totals */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/80 dark:bg-gray-900/60 p-2 text-center">
+                                <div className="text-[11px] text-amber-700/90 dark:text-amber-300">Brutto perfekt</div>
+                                <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                                  {bestData ? (bestData.totals.brutto).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
+                                </div>
+                              </div>
+                              <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-white/80 dark:bg-gray-900/60 p-2 text-center">
+                                <div className="text-[11px] text-amber-700/90 dark:text-amber-300">Netto perfekt</div>
+                                <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                                  {bestData ? (bestData.totals.netto).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
+                                </div>
+                              </div>
+                            </div>
+                            {/* Metrics list */}
+                            <div className="flex flex-wrap gap-2">
+                              {(() => {
+                                const best = bestData?.best || {}
+                                const items = [
+                                  { key: 'tma', label: 'TMA' },
+                                  { key: 'gutscheine', label: 'Gutscheine' },
+                                  { key: 'vertuo', label: 'Vertuo' },
+                                  { key: 'vertuo_pop', label: 'Pop+' },
+                                  { key: 'aeroccino', label: 'Aeroccino' },
+                                  { key: 'vorteilsbox', label: 'Vorteilsbox' },
+                                ]
+                                return items.map(i => (
+                                  <span key={i.key} className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border border-amber-200 text-amber-800 bg-amber-50">
+                                    {i.label}: x{Number(best[i.key as keyof typeof best] || 0)}
+                                  </span>
+                                ))
+                              })()}
+                            </div>
+                          </div>
+                        )}
                       </div>
                         </div>
                   </div>
