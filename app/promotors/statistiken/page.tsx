@@ -1197,7 +1197,7 @@ Mario`
                         })()}
                         {/* Footer note */}
                         <div className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400">
-                          Auszahlung gemäß aktuellem Stand. Änderungen nach Upload deiner Prämien möglich.
+                          Auszahlung gemäß aktuellem Stand.
                         </div>
                       </div>
 
