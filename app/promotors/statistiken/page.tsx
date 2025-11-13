@@ -1248,9 +1248,41 @@ Mario`
                                     </span>
                                   ))}
                                 </div>
-                                {/* Projection hint */}
+                                {/* Dynamic projection hint */}
                                 <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Durchschnitt (+22,50 €)'}
+                                  {(() => {
+                                    const price = (praemienMe?.price || {
+                                      brutto: { tma: 7.5, gutscheine: 3.5, vertuo: 7.5, vertuo_pop: 7.5, aeroccino: 3.5, vorteilsbox: 0 },
+                                      netto: { tma: 6.19, gutscheine: 2.89, vertuo: 6.19, vertuo_pop: 6.19, aeroccino: 2.89, vorteilsbox: 0 },
+                                    })[benchmarkMode]
+                                    const candidates = [
+                                      { key: 'vertuo', label: 'Vertuo', rate: Number(price.vertuo || 0) },
+                                      { key: 'vertuo_pop', label: 'Pop+', rate: Number(price.vertuo_pop || 0) },
+                                      { key: 'tma', label: 'TMA', rate: Number(price.tma || 0) },
+                                      { key: 'gutscheine', label: 'Gutscheine', rate: Number(price.gutscheine || 0) },
+                                      { key: 'aeroccino', label: 'Aeroccino', rate: Number(price.aeroccino || 0) },
+                                    ].filter(c => c.rate > 0)
+                                    // sort by best €/unit
+                                    candidates.sort((a, b) => b.rate - a.rate)
+                                    if (!isFinite(clusterAvg) || clusterAvg <= 0) {
+                                      return 'Noch kein Durchschnitt verfügbar.'
+                                    }
+                                    if (!positive) {
+                                      const need = clusterAvg - your
+                                      const best = candidates[0]
+                                      const units = Math.max(1, Math.ceil(need / best.rate))
+                                      return `+${units} ${best.label} bis zum Durchschnitt (+${fmt(need)})`
+                                    } else {
+                                      const targetPct = 15
+                                      const targetDelta = (clusterAvg * (targetPct / 100)) - (your - clusterAvg)
+                                      if (targetDelta <= 0) {
+                                        return `Ziel halten: ${Math.round(deltaPct)}% über Ø`
+                                      }
+                                      const best = candidates[0]
+                                      const units = Math.max(1, Math.ceil(targetDelta / best.rate))
+                                      return `+${units} ${best.label} sichern +${targetPct}% vs. Ø`
+                                    }
+                                  })()}
                                 </div>
                               </div>
                             )
