@@ -1852,19 +1852,19 @@ Liebe Grüße, dein Nespresso Team`;
                         </div>
                       ) : (
                         <div className="grid grid-cols-3 gap-3">
-                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-xs text-gray-500">Brutto Gesamt</div>
                             <div className="text-lg font-semibold text-gray-900">
                               {praemienSummary ? `${praemienSummary.totals.brutto.toFixed(2)} €` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-xs text-gray-500">Netto Gesamt</div>
                             <div className="text-lg font-semibold text-gray-900">
                               {praemienSummary ? `${praemienSummary.totals.netto.toFixed(2)} €` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col items-center justify-center text-center">
                             <div className="text-xs text-gray-500">Datensatzanzahl</div>
                             <div className="text-lg font-semibold text-gray-900">
                               {praemienSummary ? praemienSummary.items.length : '—'}
