@@ -1337,7 +1337,7 @@ Mario`
                       {/* Lifetime totals - compact card (between Benchmark and Perfekter Monat) */}
                       <div
                         className="mt-2 rounded-lg p-[1px]"
-                        style={{ background: 'linear-gradient(to right, rgba(236,72,153,0.18), rgba(147,51,234,0.18))' }}
+                        style={{ background: 'linear-gradient(to right, rgba(236,72,153,0.28), rgba(147,51,234,0.28))' }}
                       >
                         <div className="rounded-lg bg-gradient-to-r from-pink-500/5 to-purple-500/5 dark:from-pink-500/10 dark:to-purple-500/10 p-3">
                         <div className="flex items-center justify-between mb-2">
@@ -1345,7 +1345,7 @@ Mario`
                             <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 text-white flex items-center justify-center">
                               <Coins className="h-3.5 w-3.5" />
                             </span>
-                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Gesamte Prämien (All‑Time)</div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Gesamte Prämien (Gesamt)</div>
                           </div>
                           {lifetimeTotals?.count !== undefined && (
                             <span className="text-[11px] text-gray-500 dark:text-gray-400">{lifetimeTotals.count} Wellen</span>
@@ -1362,13 +1362,13 @@ Mario`
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-md border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 text-center shadow-sm ring-1 ring-pink-200/40">
                               <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto gesamt</div>
                               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {lifetimeTotals ? lifetimeTotals.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
                               </div>
                             </div>
-                            <div className="rounded-md border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/70 p-2 text-center">
+                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 text-center shadow-sm ring-1 ring-purple-200/40">
                               <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto gesamt</div>
                               <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                                 {lifetimeTotals ? lifetimeTotals.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
