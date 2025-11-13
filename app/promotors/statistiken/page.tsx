@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, Sliders, Plus, Minus } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -44,16 +44,6 @@ export default function StatistikenPage() {
   // Leaderboard state
   const [showLeaderboard, setShowLeaderboard] = useState(false)
   const [leaderboardCategory, setLeaderboardCategory] = useState<"mcet" | "tma" | "vlshare">("mcet")
-  
-  // What-if simulator state
-  const [whatIf, setWhatIf] = useState<{[k: string]: number}>({
-    gutscheine: 0,
-    tma: 0,
-    vertuo: 0,
-    vertuo_pop: 0,
-    aeroccino: 0,
-    vorteilsbox: 0,
-  })
   
   // Fetch leaderboard when timeframe changes
   useEffect(() => {
@@ -1144,146 +1134,104 @@ Mario`
                         </div>
                       </div>
 
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      {/* Cluster-Benchmark (replaces Tipps) */}
+                      {(() => {
+                        const [benchmarkMode, setBenchmarkMode] = [undefined, undefined] as any // placeholder to avoid scope errors in static parse
+                        return null
+                      })()}
+                      <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/40 to-indigo-50/40 dark:from-purple-900/15 dark:to-indigo-900/15 p-4">
                         {/* Header */}
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/70 dark:bg-gray-800/60 border border-blue-200/60 dark:border-blue-800/60">
-                              <Sliders className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center flex-shrink-0">
+                              <TrendingUp className="h-3.5 w-3.5" />
                             </span>
-                            <h4 className="font-semibold text-blue-800 dark:text-blue-300">What‑if – Prämien</h4>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">Cluster‑Benchmark</div>
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                {(() => {
+                                  const wave = praemienMe?.waveMonth ? new Date(praemienMe.waveMonth).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }) : '—'
+                                  return <>Cluster — · Welle {wave} · Netto</>
+                                })()}
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[11px] text-blue-700/80 dark:text-blue-200/80">Ziehe die Regler (1–10) – live Brutto/Netto</span>
+                          {/* Toggle pill mock (visual only for now) */}
+                          <div className="inline-flex items-center text-[11px] bg-white dark:bg-gray-900 border border-purple-200/60 dark:border-purple-800/60 rounded-full p-0.5">
+                            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Netto</span>
+                            <span className="px-2 py-0.5 text-gray-500">Brutto</span>
+                          </div>
                         </div>
-                        {/* Content */}
+                        {/* Body */}
                         {praemienMeLoading ? (
                           <div className="space-y-3">
-                            <div className="grid grid-cols-3 gap-2">
-                              {[0,1,2].map(i => (
-                                <div key={i} className="rounded-md border border-blue-200/60 dark:border-blue-800/60 bg-white/70 dark:bg-gray-900/60 p-3">
-                                  <div className="h-3 w-16 bg-blue-100 rounded mb-2 animate-skeleton-fade"></div>
-                                  <div className="h-5 w-20 bg-blue-100 rounded animate-skeleton-fade"></div>
-                                </div>
-                              ))}
+                            <div className="h-7 w-40 bg-white/60 dark:bg-gray-800/50 rounded-md animate-skeleton-fade" />
+                            <div className="space-y-2">
+                              <div className="h-2.5 bg-white/70 dark:bg-gray-800/60 rounded-full animate-skeleton-fade"></div>
+                              <div className="h-2.5 bg-white/70 dark:bg-gray-800/60 rounded-full animate-skeleton-fade w-3/4"></div>
                             </div>
-                            {[0,1,2,3].map(i => (
-                              <div key={i} className="flex items-center justify-between p-3 rounded-md border border-white/60 dark:border-gray-700/60 bg-white/60 dark:bg-gray-900/40 backdrop-blur-sm">
-                                <div className="h-4 w-28 bg-blue-100 rounded animate-skeleton-fade"></div>
-                                <div className="h-3 w-40 bg-blue-100 rounded animate-skeleton-fade"></div>
-                                <div className="h-6 w-48 bg-blue-100 rounded animate-skeleton-fade"></div>
-                                <div className="h-4 w-16 bg-blue-100 rounded animate-skeleton-fade"></div>
-                              </div>
-                            ))}
+                            <div className="flex gap-2">
+                              <div className="h-6 w-28 bg-white/70 dark:bg-gray-800/60 rounded-md animate-skeleton-fade"></div>
+                              <div className="h-6 w-28 bg-white/70 dark:bg-gray-800/60 rounded-md animate-skeleton-fade"></div>
+                            </div>
                           </div>
                         ) : (
                           (() => {
-                            const price = praemienMe?.price || {
-                              brutto: { tma: 7.5, gutscheine: 3.5, vertuo: 7.5, vertuo_pop: 7.5, aeroccino: 3.5, vorteilsbox: 0 },
-                              netto: { tma: 6.19, gutscheine: 2.89, vertuo: 6.19, vertuo_pop: 6.19, aeroccino: 2.89, vorteilsbox: 0 },
-                            }
-                            const baseB = praemienMe?.totals?.brutto || 0
-                            const baseN = praemienMe?.totals?.netto || 0
-                            const calcDelta = () => {
-                              const wb = (whatIf.tma || 0) * price.brutto.tma +
-                                (whatIf.gutscheine || 0) * price.brutto.gutscheine +
-                                (whatIf.vertuo || 0) * price.brutto.vertuo +
-                                (whatIf.vertuo_pop || 0) * price.brutto.vertuo_pop +
-                                (whatIf.aeroccino || 0) * price.brutto.aeroccino +
-                                (whatIf.vorteilsbox || 0) * price.brutto.vorteilsbox
-                              const wn = (whatIf.tma || 0) * price.netto.tma +
-                                (whatIf.gutscheine || 0) * price.netto.gutscheine +
-                                (whatIf.vertuo || 0) * price.netto.vertuo +
-                                (whatIf.vertuo_pop || 0) * price.netto.vertuo_pop +
-                                (whatIf.aeroccino || 0) * price.netto.aeroccino +
-                                (whatIf.vorteilsbox || 0) * price.netto.vorteilsbox
-                              return { wb, wn }
-                            }
-                            const { wb, wn } = calcDelta()
-                            const format = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-                            const metrics = [
-                              { key: 'gutscheine', label: 'Gutscheine', rateB: price.brutto.gutscheine, rateN: price.netto.gutscheine, chip: 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border border-purple-200 dark:from-purple-900/20 dark:to-purple-800/20 dark:text-purple-300 dark:border-purple-800/60' },
-                              { key: 'tma', label: 'TMA', rateB: price.brutto.tma, rateN: price.netto.tma, chip: 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border border-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20 dark:text-indigo-300 dark:border-indigo-800/60' },
-                              { key: 'vertuo', label: 'Vertuo', rateB: price.brutto.vertuo, rateN: price.netto.vertuo, chip: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 dark:text-blue-300 dark:border-blue-800/60' },
-                              { key: 'vertuo_pop', label: 'Vertuo Pop+', rateB: price.brutto.vertuo_pop, rateN: price.netto.vertuo_pop, chip: 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border border-cyan-200 dark:from-cyan-900/20 dark:to-cyan-800/20 dark:text-cyan-300 dark:border-cyan-800/60' },
-                              { key: 'aeroccino', label: 'Aeroccino', rateB: price.brutto.aeroccino, rateN: price.netto.aeroccino, chip: 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 border border-teal-200 dark:from-teal-900/20 dark:to-teal-800/20 dark:text-teal-300 dark:border-teal-800/60' },
-                            ].filter(m => (m.rateB || 0) > 0 || (m.rateN || 0) > 0)
+                            // User values from prämienMe (Netto default)
+                            const your = Number(praemienMe?.totals?.netto || 0)
+                            // Mock cluster average for now
+                            const clusterAvg = 134.0
+                            const deltaEur = your - clusterAvg
+                            const deltaPct = clusterAvg > 0 ? (deltaEur / clusterAvg) * 100 : 0
+                            const positive = deltaEur >= 0
+                            const fmt = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+                            const max = Math.max(your, clusterAvg, 1)
+                            const youW = Math.max(4, Math.min(100, Math.round((your / max) * 100)))
+                            const avgW = Math.max(4, Math.min(100, Math.round((clusterAvg / max) * 100)))
+                            // Mock drivers
+                            const drivers = [
+                              { label: 'Vertuo', eur: +24.76 },
+                              { label: 'Gutscheine', eur: -6.00 }
+                            ]
                             return (
                               <div className="space-y-3">
-                                {/* Summary */}
-                                <div className="grid grid-cols-3 gap-2">
-                                  <div className="rounded-md border border-blue-300/60 dark:border-blue-800/60 bg-white/80 dark:bg-gray-900/60 p-3 text-center">
-                                    <div className="text-[11px] text-blue-800/80 dark:text-blue-300/80">Aktuell</div>
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{format(baseB)} · <span className="text-emerald-600 dark:text-emerald-400">{format(baseN)}</span></div>
+                                {/* Delta pill + microcopy */}
+                                <div className="flex items-center gap-3">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                    {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} —‑Schnitt
+                                  </span>
+                                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                                    {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Cluster‑Ø
+                                  </span>
+                                </div>
+                                {/* Bars */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Du</span>
+                                    <div className="flex-1 h-2 bg-white/60 dark:bg-gray-800/50 rounded-full overflow-hidden">
+                                      <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full" style={{ width: `${youW}%` }}></div>
+                                    </div>
+                                    <span className="text-[11px] text-gray-700 dark:text-gray-300 w-20 text-right">{fmt(your)}</span>
                                   </div>
-                                  <div className="rounded-md border border-blue-300/60 dark:border-blue-800/60 bg-white/80 dark:bg-gray-900/60 p-3 text-center">
-                                    <div className="text-[11px] text-blue-800/80 dark:text-blue-300/80">Zusatz</div>
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">+{format(wb)} · <span className="text-emerald-600 dark:text-emerald-400">+{format(wn)}</span></div>
-                                  </div>
-                                  <div className="rounded-md border border-blue-300/60 dark:border-blue-800/60 bg-white/80 dark:bg-gray-900/60 p-3 text-center">
-                                    <div className="text-[11px] text-blue-800/80 dark:text-blue-300/80">Neu gesamt</div>
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{format(baseB + wb)} · <span className="text-emerald-600 dark:text-emerald-400">{format(baseN + wn)}</span></div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Cluster‑Ø</span>
+                                    <div className="flex-1 h-2 bg-white/60 dark:bg-gray-800/50 rounded-full overflow-hidden">
+                                      <div className="h-full bg-indigo-200/80 dark:bg-indigo-900/40 rounded-full" style={{ width: `${avgW}%` }}></div>
+                                    </div>
+                                    <span className="text-[11px] text-gray-700 dark:text-gray-300 w-20 text-right">{fmt(clusterAvg)}</span>
                                   </div>
                                 </div>
-                                {/* Rows */}
-                                {metrics.map(m => {
-                                  const v = Math.max(0, Math.min(10, Number(whatIf[m.key] || 0)))
-                                  const dB = v * m.rateB
-                                  const dN = v * m.rateN
-                                  return (
-                                    <div key={m.key} className="flex items-center justify-between p-3 rounded-md border border-white/60 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/50 backdrop-blur-sm">
-                                      <div className="min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <span className={`text-[11px] px-2 py-0.5 rounded-md ${m.chip}`}>{m.label}</span>
-                                          <span className="text-[11px] text-blue-700/80 dark:text-blue-200/80">Brutto {m.rateB.toFixed(2)}€ · Netto {m.rateN.toFixed(2)}€</span>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          className="h-7 w-7 rounded-md border border-blue-200/60 dark:border-blue-800/60 bg-white/70 dark:bg-gray-800/60 flex items-center justify-center disabled:opacity-50"
-                                          onClick={() => setWhatIf(prev => ({ ...prev, [m.key]: Math.max(0, v - 1) }))}
-                                          disabled={v <= 0}
-                                          aria-label="minus"
-                                        >
-                                          <Minus className="h-4 w-4 text-blue-700/80 dark:text-blue-300/80" />
-                                        </button>
-                                        <input
-                                          type="range"
-                                          min={0}
-                                          max={10}
-                                          step={1}
-                                          value={v}
-                                          onChange={(e) => {
-                                            const nv = parseInt(e.currentTarget.value || '0', 10)
-                                            setWhatIf(prev => ({ ...prev, [m.key]: nv }))
-                                          }}
-                                          className="w-40 sm:w-56 accent-blue-600"
-                                          aria-label={`${m.label} What-if`}
-                                        />
-                                        <button
-                                          className="h-7 w-7 rounded-md border border-blue-200/60 dark:border-blue-800/60 bg-white/70 dark:bg-gray-800/60 flex items-center justify-center disabled:opacity-50"
-                                          onClick={() => setWhatIf(prev => ({ ...prev, [m.key]: Math.min(10, v + 1) }))}
-                                          disabled={v >= 10}
-                                          aria-label="plus"
-                                        >
-                                          <Plus className="h-4 w-4 text-blue-700/80 dark:text-blue-300/80" />
-                                        </button>
-                                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">x{v}</span>
-                                      </div>
-                                      <div className="text-right">
-                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">+{format(dB)}</div>
-                                        <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">+{format(dN)}</div>
-                                      </div>
-                                    </div>
-                                  )
-                                })}
-                                {/* Footer actions */}
-                                <div className="flex items-center justify-end gap-3">
-                                  <button
-                                    onClick={() => setWhatIf({ gutscheine:0, tma:0, vertuo:0, vertuo_pop:0, aeroccino:0, vorteilsbox:0 })}
-                                    className="text-xs text-blue-700 hover:underline dark:text-blue-300"
-                                  >
-                                    Zurücksetzen
-                                  </button>
+                                {/* Drivers */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {drivers.map((d, i) => (
+                                    <span key={i} className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium border ${d.eur >= 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                      {d.label} {d.eur >= 0 ? '+' : '−'}{fmt(Math.abs(d.eur))}
+                                    </span>
+                                  ))}
+                                </div>
+                                {/* Projection hint */}
+                                <div className="text-[11px] text-gray-500 dark:text-gray-400">
+                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Cluster‑Ø (+22,50 €)'}
                                 </div>
                               </div>
                             )
