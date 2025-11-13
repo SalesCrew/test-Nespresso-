@@ -1015,24 +1015,59 @@ Mario`
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
                     <div className="space-y-4">
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                        <h4 className="font-semibold text-green-800 dark:text-green-300 mb-2 flex items-center">
-                          <svg className="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                          </svg>
-                          💰 Prämien-Potenzial
+                      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                        <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center">
+                          🎁 Deine Prämien
                         </h4>
-                        <p className="text-sm text-green-700 dark:text-green-200 leading-relaxed">
-                          {statsData[timeFrame].mcet.value !== null ? (
-                            <>
-                              Bei deinem aktuellen <strong>MC/ET-Wert von {statsData[timeFrame].mcet.value.toFixed(1)}</strong> hast du bereits eine solide Basis. 
-                              Wenn du deinen <strong>TMA-Anteil im nächsten Monat auf 90%</strong> verbesserst, kannst du dir eine 
-                              <strong className="text-green-800 dark:text-green-300"> zusätzliche Prämie von 100€</strong> sichern.
-                            </>
-                          ) : (
-                            'Sobald deine ersten KPI-Daten verfügbar sind, siehst du hier dein Prämien-Potenzial.'
-                          )}
-                        </p>
+                        {(() => {
+                          const items = [
+                            { key: 'gutscheine', label: 'Gutscheine', count: 5, bruttoPer: 3.5, nettoPer: 2.89 },
+                            { key: 'tma',         label: 'TMA',        count: 2, bruttoPer: 7.5, nettoPer: 6.19 },
+                            { key: 'vertuo',      label: 'Vertuo',     count: 1, bruttoPer: 7.5, nettoPer: 6.19 },
+                            { key: 'pop',         label: 'Pop+',       count: 0, bruttoPer: 7.5, nettoPer: 6.19 },
+                            { key: 'aeroccino',   label: 'Aeroccino',  count: 1, bruttoPer: 3.5, nettoPer: 2.89 },
+                            { key: 'vorteilsbox', label: 'Vorteilsbox',count: 0, bruttoPer: 0,   nettoPer: 0 },
+                          ];
+                          const totals = items.reduce((acc, it) => {
+                            acc.brutto += it.count * it.bruttoPer;
+                            acc.netto  += it.count * it.nettoPer;
+                            return acc;
+                          }, { brutto: 0, netto: 0 });
+                          return (
+                            <div className="space-y-3">
+                              {/* Totals */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="rounded-lg bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
+                                  <div className="text-[11px] text-gray-500">Brutto Gesamt</div>
+                                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{totals.brutto.toFixed(2)} €</div>
+                                </div>
+                                <div className="rounded-lg bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
+                                  <div className="text-[11px] text-gray-500">Netto Gesamt</div>
+                                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{totals.netto.toFixed(2)} €</div>
+                                </div>
+                              </div>
+                              {/* Breakdown */}
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {items.map(it => {
+                                  const brutto = it.count * it.bruttoPer;
+                                  const netto = it.count * it.nettoPer;
+                                  return (
+                                    <div key={it.key} className="rounded-md bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
+                                      <div className="text-[11px] text-gray-500">{it.label}</div>
+                                      <div className="text-base font-semibold text-gray-900 dark:text-gray-100">{it.count}×</div>
+                                      <div className="text-[12px] text-gray-600 dark:text-gray-300">
+                                        <span className="font-medium text-purple-700 dark:text-purple-300">{brutto.toFixed(2)} €</span> Brutto • <span className="font-medium text-indigo-700 dark:text-indigo-300">{netto.toFixed(2)} €</span> Netto
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div className="text-[11px] text-gray-500/80 text-center">
+                                Beispielwerte – echte Zahlen erscheinen nach dem Import.
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
