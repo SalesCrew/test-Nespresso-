@@ -1015,7 +1015,7 @@ Mario`
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
                     <div className="space-y-4">
-                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/15 dark:to-indigo-900/15 p-4">
+                      <div className="rounded-lg border border-transparent ring-1 ring-purple-200/40 dark:ring-purple-900/30 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4">
                         {/* Header */}
                         <div className="flex items-center gap-3 mb-3">
                           <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
@@ -1059,7 +1059,7 @@ Mario`
                                 const netto = m.count * m.rateN
                                 const has = m.count > 0
                                 return (
-                                  <div key={m.key} className={`flex items-center justify-between p-3 rounded-md border ${has ? 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-700' : 'bg-gray-50 dark:bg-gray-800/40 border-gray-100 dark:border-gray-700 opacity-80'}`}>
+                                  <div key={m.key} className={`flex items-center justify-between p-3 rounded-md border shadow-sm backdrop-blur-sm ${has ? 'bg-white/80 dark:bg-gray-900/60 border-white/60 dark:border-gray-700/60' : 'bg-white/60 dark:bg-gray-900/40 border-white/50 dark:border-gray-700/50'}`}>
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-2">
                                         <span className={`text-[11px] px-2 py-0.5 rounded-md ${m.chip}`}>{m.label}</span>
