@@ -762,7 +762,7 @@ export default function EinsatzplanPage() {
         const tracking = data.tracking || {};
         const checkins: Array<{ checked_in_at: string }> = data.checkins || [];
         const outsideBreaks: Array<{ reported_at: string }> = data.outsideBreaks || [];
-
+            
         const hasOutsideBreak = outsideBreaks.length > 0;
         const outsideBreakTimestamp = hasOutsideBreak ? outsideBreaks[outsideBreaks.length - 1].reported_at : null;
         const hasCheckedIn = checkins.length > 0;
@@ -770,7 +770,7 @@ export default function EinsatzplanPage() {
         const actualStart = tracking.actual_start_time ? tracking.actual_start_time.substring(11, 16) : null;
         const actualEnd = tracking.actual_end_time ? tracking.actual_end_time.substring(11, 16) : null;
 
-        setAssignmentTrackingData({
+            setAssignmentTrackingData({
           id: assignment.id || editingEinsatz.id,
           market: assignment.title || editingEinsatz.market || 'N/A',
           address: assignment.location_text || editingEinsatz.address || '',
@@ -793,10 +793,10 @@ export default function EinsatzplanPage() {
           foto_kapsellade_url: tracking.foto_kapsellade_url || null,
           foto_pos_gesamt_url: tracking.foto_pos_gesamt_url || null,
           foto_extra_url: tracking.foto_extra_url || null,
-          hasCheckedIn,
-          hasOutsideBreak,
+              hasCheckedIn,
+              hasOutsideBreak,
           outsideBreakTimestamp,
-        });
+            });
       } catch (error) {
         console.error('Failed to load tracking data:', error);
         setAssignmentTrackingData(null);
@@ -2097,12 +2097,12 @@ export default function EinsatzplanPage() {
       if (activeView === 'maerkte') {
         processMarketsExcel(file);
       } else {
-        if (importType === 'roh') {
-          processRohExcel(file);
-        } else if (importType === 'intern') {
-          processInternExcel(file);
-        } else {
-          console.log('Unknown import type:', importType);
+      if (importType === 'roh') {
+        processRohExcel(file);
+      } else if (importType === 'intern') {
+        processInternExcel(file);
+      } else {
+        console.log('Unknown import type:', importType);
         }
       }
     }
@@ -2121,12 +2121,12 @@ export default function EinsatzplanPage() {
       if (activeView === 'maerkte') {
         processMarketsExcel(file);
       } else {
-        if (importType === 'roh') {
-          processRohExcel(file);
-        } else if (importType === 'intern') {
-          processInternExcel(file);
-        } else {
-          console.log('Unknown import type:', importType);
+      if (importType === 'roh') {
+        processRohExcel(file);
+      } else if (importType === 'intern') {
+        processInternExcel(file);
+      } else {
+        console.log('Unknown import type:', importType);
         }
       }
     }
@@ -3609,7 +3609,7 @@ Import EP
                             </div>
                             {/* Market matching popup - positioned below the chain icon */}
                             {showMarketMatchPopup === einsatz.id && (
-                              <div
+                              <div 
                                 ref={marketMatchPopupRef}
                                 className="absolute top-full right-0 mt-2 w-[520px] max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-xl z-50"
                                 onClick={(e) => e.stopPropagation()}
@@ -3624,29 +3624,29 @@ Import EP
                                       placeholder="Nach Markt, PLZ oder Ort suchen…"
                                       className="w-full h-9 pl-8 pr-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
                                     />
-                                  </div>
-                                  {einsatz.matched_market_id && (
-                                    <button
-                                      onClick={async () => {
-                                        try {
-                                          const res = await fetch(`/api/assignments/${einsatz.id}`, {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ matched_market_id: null })
+                                    </div>
+                                    {einsatz.matched_market_id && (
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            const res = await fetch(`/api/assignments/${einsatz.id}`, {
+                                              method: 'PATCH',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ matched_market_id: null })
                                           });
-                                          if (res.ok) {
+                                            if (res.ok) {
                                             setEinsatzplanData(prev => prev.map(p => p.id === einsatz.id ? { ...p, matched_market_id: null } : p));
-                                          }
-                                        } finally {
+                                            }
+                                          } finally {
                                           setShowMarketMatchPopup(null);
-                                        }
-                                      }}
+                                          }
+                                        }}
                                       className="text-xs px-2 py-1 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
-                                    >
-                                      Zuordnung entfernen
-                                    </button>
-                                  )}
-                                </div>
+                                      >
+                                        Zuordnung entfernen
+                                      </button>
+                                    )}
+                                  </div>
 
                                 {/* Current selection ribbon */}
                                 <div className="px-3 pt-2">
@@ -3656,7 +3656,7 @@ Import EP
                                       ? (marketById.get(einsatz.matched_market_id)?.name || ('Markt ' + einsatz.matched_market_id.slice(0, 8)))
                                       : 'Kein Markt zugeordnet'}
                                   </div>
-                                </div>
+                                  </div>
 
                                 {/* List */}
                                 <div className="p-3">
@@ -3697,25 +3697,25 @@ Import EP
                                               ) : (
                                                 <button
                                                   className="px-2 py-1 text-xs rounded-md border border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
-                                                  onClick={async () => {
-                                                    try {
-                                                      const res = await fetch(`/api/assignments/${einsatz.id}`, {
-                                                        method: 'PATCH',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ matched_market_id: m.id })
+                                          onClick={async () => {
+                                            try {
+                                              const res = await fetch(`/api/assignments/${einsatz.id}`, { 
+                                                method: 'PATCH',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ matched_market_id: m.id })
                                                       });
-                                                      if (res.ok) {
+                                              if (res.ok) {
                                                         setEinsatzplanData(prev => prev.map(p => p.id === einsatz.id ? { ...p, matched_market_id: m.id } : p));
-                                                      }
-                                                    } finally {
+                                              }
+                                            } finally {
                                                       setShowMarketMatchPopup(null);
-                                                    }
-                                                  }}
-                                                >
+                                            }
+                                        }}
+                                      >
                                                   Auswählen
                                                 </button>
                                               )}
-                                            </div>
+                                      </div>
                                           </div>
                                         );
                                       })}
@@ -6158,11 +6158,11 @@ Import EP
                       setMarketPickerSearch(value);
                       setShowMarketPicker(value.trim().length > 0);
                     }}
-                     className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
-                     placeholder="z.B. Interspar Graz"
-                     required
-                       style={hoveredMarket ? { opacity: 0.65 } : undefined}
-                     />
+                    className="w-full h-9 px-3 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-0 focus:border-gray-400"
+                    placeholder="z.B. Interspar Graz"
+                    required
+                      style={hoveredMarket ? { opacity: 0.65 } : undefined}
+                    />
                     {showMarketPicker && (
                       <div 
                         ref={marketPickerRef}
@@ -6650,14 +6650,14 @@ Import EP
                             <SelectContent className="bg-white border border-gray-200">
                               <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto no-scrollbar">
                                 {marketsPromotorsList.map((p) => (
-                                  <SelectItem
-                                    key={p.id}
-                                    value={p.id}
-                                    className="focus:bg-transparent data-[highlighted]:bg-gray-100"
-                                  >
-                                    {p.name}
-                                  </SelectItem>
-                                ))}
+                                <SelectItem
+                                  key={p.id}
+                                  value={p.id}
+                                  className="focus:bg-transparent data-[highlighted]:bg-gray-100"
+                                >
+                                  {p.name}
+                                </SelectItem>
+                              ))}
                               </div>
                             </SelectContent>
                           </Select>

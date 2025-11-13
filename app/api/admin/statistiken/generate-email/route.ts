@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     // Try to fetch latest historical feedback (KPIs + full email text) for this promotor by email
     try {
       if (email) {
-        const svc = createSupabaseServiceClient()
+      const svc = createSupabaseServiceClient()
         // Resolve user by email from user_profiles (case-insensitive)
         const { data: profile } = await svc
           .from('user_profiles')
@@ -75,11 +75,11 @@ export async function POST(req: Request) {
 
         if (profile?.user_id) {
           const { data: latest } = await svc
-            .from('kpi_feedback')
+        .from('kpi_feedback')
             .select('mc_et, tma, vl_value, feedback_text, created_at')
             .eq('user_id', profile.user_id)
-            .order('created_at', { ascending: false })
-            .limit(1)
+        .order('created_at', { ascending: false })
+        .limit(1)
             .single()
 
           if (latest) {
