@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -1015,59 +1015,74 @@ Mario`
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4">
                     <div className="space-y-4">
-                      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                        <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center">
-                          🎁 Deine Prämien
-                        </h4>
+                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-4">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
+                            <Gift className="h-3.5 w-3.5" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">Deine Prämien</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Welle Nov 2025 · Stand 13.11.2025</div>
+                          </div>
+                        </div>
+                        {/* Summary strip */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto Gesamt</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">182,50 €</div>
+                          </div>
+                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto Gesamt</div>
+                            <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">150,12 €</div>
+                          </div>
+                          <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Deine Einträge</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">6</div>
+                          </div>
+                        </div>
+                        {/* Breakdown grid */}
                         {(() => {
-                          const items = [
-                            { key: 'gutscheine', label: 'Gutscheine', count: 5, bruttoPer: 3.5, nettoPer: 2.89 },
-                            { key: 'tma',         label: 'TMA',        count: 2, bruttoPer: 7.5, nettoPer: 6.19 },
-                            { key: 'vertuo',      label: 'Vertuo',     count: 1, bruttoPer: 7.5, nettoPer: 6.19 },
-                            { key: 'pop',         label: 'Pop+',       count: 0, bruttoPer: 7.5, nettoPer: 6.19 },
-                            { key: 'aeroccino',   label: 'Aeroccino',  count: 1, bruttoPer: 3.5, nettoPer: 2.89 },
-                            { key: 'vorteilsbox', label: 'Vorteilsbox',count: 0, bruttoPer: 0,   nettoPer: 0 },
-                          ];
-                          const totals = items.reduce((acc, it) => {
-                            acc.brutto += it.count * it.bruttoPer;
-                            acc.netto  += it.count * it.nettoPer;
-                            return acc;
-                          }, { brutto: 0, netto: 0 });
+                          const metrics = [
+                            { key: 'gutscheine', label: 'Gutscheine', count: 5, rateB: 3.5, rateN: 2.89, chip: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+                            { key: 'tma', label: 'TMA', count: 7, rateB: 7.5, rateN: 6.19, chip: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' },
+                            { key: 'vertuo', label: 'Vertuo', count: 4, rateB: 7.5, rateN: 6.19, chip: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+                            { key: 'vertuo_pop', label: 'Vertuo Pop+', count: 3, rateB: 7.5, rateN: 6.19, chip: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300' },
+                            { key: 'aeroccino', label: 'Aeroccino', count: 6, rateB: 3.5, rateN: 2.89, chip: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300' },
+                            { key: 'vorteilsbox', label: 'Vorteilsbox', count: 1, rateB: 39, rateN: 32.18, chip: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
+                          ]
+                          const format = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
                           return (
-                            <div className="space-y-3">
-                              {/* Totals */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div className="rounded-lg bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
-                                  <div className="text-[11px] text-gray-500">Brutto Gesamt</div>
-                                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{totals.brutto.toFixed(2)} €</div>
-                                </div>
-                                <div className="rounded-lg bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
-                                  <div className="text-[11px] text-gray-500">Netto Gesamt</div>
-                                  <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{totals.netto.toFixed(2)} €</div>
-                                </div>
-                              </div>
-                              {/* Breakdown */}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {items.map(it => {
-                                  const brutto = it.count * it.bruttoPer;
-                                  const netto = it.count * it.nettoPer;
-                                  return (
-                                    <div key={it.key} className="rounded-md bg-white/70 dark:bg-white/5 border border-purple-100 dark:border-purple-900/40 p-3 text-center">
-                                      <div className="text-[11px] text-gray-500">{it.label}</div>
-                                      <div className="text-base font-semibold text-gray-900 dark:text-gray-100">{it.count}×</div>
-                                      <div className="text-[12px] text-gray-600 dark:text-gray-300">
-                                        <span className="font-medium text-purple-700 dark:text-purple-300">{brutto.toFixed(2)} €</span> Brutto • <span className="font-medium text-indigo-700 dark:text-indigo-300">{netto.toFixed(2)} €</span> Netto
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {metrics.map((m) => {
+                                const brutto = m.count * m.rateB
+                                const netto = m.count * m.rateN
+                                const has = m.count > 0
+                                return (
+                                  <div key={m.key} className={`flex items-center justify-between p-3 rounded-md border ${has ? 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-700' : 'bg-gray-50 dark:bg-gray-800/40 border-gray-100 dark:border-gray-700 opacity-80'}`}>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`text-[11px] px-2 py-0.5 rounded-md ${m.chip}`}>{m.label}</span>
+                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">Brutto {m.rateB.toFixed(2)}€ · Netto {m.rateN.toFixed(2)}€</span>
                                       </div>
                                     </div>
-                                  );
-                                })}
-                              </div>
-                              <div className="text-[11px] text-gray-500/80 text-center">
-                                Beispielwerte – echte Zahlen erscheinen nach dem Import.
-                              </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">x{m.count}</span>
+                                      <div className="text-right">
+                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{has ? format(brutto) : '—'}</div>
+                                        <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{has ? format(netto) : '—'}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
                             </div>
-                          );
+                          )
                         })()}
+                        {/* Footer note */}
+                        <div className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400">
+                          Auszahlung gemäß aktuellem Stand. Änderungen nach Upload deiner Prämien möglich.
+                        </div>
                       </div>
 
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
