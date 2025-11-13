@@ -1311,31 +1311,28 @@ Mario`
                         )}
                       </div>
 
-                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-700">
+                      <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-700" style={{background: 'linear-gradient(to right, rgba(238, 179, 75, 0.10), rgba(255, 237, 153, 0.10))'}}>
                         <div className="flex items-center justify-between mb-1">
                           <h4 className="font-semibold text-amber-800 dark:text-amber-300 flex items-center">
-                            <span
-                              className="h-6 w-6 rounded-full mr-2 flex items-center justify-center"
-                              style={{ background: 'linear-gradient(135deg, #EEB34B 0%, #FFED99 25%, #FCD33D 50%, #FAF995 75%, #EFC253 100%)' }}
-                            >
+                            <span className="h-6 w-6 rounded-full mr-2 flex items-center justify-center bg-gradient-to-br from-orange-500 to-amber-500">
                               <Crown className="h-3.5 w-3.5 text-white" />
                             </span>
                             Perfekter Monat
-                          </h4>
-                        </div>
+                        </h4>
+                      </div>
                         {bestLoading ? (
                           <div className="space-y-2">
                             <div className="h-3 w-48 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
                             <div className="grid grid-cols-2 gap-2">
                               <div className="h-10 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
                               <div className="h-10 bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
-                            </div>
+                      </div>
                             <div className="h-6 w-full bg-amber-100 dark:bg-amber-900/30 rounded animate-skeleton-fade"></div>
                           </div>
                         ) : (
                           <div className="space-y-3">
                             <div className="text-xs text-amber-700 dark:text-amber-200">
-                              Theoretisch basierend auf deinen Bestwerten
+                              Theoretischer Wert: beste Einzelleistungen aus der Vergangenheit kombiniert.
                             </div>
                             {/* Totals */}
                             <div className="grid grid-cols-2 gap-2">
