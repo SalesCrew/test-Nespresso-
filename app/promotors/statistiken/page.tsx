@@ -1134,7 +1134,7 @@ Mario`
                         </div>
                       </div>
 
-                      {/* Cluster-Benchmark (replaces Tipps) */}
+                      {/* Benchmark (replaces Tipps) */}
                       {(() => {
                         const [benchmarkMode, setBenchmarkMode] = [undefined, undefined] as any // placeholder to avoid scope errors in static parse
                         return null
@@ -1147,11 +1147,11 @@ Mario`
                               <TrendingUp className="h-3.5 w-3.5" />
                             </span>
                             <div className="min-w-0">
-                              <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">Benchmark (Alle Regionen)</div>
+                              <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">Benchmark</div>
                               <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                                 {(() => {
                                   const wave = praemienMe?.waveMonth ? new Date(praemienMe.waveMonth).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }) : '—'
-                                  return <>Alle Regionen · Welle {wave} · Netto</>
+                                  return <>Welle {wave} · Netto</>
                                 })()}
                               </div>
                             </div>
@@ -1198,10 +1198,10 @@ Mario`
                                 {/* Delta pill + microcopy */}
                                 <div className="flex items-center gap-3">
                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                                    {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} Regions‑Schnitt
+                                    {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} Durchschnitt
                                   </span>
                                   <span className="text-xs text-gray-600 dark:text-gray-400">
-                                    {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Regions‑Ø
+                                    {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Durchschnitt
                                   </span>
                                 </div>
                                 {/* Bars */}
@@ -1214,7 +1214,7 @@ Mario`
                                     <span className="text-[11px] text-gray-700 dark:text-gray-300 w-20 text-right">{fmt(your)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Regions‑Ø</span>
+                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Durchschnitt</span>
                                     <div className="flex-1 h-2 bg-white/60 dark:bg-gray-800/50 rounded-full overflow-hidden">
                                       <div className="h-full bg-blue-200/80 dark:bg-indigo-900/40 rounded-full" style={{ width: `${avgW}%` }}></div>
                                     </div>
@@ -1231,7 +1231,7 @@ Mario`
                                 </div>
                                 {/* Projection hint */}
                                 <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Regions‑Ø (+22,50 €)'}
+                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Durchschnitt (+22,50 €)'}
                                 </div>
                               </div>
                             )
