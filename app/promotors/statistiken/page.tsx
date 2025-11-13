@@ -1048,7 +1048,7 @@ Mario`
                 onClick={toggleFeedback}
               >
                 <button className="flex items-center justify-center w-full">
-                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Potential Analyse</span>
+                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Deine Prämien!</span>
                   <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
                 </button>
               </div>
