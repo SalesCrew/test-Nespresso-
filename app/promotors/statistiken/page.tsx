@@ -1200,7 +1200,7 @@ Mario`
                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] leading-none whitespace-nowrap font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
                                     {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} Durchschnitt
                                   </span>
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] leading-none whitespace-nowrap font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] leading-none whitespace-nowrap font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                                     {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Durchschnitt
                                   </span>
                                 </div>
