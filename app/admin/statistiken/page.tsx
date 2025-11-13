@@ -1779,7 +1779,7 @@ Liebe Grüße, dein Nespresso Team`;
                           <Gift className="h-4 w-4" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Prämien – Übersicht</h3>
+                          <h3 className="text-lg font-semibold text-gray-900">Prämien Übersicht</h3>
                           <p className="text-xs text-gray-500">Werte für Gutscheine, TMA, Vertuo, Vertuo Pop+, Aeroccino, Vorteilsbox</p>
                         </div>
                       </div>
