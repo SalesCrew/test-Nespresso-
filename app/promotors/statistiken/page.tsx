@@ -1139,7 +1139,7 @@ Mario`
                         const [benchmarkMode, setBenchmarkMode] = [undefined, undefined] as any // placeholder to avoid scope errors in static parse
                         return null
                       })()}
-                      <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/40 to-indigo-50/40 dark:from-purple-900/15 dark:to-indigo-900/15 p-4">
+                      <div className="rounded-lg border border-blue-300/50 dark:border-blue-800/50 bg-gradient-to-br from-blue-50/40 to-indigo-50/40 dark:from-blue-900/15 dark:to-indigo-900/15 p-4">
                         {/* Header */}
                         <div className="flex items-center justify-between gap-3 mb-3">
                           <div className="flex items-center gap-2 min-w-0">
@@ -1147,18 +1147,18 @@ Mario`
                               <TrendingUp className="h-3.5 w-3.5" />
                             </span>
                             <div className="min-w-0">
-                              <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">Cluster‑Benchmark</div>
+                              <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">Benchmark (Alle Regionen)</div>
                               <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                                 {(() => {
                                   const wave = praemienMe?.waveMonth ? new Date(praemienMe.waveMonth).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }) : '—'
-                                  return <>Cluster — · Welle {wave} · Netto</>
+                                  return <>Alle Regionen · Welle {wave} · Netto</>
                                 })()}
                               </div>
                             </div>
                           </div>
                           {/* Toggle pill mock (visual only for now) */}
-                          <div className="inline-flex items-center text-[11px] bg-white dark:bg-gray-900 border border-purple-200/60 dark:border-purple-800/60 rounded-full p-0.5">
-                            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Netto</span>
+                          <div className="inline-flex items-center text-[11px] bg-white dark:bg-gray-900 border border-blue-200/60 dark:border-blue-800/60 rounded-full p-0.5">
+                            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">Netto</span>
                             <span className="px-2 py-0.5 text-gray-500">Brutto</span>
                           </div>
                         </div>
@@ -1198,10 +1198,10 @@ Mario`
                                 {/* Delta pill + microcopy */}
                                 <div className="flex items-center gap-3">
                                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${positive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                                    {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} —‑Schnitt
+                                    {positive ? '↑' : '↓'} {Math.abs(deltaPct).toFixed(0)}% {positive ? 'über' : 'unter'} Regions‑Schnitt
                                   </span>
                                   <span className="text-xs text-gray-600 dark:text-gray-400">
-                                    {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Cluster‑Ø
+                                    {positive ? '+' : '−'}{fmt(Math.abs(deltaEur))} gegenüber Regions‑Ø
                                   </span>
                                 </div>
                                 {/* Bars */}
@@ -1209,14 +1209,14 @@ Mario`
                                   <div className="flex items-center gap-2">
                                     <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Du</span>
                                     <div className="flex-1 h-2 bg-white/60 dark:bg-gray-800/50 rounded-full overflow-hidden">
-                                      <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full" style={{ width: `${youW}%` }}></div>
+                                      <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: `${youW}%` }}></div>
                                     </div>
                                     <span className="text-[11px] text-gray-700 dark:text-gray-300 w-20 text-right">{fmt(your)}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Cluster‑Ø</span>
+                                    <span className="text-[11px] text-gray-600 dark:text-gray-400 w-16">Regions‑Ø</span>
                                     <div className="flex-1 h-2 bg-white/60 dark:bg-gray-800/50 rounded-full overflow-hidden">
-                                      <div className="h-full bg-indigo-200/80 dark:bg-indigo-900/40 rounded-full" style={{ width: `${avgW}%` }}></div>
+                                      <div className="h-full bg-blue-200/80 dark:bg-indigo-900/40 rounded-full" style={{ width: `${avgW}%` }}></div>
                                     </div>
                                     <span className="text-[11px] text-gray-700 dark:text-gray-300 w-20 text-right">{fmt(clusterAvg)}</span>
                                   </div>
@@ -1231,7 +1231,7 @@ Mario`
                                 </div>
                                 {/* Projection hint */}
                                 <div className="text-[11px] text-gray-500 dark:text-gray-400">
-                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Cluster‑Ø (+22,50 €)'}
+                                  {positive ? 'Ziel halten: +2 Pop+ sichern +15% vs. Ø' : '+3 Vertuo bis zum Regions‑Ø (+22,50 €)'}
                                 </div>
                               </div>
                             )
