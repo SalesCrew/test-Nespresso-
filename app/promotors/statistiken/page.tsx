@@ -1,5 +1,6 @@
 "use client"
 
+// non-reactive: housekeeping marker to trigger deploy (no functional changes)
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown, Coins } from "lucide-react"
