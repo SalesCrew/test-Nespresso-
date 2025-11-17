@@ -1101,15 +1101,7 @@ Mario`
               
               <CardContent className="p-4 max-[420px]:p-3">
                 <ScrollArea className="h-[280px] pr-4">
-                  <div
-                    className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3"
-                    style={{
-                      transformOrigin: 'top left',
-                      transform: 'scale(var(--prmScale))',
-                      // Scale dynamically with viewport width; floors at 0.52 for very small devices, caps at 1 for larger screens
-                      ['--prmScale' as any]: 'clamp(0.52, calc(100vw / 420), 1)'
-                    }}
-                  >
+                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3 max-[420px]:origin-top-left max-[420px]:scale-[.88] max-[390px]:scale-[.84] max-[360px]:scale-[.78] max-[340px]:scale-[.74] max-[320px]:scale-[.70] max-[300px]:scale-[.66] max-[280px]:scale-[.62] max-[260px]:scale-[.58] max-[240px]:scale-[.54] max-[220px]:scale-[.50] max-[200px]:scale-[.46]">
                     <div className="space-y-4">
                       <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 max-[420px]:p-3">
                         {/* Header */}
