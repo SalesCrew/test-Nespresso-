@@ -1101,7 +1101,7 @@ Mario`
               
               <CardContent className="p-4 max-[420px]:p-3">
                 <ScrollArea className="h-[280px] pr-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3 max-[420px]:scale-[.92] max-[420px]:origin-top-left">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3 max-[420px]:scale-[.92] max-[420px]:origin-top-left max-[390px]:scale-[.88] max-[360px]:scale-[.84] max-[340px]:scale-[.80] max-[320px]:scale-[.76]">
                     <div className="space-y-4">
                       <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 max-[420px]:p-3">
                         {/* Header */}
