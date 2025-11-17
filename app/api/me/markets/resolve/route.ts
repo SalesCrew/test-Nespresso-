@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (marketId) {
       const { data: m, error } = await svc
         .from('markets')
-        .select('id, name, address, plz, city, cluster, marktleiter, marktleiterPhone, marktleiterEmail, photosExterior, photosProducts, updated_at')
+        .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_products, updated_at')
         .eq('id', marketId)
         .maybeSingle();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,11 +34,11 @@ export async function POST(req: NextRequest) {
         plz: (m as any).plz || '',
         city: (m as any).city || '',
         cluster: (m as any).cluster || '',
-        marktleiter: (m as any).marktleiter || '',
-        marktleiterPhone: (m as any).marktleiterPhone || '',
-        marktleiterEmail: (m as any).marktleiterEmail || '',
-        photosExterior: (m as any).photosExterior || [],
-        photosProducts: (m as any).photosProducts || [],
+        marktleiter: (m as any).marktleiter_name || '',
+        marktleiterPhone: (m as any).marktleiter_phone || '',
+        marktleiterEmail: (m as any).marktleiter_email || '',
+        photosExterior: (m as any).photos_exterior || [],
+        photosProducts: (m as any).photos_products || [],
         updated_at: (m as any).updated_at || null,
       };
       return NextResponse.json({ market: projection });
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const { data: markets, error } = await svc
       .from('markets')
-      .select('id, name, address, plz, city, cluster, marktleiter, marktleiterPhone, marktleiterEmail, photosExterior, photosProducts, updated_at, acceptance_addresses');
+      .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_products, updated_at');
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -62,11 +62,11 @@ export async function POST(req: NextRequest) {
       plz: (market as any).plz || '',
       city: (market as any).city || '',
       cluster: (market as any).cluster || '',
-      marktleiter: (market as any).marktleiter || '',
-      marktleiterPhone: (market as any).marktleiterPhone || '',
-      marktleiterEmail: (market as any).marktleiterEmail || '',
-      photosExterior: (market as any).photosExterior || [],
-      photosProducts: (market as any).photosProducts || [],
+      marktleiter: (market as any).marktleiter_name || '',
+      marktleiterPhone: (market as any).marktleiter_phone || '',
+      marktleiterEmail: (market as any).marktleiter_email || '',
+      photosExterior: (market as any).photos_exterior || [],
+      photosProducts: (market as any).photos_products || [],
       updated_at: (market as any).updated_at || null,
     };
     return NextResponse.json({ market: projection });
