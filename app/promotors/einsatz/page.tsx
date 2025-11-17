@@ -45,6 +45,7 @@ import {
   RotateCcw,
   GraduationCap,
   UserCheck,
+  Store,
   Separator as LucideSeparator
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -249,6 +250,10 @@ export default function EinsatzPage() {
   
   // State for tracking data (for persistent status)
   const [trackingData, setTrackingData] = useState<any | null>(null);
+  // Markt modal state
+  const [showMarketPopup, setShowMarketPopup] = useState(false);
+  const [marketLoading, setMarketLoading] = useState(false);
+  const [marketData, setMarketData] = useState<any | null>(null);
   
   // Load process state from API
   const loadBuddyTags = async () => {
@@ -2049,6 +2054,39 @@ const loadProcessState = async () => {
                 <Clock className="h-3.5 w-3.5 mr-1" /> 
                 <span className="text-xs font-medium">{displayedAssignment?.start_ts && displayedAssignment?.end_ts ? `${displayedAssignment.start_ts.substring(11, 16)}-${displayedAssignment.end_ts.substring(11, 16)}` : ''}</span>
               </div>
+              {/* Market pill - always visible */}
+              <div 
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-pointer hover:from-purple-600 hover:to-pink-600 transition-all"
+                onClick={async () => {
+                  setShowMarketPopup(true);
+                  setMarketLoading(true);
+                  try {
+                    const body = {
+                      location_text: displayedAssignment?.location_text || displayedAssignment?.address || '',
+                      postal_code: displayedAssignment?.postal_code || '',
+                      city: displayedAssignment?.city || '',
+                    };
+                    const res = await fetch('/api/me/markets/resolve', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(body),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setMarketData(data?.market || null);
+                    } else {
+                      setMarketData(null);
+                    }
+                  } catch {
+                    setMarketData(null);
+                  } finally {
+                    setMarketLoading(false);
+                  }
+                }}
+              >
+                <Store className="h-3.5 w-3.5 mr-1" />
+                <span className="text-xs font-medium">Markt</span>
+              </div>
               
               {/* Notes pill - only show if there's a note */}
               {currentAssignmentNote && (
@@ -3690,6 +3728,153 @@ const loadProcessState = async () => {
                   <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm">Keine Notiz verfügbar</p>
                 </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Market Popup Modal */}
+      {showMarketPopup && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/30 z-50"
+            onClick={() => setShowMarketPopup(false)}
+          ></div>
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl z-[60] w-[92vw] max-w-[700px] max-h-[75vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-white/20">
+                    <Store className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold truncate">{marketData?.name || 'Markt'}</h3>
+                    <p className="text-white/90 text-xs truncate">{marketData?.address ? `${marketData.address}${marketData.plz || marketData.city ? ' • ' : ''}${[marketData?.plz, marketData?.city].filter(Boolean).join(' ')}` : '—'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {marketData?.cluster && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/20 border border-white/30">
+                      {marketData.cluster === 'wien-noe-bgl' ? 'W/NÖ/BGL' :
+                       marketData.cluster === 'steiermark' ? 'ST' :
+                       marketData.cluster === 'salzburg' ? 'S' :
+                       marketData.cluster === 'oberoesterreich' ? 'OÖ' :
+                       marketData.cluster === 'tirol' ? 'T' :
+                       marketData.cluster === 'vorarlberg' ? 'V' :
+                       marketData.cluster === 'kaernten' ? 'K' : '—'}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setShowMarketPopup(false)}
+                    className="p-1 hover:bg-white/20 rounded transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Content */}
+            <div className="p-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {marketLoading ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[0,1,2,3].map(i => (
+                      <div key={i} className="h-14 bg-gray-100 rounded-lg animate-skeleton-fade"></div>
+                    ))}
+                  </div>
+                  <div className="h-10 bg-gray-100 rounded-lg animate-skeleton-fade"></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[0,1,2,3].map(i => (
+                      <div key={i} className="h-32 bg-gray-100 rounded-lg animate-skeleton-fade"></div>
+                    ))}
+                  </div>
+                </div>
+              ) : marketData ? (
+                <div className="space-y-6">
+                  {/* Basisinformationen */}
+                  <section>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Basisinformationen</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <div className="text-[11px] text-gray-500">Marktname</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{marketData.name || '—'}</div>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <div className="text-[11px] text-gray-500">Adresse</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{marketData.address || '—'}</div>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <div className="text-[11px] text-gray-500">PLZ</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{marketData.plz || '—'}</div>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                        <div className="text-[11px] text-gray-500">Ort</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">{marketData.city || '—'}</div>
+                      </div>
+                    </div>
+                  </section>
+                  {/* Marktleiter */}
+                  <section>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Marktleiter</h4>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="text-sm font-medium text-gray-900">{marketData.marktleiter || '—'}</div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <a href={marketData.marktleiterPhone ? `tel:${marketData.marktleiterPhone}` : undefined} className={`px-2 py-0.5 text-xs rounded-md border ${marketData.marktleiterPhone ? 'border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'}`}>Telefon</a>
+                        <a href={marketData.marktleiterEmail ? `mailto:${marketData.marktleiterEmail}` : undefined} className={`px-2 py-0.5 text-xs rounded-md border ${marketData.marktleiterEmail ? 'border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'}`}>E‑Mail</a>
+                      </div>
+                    </div>
+                  </section>
+                  {/* Fotos Außenansicht */}
+                  <section>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Fotos Außenansicht</h4>
+                    {Array.isArray(marketData.photosExterior) && marketData.photosExterior.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {marketData.photosExterior.map((p: any, idx: number) => (
+                          <figure key={idx} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                            {p?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={p.url} alt="" className="w-full h-40 object-cover" />
+                            ) : (
+                              <div className="h-40 bg-gray-100"></div>
+                            )}
+                            {p?.comment && (
+                              <figcaption className="text-xs text-gray-600 p-2 border-t border-gray-100">{p.comment}</figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">Keine Fotos vorhanden.</div>
+                    )}
+                  </section>
+                  {/* Fotos Produkte */}
+                  <section>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Fotos Produkte</h4>
+                    {Array.isArray(marketData.photosProducts) && marketData.photosProducts.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {marketData.photosProducts.map((p: any, idx: number) => (
+                          <figure key={idx} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                            {p?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={p.url} alt="" className="w-full h-40 object-cover" />
+                            ) : (
+                              <div className="h-40 bg-gray-100"></div>
+                            )}
+                            {p?.comment && (
+                              <figcaption className="text-xs text-gray-600 p-2 border-t border-gray-100">{p.comment}</figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">Keine Fotos vorhanden.</div>
+                    )}
+                  </section>
+                </div>
+              ) : (
+                <div className="text-center py-10 text-sm text-gray-600">Keine Marktdaten verfügbar.</div>
               )}
             </div>
           </div>
