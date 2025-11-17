@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown, Coins } from "lucide-react"
-
-// deploy-trigger: non-reactive comment for production push
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -2787,4 +2785,5 @@ Mario`
       )}
     </>
   )
-} 
+}
+// deploy: no-op
