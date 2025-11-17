@@ -314,6 +314,7 @@ export default function EinsatzplanPage() {
   const [marketMatchSearch, setMarketMatchSearch] = useState("");
   const marketById = useMemo(() => new Map(marketsData.map((m: any) => [m.id, m])), [marketsData]);
   const marketMatchPopupRef = useRef<HTMLDivElement | null>(null);
+  const [selectingMarketId, setSelectingMarketId] = useState<string | null>(null);
 
   // Close market match popup on outside click (ignore clicks on the icon or inside the popup)
   useEffect(() => {
@@ -3701,8 +3702,11 @@ Import EP
                                                 </span>
                                               ) : (
                                                 <button
-                                                  className="px-2 py-1 text-xs rounded-md border border-green-200 text-green-700 bg-green-50 hover:bg-green-100"
+                                                  className={`px-2 py-1 text-xs rounded-md border border-green-200 text-green-700 bg-green-50 hover:bg-green-100 ${selectingMarketId === m.id ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                  disabled={selectingMarketId === m.id}
                                           onClick={async () => {
+                                            if (selectingMarketId) return;
+                                            setSelectingMarketId(m.id);
                                             try {
                                               const res = await fetch(`/api/assignments/${einsatz.id}`, { 
                                                 method: 'PATCH',
@@ -3713,11 +3717,12 @@ Import EP
                                                         setEinsatzplanData(prev => prev.map(p => p.id === einsatz.id ? { ...p, matched_market_id: m.id } : p));
                                               }
                                             } finally {
+                                                      setSelectingMarketId(null);
                                                       setShowMarketMatchPopup(null);
                                             }
                                         }}
                                       >
-                                                  Auswählen
+                                                  {selectingMarketId === m.id ? 'Auswählen…' : 'Auswählen'}
                                                 </button>
                                               )}
                                       </div>
