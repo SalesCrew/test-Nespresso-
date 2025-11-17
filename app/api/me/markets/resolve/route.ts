@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     if (marketId) {
       const { data: m, error } = await svc
         .from('markets')
-        .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_products, updated_at')
+        .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_interior, photos_products, updated_at')
         .eq('id', marketId)
         .maybeSingle();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
         marktleiterPhone: (m as any).marktleiter_phone || '',
         marktleiterEmail: (m as any).marktleiter_email || '',
         photosExterior: (m as any).photos_exterior || [],
+        photosInterior: (m as any).photos_interior || [],
         photosProducts: (m as any).photos_products || [],
         updated_at: (m as any).updated_at || null,
       };
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const { data: markets, error } = await svc
       .from('markets')
-      .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_products, updated_at');
+      .select('id, name, address, plz, city, cluster, marktleiter_name, marktleiter_phone, marktleiter_email, photos_exterior, photos_interior, photos_products, updated_at');
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
       marktleiterPhone: (market as any).marktleiter_phone || '',
       marktleiterEmail: (market as any).marktleiter_email || '',
       photosExterior: (market as any).photos_exterior || [],
+      photosInterior: (market as any).photos_interior || [],
       photosProducts: (market as any).photos_products || [],
       updated_at: (market as any).updated_at || null,
     };

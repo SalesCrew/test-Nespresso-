@@ -3821,9 +3821,19 @@ const loadProcessState = async () => {
                     <h4 className="text-sm font-semibold text-gray-900 mb-2">Marktleiter</h4>
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                       <div className="text-sm font-medium text-gray-900">{marketData.marktleiter || '—'}</div>
-                      <div className="mt-2 flex items-center gap-2">
-                        <a href={marketData.marktleiterPhone ? `tel:${marketData.marktleiterPhone}` : undefined} className={`px-2 py-0.5 text-xs rounded-md border ${marketData.marktleiterPhone ? 'border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'}`}>Telefon</a>
-                        <a href={marketData.marktleiterEmail ? `mailto:${marketData.marktleiterEmail}` : undefined} className={`px-2 py-0.5 text-xs rounded-md border ${marketData.marktleiterEmail ? 'border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100' : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'}`}>E‑Mail</a>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="text-gray-700">
+                          <span className="text-[11px] text-gray-500 mr-1">Telefon:</span>
+                          {marketData.marktleiterPhone ? (
+                            <a href={`tel:${marketData.marktleiterPhone}`} className="text-blue-600 hover:underline">{marketData.marktleiterPhone}</a>
+                          ) : '—'}
+                        </div>
+                        <div className="text-gray-700">
+                          <span className="text-[11px] text-gray-500 mr-1">E‑Mail:</span>
+                          {marketData.marktleiterEmail ? (
+                            <a href={`mailto:${marketData.marktleiterEmail}`} className="text-blue-600 hover:underline">{marketData.marktleiterEmail}</a>
+                          ) : '—'}
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -3833,6 +3843,29 @@ const loadProcessState = async () => {
                     {Array.isArray(marketData.photosExterior) && marketData.photosExterior.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {marketData.photosExterior.map((p: any, idx: number) => (
+                          <figure key={idx} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+                            {p?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={p.url} alt="" className="w-full h-40 object-cover" />
+                            ) : (
+                              <div className="h-40 bg-gray-100"></div>
+                            )}
+                            {p?.comment && (
+                              <figcaption className="text-xs text-gray-600 p-2 border-t border-gray-100">{p.comment}</figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">Keine Fotos vorhanden.</div>
+                    )}
+                  </section>
+                  {/* Fotos Innenansicht */}
+                  <section>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Fotos Innenansicht</h4>
+                    {Array.isArray(marketData.photosInterior) && marketData.photosInterior.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {marketData.photosInterior.map((p: any, idx: number) => (
                           <figure key={idx} className="rounded-lg border border-gray-200 overflow-hidden bg-white">
                             {p?.url ? (
                               // eslint-disable-next-line @next/next/no-img-element
