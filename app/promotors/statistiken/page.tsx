@@ -1099,19 +1099,19 @@ Mario`
                 </h3>
               </div>
               
-              <CardContent className="p-4">
+              <CardContent className="p-4 max-[420px]:p-3">
                 <ScrollArea className="h-[280px] pr-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3">
                     <div className="space-y-4">
-                      <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4">
+                      <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 max-[420px]:p-3">
                         {/* Header */}
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">
-                            <Gift className="h-3.5 w-3.5" />
+                        <div className="flex items-center gap-3 mb-3 max-[420px]:gap-2 max-[420px]:mb-2">
+                          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center max-[420px]:h-6 max-[420px]:w-6">
+                            <Gift className="h-3.5 w-3.5 max-[420px]:h-3 max-[420px]:w-3" />
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900 dark:text-gray-100">Deine Prämien</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-[15px]">Deine Prämien</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">
                               {praemienMe?.waveMonth
                                 ? (() => {
                                     const d = new Date(praemienMe.waveMonth)
@@ -1124,22 +1124,22 @@ Mario`
                           </div>
                         </div>
                         {/* Summary strip */}
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto Gesamt</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        <div className="grid grid-cols-3 gap-2 max-[420px]:gap-1">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 max-[420px]:p-2 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Brutto Gesamt</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-base">
                               {praemienMe ? `${praemienMe.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto Gesamt</div>
-                            <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 max-[420px]:p-2 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Netto Gesamt</div>
+                            <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 max-[420px]:text-base">
                               {praemienMe ? `${praemienMe.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\u00A0€` : '—'}
                             </div>
                           </div>
-                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 flex flex-col items-center justify-center text-center">
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400">Deine Einträge</div>
-                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          <div className="rounded-md border border-purple-300/50 dark:border-purple-800/50 bg-white dark:bg-gray-900 p-3 max-[420px]:p-2 flex flex-col items-center justify-center text-center">
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Deine Einträge</div>
+                            <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-base">
                               {(() => {
                                 const values = praemienMe?.values || {}
                                 const cnt = ['gutscheine','tma','vertuo','vertuo_pop','aeroccino','vorteilsbox']
@@ -1169,24 +1169,24 @@ Mario`
                           })()
                           const format = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
                           return (
-                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-[420px]:gap-1.5">
                               {metrics.filter(m => m.count > 0).map((m) => {
                                 const brutto = m.count * m.rateB
                                 const netto = m.count * m.rateN
                                 const has = m.count > 0
                                 return (
-                                  <div key={m.key} className={`flex items-center justify-between p-3 rounded-md border shadow-sm backdrop-blur-sm ${has ? 'bg-white/80 dark:bg-gray-900/60 border-white/60 dark:border-gray-700/60' : 'bg-white/60 dark:bg-gray-900/40 border-white/50 dark:border-gray-700/50'}`}>
+                                  <div key={m.key} className={`flex items-center justify-between p-3 max-[420px]:p-2 rounded-md border shadow-sm backdrop-blur-sm ${has ? 'bg-white/80 dark:bg-gray-900/60 border-white/60 dark:border-gray-700/60' : 'bg-white/60 dark:bg-gray-900/40 border-white/50 dark:border-gray-700/50'}`}>
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-2">
-                                        <span className={`text-[11px] px-2 py-0.5 rounded-md ${m.chip}`}>{m.label}</span>
-                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">Brutto {m.rateB.toFixed(2)}€ · Netto {m.rateN.toFixed(2)}€</span>
+                                        <span className={`text-[11px] px-2 py-0.5 rounded-md max-[420px]:px-1.5 ${m.chip}`}>{m.label}</span>
+                                        <span className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Brutto {m.rateB.toFixed(2)}€ · Netto {m.rateN.toFixed(2)}€</span>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">x{m.count}</span>
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 max-[420px]:text-[10px] max-[420px]:px-1.5">x{m.count}</span>
                                       <div className="text-right">
-                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{has ? format(brutto) : '—'}</div>
-                                        <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{has ? format(netto) : '—'}</div>
+                                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-[13px]">{has ? format(brutto) : '—'}</div>
+                                        <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 max-[420px]:text-[13px]">{has ? format(netto) : '—'}</div>
                                       </div>
                                     </div>
                                   </div>
@@ -1196,7 +1196,7 @@ Mario`
                           )
                         })()}
                         {/* Footer note */}
-                        <div className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400">
+                        <div className="mt-3 text-center text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">
                           Auszahlung gemäß aktuellem Stand.
                         </div>
                       </div>
@@ -1339,13 +1339,13 @@ Mario`
                         className="mt-2 rounded-lg p-[1px]"
                         style={{ background: 'linear-gradient(to right, rgba(236,72,153,0.28), rgba(147,51,234,0.28))' }}
                       >
-                        <div className="rounded-lg bg-gradient-to-r from-pink-500/5 to-purple-500/5 dark:from-pink-500/10 dark:to-purple-500/10 p-3">
+                        <div className="rounded-lg bg-gradient-to-r from-pink-500/5 to-purple-500/5 dark:from-pink-500/10 dark:to-purple-500/10 p-3 max-[420px]:p-2">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 text-white flex items-center justify-center">
+                            <span className="h-6 w-6 rounded-lg bg-gradient-to-br from-pink-500 to-purple-500 text-white flex items-center justify-center max-[420px]:h-5 max-[420px]:w-5">
                               <Coins className="h-3.5 w-3.5" />
                             </span>
-                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Gesamte Prämien (Gesamt)</div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-[13px]">Gesamte Prämien (Gesamt)</div>
                           </div>
                           {lifetimeTotals?.count !== undefined && (
                             <span className="text-[11px] text-gray-500 dark:text-gray-400">{lifetimeTotals.count} Wellen</span>
@@ -1362,15 +1362,15 @@ Mario`
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 text-center shadow-sm ring-1 ring-pink-200/40">
-                              <div className="text-[11px] text-gray-500 dark:text-gray-400">Brutto gesamt</div>
-                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 max-[420px]:p-1.5 text-center shadow-sm ring-1 ring-pink-200/40">
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Brutto gesamt</div>
+                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 max-[420px]:text-[13px]">
                                 {lifetimeTotals ? lifetimeTotals.totals.brutto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
                               </div>
                             </div>
-                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 text-center shadow-sm ring-1 ring-purple-200/40">
-                              <div className="text-[11px] text-gray-500 dark:text-gray-400">Netto gesamt</div>
-                              <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                            <div className="rounded-md border border-white/80 dark:border-gray-700 bg-white/95 dark:bg-gray-900/70 p-2 max-[420px]:p-1.5 text-center shadow-sm ring-1 ring-purple-200/40">
+                              <div className="text-[11px] text-gray-500 dark:text-gray-400 max-[420px]:text-[10px]">Netto gesamt</div>
+                              <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 max-[420px]:text-[13px]">
                                 {lifetimeTotals ? lifetimeTotals.totals.netto.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'} €
                               </div>
                             </div>
@@ -1430,7 +1430,7 @@ Mario`
                                   { key: 'vorteilsbox', label: 'Vorteilsbox' },
                                 ]
                                 return items.map(i => (
-                                  <span key={i.key} className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border border-amber-200 text-amber-800 bg-amber-50">
+                                  <span key={i.key} className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border border-amber-200 text-amber-800 bg-amber-50 max-[420px]:text-[10px] max-[420px]:px-1.5">
                                     {i.label}: x{Number(best[i.key as keyof typeof best] || 0)}
                                   </span>
                                 ))
@@ -2786,4 +2786,3 @@ Mario`
     </>
   )
 }
-// deploy: no-op
