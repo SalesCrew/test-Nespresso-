@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
+    const marketId = String(body.market_id || '').trim();
     const assignment = {
       id: 'resolve',
       location_text: String(body.location_text || '').trim(),
@@ -18,6 +19,31 @@ export async function POST(req: NextRequest) {
     };
 
     const svc = createSupabaseServiceClient();
+    if (marketId) {
+      const { data: m, error } = await svc
+        .from('markets')
+        .select('id, name, address, plz, city, cluster, marktleiter, marktleiterPhone, marktleiterEmail, photosExterior, photosProducts, updated_at')
+        .eq('id', marketId)
+        .maybeSingle();
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (!m) return NextResponse.json({ market: null });
+      const projection = {
+        id: (m as any).id,
+        name: (m as any).name || '',
+        address: (m as any).address || '',
+        plz: (m as any).plz || '',
+        city: (m as any).city || '',
+        cluster: (m as any).cluster || '',
+        marktleiter: (m as any).marktleiter || '',
+        marktleiterPhone: (m as any).marktleiterPhone || '',
+        marktleiterEmail: (m as any).marktleiterEmail || '',
+        photosExterior: (m as any).photosExterior || [],
+        photosProducts: (m as any).photosProducts || [],
+        updated_at: (m as any).updated_at || null,
+      };
+      return NextResponse.json({ market: projection });
+    }
+
     const { data: markets, error } = await svc
       .from('markets')
       .select('id, name, address, plz, city, cluster, marktleiter, marktleiterPhone, marktleiterEmail, photosExterior, photosProducts, updated_at, acceptance_addresses');

@@ -2062,6 +2062,7 @@ const loadProcessState = async () => {
                   setMarketLoading(true);
                   try {
                     const body = {
+                      market_id: displayedAssignment?.matched_market_id || null,
                       location_text: displayedAssignment?.location_text || displayedAssignment?.address || '',
                       postal_code: displayedAssignment?.postal_code || '',
                       city: displayedAssignment?.city || '',
