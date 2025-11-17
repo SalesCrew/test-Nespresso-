@@ -298,6 +298,7 @@ export default function EinsatzplanPage() {
   const [acceptanceCity, setAcceptanceCity] = useState('');
   const [copiedAcceptanceKey, setCopiedAcceptanceKey] = useState<string | null>(null);
   const [pendingAcceptanceDelete, setPendingAcceptanceDelete] = useState<Record<string, boolean>>({});
+  const [acceptanceSaving, setAcceptanceSaving] = useState(false);
   const [marketNotesMode, setMarketNotesMode] = useState<'internal' | 'promotor'>('internal');
   const [pendingMarketDelete, setPendingMarketDelete] = useState<Record<string, boolean>>({});
   const [pendingPhotoDelete, setPendingPhotoDelete] = useState<Record<string, boolean>>({});
@@ -2546,11 +2547,13 @@ export default function EinsatzplanPage() {
     if (!editingMarket?.id) return;
     const raw = acceptanceRaw.trim();
     if (!raw || raw.split(/\s+/).length < 2) return;
+    setAcceptanceSaving(true);
     const fingerprint = normalizeForMatch([raw].join(' ').trim());
     const current: any[] = Array.isArray(editingMarket.acceptance_addresses) ? editingMarket.acceptance_addresses : [];
     if (current.some((e: any) => (e?.fingerprint || '') === fingerprint)) {
       // Reset input quietly
       setAcceptanceRaw(''); setAcceptancePlz(''); setAcceptanceCity('');
+      setAcceptanceSaving(false);
       return;
     }
     const optimistic = [{ raw, fingerprint, plz: acceptancePlz || null, city: acceptanceCity || null, source: 'manual', added_at: new Date().toISOString() }, ...current].slice(0, 30);
@@ -2571,6 +2574,8 @@ export default function EinsatzplanPage() {
       }
     } catch {
       setEditingMarket((prev: any) => prev ? { ...prev, acceptance_addresses: current } : prev);
+    } finally {
+      setAcceptanceSaving(false);
     }
   };
 
@@ -6884,7 +6889,7 @@ Import EP
                         <div className="px-3 pt-3">
                           <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-600">Primär</span>
+                              <span className="text-xs text-green-700 font-medium">Primär</span>
                             </div>
                             <div className="text-sm text-gray-900 truncate">{editingMarket?.address || '—'}</div>
                             <div className="text-xs text-gray-500">{[editingMarket?.plz, editingMarket?.city].filter(Boolean).join(' ')}</div>
@@ -6957,10 +6962,10 @@ Import EP
                             />
                             <button
                               onClick={addAcceptanceAddress}
-                              disabled={!acceptanceRaw.trim()}
+                              disabled={!acceptanceRaw.trim() || acceptanceSaving}
                               className="px-3 py-1.5 text-sm rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50"
                             >
-                              Hinzufügen
+                              {acceptanceSaving ? 'Hinzufügen…' : 'Hinzufügen'}
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
