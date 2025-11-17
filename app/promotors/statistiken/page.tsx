@@ -1101,7 +1101,7 @@ Mario`
               
               <CardContent className="p-4 max-[420px]:p-3">
                 <ScrollArea className="h-[280px] pr-4 no-scrollbar prm-scroll">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3 max-[420px]:origin-top-left max-[420px]:scale-[.86] max-[390px]:scale-[.82] max-[360px]:scale-[.76] max-[340px]:scale-[.72] max-[320px]:scale-[.68] max-[300px]:scale-[.64] max-[280px]:scale-[.60] max-[260px]:scale-[.56] max-[240px]:scale-[.52] max-[220px]:scale-[.48] max-[200px]:scale-[.44] max-[180px]:scale-[.40] max-[160px]:scale-[.36] max-[140px]:scale-[.32] max-[120px]:scale-[.28] max-[100px]:scale-[.24] max-[80px]:scale-[.20] max-[70px]:scale-[.18] max-[60px]:scale-[.16] max-[50px]:scale-[.14]">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed space-y-4 pb-3 max-[420px]:origin-top-left max-[420px]:scale-[.86] max-[390px]:scale-[.82] max-[360px]:scale-[.76] max-[340px]:scale-[.72] max-[320px]:scale-[.68] max-[300px]:scale-[.64] max-[280px]:scale-[.60] max-[260px]:scale-[.56] max-[240px]:scale-[.52] max-[220px]:scale-[.48] max-[200px]:scale-[.44] max-[180px]:scale-[.40] max-[160px]:scale-[.36] max-[140px]:scale-[.32] max-[120px]:scale-[.28] max-[100px]:scale-[.24] max-[80px]:scale-[.20] max-[70px]:scale-[.18] max-[60px]:scale-[.16] max-[50px]:scale-[.14] max-[40px]:scale-[.12] max-[30px]:scale-[.08] max-[20px]:scale-[.04]">
                     <div className="space-y-4">
                       <div className="rounded-lg border border-purple-300/50 dark:border-purple-800/50 bg-gradient-to-br from-purple-50/60 to-indigo-50/60 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 max-[420px]:p-3">
                         {/* Header */}
@@ -1447,6 +1447,15 @@ Mario`
                   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                   .prm-scroll [data-radix-scroll-area-viewport]::-webkit-scrollbar { display: none; }
                   .prm-scroll [data-radix-scroll-area-viewport] { -ms-overflow-style: none; scrollbar-width: none; }
+                  .prm-scroll [role="scrollbar"] { display: none !important; }
+                  .prm-scroll [data-orientation="vertical"], 
+                  .prm-scroll [data-orientation="horizontal"], 
+                  .prm-scroll [data-radix-scroll-area-corner] { display: none !important; }
+                  .prm-scroll .ScrollAreaScrollbar, 
+                  .prm-scroll .scrollbar, 
+                  .prm-scroll [class*="Scrollbar"] { display: none !important; }
+                  .prm-scroll::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
+                  .prm-scroll { scrollbar-width: none !important; -ms-overflow-style: none !important; }
                 `}</style>
               </CardContent>
             </Card>
