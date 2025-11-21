@@ -737,7 +737,7 @@ export default function DashboardPage() {
         className="group relative rounded-2xl border border-purple-100/60 bg-white/95 p-4 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-1 items-start gap-3 min-w-0">
+          <div className="flex flex-1 items-center gap-3 min-w-0">
             {isAssignment ? (
               <div className={`${indicatorClasses} cursor-default`}>
                 {todo.completed ? (
