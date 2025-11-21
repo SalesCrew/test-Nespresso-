@@ -1036,7 +1036,7 @@ export default function DashboardPage() {
 
       <div className="relative mb-8">
         <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
-        <Card className="relative overflow-hidden rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
+        <Card className="relative overflow-visible rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
           <CardHeader className="relative z-10 p-0">
             <div className="relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
