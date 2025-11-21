@@ -36,6 +36,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 
 // TypeScript interfaces for todo items
+type TodoFilterRange = "heute" | "7tage" | "30tage"
+
 interface TodoItem {
   id: number;
   title: string;
@@ -73,7 +75,7 @@ const PRIORITY_TOKENS: { [key in TodoItem["priority"]]: { label: string; classes
 
 export default function DashboardPage() {
   const [expandedTodos, setExpandedTodos] = useState(false);
-  const [todoFilter, setTodoFilter] = useState("heute");
+  const [todoFilter, setTodoFilter] = useState<TodoFilterRange>("heute");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showTodoHistory, setShowTodoHistory] = useState(false);
   const [monthFilterOpen, setMonthFilterOpen] = useState(false);
@@ -381,6 +383,11 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
   const [todosLoading, setTodosLoading] = useState(true); // Start with loading state
+
+  const handleTimeframeSelect = (value: TodoFilterRange) => {
+    setTodoFilter(value)
+    setShowFilterDropdown(false)
+  }
   
   // Work status data
   const [workStatus, setWorkStatus] = useState({ goalHours: 0, workedHours: 0, percentage: 0 });
@@ -679,6 +686,7 @@ export default function DashboardPage() {
     // Disable manual toggling entirely; completion is driven by app actions only
     return;
     
+    /*
     // Find the todo to get its details
     const allCurrentTodos = [...assignmentTodos, ...documentTodos, ...messageTodos, ...regularTodos];
     const todoToToggle = allCurrentTodos.find(t => t.id === id);
@@ -710,6 +718,7 @@ export default function DashboardPage() {
       // For document todos, we don't update local state since they're computed from documents array
       // The completion is tracked in history and will be reflected on next data refresh
     }
+    */
   };
   
   const renderTodoCollection = (items: TodoItem[]) => (
@@ -1078,14 +1087,18 @@ export default function DashboardPage() {
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownPopupRef}
-                        className="absolute top-full right-0 z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
+                        className="pointer-events-auto absolute top-full right-0 z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
                       >
                         <button
                           type="button"
                           className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-purple-500/20 hover:via-pink-500/10 hover:to-pink-500/20 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/30 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/25 dark:hover:via-pink-500/15 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
-                          onClick={() => {
-                            setTodoFilter("heute");
-                            setShowFilterDropdown(false);
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("heute");
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("heute");
                           }}
                         >
                           Heute
@@ -1093,9 +1106,13 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-purple-500/20 hover:via-pink-500/10 hover:to-pink-500/20 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/30 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/25 dark:hover:via-pink-500/15 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
-                          onClick={() => {
-                            setTodoFilter("7tage");
-                            setShowFilterDropdown(false);
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("7tage");
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("7tage");
                           }}
                         >
                           Nächsten 7 Tage
@@ -1103,9 +1120,13 @@ export default function DashboardPage() {
                         <button
                           type="button"
                           className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-purple-500/20 hover:via-pink-500/10 hover:to-pink-500/20 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/30 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/25 dark:hover:via-pink-500/15 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
-                          onClick={() => {
-                            setTodoFilter("30tage");
-                            setShowFilterDropdown(false);
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("30tage");
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleTimeframeSelect("30tage");
                           }}
                         >
                           Nächsten 30 Tage
