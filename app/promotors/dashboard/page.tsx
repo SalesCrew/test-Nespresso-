@@ -1166,7 +1166,7 @@ export default function DashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex w-full max-w-[200px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto md:max-w-none"
+                  className="flex min-w-[150px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto"
                   onClick={() => setExpandedTodos(!expandedTodos)}
                 >
                   {expandedTodos ? (
