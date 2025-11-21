@@ -734,9 +734,10 @@ export default function DashboardPage() {
         return (
       <li
         key={todo.id}
-        className="group relative flex flex-col gap-4 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
+        className="group relative rounded-2xl border border-purple-100/60 bg-white/95 p-4 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
       >
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-1 items-start gap-3 min-w-0">
             {isAssignment ? (
               <div className={`${indicatorClasses} cursor-default`}>
                 {todo.completed ? (
@@ -782,33 +783,34 @@ export default function DashboardPage() {
                   <Clock className="h-3.5 w-3.5" />
                   {todo.due}
                 </span>
-                    {isAssignment && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-                        <Briefcase className="h-3.5 w-3.5" />
-                        Einsatz
-                      </span>
-                    )}
+                {isAssignment && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    Einsatz
+                  </span>
+                )}
               </div>
             </div>
+          </div>
 
-            <div className="flex min-w-[140px] flex-col items-start gap-2 sm:items-end sm:justify-between">
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
-              >
-                {priorityToken.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleOpenCalendar(todo)}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-purple-200 hover:text-purple-500 dark:border-slate-700 dark:text-slate-200 dark:hover:border-purple-500/50"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                Kalender öffnen
-              </button>
-            </div>
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-col sm:items-end">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
+            >
+              {priorityToken.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleOpenCalendar(todo)}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-purple-200 hover:text-purple-500 dark:border-slate-700 dark:text-slate-200 dark:hover:border-purple-500/50"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              Kalender öffnen
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 pl-[3.75rem] sm:pl-[3.5rem]">
+        <div className="mt-3 flex flex-wrap gap-2">
           {isDocument && (
             <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
               <FileText className="h-3.5 w-3.5" />
