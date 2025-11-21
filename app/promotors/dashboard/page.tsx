@@ -1162,41 +1162,31 @@ export default function DashboardPage() {
           </CardContent>
           {sortedTodos.length > 0 && (
             <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
-              <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-3">
-                <div className="flex justify-center md:justify-start">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                </div>
-                <div className="flex w-full flex-wrap items-center justify-center gap-3 md:flex-row md:gap-0 md:w-auto md:items-center md:justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex w-full max-w-[200px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto md:max-w-none"
-                    onClick={() => setExpandedTodos(!expandedTodos)}
-                  >
-                    {expandedTodos ? (
-                      <>
-                        <ChevronUp className="h-4 w-4" />
-                        Weniger
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-4 w-4" />
-                        Alle anzeigen
-                      </>
-                    )}
-                  </Button>
-                  <button
-                    onClick={() => setShowTodoHistory(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200 md:hidden"
-                  >
-                    <History className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="hidden w-full justify-center md:flex md:w-auto md:justify-end">
-                  <button onClick={() => setShowTodoHistory(true)} className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200">
-                    <History className="h-4 w-4" />
-                  </button>
-                </div>
+              <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex w-full max-w-[200px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto md:max-w-none"
+                  onClick={() => setExpandedTodos(!expandedTodos)}
+                >
+                  {expandedTodos ? (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      Weniger
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      Alle anzeigen
+                    </>
+                  )}
+                </Button>
+                <button
+                  onClick={() => setShowTodoHistory(true)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
+                >
+                  <History className="h-4 w-4" />
+                </button>
               </div>
             </CardFooter>
           )}
