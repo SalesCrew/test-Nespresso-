@@ -1052,9 +1052,6 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/80">
                       To-Dos
                     </p>
-                    <p className="text-[11px] text-white/80">
-                      Automatisch abgehakt, sobald du fertig bist.
-                    </p>
                   </div>
                 </div>
 
