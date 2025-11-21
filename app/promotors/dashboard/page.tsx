@@ -1112,7 +1112,7 @@ export default function DashboardPage() {
               sortedTodos.length > 0 ? (expandedTodos ? "max-h-[340px]" : "max-h-[220px]") : ""
             } overflow-hidden`}
           >
-            <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
+            <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 justify-end dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
               <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
                 {openTodos} offen
               </span>
