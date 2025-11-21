@@ -1152,7 +1152,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : sortedTodos.length === 0 ? (
-                <div className="flex min-h-[220px] flex-col items-center justify-center px-6 py-10 text-center">
+                <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-10 text-center">
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
