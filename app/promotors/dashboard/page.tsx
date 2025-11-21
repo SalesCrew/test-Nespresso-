@@ -1114,13 +1114,15 @@ export default function DashboardPage() {
               sortedTodos.length > 0 ? (expandedTodos ? "max-h-[340px]" : "max-h-[220px]") : ""
             } overflow-hidden`}
           >
-            <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 justify-end dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
-              <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
-                {openTodos} offen
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white text-purple-600 px-2.5 py-0.5 shadow-sm dark:bg-gray-800 dark:text-purple-200">
-                {completedTodos} erledigt
-              </span>
+            <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 justify-between dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
+                  {openTodos} offen
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white text-purple-600 px-2.5 py-0.5 shadow-sm dark:bg-gray-800 dark:text-purple-200">
+                  {completedTodos} erledigt
+                </span>
+              </div>
               <span className="inline-flex items-center gap-1 rounded-full border border-purple-100 px-2.5 py-0.5 text-purple-600 dark:border-purple-500/40 dark:text-purple-200">
                 {totalTodos} gesamt
               </span>
