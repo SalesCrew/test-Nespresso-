@@ -1115,7 +1115,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent
-            className={`relative z-0 p-0 transition-all duration-500 ${expandedTodos ? "max-h-[340px]" : "max-h-[220px]"} overflow-hidden`}
+            className={`relative z-0 p-0 transition-all duration-500 ${
+              sortedTodos.length > 0 ? (expandedTodos ? "max-h-[340px]" : "max-h-[220px]") : ""
+            } overflow-hidden`}
           >
             <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
               <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
@@ -1152,7 +1154,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : sortedTodos.length === 0 ? (
-                <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-10 text-center">
+                <div className="flex min-h-[230px] flex-col items-center justify-center px-6 py-10 text-center">
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
