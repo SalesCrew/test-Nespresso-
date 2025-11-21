@@ -1058,9 +1058,6 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">
-                    Zeitraum
-                  </span>
                   <div className="relative">
                     <button
                       ref={filterButtonRef}
@@ -1120,12 +1117,6 @@ export default function DashboardPage() {
               <span className="inline-flex items-center gap-1 rounded-full border border-purple-100 px-2.5 py-0.5 text-purple-600 dark:border-purple-500/40 dark:text-purple-200">
                 {totalTodos} gesamt
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.35em] text-gray-400 dark:text-gray-500">
-                {todoFilter === "heute" ? "Heute" : todoFilter === "7tage" ? "Nächsten 7 Tage" : "Nächsten 30 Tage"}
-              </span>
-              <span className="text-[10px] font-medium text-gray-400 italic dark:text-gray-500">
-                Wir melden uns sofort, sobald neue Aufgaben auftauchen.
-              </span>
             </div>
             <div className="relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-purple-900/50"></div>
@@ -1150,9 +1141,6 @@ export default function DashboardPage() {
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Wir melden uns sofort, sobald neue Aufgaben auftauchen.
-                  </p>
                 </div>
               ) : expandedTodos ? (
                 <ScrollArea className="h-full max-h-[310px] pr-2">
