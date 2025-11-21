@@ -715,7 +715,7 @@ export default function DashboardPage() {
   };
   
   const handleOpenCalendar = (todo: TodoItem) => {
-    router.push("/promotors/dashboard#terminkalender");
+    router.push("/promotors/einsatz");
   };
 
   const renderTodoCollection = (items: TodoItem[]) => (
