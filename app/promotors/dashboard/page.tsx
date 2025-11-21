@@ -1053,9 +1053,9 @@ export default function DashboardPage() {
                       backgroundRepeat: "no-repeat"
                     }}
                   >
-                    <option value="heute" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">Heute</option>
-                    <option value="7tage" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">7 Tage</option>
-                    <option value="30tage" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">30 Tage</option>
+                    <option value="heute">Heute</option>
+                    <option value="7tage">7 Tage</option>
+                    <option value="30tage">30 Tage</option>
                   </select>
                 </div>
               </div>
@@ -2427,6 +2427,23 @@ export default function DashboardPage() {
         @keyframes skeleton-fade {
           0% { opacity: 0.4; }
           100% { opacity: 0.8; }
+        }
+      `}</style>
+      <style jsx global>{`
+        select option {
+          background-color: white !important;
+          color: #111827 !important;
+          font-size: 16px !important;
+          font-weight: 400 !important;
+          padding: 12px 16px !important;
+          border: none !important;
+          outline: none !important;
+        }
+        select option:hover {
+          background: linear-gradient(to right, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08)) !important;
+        }
+        select option:checked {
+          background: linear-gradient(to right, rgba(168, 85, 247, 0.12), rgba(236, 72, 153, 0.12)) !important;
         }
       `}</style>
     </>
