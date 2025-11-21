@@ -19,6 +19,7 @@ import {
   X,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   MapPin, // For assignment location
   // Film, // Replaced by VideoIcon for quick action
   GraduationCap, // For combined Schulungen & Videos quick action
@@ -818,8 +819,8 @@ export default function DashboardPage() {
               onClick={() => handleOpenCalendar(todo)}
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-purple-200 hover:text-purple-500 dark:border-slate-700 dark:text-slate-200 dark:hover:border-purple-500/50"
             >
-              <Calendar className="h-3.5 w-3.5" />
-              Kalender öffnen
+              <ArrowUpRight className="h-3.5 w-3.5" />
+              Zum Einsatz
             </button>
           </div>
         </div>
