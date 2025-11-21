@@ -1099,17 +1099,8 @@ export default function DashboardPage() {
                           <button
                             key={option.value}
                             type="button"
-                            className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-purple-500/25 hover:via-pink-500/15 hover:to-pink-500/25 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/30 dark:hover:via-pink-500/20 dark:hover:to-pink-500/30 dark:hover:text-purple-100"
-                            onPointerDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleTimeframeSelect(option.value);
-                            }}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleTimeframeSelect(option.value);
-                            }}
+                            className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-all hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40 dark:text-gray-200 dark:hover:from-purple-500/25 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
+                            onClick={() => handleTimeframeSelect(option.value)}
                           >
                             {option.label}
                           </button>
