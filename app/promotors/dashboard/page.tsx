@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const [showTodoHistory, setShowTodoHistory] = useState(false);
   const [monthFilterOpen, setMonthFilterOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(new Date());
@@ -187,6 +188,8 @@ export default function DashboardPage() {
   const [showLegendPopup, setShowLegendPopup] = useState(false);
   const legendIconRef = useRef<HTMLButtonElement>(null);
   const legendPopupRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -362,6 +365,22 @@ export default function DashboardPage() {
   const [documents, setDocuments] = useState<any[]>([]);
   const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
   const [todosLoading, setTodosLoading] = useState(true); // Start with loading state
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showFilterDropdown &&
+        filterButtonRef.current &&
+        !filterButtonRef.current.contains(event.target as Node) &&
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowFilterDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showFilterDropdown]);
   
   // Work status data
   const [workStatus, setWorkStatus] = useState({ goalHours: 0, workedHours: 0, percentage: 0 });
@@ -1042,21 +1061,54 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">
                     Zeitraum
                   </span>
-                  <select
-                    value={todoFilter}
-                    onChange={(e) => setTodoFilter(e.target.value as TodoFilterRange)}
-                    className="rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer appearance-none pr-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')] bg-[length:12px] bg-[position:right_0.5rem_center] bg-no-repeat"
-                    style={{
-                      backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')",
-                      backgroundPosition: "right 0.5rem center",
-                      backgroundSize: "12px",
-                      backgroundRepeat: "no-repeat"
-                    }}
-                  >
-                    <option value="heute">Heute</option>
-                    <option value="7tage">7 Tage</option>
-                    <option value="30tage">30 Tage</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      ref={filterButtonRef}
+                      type="button"
+                      className="flex items-center gap-2 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none cursor-pointer"
+                      onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                    >
+                      {todoFilter === "heute" ? "Heute" : todoFilter === "7tage" ? "7 Tage" : "30 Tage"}
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    {showFilterDropdown && (
+                      <div
+                        ref={filterDropdownRef}
+                        className="absolute top-full right-0 z-50 mt-2 w-44 overflow-hidden rounded-lg bg-white shadow-2xl border-0"
+                      >
+                        <button
+                          type="button"
+                          className="block w-full px-4 py-3 text-left text-base font-normal text-gray-900 transition-all hover:bg-gradient-to-r hover:from-purple-500/8 hover:to-pink-500/8"
+                          onClick={() => {
+                            setTodoFilter("heute");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          Heute
+                        </button>
+                        <button
+                          type="button"
+                          className="block w-full px-4 py-3 text-left text-base font-normal text-gray-900 transition-all hover:bg-gradient-to-r hover:from-purple-500/8 hover:to-pink-500/8"
+                          onClick={() => {
+                            setTodoFilter("7tage");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          7 Tage
+                        </button>
+                        <button
+                          type="button"
+                          className="block w-full px-4 py-3 text-left text-base font-normal text-gray-900 transition-all hover:bg-gradient-to-r hover:from-purple-500/8 hover:to-pink-500/8"
+                          onClick={() => {
+                            setTodoFilter("30tage");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          30 Tage
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2427,23 +2479,6 @@ export default function DashboardPage() {
         @keyframes skeleton-fade {
           0% { opacity: 0.4; }
           100% { opacity: 0.8; }
-        }
-      `}</style>
-      <style jsx global>{`
-        select option {
-          background-color: white !important;
-          color: #111827 !important;
-          font-size: 16px !important;
-          font-weight: 400 !important;
-          padding: 12px 16px !important;
-          border: none !important;
-          outline: none !important;
-        }
-        select option:hover {
-          background: linear-gradient(to right, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08)) !important;
-        }
-        select option:checked {
-          background: linear-gradient(to right, rgba(168, 85, 247, 0.12), rgba(236, 72, 153, 0.12)) !important;
         }
       `}</style>
     </>
