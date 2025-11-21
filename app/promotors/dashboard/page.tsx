@@ -1036,10 +1036,10 @@ export default function DashboardPage() {
 
       <div className="relative mb-8">
         <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
-        <Card className="relative overflow-visible rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
+        <Card className="relative overflow-visible rounded-lg border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
           <CardHeader className="relative z-20 p-0">
             <div className="relative px-4 py-3 text-white">
-              <div className="pointer-events-none absolute inset-0 rounded-t-[28px] overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 rounded-t-lg overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
                 <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
               </div>
@@ -1152,7 +1152,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : sortedTodos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+                <div className="flex min-h-[220px] flex-col items-center justify-center px-6 py-10 text-center">
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
