@@ -1041,60 +1041,45 @@ export default function DashboardPage() {
             <div className="relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
               <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
-              <div className="relative flex flex-col gap-4 px-6 py-5 text-white lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
+              <div className="relative flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shadow-inner">
                     <CheckCircle2 className="h-5 w-5" />
-                    <span>To-Dos</span>
                   </div>
-                  <p className="mt-2 text-xs text-white/75">
-                    Wir haken automatisch für dich ab, sobald etwas in der App wirklich erledigt ist.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-white">
-                      {openTodos} offen
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-white/90">
-                      {completedTodos} erledigt
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/30 px-3 py-1 text-white/90">
-                      {totalTodos} gesamt
-                    </span>
+                  <div className="leading-tight">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-white/80">
+                      To-Dos
+                    </p>
+                    <p className="text-[11px] text-white/80">
+                      Automatisch abgehakt, sobald du fertig bist.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 self-start lg:self-auto">
-                  <div className="text-right text-[11px] uppercase tracking-[0.35em] text-white/60">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">
                     Zeitraum
-                  </div>
+                  </span>
                   <div className="relative">
                     <button
                       ref={dropdownButtonRef}
-                      className="flex min-h-[40px] items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm font-semibold tracking-wide text-white shadow-inner backdrop-blur-sm transition hover:bg-white/25"
+                      className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowFilterDropdown(!showFilterDropdown);
                       }}
                     >
-                      {todoFilter === "heute" ? (
-                        "Heute"
-                      ) : todoFilter === "7tage" ? (
-                        <div className="flex flex-col items-center leading-tight">
-                          <span className="text-[10px] uppercase tracking-wide text-white/70">Nächsten</span>
-                          <span className="-mt-0.5 text-xs">7 Tage</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center leading-tight">
-                          <span className="text-[10px] uppercase tracking-wide text-white/70">Nächsten</span>
-                          <span className="-mt-0.5 text-xs">30 Tage</span>
-                        </div>
-                      )}
+                      {todoFilter === "heute"
+                        ? "Heute"
+                        : todoFilter === "7tage"
+                          ? "7 Tage"
+                          : "30 Tage"}
                       <ChevronDown className="h-4 w-4" />
                     </button>
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownPopupRef}
-                        className="absolute top-full right-0 z-30 mt-2 w-48 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
+                        className="absolute top-full right-0 z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
                       >
                         <button
                           className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
@@ -1133,6 +1118,23 @@ export default function DashboardPage() {
           <CardContent
             className={`p-0 transition-all duration-500 ${expandedTodos ? "max-h-[340px]" : "max-h-[220px]"} overflow-hidden`}
           >
+            <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
+                {openTodos} offen
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-white text-purple-600 px-2.5 py-0.5 shadow-sm dark:bg-gray-800 dark:text-purple-200">
+                {completedTodos} erledigt
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-purple-100 px-2.5 py-0.5 text-purple-600 dark:border-purple-500/40 dark:text-purple-200">
+                {totalTodos} gesamt
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-[0.35em] text-gray-400 dark:text-gray-500">
+                {todoFilter === "heute" ? "Heute" : todoFilter === "7tage" ? "Nächsten 7 Tage" : "Nächsten 30 Tage"}
+              </span>
+              <span className="text-[10px] font-medium text-gray-400 italic dark:text-gray-500">
+                Wir melden uns sofort, sobald neue Aufgaben auftauchen.
+              </span>
+            </div>
             <div className="relative">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-purple-900/50"></div>
               {todosLoading ? (
