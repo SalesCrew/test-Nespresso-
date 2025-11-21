@@ -736,7 +736,7 @@ export default function DashboardPage() {
         key={todo.id}
         className="group relative rounded-2xl border border-purple-100/60 bg-white/95 p-4 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 items-center gap-3 min-w-0">
             {isAssignment ? (
               <div className={`${indicatorClasses} cursor-default`}>
@@ -770,7 +770,7 @@ export default function DashboardPage() {
               </button>
             )}
 
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex-1 min-w-0">
               <p
                 className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
                   todo.completed ? "opacity-60 line-through" : ""
@@ -793,7 +793,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-col sm:items-end">
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-col sm:items-end sm:justify-center">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
             >
