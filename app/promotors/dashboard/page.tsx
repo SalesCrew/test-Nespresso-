@@ -736,10 +736,10 @@ export default function DashboardPage() {
         key={todo.id}
         className="group relative rounded-2xl border border-purple-100/60 bg-white/95 p-4 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center">
           <div className="flex flex-1 items-center gap-3 min-w-0">
             {isAssignment ? (
-              <div className={`${indicatorClasses} cursor-default`}>
+              <div className={`${indicatorClasses} cursor-default flex-shrink-0`}>
                 {todo.completed ? (
                   <CheckCircle2 className="w-5 h-5" />
                 ) : (
@@ -750,7 +750,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => toggleTodo(todo.id)}
-                className={`${indicatorClasses} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500`}
+                className={`${indicatorClasses} flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500`}
                 aria-label="To-Do abhaken"
               >
                 {todo.completed ? (
@@ -771,29 +771,43 @@ export default function DashboardPage() {
             )}
 
             <div className="flex-1 min-w-0">
-              <p
-                className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
-                  todo.completed ? "opacity-60 line-through" : ""
-                }`}
-              >
-                {todo.title}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                  <Clock className="h-3.5 w-3.5" />
-                  {todo.due}
-                </span>
-                {isAssignment && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-                    <Briefcase className="h-3.5 w-3.5" />
-                    Einsatz
+              <div className="flex flex-col">
+                <p
+                  className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
+                    todo.completed ? "opacity-60 line-through" : ""
+                  }`}
+                >
+                  {todo.title}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    <Clock className="h-3.5 w-3.5" />
+                    {todo.due}
                   </span>
-                )}
+                  {isAssignment && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+                      <Briefcase className="h-3.5 w-3.5" />
+                      Einsatz
+                    </span>
+                  )}
+                  {isDocument && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
+                      <FileText className="h-3.5 w-3.5" />
+                      Dokument
+                    </span>
+                  )}
+                  {isMessage && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      Wichtig
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:flex-col sm:items-end sm:justify-center">
+          <div className="flex flex-col items-end gap-2 ml-4">
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
             >
@@ -808,21 +822,6 @@ export default function DashboardPage() {
               Kalender öffnen
             </button>
           </div>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          {isDocument && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
-              <FileText className="h-3.5 w-3.5" />
-              Dokument
-            </span>
-          )}
-          {isMessage && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Wichtig
-            </span>
-          )}
         </div>
           </li>
         );
