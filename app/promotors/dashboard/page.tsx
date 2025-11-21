@@ -1162,11 +1162,11 @@ export default function DashboardPage() {
           </CardContent>
           {sortedTodos.length > 0 && (
             <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
-              <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
+              <div className="mx-auto flex flex-wrap items-center justify-center gap-3 md:gap-4">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex min-w-[150px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto"
+                  className="inline-flex min-w-[150px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200"
                   onClick={() => setExpandedTodos(!expandedTodos)}
                 >
                   {expandedTodos ? (
