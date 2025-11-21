@@ -1044,8 +1044,8 @@ export default function DashboardPage() {
       </section>
 
       <div className="relative mb-8">
-        <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
-        <Card className="relative overflow-visible rounded-lg border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
+        <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 opacity-60 pointer-events-none"></div>
+        <Card className="relative overflow-visible rounded-lg border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] dark:border-purple-900/40 dark:bg-gray-900/80">
           <CardHeader className="relative z-20 p-0">
             <div className="relative px-4 py-3 text-white">
               <div className="pointer-events-none absolute inset-0 rounded-t-lg overflow-hidden">
@@ -1069,7 +1069,7 @@ export default function DashboardPage() {
                     <button
                       ref={filterButtonRef}
                       type="button"
-                      className="flex items-center gap-2 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none cursor-pointer"
+                      className="flex items-center gap-2 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none cursor-pointer"
                       onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                     >
                       {todoFilter === "heute" ? "Heute" : todoFilter === "7tage" ? "7 Tage" : "30 Tage"}
@@ -1078,7 +1078,7 @@ export default function DashboardPage() {
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownRef}
-                        className="absolute top-full right-0 z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_20px_45px_rgba(15,23,42,0.12)] border border-white/60 overflow-hidden backdrop-blur-sm"
+                        className="absolute top-full right-0 z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_20px_45px_rgba(15,23,42,0.12)] border border-white/60 overflow-hidden"
                       >
                         {[
                           { label: "Heute", value: "heute" },
@@ -1161,7 +1161,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
           {sortedTodos.length > 0 && (
-            <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 backdrop-blur dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
+            <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
               <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
