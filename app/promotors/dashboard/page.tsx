@@ -1045,7 +1045,7 @@ export default function DashboardPage() {
                   <select
                     value={todoFilter}
                     onChange={(e) => setTodoFilter(e.target.value as TodoFilterRange)}
-                    className="rounded-md bg-white/20 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none focus:ring-0 cursor-pointer appearance-none pr-8"
+                    className="rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer appearance-none pr-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')] bg-[length:12px] bg-[position:right_0.5rem_center] bg-no-repeat"
                     style={{
                       backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw2IDZMMTEgMSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')",
                       backgroundPosition: "right 0.5rem center",
@@ -1053,9 +1053,9 @@ export default function DashboardPage() {
                       backgroundRepeat: "no-repeat"
                     }}
                   >
-                    <option value="heute" className="bg-white text-gray-900 hover:bg-purple-50">Heute</option>
-                    <option value="7tage" className="bg-white text-gray-900 hover:bg-purple-50">7 Tage</option>
-                    <option value="30tage" className="bg-white text-gray-900 hover:bg-purple-50">30 Tage</option>
+                    <option value="heute" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">Heute</option>
+                    <option value="7tage" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">7 Tage</option>
+                    <option value="30tage" className="bg-white text-gray-900 text-sm font-normal py-2 border-0">30 Tage</option>
                   </select>
                 </div>
               </div>
