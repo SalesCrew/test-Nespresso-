@@ -1037,11 +1037,11 @@ export default function DashboardPage() {
       <div className="relative mb-8">
         <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
         <Card className="relative overflow-hidden rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
-          <CardHeader className="p-0">
+          <CardHeader className="relative z-10 p-0">
             <div className="relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
               <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
-              <div className="relative flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-white">
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-white">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shadow-inner">
                     <CheckCircle2 className="h-5 w-5" />
@@ -1079,7 +1079,7 @@ export default function DashboardPage() {
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownPopupRef}
-                        className="absolute top-full right-0 z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
+                        className="absolute top-full right-0 z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
                       >
                         <button
                           className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
@@ -1116,7 +1116,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent
-            className={`p-0 transition-all duration-500 ${expandedTodos ? "max-h-[340px]" : "max-h-[220px]"} overflow-hidden`}
+            className={`relative z-0 p-0 transition-all duration-500 ${expandedTodos ? "max-h-[340px]" : "max-h-[220px]"} overflow-hidden`}
           >
             <div className="px-4 py-3 border-b border-purple-50/80 bg-white/90 text-[11px] font-semibold text-gray-600 flex flex-wrap items-center gap-2 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-gray-200">
               <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 text-purple-700 px-2.5 py-0.5 dark:bg-purple-500/15 dark:text-purple-200">
