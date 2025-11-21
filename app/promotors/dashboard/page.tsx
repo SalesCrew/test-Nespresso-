@@ -53,6 +53,24 @@ interface TodoHistoryItem {
   completed: boolean;
 }
 
+const PRIORITY_TOKENS: { [key in TodoItem["priority"]]: { label: string; classes: string } } = {
+  high: {
+    label: "Prio hoch",
+    classes:
+      "bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30"
+  },
+  medium: {
+    label: "Prio mittel",
+    classes:
+      "bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/30"
+  },
+  low: {
+    label: "Prio entspannt",
+    classes:
+      "bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30"
+  }
+};
+
 export default function DashboardPage() {
   const [expandedTodos, setExpandedTodos] = useState(false);
   const [todoFilter, setTodoFilter] = useState("heute");
@@ -655,6 +673,7 @@ export default function DashboardPage() {
 
   const completedTodos = sortedTodos.filter(todo => todo.completed).length;
   const totalTodos = sortedTodos.length;
+  const openTodos = Math.max(totalTodos - completedTodos, 0);
 
   const toggleTodo = async (id: number) => {
     // Disable manual toggling entirely; completion is driven by app actions only
@@ -692,6 +711,115 @@ export default function DashboardPage() {
       // The completion is tracked in history and will be reflected on next data refresh
     }
   };
+  
+  const renderTodoCollection = (items: TodoItem[]) => (
+    <ul className="space-y-3 px-4 py-4">
+      {items.map((todo) => {
+        const priorityToken = PRIORITY_TOKENS[todo.priority] || PRIORITY_TOKENS.medium;
+        const isAssignment = todo.id >= 100000 && todo.id < 200000;
+        const isDocument = todo.id >= 200000 && todo.id < 300000;
+        const isMessage = todo.id >= 300000;
+        const indicatorClasses = `w-11 h-11 rounded-2xl border flex items-center justify-center transition-all duration-300 ${
+          todo.completed
+            ? "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600 shadow-sm dark:from-emerald-500/15 dark:to-teal-500/10 dark:border-emerald-500/40 dark:text-emerald-200"
+            : "bg-white/90 border-white/40 text-purple-600 shadow-[0_6px_16px_rgba(79,70,229,0.18)] group-hover:-translate-y-0.5 dark:bg-gray-900/70 dark:border-purple-900/40 dark:text-purple-100"
+        }`;
+
+        return (
+          <li
+            key={todo.id}
+            className="group relative flex items-start gap-3 rounded-2xl border border-purple-100/60 bg-white/95 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
+          >
+            {isAssignment ? (
+              <div className={`${indicatorClasses} cursor-default`}>
+                {todo.completed ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <Briefcase className="w-5 h-5" />
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => toggleTodo(todo.id)}
+                className={`${indicatorClasses} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500`}
+                aria-label="To-Do abhaken"
+              >
+                {todo.completed ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="w-5 h-5 text-purple-400 dark:text-purple-200"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8 s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"
+                    />
+                  </svg>
+                )}
+              </button>
+            )}
+
+            <div className="flex-1 min-w-0 py-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p
+                    className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
+                      todo.completed ? "opacity-60 line-through" : ""
+                    }`}
+                  >
+                    {todo.title}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                      <Clock className="h-3.5 w-3.5" />
+                      {todo.due}
+                    </span>
+                    {isAssignment && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+                        <Briefcase className="h-3.5 w-3.5" />
+                        Einsatz
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
+                  >
+                    {priorityToken.label}
+                  </span>
+                  {todo.completed && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                      ✓ erledigt
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                {isDocument && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
+                    <FileText className="h-3.5 w-3.5" />
+                    Dokument
+                  </span>
+                )}
+                {isMessage && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Wichtig
+                  </span>
+                )}
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   // Load calendar assignments
   const loadCalendarAssignments = async () => {
@@ -906,176 +1034,179 @@ export default function DashboardPage() {
         <p className="text-gray-600 dark:text-gray-400">{animatedSubtitle}</p>
       </section>
 
-      <Card className="mb-6 overflow-hidden border-none shadow-md bg-white dark:bg-gray-900">
-          <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 relative h-[80px] z-[25]">
-            {/* Single row with all content properly spaced */}
-            <div className="flex items-center justify-between h-full">
-              {/* Left side: Title and count */}
-              <div className="flex flex-col justify-center h-full">
-                <div className="flex items-center mb-1">
-                <CheckCircle2 className="mr-2 h-5 w-5" />
-                  <span className="text-lg font-semibold">To-Dos</span>
-            </div>
-                {totalTodos > 0 && (
-                  <span className="text-white/90 text-sm font-medium">
-                    {totalTodos - completedTodos} offen
-                  </span>
-                )}
-          </div>
-          
-              {/* Right side: Filter dropdown */}
-              <div className="relative">
-                <button ref={dropdownButtonRef} className="text-white text-sm flex items-center font-medium py-2 px-3 rounded-md hover:bg-white/10 transition-colors min-h-[40px]" onClick={(e) => { e.stopPropagation(); setShowFilterDropdown(!showFilterDropdown);}}>
-                  {todoFilter === "heute" ? (
-                    "Heute"
-                  ) : todoFilter === "7tage" ? (
-                    <div className="flex flex-col items-center leading-tight">
-                      <span className="text-xs">Nächsten</span>
-                      <span className="text-xs -mt-0.5">7 Tage</span>
-          </div>
-                  ) : (
-                    <div className="flex flex-col items-center leading-tight">
-                      <span className="text-xs">Nächsten</span>
-                      <span className="text-xs -mt-0.5">30 Tage</span>
-        </div>
-                  )}
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                </button>
-                {showFilterDropdown && (
-                  <div 
-                    ref={filterDropdownPopupRef}
-                    className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-30">
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("heute"); setShowFilterDropdown(false); }}>Heute</button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("7tage"); setShowFilterDropdown(false); }}>Nächsten 7 Tage</button>
-                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-purple-100 hover:text-purple-800 dark:hover:bg-purple-800 dark:hover:text-purple-100" onClick={() => { setTodoFilter("30tage"); setShowFilterDropdown(false); }}>Nächsten 30 Tage</button>
-      </div>
-                )}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
+        <Card className="relative overflow-hidden rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
+          <CardHeader className="p-0">
+            <div className="relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
+              <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
+              <div className="relative flex flex-col gap-4 px-6 py-5 text-white lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span>To-Dos</span>
+                  </div>
+                  <p className="mt-2 text-xs text-white/75">
+                    Wir haken automatisch für dich ab, sobald etwas in der App wirklich erledigt ist.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-white">
+                      {openTodos} offen
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-white/90">
+                      {completedTodos} erledigt
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/30 px-3 py-1 text-white/90">
+                      {totalTodos} gesamt
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 self-start lg:self-auto">
+                  <div className="text-right text-[11px] uppercase tracking-[0.35em] text-white/60">
+                    Zeitraum
+                  </div>
+                  <div className="relative">
+                    <button
+                      ref={dropdownButtonRef}
+                      className="flex min-h-[40px] items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-sm font-semibold tracking-wide text-white shadow-inner backdrop-blur-sm transition hover:bg-white/25"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFilterDropdown(!showFilterDropdown);
+                      }}
+                    >
+                      {todoFilter === "heute" ? (
+                        "Heute"
+                      ) : todoFilter === "7tage" ? (
+                        <div className="flex flex-col items-center leading-tight">
+                          <span className="text-[10px] uppercase tracking-wide text-white/70">Nächsten</span>
+                          <span className="-mt-0.5 text-xs">7 Tage</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center leading-tight">
+                          <span className="text-[10px] uppercase tracking-wide text-white/70">Nächsten</span>
+                          <span className="-mt-0.5 text-xs">30 Tage</span>
+                        </div>
+                      )}
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    {showFilterDropdown && (
+                      <div
+                        ref={filterDropdownPopupRef}
+                        className="absolute top-full right-0 z-30 mt-2 w-48 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
+                      >
+                        <button
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          onClick={() => {
+                            setTodoFilter("heute");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          Heute
+                        </button>
+                        <button
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          onClick={() => {
+                            setTodoFilter("7tage");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          Nächsten 7 Tage
+                        </button>
+                        <button
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          onClick={() => {
+                            setTodoFilter("30tage");
+                            setShowFilterDropdown(false);
+                          }}
+                        >
+                          Nächsten 30 Tage
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent className={`p-0 transition-all duration-300 ${expandedTodos ? "max-h-80" : "max-h-[180px]"} overflow-hidden`}>
-            {todosLoading ? (
-              // Loading Skeletons
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {[...Array(3)].map((_, index) => (
-                  <div key={`skeleton-${index}`} className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 bg-gray-200 rounded-full animate-skeleton-fade"></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="h-4 bg-gray-200 rounded mb-2 w-3/4 animate-skeleton-fade"></div>
-                        <div className="flex items-center">
-                          <div className="h-3 bg-gray-100 rounded w-1/3 animate-skeleton-fade"></div>
-                        </div>
+          <CardContent
+            className={`p-0 transition-all duration-500 ${expandedTodos ? "max-h-[340px]" : "max-h-[220px]"} overflow-hidden`}
+          >
+            <div className="relative">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-purple-900/50"></div>
+              {todosLoading ? (
+                <div className="space-y-3 px-4 py-4">
+                  {[...Array(3)].map((_, index) => (
+                    <div
+                      key={`todo-skeleton-${index}`}
+                      className="flex items-center gap-3 rounded-2xl border border-purple-50/80 bg-white/80 p-4 shadow-sm animate-pulse dark:border-purple-900/40 dark:bg-gray-900/60"
+                    >
+                      <div className="h-11 w-11 rounded-2xl bg-gray-200/70 dark:bg-gray-800" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3.5 w-3/4 rounded bg-gray-200 dark:bg-gray-800" />
+                        <div className="h-2.5 w-1/3 rounded bg-gray-100 dark:bg-gray-700" />
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : sortedTodos.length === 0 ? (
-              // Empty state - minimal
-              <div className="flex items-center justify-center py-8">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Keine To-Dos vorhanden
-                </p>
-              </div>
-            ) : expandedTodos ? (
-              <ScrollArea className="h-full max-h-80 overflow-y-auto">
-                <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {sortedTodos.map((todo) => (
-                    <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                <div className="flex items-center gap-3">
-                        {todo.id >= 100000 && todo.id < 200000 ? (
-                          // Assignment todo - show assignment icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            {todo.completed ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <Briefcase className="w-5 h-5 text-blue-500" />
-                            )}
-                          </div>
-                        ) : (
-                          // Regular todo, Document todo, and Message todo - clickable checkbox
-                        <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                        </button>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center">
-                          <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
-                            {todo.id >= 200000 && todo.id < 300000 && (
-                              <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
-                            )}
-                            {todo.id >= 300000 && (
-                              <AlertCircle className="w-4 h-4 text-yellow-500 ml-2 flex-shrink-0" />
-                            )}
-                          </div>
-                          <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
-                  </div>
-                </div>
-                    </li>
                   ))}
-                </ul>
-              </ScrollArea>
-            ) : (
-              <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-                {sortedTodos.slice(0, 3).map((todo) => (
-                  <li key={todo.id} className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                        {todo.id >= 100000 && todo.id < 200000 ? (
-                          // Assignment todo - show assignment icon instead of checkbox
-                          <div className="w-5 h-5 flex items-center justify-center">
-                            {todo.completed ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <Briefcase className="w-5 h-5 text-blue-500" />
-                            )}
-                          </div>
-                        ) : (
-                          // Regular todo, Document todo, and Message todo - clickable checkbox
-                       <button onClick={() => toggleTodo(todo.id)} className="w-5 h-5 flex items-center justify-center transition-all focus:outline-none">
-                          {todo.completed ? (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-green-500"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500 transition-colors"><path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M12,20c-4.42,0-8-3.58-8-8s3.58-8,8-8s8,3.58,8,8S16.42,20,12,20z"/></svg>)}
-                        </button>
-                        )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center">
-                          <p className={`text-sm font-medium ${todo.completed ? 'text-gray-400 dark:text-gray-500 line-through' : ''}`}>{todo.title}</p>
-                            {todo.id >= 200000 && todo.id < 300000 && (
-                              <FileText className="w-4 h-4 text-orange-500 ml-2 flex-shrink-0" />
-                            )}
-                            {todo.id >= 300000 && (
-                              <AlertCircle className="w-4 h-4 text-yellow-500 ml-2 flex-shrink-0" />
-                            )}
-                        </div>
-                        <div className="flex items-center mt-1"><Clock className="h-3 w-3 mr-1 text-gray-400 dark:text-gray-500"/><span className="text-xs text-gray-500 dark:text-gray-400">{todo.due}</span></div>
-          </div>
-        </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-                </CardContent>
-          {sortedTodos.length > 0 && (
-          <CardFooter className="p-3 border-t bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex items-center justify-between w-full">
-              {/* Empty space on the left for balance */}
-              <div className="w-8 h-8"></div>
-              
-              {/* Centered "Alle anzeigen" button */}
-              <Button variant="ghost" size="sm" className="flex items-center justify-center font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent hover:opacity-80 transition-opacity" onClick={() => setExpandedTodos(!expandedTodos)}>
-                {expandedTodos ? (<><ChevronUp className="h-4 w-4 mr-1 text-purple-500" /> Weniger anzeigen</>) : (<><ChevronDown className="h-4 w-4 mr-1 text-purple-500" /> Alle anzeigen</>)}
-              </Button>
-              
-              {/* History icon on the right */}
-              <button
-                onClick={() => setShowTodoHistory(true)}
-                className="flex items-center justify-center w-8 h-8 rounded-full opacity-30 hover:opacity-60 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <History className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              </button>
+                </div>
+              ) : sortedTodos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Wir melden uns sofort, sobald neue Aufgaben auftauchen.
+                  </p>
+                </div>
+              ) : expandedTodos ? (
+                <ScrollArea className="h-full max-h-[310px] pr-2">
+                  {renderTodoCollection(sortedTodos)}
+                </ScrollArea>
+              ) : (
+                renderTodoCollection(sortedTodos.slice(0, 3))
+              )}
             </div>
-          </CardFooter>
+          </CardContent>
+          {sortedTodos.length > 0 && (
+            <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 backdrop-blur dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <span>Wird automatisch abgehakt, sobald du die Aufgabe erledigt hast.</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200"
+                    onClick={() => setExpandedTodos(!expandedTodos)}
+                  >
+                    {expandedTodos ? (
+                      <>
+                        <ChevronUp className="h-4 w-4" />
+                        Weniger
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4" />
+                        Alle anzeigen
+                      </>
+                    )}
+                  </Button>
+                  <button
+                    onClick={() => setShowTodoHistory(true)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
+                  >
+                    <History className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </CardFooter>
           )}
         </Card>
+      </div>
 
       {/* To-Do History Popup */}
       {showTodoHistory && (
