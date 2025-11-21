@@ -1077,7 +1077,8 @@ export default function DashboardPage() {
                   <div className="relative">
                     <button
                       ref={dropdownButtonRef}
-                      className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30"
+                      type="button"
+                      className="flex items-center gap-2 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowFilterDropdown(!showFilterDropdown);
@@ -1093,13 +1094,13 @@ export default function DashboardPage() {
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownPopupRef}
-                        className="pointer-events-auto absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-2xl border border-purple-100/60 bg-white/95 py-2 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
+                        className="absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-lg border border-purple-100/60 bg-white py-2 shadow-2xl dark:border-purple-900/40 dark:bg-gray-900"
                       >
                         {timeframeOptions.map((option) => (
                           <button
                             key={option.value}
                             type="button"
-                            className="block w-full rounded-md px-4 py-2 text-left text-sm font-medium text-gray-700 transition-all hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:text-purple-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/40 dark:text-gray-200 dark:hover:from-purple-500/25 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
+                            className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 transition-all hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:text-purple-700 dark:text-gray-200 dark:hover:from-purple-500/25 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
                             onClick={() => handleTimeframeSelect(option.value)}
                           >
                             {option.label}
