@@ -76,7 +76,6 @@ const PRIORITY_TOKENS: { [key in TodoItem["priority"]]: { label: string; classes
 export default function DashboardPage() {
   const [expandedTodos, setExpandedTodos] = useState(false);
   const [todoFilter, setTodoFilter] = useState<TodoFilterRange>("heute");
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showTodoHistory, setShowTodoHistory] = useState(false);
   const [monthFilterOpen, setMonthFilterOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
@@ -189,8 +188,6 @@ export default function DashboardPage() {
   const legendIconRef = useRef<HTMLButtonElement>(null);
   const legendPopupRef = useRef<HTMLDivElement>(null);
 
-  const dropdownButtonRef = useRef<HTMLButtonElement>(null);
-  const filterDropdownPopupRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fullSubtitle = "Hier ist dein Überblick für heute.";
@@ -359,41 +356,12 @@ export default function DashboardPage() {
     }, 50);
   };
 
-  useEffect(() => {
-    const handleClickOutsideFilter = (event: MouseEvent) => {
-      if (
-        showFilterDropdown &&
-          dropdownButtonRef.current && 
-        !dropdownButtonRef.current.contains(event.target as Node) &&
-        filterDropdownPopupRef.current &&
-        !filterDropdownPopupRef.current.contains(event.target as Node)
-      ) {
-        setShowFilterDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutsideFilter);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutsideFilter);
-    };
-  }, [showFilterDropdown]);
-
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [todoHistoryData, setTodoHistoryData] = useState<any[]>([]);
   const [todosLoading, setTodosLoading] = useState(true); // Start with loading state
-
-  const handleTimeframeSelect = (value: TodoFilterRange) => {
-    setTodoFilter(value);
-    setShowFilterDropdown(false);
-  };
-
-  const timeframeOptions: { value: TodoFilterRange; label: string }[] = [
-    { value: "heute", label: "Heute" },
-    { value: "7tage", label: "Nächsten 7 Tage" },
-    { value: "30tage", label: "Nächsten 30 Tage" }
-  ];
   
   // Work status data
   const [workStatus, setWorkStatus] = useState({ goalHours: 0, workedHours: 0, percentage: 0 });
@@ -1074,41 +1042,15 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/60">
                     Zeitraum
                   </span>
-                  <div className="relative">
-                    <button
-                      ref={dropdownButtonRef}
-                      type="button"
-                      className="flex items-center gap-2 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowFilterDropdown(!showFilterDropdown);
-                      }}
-                    >
-                      {todoFilter === "heute"
-                        ? "Heute"
-                        : todoFilter === "7tage"
-                          ? "7 Tage"
-                          : "30 Tage"}
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
-                    {showFilterDropdown && (
-                      <div
-                        ref={filterDropdownPopupRef}
-                        className="absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-lg border border-purple-100/60 bg-white py-2 shadow-2xl dark:border-purple-900/40 dark:bg-gray-900"
-                      >
-                        {timeframeOptions.map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 transition-all hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:text-purple-700 dark:text-gray-200 dark:hover:from-purple-500/25 dark:hover:to-pink-500/25 dark:hover:text-purple-100"
-                            onClick={() => handleTimeframeSelect(option.value)}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <select
+                    value={todoFilter}
+                    onChange={(e) => setTodoFilter(e.target.value as TodoFilterRange)}
+                    className="rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm shadow-inner hover:bg-white/30 transition-colors border-0 focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer"
+                  >
+                    <option value="heute" className="bg-gray-900 text-white">Heute</option>
+                    <option value="7tage" className="bg-gray-900 text-white">7 Tage</option>
+                    <option value="30tage" className="bg-gray-900 text-white">30 Tage</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -2461,8 +2403,6 @@ export default function DashboardPage() {
           </div>
         </>
       )}
-       <div className={`fixed inset-0 z-20 ${showFilterDropdown ? 'block' : 'hidden'}`} onClick={() => setShowFilterDropdown(false)}></div>
-
 
 
       {/* Onboarding Modal removed - only available from landing page */}
