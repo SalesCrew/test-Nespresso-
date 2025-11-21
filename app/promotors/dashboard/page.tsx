@@ -1081,7 +1081,7 @@ export default function DashboardPage() {
                         className="absolute top-full right-0 z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-purple-100/50 bg-white/95 py-1 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90"
                       >
                         <button
-                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/20 dark:hover:to-pink-500/20 dark:hover:text-purple-100"
                           onClick={() => {
                             setTodoFilter("heute");
                             setShowFilterDropdown(false);
@@ -1090,7 +1090,7 @@ export default function DashboardPage() {
                           Heute
                         </button>
                         <button
-                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/20 dark:hover:to-pink-500/20 dark:hover:text-purple-100"
                           onClick={() => {
                             setTodoFilter("7tage");
                             setShowFilterDropdown(false);
@@ -1099,7 +1099,7 @@ export default function DashboardPage() {
                           Nächsten 7 Tage
                         </button>
                         <button
-                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-purple-50 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-purple-900/40 dark:hover:text-purple-100"
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:text-purple-700 dark:text-gray-200 dark:hover:bg-gradient-to-r dark:hover:from-purple-500/20 dark:hover:to-pink-500/20 dark:hover:text-purple-100"
                           onClick={() => {
                             setTodoFilter("30tage");
                             setShowFilterDropdown(false);
