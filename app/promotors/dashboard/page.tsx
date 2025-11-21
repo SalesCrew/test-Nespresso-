@@ -714,8 +714,12 @@ export default function DashboardPage() {
     */
   };
   
+  const handleOpenCalendar = (todo: TodoItem) => {
+    router.push("/promotors/dashboard#terminkalender");
+  };
+
   const renderTodoCollection = (items: TodoItem[]) => (
-    <ul className="space-y-3 px-4 py-4">
+  <ul className="px-4 py-4 divide-y divide-purple-50">
       {items.map((todo) => {
         const priorityToken = PRIORITY_TOKENS[todo.priority] || PRIORITY_TOKENS.medium;
         const isAssignment = todo.id >= 100000 && todo.id < 200000;
@@ -728,10 +732,11 @@ export default function DashboardPage() {
         }`;
 
         return (
-          <li
-            key={todo.id}
-            className="group relative flex items-start gap-3 rounded-2xl border border-purple-100/60 bg-white/95 shadow-[0_18px_40px_rgba(79,70,229,0.08)] transition-all duration-300 hover:border-pink-100/80 hover:shadow-[0_22px_45px_rgba(236,72,153,0.18)] dark:border-purple-900/40 dark:bg-gray-900/80"
-          >
+      <li
+        key={todo.id}
+        className="group relative flex flex-col gap-4 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between"
+      >
+        <div className="flex items-start gap-3">
             {isAssignment ? (
               <div className={`${indicatorClasses} cursor-default`}>
                 {todo.completed ? (
@@ -764,59 +769,59 @@ export default function DashboardPage() {
               </button>
             )}
 
-            <div className="flex-1 min-w-0 py-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p
-                    className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
-                      todo.completed ? "opacity-60 line-through" : ""
-                    }`}
-                  >
-                    {todo.title}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                      <Clock className="h-3.5 w-3.5" />
-                      {todo.due}
-                    </span>
+            <div className="flex-1 min-w-0">
+              <p
+                className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
+                  todo.completed ? "opacity-60 line-through" : ""
+                }`}
+              >
+                {todo.title}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                  <Clock className="h-3.5 w-3.5" />
+                  {todo.due}
+                </span>
                     {isAssignment && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
                         <Briefcase className="h-3.5 w-3.5" />
                         Einsatz
                       </span>
                     )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
-                  >
-                    {priorityToken.label}
-                  </span>
-                  {todo.completed && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
-                      ✓ erledigt
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-2 flex flex-wrap gap-2">
-                {isDocument && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
-                    <FileText className="h-3.5 w-3.5" />
-                    Dokument
-                  </span>
-                )}
-                {isMessage && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    Wichtig
-                  </span>
-                )}
               </div>
             </div>
+
+            <div className="flex min-w-[140px] flex-col items-start gap-2 sm:items-end sm:justify-between">
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${priorityToken.classes}`}
+              >
+                {priorityToken.label}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleOpenCalendar(todo)}
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-purple-200 hover:text-purple-500 dark:border-slate-700 dark:text-slate-200 dark:hover:border-purple-500/50"
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                Kalender öffnen
+              </button>
+            </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pl-[3.75rem] sm:pl-[3.5rem]">
+          {isDocument && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-200">
+              <FileText className="h-3.5 w-3.5" />
+              Dokument
+            </span>
+          )}
+          {isMessage && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Wichtig
+            </span>
+          )}
+        </div>
           </li>
         );
       })}
@@ -1153,12 +1158,12 @@ export default function DashboardPage() {
           </CardContent>
           {sortedTodos.length > 0 && (
             <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 backdrop-blur dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
                 <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <span>Wird automatisch abgehakt, sobald du die Aufgabe erledigt hast.</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex justify-center">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1177,6 +1182,8 @@ export default function DashboardPage() {
                       </>
                     )}
                   </Button>
+                </div>
+                <div className="flex justify-end">
                   <button
                     onClick={() => setShowTodoHistory(true)}
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
