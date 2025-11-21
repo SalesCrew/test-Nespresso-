@@ -1163,9 +1163,8 @@ export default function DashboardPage() {
           {sortedTodos.length > 0 && (
             <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
               <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-3">
-                <div className="flex items-center gap-2 justify-center text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 md:justify-start md:text-left">
+                <div className="flex justify-center md:justify-start">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  <span>Wird automatisch abgehakt, sobald du die Aufgabe erledigt hast.</span>
                 </div>
                 <div className="flex w-full flex-wrap items-center justify-center gap-3 md:flex-row md:gap-0 md:w-auto md:items-center md:justify-center">
                   <Button
