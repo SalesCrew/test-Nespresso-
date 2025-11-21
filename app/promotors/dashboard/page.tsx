@@ -770,7 +770,7 @@ export default function DashboardPage() {
               </button>
             )}
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
               <p
                 className={`text-sm font-semibold text-gray-900 dark:text-gray-100 ${
                   todo.completed ? "opacity-60 line-through" : ""
