@@ -1037,11 +1037,13 @@ export default function DashboardPage() {
       <div className="relative mb-8">
         <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-purple-500/25 via-transparent to-pink-500/25 blur-3xl opacity-70 pointer-events-none"></div>
         <Card className="relative overflow-visible rounded-[28px] border border-purple-100/70 bg-white/95 shadow-[0_25px_60px_rgba(109,40,217,0.15)] backdrop-blur-xl dark:border-purple-900/40 dark:bg-gray-900/80">
-          <CardHeader className="relative z-10 p-0">
-            <div className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
-              <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-white">
+          <CardHeader className="relative z-20 p-0">
+            <div className="relative px-4 py-3 text-white">
+              <div className="pointer-events-none absolute inset-0 rounded-t-[28px] overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
+                <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_60%)]"></div>
+              </div>
+              <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-2xl bg-white/15 flex items-center justify-center shadow-inner">
                     <CheckCircle2 className="h-5 w-5" />
