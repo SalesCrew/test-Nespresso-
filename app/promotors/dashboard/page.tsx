@@ -1167,7 +1167,7 @@ export default function DashboardPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <span>Wird automatisch abgehakt, sobald du die Aufgabe erledigt hast.</span>
                 </div>
-                <div className="flex w-full justify-center md:w-auto">
+                <div className="flex w-full flex-col items-center gap-3 md:flex-row md:gap-0 md:w-auto md:items-center md:justify-center">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1186,12 +1186,17 @@ export default function DashboardPage() {
                       </>
                     )}
                   </Button>
+                  <div className="flex w-full justify-center md:hidden">
+                    <button
+                      onClick={() => setShowTodoHistory(true)}
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
+                    >
+                      <History className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex w-full justify-center md:w-auto md:justify-end">
-                  <button
-                    onClick={() => setShowTodoHistory(true)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
-                  >
+                <div className="hidden w-full justify-center md:flex md:w-auto md:justify-end">
+                  <button onClick={() => setShowTodoHistory(true)} className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200">
                     <History className="h-4 w-4" />
                   </button>
                 </div>
