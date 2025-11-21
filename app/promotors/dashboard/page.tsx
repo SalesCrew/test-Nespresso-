@@ -1162,16 +1162,16 @@ export default function DashboardPage() {
           </CardContent>
           {sortedTodos.length > 0 && (
             <CardFooter className="border-t border-purple-50/70 bg-gradient-to-r from-purple-50/70 via-white to-pink-50/70 px-5 py-4 dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/40 dark:to-pink-900/10">
-              <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <div className="grid gap-4 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-3">
+                <div className="flex items-center gap-2 justify-center text-center text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 md:justify-start md:text-left">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <span>Wird automatisch abgehakt, sobald du die Aufgabe erledigt hast.</span>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex w-full justify-center md:w-auto">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="flex items-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200"
+                    className="flex w-full max-w-[220px] items-center justify-center gap-2 rounded-full border border-purple-100 bg-white/90 px-4 py-2 text-sm font-semibold text-purple-600 shadow-sm hover:bg-white dark:border-purple-900/50 dark:bg-gray-900/60 dark:text-purple-200 md:w-auto md:max-w-none"
                     onClick={() => setExpandedTodos(!expandedTodos)}
                   >
                     {expandedTodos ? (
@@ -1187,7 +1187,7 @@ export default function DashboardPage() {
                     )}
                   </Button>
                 </div>
-                <div className="flex justify-end">
+                <div className="flex w-full justify-center md:w-auto md:justify-end">
                   <button
                     onClick={() => setShowTodoHistory(true)}
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
