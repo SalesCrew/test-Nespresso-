@@ -1157,7 +1157,7 @@ export default function DashboardPage() {
                     <div className="flex h-11 w-11 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
                       <CheckCircle2 className="h-4 w-4" />
                     </div>
-                    <p className="text-[15px] font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
+                    <p className="text-[15px] font-medium text-gray-600 dark:text-gray-300">Alles erledigt – hier gibt&apos;s nix zu tun.</p>
                   </div>
                   <button
                     type="button"
