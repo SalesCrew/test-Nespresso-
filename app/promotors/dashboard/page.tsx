@@ -1148,17 +1148,17 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : sortedTodos.length === 0 ? (
-                <div className="relative min-h-[230px] px-6 py-10">
-                  <div className="flex h-full flex-col items-center justify-center text-center">
-                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
-                      <CheckCircle2 className="h-5 w-5" />
+                <div className="relative min-h-[180px] px-4 py-8">
+                  <div className="flex h-full flex-col items-center justify-center text-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
+                      <CheckCircle2 className="h-4 w-4" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
+                    <p className="text-[15px] font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowTodoHistory(true)}
-                    className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
+                    className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
                   >
                     <History className="h-4 w-4" />
                   </button>
