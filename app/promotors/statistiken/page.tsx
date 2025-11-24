@@ -3,7 +3,7 @@
 // non-reactive: housekeeping marker to trigger deploy (no functional changes)
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown, Coins } from "lucide-react"
+import { ArrowRight, ArrowLeft, ChevronDown, ChevronUp, X, BarChart2, History, Info, Eye, Trophy, User, Gift, TrendingUp, Crown, Coins, Calendar } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function StatistikenPage() {
@@ -1868,129 +1868,148 @@ Mario`
 
       {/* History Section */}
       <div className="w-full max-w-md mx-auto mb-8">
-        <Card className="w-full border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-          {/* Blue gradient header with rounded corners */}
-          <div className="py-3 px-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-            <h3 className="text-center font-medium text-white flex items-center justify-center">
-              <History className="h-4 w-4 mr-2" />
-              Verlauf ({verlaufData.length})
-            </h3>
+        <Card className="w-full border border-slate-100 dark:border-gray-800 shadow-[0_8px_24px_rgba(15,23,42,0.08)] rounded-[24px] overflow-hidden bg-white dark:bg-gray-900">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-slate-100/60 dark:border-gray-800/60 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
+                <History className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Verlauf
+              </h3>
+            </div>
+            <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+              {verlaufData.length}
+            </span>
           </div>
           
           <CardContent className="p-0">
             {verlaufData.length === 0 ? (
-              <div className="py-12 px-6 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full mb-4">
-                  <History className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+              <div className="py-16 px-6 text-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center mx-auto mb-4">
+                  <History className="h-8 w-8 text-purple-500 dark:text-purple-400" />
                 </div>
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <h4 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-2">
                   Noch keine KPI-Daten vorhanden
                 </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">
                   Sobald du dein erstes CA KPI Feedback erhältst, erscheint es hier in deinem Verlauf.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              <div>
                 {currentPageData.map((entry, index) => (
                 <div 
                   key={index} 
-                  className={`flex items-center p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ${
+                  className={`px-6 py-4 transition-all duration-200 ease-out cursor-pointer hover:bg-gradient-to-r hover:from-purple-50/40 hover:via-white hover:to-pink-50/40 hover:mx-3 hover:rounded-2xl hover:shadow-sm dark:hover:from-purple-900/10 dark:hover:via-gray-900 dark:hover:to-pink-900/10 ${
                     !historyExpanded && index > 4 ? 
                       (index === 4 ? 'opacity-50' : 'hidden') : ''
                   }`}
                   onClick={() => setSelectedHistoryEntry(historyPage * entriesPerPage + index)}
                 >
-                  <div className="flex-shrink-0 w-24">
-                    <div className="flex items-center">
-                      <span className="text-gray-500 dark:text-gray-400">
-                        {entry.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 flex justify-between ml-4">
-                    <div 
-                      className={`text-sm font-medium ${getColorForMcEt(entry.mcet) !== "custom-orange" ? getColorForMcEt(entry.mcet) : ""}`}
-                      style={getStyleForColor(getColorForMcEt(entry.mcet))}
-                    >
-                      MC/ET: {entry.mcet}
+                  <div className="flex items-center gap-6">
+                    {/* Date Section */}
+                    <div className="flex-shrink-0">
+                      <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5 dark:bg-gray-800/50">
+                        <Calendar className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                          {entry.date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </span>
+                      </div>
                     </div>
                     
-                    <div 
-                      className={`text-sm font-medium ${getColorForTma(entry.tma) !== "custom-orange" ? getColorForTma(entry.tma) : ""}`}
-                      style={getStyleForColor(getColorForTma(entry.tma))}
-                    >
-                      TMA: {entry.tma}%
-                    </div>
-                    
-                    <div 
-                      className={`text-sm font-medium ${getColorForVlShare(entry.vl) !== "custom-orange" ? getColorForVlShare(entry.vl) : ""}`}
-                      style={getStyleForColor(getColorForVlShare(entry.vl))}
-                    >
-                      VL: {entry.vl}%
+                    {/* KPI Metrics */}
+                    <div className="flex-1 flex items-center justify-between gap-4">
+                      <div className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+                        getColorForMcEt(entry.mcet) === "text-green-600" 
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : getColorForMcEt(entry.mcet) === "text-red-600"
+                          ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                      }`}>
+                        MC/ET: {entry.mcet}
+                      </div>
+                      
+                      <div className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+                        getColorForTma(entry.tma) === "text-green-600"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : getColorForTma(entry.tma) === "text-red-600"
+                          ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                      }`}>
+                        TMA: {entry.tma}%
+                      </div>
+                      
+                      <div className={`rounded-xl px-3 py-2 text-sm font-semibold ${
+                        getColorForVlShare(entry.vl) === "text-green-600"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : getColorForVlShare(entry.vl) === "text-red-600"
+                          ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                      }`}>
+                        VL: {entry.vl}%
+                      </div>
                     </div>
                   </div>
                 </div>
                 ))}
                 
-                {/* Blurred overlay for collapsed state */}
+                {/* Fade overlay for collapsed state */}
                 {!historyExpanded && currentPageData.length > 5 && (
-                  <div className="relative">
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-gray-900 to-transparent pointer-events-none"></div>
+                  <div className="relative -mt-20 h-20 pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-gray-900 dark:via-gray-900/80 dark:to-transparent"></div>
                   </div>
                 )}
               </div>
             )}
             
-            {/* Footer with Show more/less button and navigation - only show when data exists */}
+            {/* Footer */}
             {verlaufData.length > 0 && (
-              <div className="p-2 border-t border-gray-100 dark:border-gray-800">
-              <div className="flex items-center justify-between">
-                {/* Left navigation arrow - only show if not on first page */}
-                <div className="w-20">
-                  {historyPage > 0 && (
-                    <button 
-                      onClick={() => navigateHistoryPrev()}
-                      className="flex items-center text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5 mr-1 text-blue-500" />
-                      <span>Neuer</span>
-                    </button>
-                  )}
+              <div className="px-6 py-3 border-t border-slate-100/60 dark:border-gray-800/60 bg-gradient-to-r from-slate-50/50 via-white to-slate-50/50 dark:from-gray-800/30 dark:via-gray-900 dark:to-gray-800/30">
+                <div className="flex items-center justify-between">
+                  {/* Left navigation */}
+                  <div className="w-8">
+                    {historyPage > 0 && (
+                      <button 
+                        onClick={() => navigateHistoryPrev()}
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-slate-400 dark:hover:bg-gray-700"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Expand button */}
+                  <button 
+                    onClick={() => setHistoryExpanded(!historyExpanded)}
+                    className="rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-slate-300 dark:hover:bg-gray-700 flex items-center gap-1.5"
+                  >
+                    {historyExpanded ? (
+                      <>
+                        <ChevronUp className="h-4 w-4 transition-transform duration-200" />
+                        <span>Weniger</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                        <span>Alle anzeigen</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  {/* Right navigation */}
+                  <div className="w-8 flex justify-end">
+                    {historyPage < totalPages - 1 && (
+                      <button 
+                        onClick={() => navigateHistoryNext()}
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all dark:bg-gray-800 dark:border-gray-700 dark:text-slate-400 dark:hover:bg-gray-700"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                
-                {/* Show more/less button */}
-                <button 
-                  onClick={() => setHistoryExpanded(!historyExpanded)}
-                  className="flex items-center justify-center text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-                >
-                  {historyExpanded ? (
-                    <>
-                      <ChevronUp className="h-4 w-4 mr-1 text-blue-500" />
-                      Schließen
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-1 text-blue-500" />
-                      Show More
-                    </>
-                  )}
-                </button>
-                
-                {/* Right navigation arrow - only show if not on last page */}
-                <div className="w-20 text-right">
-                  {historyPage < totalPages - 1 && (
-                    <button 
-                      onClick={() => navigateHistoryNext()}
-                      className="flex items-center justify-end text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-                    >
-                      <span>Älter</span>
-                      <ArrowRight className="h-3.5 w-3.5 ml-1 text-blue-500" />
-                    </button>
-                  )}
-                </div>
-              </div>
               </div>
             )}
           </CardContent>
