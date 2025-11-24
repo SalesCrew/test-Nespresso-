@@ -1060,21 +1060,30 @@ Mario`
             </CardContent>
           </Card>
           
-          {/* Feedback dropdown that peeks from behind the card - only visible when feedback is closed and data exists */}
-          {realHistoryData.length > 0 && (
+          {/* Feedback dropdown / flap */}
+          {(historyDataLoading || realHistoryData.length > 0) && (
             <div 
               className={`absolute left-1/2 transform -translate-x-1/2 -bottom-[1.65rem] z-0 flex justify-center w-full transition-all duration-500 ${
                 feedbackOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
             >
               <div 
-                className="bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 cursor-pointer w-52 text-center filter drop-shadow-md"
-                onClick={toggleFeedback}
+                className={`bg-white dark:bg-gray-900 shadow-sm rounded-b-xl px-8 py-1 border border-gray-100 dark:border-gray-800 w-52 text-center filter drop-shadow-md ${
+                  historyDataLoading ? 'cursor-default' : 'cursor-pointer'
+                }`}
+                onClick={historyDataLoading ? undefined : toggleFeedback}
               >
-                <button className="flex items-center justify-center w-full">
-                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Deine Prämien!</span>
-                  <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
-                </button>
+                {historyDataLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="h-2.5 w-20 rounded-full bg-gradient-to-r from-purple-100 via-pink-100 to-purple-100 animate-pulse dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"></span>
+                    <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 animate-pulse dark:from-gray-700 dark:to-gray-600"></span>
+                  </div>
+                ) : (
+                  <button className="flex items-center justify-center w-full">
+                    <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent text-xs font-medium opacity-75">Deine Prämien!</span>
+                    <ChevronDown className="h-3.5 w-3.5 ml-1 text-pink-500 transform translate-y-[1px] opacity-75" />
+                  </button>
+                )}
               </div>
             </div>
           )}
