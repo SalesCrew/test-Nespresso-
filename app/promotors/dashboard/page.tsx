@@ -1145,11 +1145,20 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : sortedTodos.length === 0 ? (
-                <div className="flex min-h-[230px] flex-col items-center justify-center px-6 py-10 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
-                    <CheckCircle2 className="h-5 w-5" />
+                <div className="relative min-h-[230px] px-6 py-10">
+                  <div className="flex h-full flex-col items-center justify-center text-center">
+                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-purple-100 bg-purple-50 text-purple-500 dark:border-purple-900/50 dark:bg-purple-900/30 dark:text-purple-200">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
                   </div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Keine To-Dos vorhanden</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowTodoHistory(true)}
+                    className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border border-purple-100/60 bg-white/80 text-purple-500 transition hover:border-pink-100 hover:text-pink-500 dark:border-purple-900/40 dark:bg-gray-900/70 dark:text-purple-200"
+                  >
+                    <History className="h-4 w-4" />
+                  </button>
                 </div>
               ) : expandedTodos ? (
                 <ScrollArea className="h-full max-h-[310px] pr-2">
