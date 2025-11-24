@@ -1878,7 +1878,20 @@ Mario`
           </div>
           
           <CardContent className="p-0">
-            {verlaufData.length === 0 ? (
+            {historyDataLoading ? (
+              <div className="px-6 py-4 space-y-3">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={`history-skeleton-${idx}`} className="flex items-center gap-6">
+                    <div className="h-4 w-24 rounded-full bg-gray-200/70 animate-pulse dark:bg-gray-700/70"></div>
+                    <div className="flex-1 flex items-center justify-between gap-4">
+                      <div className="h-4 w-24 rounded-full bg-gray-200/70 animate-pulse dark:bg-gray-700/70"></div>
+                      <div className="h-4 w-24 rounded-full bg-gray-200/70 animate-pulse dark:bg-gray-700/70"></div>
+                      <div className="h-4 w-24 rounded-full bg-gray-200/70 animate-pulse dark:bg-gray-700/70"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : verlaufData.length === 0 ? (
               <div className="py-12 px-6 text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-full mb-4">
                   <History className="h-8 w-8 text-blue-500 dark:text-blue-400" />
