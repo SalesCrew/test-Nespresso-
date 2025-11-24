@@ -1310,7 +1310,7 @@ export default function DashboardPage() {
                     <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
                       <History className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Keine Aufgaben für diesen Zeitraum gefunden
+                        Alles erledigt – hier gibt&apos;s nix zu tun.
                       </p>
                     </div>
                   )}
