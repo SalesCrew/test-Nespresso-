@@ -1286,45 +1286,31 @@ export default function DashboardPage() {
                           month: "2-digit",
                           year: "numeric"
                         });
-                        const badgeDate = todo.completedDate.toLocaleDateString("de-DE", {
-                          day: "2-digit",
-                          month: "2-digit"
-                        });
                         return (
                           <div
                             key={todo.id}
-                            className="group p-[1px] rounded-2xl bg-gradient-to-br from-purple-200/60 via-pink-200/40 to-purple-100/30 shadow-[0_2px_12px_rgba(168,85,247,0.08)] transition-all duration-200 ease-out hover:shadow-[0_8px_24px_rgba(168,85,247,0.15)] hover:-translate-y-1 hover:scale-[1.01] dark:from-purple-700/40 dark:via-pink-700/30 dark:to-purple-600/20"
+                            className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700"
                           >
-                            <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 p-4 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
-                              <div className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-purple-400 to-pink-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.25)]">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-                                <CheckCircle2 className="relative h-4 w-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">
-                                  {todo.title}
-                                </p>
-                                <p className="text-xs text-purple-400/70 dark:text-purple-300/60">
-                                  <Calendar className="inline h-3 w-3 mr-1" />
-                                  Abgeschlossen am {formattedDate}
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-gradient-to-r from-purple-50 to-pink-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-purple-600 ring-1 ring-purple-200/50 dark:from-purple-900/40 dark:to-pink-900/40 dark:text-purple-100 dark:ring-purple-700/50">
-                                {badgeDate}
-                              </span>
+                            <div className="flex-shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-green-500">
+                                <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/>
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{todo.title}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {formattedDate}
+                              </p>
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-purple-100 bg-gradient-to-br from-purple-50/70 via-white to-pink-50/70 px-6 py-16 text-center dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/30 dark:to-pink-900/10">
-                      <History className="mb-3 h-12 w-12 text-purple-400 animate-pulse dark:text-purple-200" style={{ animationDuration: '3s' }} />
-                      <p className="text-sm font-medium text-slate-600 dark:text-gray-300">
-                        Keine Aufgaben für diesen Zeitraum
-                      </p>
-                      <p className="text-xs tracking-wide text-slate-400 dark:text-gray-400">
-                        Wähle einen anderen Monat, um ältere Einträge zu sehen.
+                    <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
+                      <History className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Keine Aufgaben für diesen Zeitraum gefunden
                       </p>
                     </div>
                   )}
