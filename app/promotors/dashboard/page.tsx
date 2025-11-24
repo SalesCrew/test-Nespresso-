@@ -1293,33 +1293,37 @@ export default function DashboardPage() {
                         return (
                           <div
                             key={todo.id}
-                            className="flex items-center gap-3 rounded-2xl border border-purple-50/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-purple-900/40 dark:bg-gray-900/70"
+                            className="group p-[1px] rounded-2xl bg-gradient-to-br from-purple-200/60 via-pink-200/40 to-purple-100/30 shadow-[0_2px_12px_rgba(168,85,247,0.08)] transition-all duration-200 ease-out hover:shadow-[0_8px_24px_rgba(168,85,247,0.15)] hover:-translate-y-1 hover:scale-[1.01] dark:from-purple-700/40 dark:via-pink-700/30 dark:to-purple-600/20"
                           >
-                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-inner">
-                              <CheckCircle2 className="h-4 w-4" />
+                            <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-white via-purple-50/20 to-pink-50/20 p-4 dark:from-gray-900 dark:via-purple-900/10 dark:to-pink-900/10">
+                              <div className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-purple-400 to-pink-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.25)]">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+                                <CheckCircle2 className="relative h-4 w-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">
+                                  {todo.title}
+                                </p>
+                                <p className="text-xs text-purple-400/70 dark:text-purple-300/60">
+                                  <Calendar className="inline h-3 w-3 mr-1" />
+                                  Abgeschlossen am {formattedDate}
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-gradient-to-r from-purple-50 to-pink-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-purple-600 ring-1 ring-purple-200/50 dark:from-purple-900/40 dark:to-pink-900/40 dark:text-purple-100 dark:ring-purple-700/50">
+                                {badgeDate}
+                              </span>
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                {todo.title}
-                              </p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Abgeschlossen am {formattedDate}
-                              </p>
-                            </div>
-                            <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-600 dark:bg-purple-900/30 dark:text-purple-100">
-                              {badgeDate}
-                            </span>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
                     <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-purple-100 bg-gradient-to-br from-purple-50/70 via-white to-pink-50/70 px-6 py-16 text-center dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/30 dark:to-pink-900/10">
-                      <History className="mb-3 h-12 w-12 text-purple-400 dark:text-purple-200" />
+                      <History className="mb-3 h-12 w-12 text-purple-400 animate-pulse dark:text-purple-200" style={{ animationDuration: '3s' }} />
                       <p className="text-sm font-medium text-slate-600 dark:text-gray-300">
                         Keine Aufgaben für diesen Zeitraum
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-gray-400">
+                      <p className="text-xs tracking-wide text-slate-400 dark:text-gray-400">
                         Wähle einen anderen Monat, um ältere Einträge zu sehen.
                       </p>
                     </div>
