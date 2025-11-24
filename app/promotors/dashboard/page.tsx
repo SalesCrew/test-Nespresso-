@@ -1275,7 +1275,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-1 flex-col overflow-hidden rounded-b-[24px] bg-white px-5 py-5 dark:bg-gray-900">
                   {filteredHistory.length > 0 ? (
-                    <div className="space-y-3 overflow-y-auto pr-1">
+                    <div className="space-y-3 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                       {filteredHistory.map((todo) => {
                         const formattedDate = todo.completedDate.toLocaleDateString("de-DE", {
                           day: "2-digit",
