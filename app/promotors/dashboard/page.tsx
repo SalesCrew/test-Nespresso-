@@ -1211,9 +1211,9 @@ export default function DashboardPage() {
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTodoHistory(false)}></div>
           <div className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <div className="relative">
-              <div className="absolute inset-0 rounded-[28px] bg-gradient-to-r from-purple-500/40 via-pink-500/35 to-orange-300/30 blur-3xl"></div>
-              <div className="relative flex max-h-[75vh] flex-col overflow-visible rounded-[24px] border border-white/70 bg-white/95 shadow-[0_35px_65px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/95 todo-history-popup">
-                <div className="relative rounded-t-[24px] bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 px-5 py-4 text-white">
+              <div className="absolute inset-0 rounded-[36px] bg-gradient-to-r from-purple-500/40 via-pink-500/35 to-orange-300/30 blur-3xl"></div>
+              <div className="relative flex max-h-[75vh] flex-col overflow-visible rounded-[34px] border border-white/70 bg-white/95 shadow-[0_35px_65px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/95 todo-history-popup">
+                <div className="relative rounded-t-[34px] bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 px-5 py-4 text-white">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-white shadow-inner">
