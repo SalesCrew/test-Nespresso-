@@ -525,6 +525,9 @@ export default function DashboardPage() {
     completed: true
   }));
 
+  const filteredHistory = getFilteredHistory();
+  const monthOptions = [{ key: "all", label: "Alle" }, ...getAvailableMonths()];
+
   // Convert documents to todos
   const getDocumentTodos = (): TodoItem[] => {
     const documentTodos: TodoItem[] = [];
@@ -1205,149 +1208,124 @@ export default function DashboardPage() {
       {/* To-Do History Popup */}
       {showTodoHistory && (
         <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" onClick={() => setShowTodoHistory(false)}></div>
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl z-50 w-[90vw] max-w-md max-h-[70vh] overflow-hidden todo-history-popup">
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={() => setShowTodoHistory(false)}></div>
+          <div className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2">
             <div className="relative">
-              {/* Header */}
-              <div className="relative bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-2xl shadow-md z-10">
-                {/* Close button */}
-                <button 
-                  onClick={() => setShowTodoHistory(false)}
-                  className="absolute top-3 right-3 p-1.5 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-                
-                {/* Header content */}
-                <div className="flex items-center">
-                  <History className="h-5 w-5 mr-2" />
-                  <div>
-                    <h2 className="text-lg font-semibold">To-Do Verlauf</h2>
-                    <p className="text-white/90 text-sm">Erledigte Aufgaben</p>
-            </div>
-          </div>
-            </div>
-            
-              {/* Month filter dropdown that peeks from behind the header - only visible when filter is closed */}
-              <div 
-                className={`absolute right-4 transform -bottom-5 z-0 flex justify-end w-auto transition-all duration-500 ${
-                  monthFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
-              >
-                <div 
-                  className="shadow-sm rounded-b-xl px-6 py-1 cursor-pointer text-center filter drop-shadow-md"
-                  style={{ backgroundColor: '#E449A3' }}
-                  onClick={() => setMonthFilterOpen(true)}
-                >
-                  <button className="flex items-center justify-center w-full">
-                    <span className="text-white text-xs font-medium opacity-90">
-                      {getSelectedMonthDisplay()}
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 ml-1 text-white transform translate-y-[1px] opacity-75" />
-                </button>
+              <div className="absolute inset-0 rounded-[28px] bg-gradient-to-r from-purple-500/40 via-pink-500/35 to-orange-300/30 blur-3xl"></div>
+              <div className="relative flex max-h-[75vh] flex-col overflow-visible rounded-[24px] border border-white/70 bg-white/95 shadow-[0_35px_65px_rgba(15,23,42,0.35)] backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/95 todo-history-popup">
+                <div className="relative rounded-t-[24px] bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 px-5 py-4 text-white">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-white shadow-inner">
+                        <History className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-semibold uppercase tracking-[0.35em] text-white/70">To-Dos</p>
+                        <p className="text-lg font-semibold leading-tight">Verlauf</p>
+                        <p className="text-sm text-white/85">Erledigte Aufgaben</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setMonthFilterOpen((prev) => !prev)}
+                          className="flex items-center gap-1 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/90 transition hover:bg-white/20"
+                        >
+                          {getSelectedMonthDisplay()}
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition ${monthFilterOpen ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                        {monthFilterOpen && (
+                          <div className="absolute right-0 top-[calc(100%+8px)] z-20 w-44 rounded-2xl border border-purple-100/70 bg-white p-2 text-left shadow-2xl dark:border-purple-900/40 dark:bg-gray-900">
+                            <div className="flex flex-col gap-1">
+                              {monthOptions.map((option) => (
+                                <button
+                                  key={option.key}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedMonth(option.key);
+                                    setMonthFilterOpen(false);
+                                  }}
+                                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-700 transition hover:bg-purple-50/80 dark:text-gray-200 dark:hover:bg-gray-800 ${
+                                    selectedMonth === option.key
+                                      ? "bg-purple-50 font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-100"
+                                      : ""
+                                  }`}
+                                >
+                                  {option.label}
+                                  {selectedMonth === option.key && (
+                                    <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowTodoHistory(false)}
+                        className="rounded-full bg-white/10 p-2 text-white transition hover:bg-white/25"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col overflow-hidden bg-white px-5 py-5 dark:bg-gray-900">
+                  {filteredHistory.length > 0 ? (
+                    <div className="space-y-3 overflow-y-auto pr-1">
+                      {filteredHistory.map((todo) => {
+                        const formattedDate = todo.completedDate.toLocaleDateString("de-DE", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric"
+                        });
+                        const badgeDate = todo.completedDate.toLocaleDateString("de-DE", {
+                          day: "2-digit",
+                          month: "2-digit"
+                        });
+                        return (
+                          <div
+                            key={todo.id}
+                            className="flex items-center gap-3 rounded-2xl border border-purple-50/80 bg-white/95 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-purple-900/40 dark:bg-gray-900/70"
+                          >
+                            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-inner">
+                              <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                {todo.title}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Abgeschlossen am {formattedDate}
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-600 dark:bg-purple-900/30 dark:text-purple-100">
+                              {badgeDate}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-purple-100 bg-gradient-to-br from-purple-50/70 via-white to-pink-50/70 px-6 py-16 text-center dark:border-purple-900/40 dark:from-purple-900/10 dark:via-gray-900/30 dark:to-pink-900/10">
+                      <History className="mb-3 h-12 w-12 text-purple-400 dark:text-purple-200" />
+                      <p className="text-sm font-medium text-slate-600 dark:text-gray-300">
+                        Keine Aufgaben für diesen Zeitraum
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-gray-400">
+                        Wähle einen anderen Monat, um ältere Einträge zu sehen.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Month Filter Card with CSS transition */}
-              <div 
-                className={`absolute right-4 transition-all duration-500 origin-top z-60 ${
-                  monthFilterOpen ? 'scale-y-100 opacity-100 top-full mt-1' : 'scale-y-0 opacity-0 pointer-events-none -bottom-5'
-                }`}
-                style={{ 
-                  transformOrigin: 'top right',
-                  maxHeight: monthFilterOpen ? '200px' : '0px'
-                }}
-              >
-                <div className="relative">
-                  <div 
-                    className="rounded-lg shadow-md overflow-hidden"
-                    style={{ backgroundColor: '#E449A3', width: '140px' }}
-                  >
-                    <div className="max-h-32 overflow-y-auto">
-                      <div className="divide-y divide-white/20">
-                        {/* Alle option */}
-                    <button 
-                          onClick={() => {
-                            setSelectedMonth("all");
-                            setMonthFilterOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors ${
-                            selectedMonth === "all" ? 'bg-white/20' : ''
-                          }`}
-                        >
-                          Alle
-                    </button>
-                        
-                        {/* Month options */}
-                        {getAvailableMonths().map((month) => (
-                    <button 
-                            key={month.key}
-                            onClick={() => {
-                              setSelectedMonth(month.key);
-                              setMonthFilterOpen(false);
-                            }}
-                            className={`w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors ${
-                              selectedMonth === month.key ? 'bg-white/20' : ''
-                            }`}
-                          >
-                            {month.label}
-                    </button>
-                        ))}
-            </div>
-              </div>
-            </div>
-            
-                  {/* Schließen button peeking from behind the card */}
-                  <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-[1.35rem] z-0 flex justify-center w-full">
-                    <div 
-                      className="shadow-sm rounded-b-xl px-6 py-1 cursor-pointer text-center filter drop-shadow-md"
-                      style={{ backgroundColor: '#E449A3' }}
-                      onClick={() => setMonthFilterOpen(false)}
-                    >
-                      <button className="flex items-center justify-center w-full">
-                        <span className="text-white text-xs font-medium opacity-90">schließen</span>
-                        <ChevronUp className="h-3.5 w-3.5 ml-1 text-white transform translate-y-[1px] opacity-75" />
-                        </button>
-                          </div>
-                      </div>
-                    </div>
-              </div>
-            </div>
-            
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[calc(70vh-80px)]">
-              {getFilteredHistory().length > 0 ? (
-                getFilteredHistory().map((todo) => (
-                  <div key={todo.id} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                    <div className="flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4 text-green-500">
-                        <path fill="currentColor" d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M10,17l-5-5l1.41-1.41L10,14.17l7.59-7.59L19,8L10,17z"/>
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{todo.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {todo.completedDate.toLocaleDateString('de-DE', { 
-                          day: '2-digit', 
-                          month: '2-digit', 
-                          year: 'numeric' 
-                        })}
-                      </p>
-                        </div>
-                      </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <History className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Keine Aufgaben für diesen Zeitraum gefunden
-                  </p>
-                    </div>
-              )}
             </div>
           </div>
-                </>
-              )}
+        </>
+      )}
 
 
         {/* Bitte Lesen Cards - Show all normal messages */}
