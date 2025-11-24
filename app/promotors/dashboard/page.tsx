@@ -1081,30 +1081,34 @@ export default function DashboardPage() {
                     {showFilterDropdown && (
                       <div
                         ref={filterDropdownRef}
-                        className="absolute top-full right-0 z-50 mt-2 w-48 rounded-2xl bg-white shadow-[0_20px_45px_rgba(15,23,42,0.12)] border border-white/60 overflow-hidden"
+                        className="absolute top-full right-0 z-50 mt-2 w-44 rounded-2xl border border-purple-100/70 bg-white p-2 text-left shadow-2xl dark:border-purple-900/40 dark:bg-gray-900"
                       >
-                        {[
-                          { label: "Heute", value: "heute" },
-                          { label: "7 Tage", value: "7tage" },
-                          { label: "30 Tage", value: "30tage" }
-                        ].map((option, idx, arr) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`flex w-full items-center justify-between px-4 py-3 text-base font-medium text-slate-800 transition-all ${
-                              idx !== arr.length - 1 ? "border-b border-slate-100" : ""
-                            } hover:bg-slate-50`}
-                            onClick={() => {
-                              setTodoFilter(option.value as TodoFilterRange);
-                              setShowFilterDropdown(false);
-                            }}
-                          >
-                            {option.label}
-                            {todoFilter === option.value && (
-                              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
-                            )}
-                          </button>
-                        ))}
+                        <div className="flex flex-col gap-1">
+                          {[
+                            { label: "Heute", value: "heute" },
+                            { label: "7 Tage", value: "7tage" },
+                            { label: "30 Tage", value: "30tage" }
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-700 transition hover:bg-purple-50/80 dark:text-gray-200 dark:hover:bg-gray-800 ${
+                                todoFilter === option.value
+                                  ? "bg-purple-50 font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-100"
+                                  : ""
+                              }`}
+                              onClick={() => {
+                                setTodoFilter(option.value as TodoFilterRange);
+                                setShowFilterDropdown(false);
+                              }}
+                            >
+                              {option.label}
+                              {todoFilter === option.value && (
+                                <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
