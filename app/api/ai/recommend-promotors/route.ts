@@ -199,10 +199,12 @@ export async function POST(req: Request) {
     // HARD FILTER #1: Cluster Match - Filter promotors by target cluster
     let clusterFilteredProfiles = workingProfiles || []
     console.log(`🎯 Target cluster for filtering: "${targetCluster}"`)
+    console.log(`📊 Working profiles count before filter: ${workingProfiles.length}`)
     
     if (targetCluster) {
-      clusterFilteredProfiles = (profiles || []).filter((p: any) => p.region === targetCluster)
-      console.log(`🔍 FILTER #1 - Cluster Match: ${profiles?.length || 0} → ${clusterFilteredProfiles.length} (target: ${targetCluster})`)
+      // USE workingProfiles (which includes fallback synthetic profiles), NOT the original profiles!
+      clusterFilteredProfiles = workingProfiles.filter((p: any) => p.region === targetCluster)
+      console.log(`🔍 FILTER #1 - Cluster Match: ${workingProfiles.length} → ${clusterFilteredProfiles.length} (target: ${targetCluster})`)
       
       // Log which promotors survived cluster filter
       const clusterSurvivors = clusterFilteredProfiles.map((p: any) => {
@@ -212,8 +214,8 @@ export async function POST(req: Request) {
       console.log('✅ Cluster filter survivors:', clusterSurvivors.length > 0 ? clusterSurvivors.join(', ') : 'NONE')
       
       // If no survivors, log what regions exist vs what we're looking for
-      if (clusterFilteredProfiles.length === 0 && profiles && profiles.length > 0) {
-        const existingRegions = [...new Set(profiles.map((p: any) => p.region || 'NULL'))].join(', ')
+      if (clusterFilteredProfiles.length === 0 && workingProfiles.length > 0) {
+        const existingRegions = [...new Set(workingProfiles.map((p: any) => p.region || 'NULL'))].join(', ')
         console.log(`⚠️ NO CLUSTER MATCH! Looking for "${targetCluster}" but profiles have: ${existingRegions}`)
       }
     } else {
@@ -466,7 +468,8 @@ export async function POST(req: Request) {
       console.log('❌ NO PROMOTORS AFTER ALL FILTERS!')
       console.log('📊 Filter summary:', {
         totalUsers: users?.length || 0,
-        totalProfiles: profiles?.length || 0,
+        dbProfiles: profiles?.length || 0,
+        workingProfiles: workingProfiles.length,
         afterClusterFilter: clusterFilteredProfiles.length,
         afterSameDayFilter: availableUserIds.length,
         afterWeeklyHoursFilter: weeklyHoursFilteredUserIds.length,
@@ -483,14 +486,15 @@ export async function POST(req: Request) {
         debug: {
           message: 'All promotors filtered out by hard filters',
           totalUsers: users?.length || 0,
-          totalProfiles: profiles?.length || 0,
+          dbProfiles: profiles?.length || 0,
+          workingProfiles: workingProfiles.length,
           afterClusterFilter: clusterFilteredProfiles.length,
           afterSameDayFilter: availableUserIds.length,
           afterWeeklyHoursFilter: weeklyHoursFilteredUserIds.length,
           finalFiltered: finalFilteredUserIds.length,
           targetCluster,
           hasMatchedMarket: !!matchedMarket,
-          existingRegions: profiles ? [...new Set(profiles.map((p: any) => p.region || 'NULL'))].join(', ') : 'NO PROFILES'
+          existingRegions: workingProfiles.length > 0 ? [...new Set(workingProfiles.map((p: any) => p.region || 'NULL'))].join(', ') : 'NO PROFILES'
         }
       })
     }
