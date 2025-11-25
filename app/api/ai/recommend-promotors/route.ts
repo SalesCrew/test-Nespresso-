@@ -97,7 +97,15 @@ export async function POST(req: Request) {
     } else if (assignment.postal_code) {
       // Fallback: determine cluster from assignment PLZ
       targetCluster = getClusterFromPLZ(assignment.postal_code)
-      console.log('🎯 Determined cluster from assignment PLZ:', targetCluster)
+      console.log('🎯 Determined cluster from assignment PLZ:', assignment.postal_code, '→', targetCluster)
+    } else {
+      console.log('⚠️ WARNING: No matched market cluster AND no assignment postal_code!')
+      console.log('⚠️ Assignment data:', {
+        id: assignment.id,
+        postal_code: assignment.postal_code,
+        region: assignment.region,
+        matched_market_id: assignment.matched_market_id
+      })
     }
 
     // Get all promotors with comprehensive data
@@ -127,19 +135,44 @@ export async function POST(req: Request) {
       console.log('⚠️ Profiles fetch error:', profilesError.message)
     }
     console.log(`✅ Found ${profiles?.length || 0} promotor profiles`)
+    
+    // DEBUG: Log all promotor regions to see what values are stored
+    if (profiles && profiles.length > 0) {
+      const regionCounts: { [key: string]: number } = {}
+      profiles.forEach((p: any) => {
+        const region = p.region || 'NULL/UNDEFINED'
+        regionCounts[region] = (regionCounts[region] || 0) + 1
+      })
+      console.log('📊 Promotor regions breakdown:', regionCounts)
+      
+      // Log first 5 profiles with their regions
+      const sampleProfiles = profiles.slice(0, 5).map((p: any) => {
+        const user = (users || []).find((u: any) => u.user_id === p.user_id)
+        return `${user?.display_name || 'Unknown'}: region="${p.region || 'NULL'}"`
+      })
+      console.log('👥 Sample promotor regions:', sampleProfiles.join(' | '))
+    }
 
     // HARD FILTER #1: Cluster Match - Filter promotors by target cluster
     let clusterFilteredProfiles = profiles || []
+    console.log(`🎯 Target cluster for filtering: "${targetCluster}"`)
+    
     if (targetCluster) {
       clusterFilteredProfiles = (profiles || []).filter((p: any) => p.region === targetCluster)
-      console.log(`🔍 FILTER #1 - Cluster Match: ${profiles?.length || 0} → ${clusterFilteredProfiles.length} (cluster: ${targetCluster})`)
+      console.log(`🔍 FILTER #1 - Cluster Match: ${profiles?.length || 0} → ${clusterFilteredProfiles.length} (target: ${targetCluster})`)
       
       // Log which promotors survived cluster filter
       const clusterSurvivors = clusterFilteredProfiles.map((p: any) => {
         const user = (users || []).find((u: any) => u.user_id === p.user_id)
         return user?.display_name || 'Unknown'
       })
-      console.log('✅ Cluster filter survivors:', clusterSurvivors.join(', '))
+      console.log('✅ Cluster filter survivors:', clusterSurvivors.length > 0 ? clusterSurvivors.join(', ') : 'NONE')
+      
+      // If no survivors, log what regions exist vs what we're looking for
+      if (clusterFilteredProfiles.length === 0 && profiles && profiles.length > 0) {
+        const existingRegions = [...new Set(profiles.map((p: any) => p.region || 'NULL'))].join(', ')
+        console.log(`⚠️ NO CLUSTER MATCH! Looking for "${targetCluster}" but profiles have: ${existingRegions}`)
+      }
     } else {
       console.log('⚠️ No target cluster determined, skipping cluster filter')
     }
@@ -383,7 +416,41 @@ export async function POST(req: Request) {
     
     // Final summary of who will be sent to AI
     const finalNames = filteredUsers.map(u => u.display_name).join(', ')
-    console.log(`🎯 Promotors being sent to AI for evaluation: ${finalNames}`)
+    console.log(`🎯 Promotors being sent to AI for evaluation: ${finalNames || 'NONE'}`)
+    
+    // EARLY RETURN if no promotors after filters
+    if (filteredUsers.length === 0) {
+      console.log('❌ NO PROMOTORS AFTER ALL FILTERS!')
+      console.log('📊 Filter summary:', {
+        totalUsers: users?.length || 0,
+        totalProfiles: profiles?.length || 0,
+        afterClusterFilter: clusterFilteredProfiles.length,
+        afterSameDayFilter: availableUserIds.length,
+        afterWeeklyHoursFilter: weeklyHoursFilteredUserIds.length,
+        finalFilteredUserIds: finalFilteredUserIds.length,
+        targetCluster
+      })
+      
+      return NextResponse.json({
+        success: true,
+        assignmentId,
+        recommendations: [],
+        timestamp: new Date().toISOString(),
+        source: 'no-candidates',
+        debug: {
+          message: 'All promotors filtered out by hard filters',
+          totalUsers: users?.length || 0,
+          totalProfiles: profiles?.length || 0,
+          afterClusterFilter: clusterFilteredProfiles.length,
+          afterSameDayFilter: availableUserIds.length,
+          afterWeeklyHoursFilter: weeklyHoursFilteredUserIds.length,
+          finalFiltered: finalFilteredUserIds.length,
+          targetCluster,
+          hasMatchedMarket: !!matchedMarket,
+          existingRegions: profiles ? [...new Set(profiles.map((p: any) => p.region || 'NULL'))].join(', ') : 'NO PROFILES'
+        }
+      })
+    }
     
     console.log(`👥 Building comprehensive promotor data for ${filteredUsers.length} promotors...`)
     const promotors = filteredUsers.map((u: any, index: number) => {
@@ -608,6 +675,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           model: 'gpt-5-chat-latest',
           temperature: 0.6,
+          response_format: { type: "json_object" },
           messages: [
             {
               role: 'system',
