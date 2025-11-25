@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       console.log('🏪 Fetching matched market details:', assignment.matched_market_id)
       const { data: market, error: marketError } = await svc
         .from('markets')
-        .select('id, name, plz, cluster, stamm_promotor_id')
+        .select('id, name, plz, cluster, stamm_promotor_id, internal_notes')
         .eq('id', assignment.matched_market_id)
         .maybeSingle()
       
@@ -786,7 +786,13 @@ Market Name: ${matchedMarket.name}
 Market PLZ: ${matchedMarket.plz}
 Market Cluster: ${matchedMarket.cluster}
 ${stammPromotorId ? `Stammpromotor ID: ${stammPromotorId} (MUSS auf Rank 1 wenn in Liste!)` : 'Kein Stammpromotor definiert'}
+${matchedMarket.internal_notes ? `Market Interne Notizen: ${matchedMarket.internal_notes}` : ''}
 ` : 'Kein Market Match für diesen Einsatz'}
+
+INTERNE NOTIZEN (SEKUNDÄRE BERÜCKSICHTIGUNG):
+Diese Notizen sind KEINE harten Filter, sondern zusätzliche Kontextinformationen. Berücksichtige sie NUR wenn sie relevante Hinweise zu Promotor-Eignung enthalten (z.B. "nicht Person X", "war unzufrieden mit Y", "Person Z sehr gut hier").
+- Einsatz SC-Interne Notizen: ${assignment.notes || 'Keine'}
+- Market Interne Notizen: ${matchedMarket?.internal_notes || 'Keine'}
 
 VERFÜGBARE PROMOTOR:INNEN (bereits hart gefiltert nach Cluster, Verfügbarkeit, Wochenstunden):
 ${JSON.stringify(promotorData, null, 2)}
@@ -812,7 +818,13 @@ WICHTIGE PRÜFKRITERIEN:
    - Faire Stundenverteilung (weniger Assignments diese Woche bevorzugen)
    - Erfahrung in ähnlichen Märkten (assignment context berücksichtigen)
    
-4. DETERMINISTISCHE RANGFOLGE:
+4. INTERNE NOTIZEN (sekundär, nur wenn relevant):
+   - Prüfe die SC-Internen Notizen und Market-Notizen auf Hinweise wie "nicht [Name]", "unzufrieden mit [Name]", "[Name] sehr gut"
+   - Falls eine Notiz einen Promotor negativ erwähnt → ranke diese Person NIEDRIGER oder schließe sie aus
+   - Falls eine Notiz einen Promotor positiv erwähnt → ranke diese Person HÖHER
+   - Ignoriere Notizen die keine Relevanz für die Promotor-Auswahl haben
+   
+5. DETERMINISTISCHE RANGFOLGE:
    - Bei Gleichstand: alphabetische Reihenfolge nach Name
    
 Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum: ${maxRecommendations} Empfehlungen. Falls weniger geeignete Kandidaten verfügbar sind, gib entsprechend weniger zurück.`
