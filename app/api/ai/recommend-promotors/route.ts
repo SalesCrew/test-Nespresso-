@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     const svc = createSupabaseServiceClient()
     console.log('📊 Database connection established')
     
-    // Get assignment details
+    // Get assignment details with matched_market_id
     console.log('🎯 Fetching assignment details for ID:', assignmentId)
     const { data: assignment, error: assignmentError } = await svc
       .from('assignments')
@@ -54,8 +54,51 @@ export async function POST(req: Request) {
       region: assignment.region,
       postal_code: assignment.postal_code,
       start_ts: assignment.start_ts,
-      end_ts: assignment.end_ts
+      end_ts: assignment.end_ts,
+      matched_market_id: assignment.matched_market_id
     })
+
+    // Get matched market details if available
+    let matchedMarket: any = null
+    let stammPromotorId: string | null = null
+    let marketCluster: string | null = null
+
+    if (assignment.matched_market_id) {
+      console.log('🏪 Fetching matched market details:', assignment.matched_market_id)
+      const { data: market, error: marketError } = await svc
+        .from('markets')
+        .select('id, name, plz, cluster, stamm_promotor_id')
+        .eq('id', assignment.matched_market_id)
+        .maybeSingle()
+      
+      if (market) {
+        matchedMarket = market
+        stammPromotorId = market.stamm_promotor_id
+        marketCluster = market.cluster
+        console.log('✅ Matched market found:', {
+          id: market.id,
+          name: market.name,
+          plz: market.plz,
+          cluster: market.cluster,
+          stammPromotorId: market.stamm_promotor_id
+        })
+      } else if (marketError) {
+        console.log('⚠️ Market fetch error:', marketError.message)
+      }
+    } else {
+      console.log('ℹ️ No matched market for this assignment')
+    }
+
+    // Determine target cluster from matched market or assignment PLZ
+    let targetCluster: string | null = null
+    if (marketCluster) {
+      targetCluster = marketCluster
+      console.log('🎯 Using cluster from matched market:', targetCluster)
+    } else if (assignment.postal_code) {
+      // Fallback: determine cluster from assignment PLZ
+      targetCluster = getClusterFromPLZ(assignment.postal_code)
+      console.log('🎯 Determined cluster from assignment PLZ:', targetCluster)
+    }
 
     // Get all promotors with comprehensive data
     console.log('👥 Fetching promotor users...')
@@ -77,7 +120,7 @@ export async function POST(req: Request) {
     console.log('📋 Fetching promotor profiles...')
     const { data: profiles, error: profilesError } = await svc
       .from('promotor_profiles')
-      .select('user_id, phone, region, postal_code, city, working_days')
+      .select('user_id, phone, region, postal_code, city, address, working_days, stammmarkt, has_driving_license, has_car')
       .in('user_id', userIds)
 
     if (profilesError) {
@@ -85,12 +128,23 @@ export async function POST(req: Request) {
     }
     console.log(`✅ Found ${profiles?.length || 0} promotor profiles`)
 
-    // Get active contracts for weekly hours
+    // HARD FILTER #1: Cluster Match - Filter promotors by target cluster
+    let clusterFilteredProfiles = profiles || []
+    if (targetCluster) {
+      clusterFilteredProfiles = (profiles || []).filter((p: any) => p.region === targetCluster)
+      console.log(`🔍 FILTER #1 - Cluster Match: ${profiles?.length || 0} → ${clusterFilteredProfiles.length} (cluster: ${targetCluster})`)
+    } else {
+      console.log('⚠️ No target cluster determined, skipping cluster filter')
+    }
+
+    const clusterFilteredUserIds = clusterFilteredProfiles.map((p: any) => p.user_id)
+
+    // Get active contracts for weekly hours (only for cluster-filtered promotors)
     console.log('📄 Fetching active contracts...')
     const { data: contracts, error: contractsError } = await svc
       .from('contracts')
       .select('user_id, hours_per_week, is_active')
-      .in('user_id', userIds)
+      .in('user_id', clusterFilteredUserIds)
       .eq('is_active', true)
 
     if (contractsError) {
@@ -107,6 +161,225 @@ export async function POST(req: Request) {
       formattedDate: assignmentDate.toLocaleDateString('de-DE')
     })
     
+    // Get week start and end for weekly hours calculation
+    const weekStart = getWeekStart(assignmentDate)
+    const weekEnd = getWeekEnd(assignmentDate)
+    console.log('📊 Current week range:', {
+      weekStart: weekStart.toLocaleDateString('de-DE'),
+      weekEnd: weekEnd.toLocaleDateString('de-DE'),
+      weekKW: currentKW
+    })
+    
+    // Get assignment date for same-day filtering
+    const assignmentDateOnly = new Date(assignmentDate.getFullYear(), assignmentDate.getMonth(), assignmentDate.getDate())
+    console.log('📅 Assignment date for filtering:', assignmentDateOnly.toLocaleDateString('de-DE'))
+    
+    // HARD FILTER #2: Same-Day Availability - Filter out promotors with assignments on same day
+    console.log('🚫 Fetching same-day assignments to exclude busy promotors...')
+    const { data: sameDayAssignments, error: sameDayError } = await svc
+      .from('assignment_participants')
+      .select(`
+        user_id,
+        assignments!inner(id, start_ts, end_ts, status, special_status)
+      `)
+      .in('user_id', clusterFilteredUserIds)
+      .gte('assignments.start_ts', assignmentDateOnly.toISOString())
+      .lt('assignments.start_ts', new Date(assignmentDateOnly.getTime() + 24 * 60 * 60 * 1000).toISOString())
+      .neq('assignments.id', assignmentId) // Exclude the current assignment itself
+
+    if (sameDayError) {
+      console.log('⚠️ Same-day assignments fetch error:', sameDayError.message)
+    }
+    
+    // Get promotors with special status assignments (krankenstand within 3 days, others on same day)
+    console.log('🏥 Fetching special status assignments to exclude promotors...')
+    const threeDaysFromAssignment = new Date(assignmentDateOnly.getTime() + 3 * 24 * 60 * 60 * 1000)
+    
+    const { data: specialStatusAssignments, error: specialStatusError } = await svc
+      .from('assignment_participants')
+      .select(`
+        user_id,
+        assignments!inner(id, start_ts, end_ts, special_status)
+      `)
+      .in('user_id', clusterFilteredUserIds)
+      .not('assignments.special_status', 'is', null)
+      .neq('assignments.id', assignmentId)
+
+    if (specialStatusError) {
+      console.log('⚠️ Special status assignments fetch error:', specialStatusError.message)
+    }
+
+    // Create set of user IDs who are busy on the same day or have special status conflicts
+    const busyUserIds = new Set<string>()
+    
+    // Add users with same-day assignments
+    if (sameDayAssignments) {
+      sameDayAssignments.forEach((item: any) => {
+        busyUserIds.add(item.user_id)
+      })
+    }
+    
+    // Add users with conflicting special statuses
+    if (specialStatusAssignments) {
+      specialStatusAssignments.forEach((item: any) => {
+        const assignmentStart = new Date(item.assignments.start_ts)
+        const assignmentDateOnlyStart = new Date(assignmentStart.getFullYear(), assignmentStart.getMonth(), assignmentStart.getDate())
+        const specialStatus = item.assignments.special_status
+        
+        if (specialStatus === 'krankenstand') {
+          // Krankenstand: exclude if within 3 days of selected assignment
+          if (assignmentDateOnlyStart >= assignmentDateOnly && assignmentDateOnlyStart <= threeDaysFromAssignment) {
+            busyUserIds.add(item.user_id)
+          }
+        } else if (['urlaub', 'zeitausgleich'].includes(specialStatus)) {
+          // Urlaub/Zeitausgleich: exclude only on same day
+          if (assignmentDateOnlyStart.getTime() === assignmentDateOnly.getTime()) {
+            busyUserIds.add(item.user_id)
+          }
+        }
+      })
+    }
+    
+    console.log(`🔍 FILTER #2 - Same-Day Availability: ${busyUserIds.size} promotors busy on this day`)
+    
+    // Filter cluster-filtered users to only available ones
+    const availableUserIds = clusterFilteredUserIds.filter((id: string) => !busyUserIds.has(id))
+    console.log(`✅ After same-day filter: ${clusterFilteredUserIds.length} → ${availableUserIds.length} available`)
+
+    // HARD FILTER #3: Weekly Hours - Filter out promotors who have completed their weekly hours
+    console.log('⏱️ Fetching current week assignments for workload calculation...')
+    const { data: currentWeekAssignments, error: weekAssignmentsError } = await svc
+      .from('assignment_participants')
+      .select(`
+        user_id,
+        assignments!inner(id, start_ts, end_ts, status)
+      `)
+      .in('user_id', availableUserIds)
+      .gte('assignments.start_ts', weekStart.toISOString())
+      .lte('assignments.start_ts', weekEnd.toISOString())
+
+    if (weekAssignmentsError) {
+      console.log('⚠️ Week assignments fetch error:', weekAssignmentsError.message)
+    }
+    console.log(`✅ Found ${currentWeekAssignments?.length || 0} current week assignment participations`)
+
+    // Create maps for quick lookup
+    console.log('🗂️ Creating lookup maps...')
+    const profileByUser = new Map(clusterFilteredProfiles.map((p: any) => [p.user_id, p]))
+    const contractByUser = new Map((contracts || []).map((c: any) => [c.user_id, c]))
+    console.log(`📋 Profile map: ${profileByUser.size} entries`)
+    console.log(`📄 Contract map: ${contractByUser.size} entries`)
+    
+    // Group current week assignments by user
+    console.log('📊 Grouping week assignments by user...')
+    const weekAssignmentsByUser = new Map()
+    ;(currentWeekAssignments || []).forEach((item: any) => {
+      const userId = item.user_id
+      if (!weekAssignmentsByUser.has(userId)) {
+        weekAssignmentsByUser.set(userId, [])
+      }
+      weekAssignmentsByUser.get(userId).push(item.assignments)
+    })
+    console.log(`⏱️ Week assignments grouped for ${weekAssignmentsByUser.size} users`)
+    
+    // Calculate worked hours and filter by availability
+    const weeklyHoursFilteredUserIds: string[] = []
+    const weeklyHoursFullUserIds: string[] = []
+    
+    availableUserIds.forEach((userId: string) => {
+      const contract = contractByUser.get(userId)
+      const contractHours = contract?.hours_per_week || 0
+      
+      if (contractHours === 0) {
+        // No contract hours defined, include promotor
+        weeklyHoursFilteredUserIds.push(userId)
+        return
+      }
+      
+      const weekAssignments = weekAssignmentsByUser.get(userId) || []
+      const workedHours = calculateWorkedHours(weekAssignments)
+      const remainingHours = Math.max(0, contractHours - workedHours)
+      
+      // Check if promotor has enough remaining hours (at least 6 hours for a typical assignment)
+      if (remainingHours >= 6) {
+        weeklyHoursFilteredUserIds.push(userId)
+      } else {
+        weeklyHoursFullUserIds.push(userId)
+      }
+    })
+    
+    console.log(`🔍 FILTER #3 - Weekly Hours: ${availableUserIds.length} → ${weeklyHoursFilteredUserIds.length} with available hours`)
+    console.log(`⏱️ ${weeklyHoursFullUserIds.length} promotors have full weekly hours`)
+    
+    // BACKUP: If ALL promotors are filtered out due to weekly hours, disable this filter
+    let finalFilteredUserIds = weeklyHoursFilteredUserIds
+    if (weeklyHoursFilteredUserIds.length === 0 && availableUserIds.length > 0) {
+      console.log('⚠️ BACKUP ACTIVATED: All promotors filtered by weekly hours, disabling this filter')
+      finalFilteredUserIds = availableUserIds
+    }
+    
+    console.log(`✅ Final filtered promotors: ${finalFilteredUserIds.length}`)
+    
+    // Filter users to only those who passed all hard filters
+    const filteredUsers = (users || []).filter((u: any) => finalFilteredUserIds.includes(u.user_id))
+    
+    console.log(`👥 Building comprehensive promotor data for ${filteredUsers.length} promotors...`)
+    const promotors = filteredUsers.map((u: any, index: number) => {
+      const profile = profileByUser.get(u.user_id) as any
+      const contract = contractByUser.get(u.user_id) as any
+      const weekAssignments = weekAssignmentsByUser.get(u.user_id) || []
+      
+      // Calculate worked hours this week
+      const workedHours = calculateWorkedHours(weekAssignments)
+      const contractHours = contract?.hours_per_week || 0
+      const remainingHours = Math.max(0, contractHours - workedHours)
+      
+      const promotorData = {
+        ...u,
+        phone: profile?.phone || u.phone || '+43 123 456 789',
+        region: profile?.region || 'wien-noe-bgl',
+        postal_code: profile?.postal_code || '',
+        city: profile?.city || '',
+        address: profile?.address || '', // Full address for distance calculation
+        working_days: profile?.working_days || [],
+        contract_hours_per_week: contractHours,
+        worked_hours_this_week: workedHours,
+        remaining_hours_this_week: remainingHours,
+        current_week_assignments: weekAssignments.length,
+        stammmarkt: profile?.stammmarkt || null,
+        has_driving_license: profile?.has_driving_license || false,
+        has_car: profile?.has_car || false,
+        // Flag if this is the Stammpromotor for the matched market
+        is_stammpromotor: stammPromotorId === u.user_id
+      }
+      
+      if (index < 3) {
+        console.log(`👤 Promotor ${index + 1}: ${promotorData.display_name}`, {
+          region: promotorData.region,
+          contractHours: promotorData.contract_hours_per_week,
+          workedHours: promotorData.worked_hours_this_week,
+          remainingHours: promotorData.remaining_hours_this_week,
+          weekAssignments: promotorData.current_week_assignments,
+          isStammpromotor: promotorData.is_stammpromotor
+        })
+      }
+      
+      return promotorData
+    })
+    
+    console.log(`✅ Built data for ${promotors.length} promotors`)
+    
+    // Check if Stammpromotor is available
+    let stammpromotorData: any = null
+    if (stammPromotorId) {
+      stammpromotorData = promotors.find((p: any) => p.user_id === stammPromotorId)
+      if (stammpromotorData) {
+        console.log('✅ Stammpromotor is AVAILABLE:', stammpromotorData.display_name)
+      } else {
+        console.log('⚠️ Stammpromotor is NOT available (filtered out or not in cluster)')
+      }
+    }
+
     // Get date range for context (4 weeks before/after)
     const contextStartDate = new Date(assignmentDate)
     contextStartDate.setDate(contextStartDate.getDate() - 28)
@@ -131,169 +404,6 @@ export async function POST(req: Request) {
       console.log('⚠️ Assignment history fetch error:', historyError.message)
     }
     console.log(`✅ Found ${assignmentHistory?.length || 0} historical assignments`)
-
-    // Get current week assignments for workload calculation
-    const weekStart = getWeekStart(assignmentDate)
-    const weekEnd = getWeekEnd(assignmentDate)
-    console.log('📊 Current week range:', {
-      weekStart: weekStart.toLocaleDateString('de-DE'),
-      weekEnd: weekEnd.toLocaleDateString('de-DE'),
-      weekKW: currentKW
-    })
-    
-    console.log('⏱️ Fetching current week assignments...')
-    const { data: currentWeekAssignments, error: weekAssignmentsError } = await svc
-      .from('assignment_participants')
-      .select(`
-        user_id,
-        assignments!inner(id, start_ts, end_ts, status)
-      `)
-      .in('user_id', userIds)
-      .gte('assignments.start_ts', weekStart.toISOString())
-      .lte('assignments.start_ts', weekEnd.toISOString())
-
-    if (weekAssignmentsError) {
-      console.log('⚠️ Week assignments fetch error:', weekAssignmentsError.message)
-    }
-    console.log(`✅ Found ${currentWeekAssignments?.length || 0} current week assignment participations`)
-
-    // Create maps for quick lookup
-    console.log('🗂️ Creating lookup maps...')
-    const profileByUser = new Map((profiles || []).map((p: any) => [p.user_id, p]))
-    const contractByUser = new Map((contracts || []).map((c: any) => [c.user_id, c]))
-    console.log(`📋 Profile map: ${profileByUser.size} entries`)
-    console.log(`📄 Contract map: ${contractByUser.size} entries`)
-    
-    // Group current week assignments by user
-    console.log('📊 Grouping week assignments by user...')
-    const weekAssignmentsByUser = new Map()
-    ;(currentWeekAssignments || []).forEach((item: any) => {
-      const userId = item.user_id
-      if (!weekAssignmentsByUser.has(userId)) {
-        weekAssignmentsByUser.set(userId, [])
-      }
-      weekAssignmentsByUser.get(userId).push(item.assignments)
-    })
-    console.log(`⏱️ Week assignments grouped for ${weekAssignmentsByUser.size} users`)
-    
-    // Get assignment date for same-day filtering
-    const assignmentDateOnly = new Date(assignmentDate.getFullYear(), assignmentDate.getMonth(), assignmentDate.getDate())
-    console.log('📅 Assignment date for filtering:', assignmentDateOnly.toLocaleDateString('de-DE'))
-    
-    // Get promotors who already have assignments on the same day
-    console.log('🚫 Fetching same-day assignments to exclude busy promotors...')
-    const { data: sameDayAssignments, error: sameDayError } = await svc
-      .from('assignment_participants')
-      .select(`
-        user_id,
-        assignments!inner(id, start_ts, end_ts, status, special_status)
-      `)
-      .in('user_id', userIds)
-      .gte('assignments.start_ts', assignmentDateOnly.toISOString())
-      .lt('assignments.start_ts', new Date(assignmentDateOnly.getTime() + 24 * 60 * 60 * 1000).toISOString())
-      .neq('assignments.id', assignmentId) // Exclude the current assignment itself
-
-    if (sameDayError) {
-      console.log('⚠️ Same-day assignments fetch error:', sameDayError.message)
-    }
-    
-    // Get promotors with special status assignments (krankenstand within 3 days, others on same day)
-    console.log('🏥 Fetching special status assignments to exclude promotors...')
-    const threeDaysFromAssignment = new Date(assignmentDateOnly.getTime() + 3 * 24 * 60 * 60 * 1000)
-    
-    const { data: specialStatusAssignments, error: specialStatusError } = await svc
-      .from('assignment_participants')
-      .select(`
-        user_id,
-        assignments!inner(id, start_ts, end_ts, special_status)
-      `)
-      .in('user_id', userIds)
-      .not('assignments.special_status', 'is', null)
-      .neq('assignments.id', assignmentId)
-
-    if (specialStatusError) {
-      console.log('⚠️ Special status assignments fetch error:', specialStatusError.message)
-    }
-
-    // Create set of user IDs who are busy on the same day or have special status conflicts
-    const busyUserIds = new Set<string>()
-    
-    // Add users with same-day assignments
-    if (sameDayAssignments) {
-      sameDayAssignments.forEach((item: any) => {
-        busyUserIds.add(item.user_id)
-      })
-    }
-    
-    // Add users with conflicting special statuses
-    if (specialStatusAssignments) {
-      specialStatusAssignments.forEach((item: any) => {
-      const assignmentStart = new Date(item.assignments.start_ts)
-      const assignmentDateOnlyStart = new Date(assignmentStart.getFullYear(), assignmentStart.getMonth(), assignmentStart.getDate())
-      const specialStatus = item.assignments.special_status
-      
-      if (specialStatus === 'krankenstand') {
-        // Krankenstand: exclude if within 3 days of selected assignment
-        if (assignmentDateOnlyStart >= assignmentDateOnly && assignmentDateOnlyStart <= threeDaysFromAssignment) {
-          busyUserIds.add(item.user_id)
-        }
-      } else if (['urlaub', 'zeitausgleich'].includes(specialStatus)) {
-        // Urlaub/Zeitausgleich: exclude only on same day
-        if (assignmentDateOnlyStart.getTime() === assignmentDateOnly.getTime()) {
-          busyUserIds.add(item.user_id)
-        }
-      }
-    })
-    }
-    
-    console.log(`🚫 Found ${busyUserIds.size} promotors with same-day assignments or special status conflicts to exclude:`, Array.from(busyUserIds).slice(0, 3))
-    
-    // Filter out busy promotors before building data
-    const availableUsers = (users || []).filter((u: any) => !busyUserIds.has(u.user_id))
-    console.log(`✅ Filtered promotors: ${users?.length || 0} total → ${availableUsers.length} available on assignment day`)
-
-    console.log('👥 Building comprehensive promotor data...')
-    const promotors = availableUsers.map((u: any, index: number) => {
-      const profile = profileByUser.get(u.user_id) as any
-      const contract = contractByUser.get(u.user_id) as any
-      const weekAssignments = weekAssignmentsByUser.get(u.user_id) || []
-      
-      // Calculate worked hours this week
-      const workedHours = calculateWorkedHours(weekAssignments)
-      const contractHours = contract?.hours_per_week || 0
-      const remainingHours = Math.max(0, contractHours - workedHours)
-      
-      const promotorData = {
-        ...u,
-        phone: profile?.phone || u.phone || '+43 123 456 789',
-        region: profile?.region || 'wien-noe-bgl',
-        postal_code: profile?.postal_code || '',
-        city: profile?.city || '',
-        address: profile?.address || '', // Full address for distance calculation
-        working_days: profile?.working_days || [],
-        contract_hours_per_week: contractHours,
-        worked_hours_this_week: workedHours,
-        remaining_hours_this_week: remainingHours,
-        current_week_assignments: weekAssignments.length,
-        stammmarkt: profile?.stammmarkt || null, // Placeholder for Stammmarkt data
-        has_driving_license: profile?.has_driving_license || false, // Placeholder for Führerschein
-        has_car: profile?.has_car || false // Placeholder for Auto
-      }
-      
-      if (index < 3) {
-        console.log(`👤 Promotor ${index + 1}: ${promotorData.display_name}`, {
-          region: promotorData.region,
-          contractHours: promotorData.contract_hours_per_week,
-          workedHours: promotorData.worked_hours_this_week,
-          remainingHours: promotorData.remaining_hours_this_week,
-          weekAssignments: promotorData.current_week_assignments
-        })
-      }
-      
-      return promotorData
-    })
-    
-    console.log(`✅ Built data for ${promotors.length} promotors`)
 
     // Helper functions
     function getCalendarWeek(date: Date): number {
@@ -437,43 +547,40 @@ export async function POST(req: Request) {
           model: "gpt-5-nano",
           input: `Du bist GPT-5 nano und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
 
+WICHTIG: Die Liste der Promotor:innen wurde bereits hart gefiltert und enthält NUR Personen, die:
+1. Im EXAKT GLEICHEN Cluster/Bundesland wie der Einsatz sind (harte Vorfilterung)
+2. Am Tag des Einsatzes VERFÜGBAR sind (keine anderen Einsätze, keine Krankenstände, keine Urlaube)
+3. Genug verbleibende Wochenstunden haben (oder es gibt KEINE anderen verfügbaren Promotor:innen)
+
+STAMMPROMOTOR PRIORITÄT (HÖCHSTE PRIORITÄT):
+- Wenn ein Promotor das Feld "is_stammpromotor: true" hat, bedeutet dies, dass dieser Markt sein STAMMMARKT ist
+- Ein Stammpromotor MUSS IMMER auf Rank 1 gesetzt werden, sofern verfügbar
+- Dies hat ABSOLUTEN VORRANG vor allen anderen Kriterien
+
 grobe regeln
 - Nutze ausschließlich die übergebenen Angaben
 - Erfinde NICHTS, nutze keine externen Quellen
 - Führe keine Nebenaufgaben aus
-- HARTE REGEL (Cluster/Bundesland): Das Cluster/Bundesland der/des Promotor:in MUSS 1:1 mit dem Cluster/Bundesland des Einsatzes übereinstimmen. Keine Cross-Cluster-Vorschläge. Beispiel: "Wien/NÖ/BGL" ↔ nur Einsätze in "Wien/NÖ/BGL".
+- Die Cluster-Filterung wurde bereits durchgeführt - alle Promotor:innen in der Liste sind im richtigen Cluster
+- Die Verfügbarkeitsprüfung wurde bereits durchgeführt - alle Promotor:innen in der Liste sind am Tag verfügbar
 - EINDEUTIGKEIT: Jede/r Promotor:in darf nur EINMAL in den Empfehlungen erscheinen - keine Duplikate!
-- Prüfe harte Eignung: Verfügbarkeit, verbleibende Wochenstunden, Muss-Anforderungen, keine Sperren
-- Bewerte geeignete Personen nach: Nähe/Anreise, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
+- Prüfe Eignung: verbleibende Wochenstunden, Skills/Notizen, Zuverlässigkeit/Erfahrung, faire Stundenverteilung
+- Bewerte nach: Stammpromotor-Match (höchste Priorität!), Nähe/Anreise, Skills, Zuverlässigkeit
 - Löse Gleichstände strikt deterministisch (alphabetische Reihenfolge bei gleicher Bewertung)
 
 STRIKTE REGELN WICHTIG!!!!
-⦁ Wenn ein Promotor aus demselben Bundesland verfügbar ist, MUSS AUSNAHMSLOS zuerst ein Promotor aus demselben Bundesland zugeteilt werden. Bundesland sind die Cluster sowie KNT oder Wien/Nö/Bgl. Ziel ist es IMMER, dass das Cluster vom Einsatz gleich ist wie das vom Promotor. Gibt es in diesem Cluster KEINE freien Promotoren, wechsle strikt zum geografisch nächstmöglichen Cluster, berechne anhand der markt adresse und PLZ und der Adresse des promotors die Distanz und nimm IMMER den nächstgelegenen verfügbaren Promotor.
+⦁ **STAMMPROMOTOR HAT OBERSTE PRIORITÄT**: Wenn ein Promotor "is_stammpromotor: true" hat, MUSS dieser auf Rank 1 gesetzt werden. Dies überschreibt alle anderen Kriterien.
 
-⦁ Viele Promotoren haben einen Stammmarkt; DIESER HAT OBERSTE PRIORITÄT. Versuche IMMER an erster Stelle, Promotoren ihrem Stammmarkt zuzuordnen – ABER NUR, wenn sie am Tag des zu matchenden Termins tatsächlich frei sind.
-
-⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird später im Prompt zur Verfügung gestellt. Du MUSST die offenen Stunden berechnen, indem du die Promotions der aktuellen Kalenderwoche mit den Wochenstunden abgleichst. Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause). Mit dieser Information und dem Abgleich der Einsätze in dieser KW MUSS eindeutig feststehen, wie viele Stunden für den Promotor noch offen sind.
+⦁ Die Stunden pro Woche jedes Promotors stehen im Dienstvertrag; diese Info wird zur Verfügung gestellt. Die offenen Stunden sind bereits berechnet (remaining_hours_this_week). Einsätze 9:30–18:30 zählen als 8 Stunden (1 Stunde Pause), Einsätze 9:30–15:30 zählen als 6 Stunden (keine Pause).
 
 ⦁ STANDARDISIERTE REASONING-STRUKTUR: Jede Empfehlung MUSS diese exakte Reihenfolge einhalten:
-  1. CLUSTER-MATCH: "Cluster: [Einsatz-Cluster] ↔ [Promotor-Cluster] ✓/✗"
-  2. WOCHENSTUNDEN: "Stunden: [gearbeitet]h/[geplant]h (noch [verfügbar]h frei)"
-  3. STAMMMARKT: "Stammmarkt: [Name/keiner] - [Match-Status]" (nur wenn Stammmarkt vorhanden)
-  4. WEITERE EIGNUNG: Kurze zusätzliche Begründung
-
-⦁ Wenn mehrere Promotoren gut geeignet sind und es KEINEN verfügbaren Promotor mit diesem Markt als Stammmarkt gibt, MUSST du anhand der Adresse und PLZ des Marktes sowie der Heimatadresse der Promotoren die Distanz berechnen und STRIKT den nächstgelegenen auswählen.
-
-⦁ Schlage NUR Promotoren vor, die an diesem Tag einen Arbeitstag haben (angezeigt in Abkürzungen: Mo, Di, Mi …). Falls es KEINE geeigneten Promotoren gibt, DARFST du ausnahmsweise nicht arbeitende Promotoren in der Nähe vorschlagen, sofern sie an diesem Tag KEINEN anderen Termin haben.
+  1. STAMMPROMOTOR-CHECK: Falls is_stammpromotor=true: "✓ STAMMPROMOTOR - Dieser Markt ist der Stammmarkt von [Name]"
+  2. CLUSTER-MATCH: "Cluster: [Promotor-Cluster] (bereits vorgeprüft ✓)"
+  3. VERFÜGBARKEIT: "Verfügbar am [Datum] (bereits vorgeprüft ✓)"
+  4. WOCHENSTUNDEN: "Stunden: [gearbeitet]h/[geplant]h (noch [verfügbar]h frei)"
+  5. WEITERE EIGNUNG: Kurze zusätzliche Begründung (Nähe, Erfahrung, etc.)
 
 ⦁ Für Strecken, die zu lang für öffentliche Verkehrsmittel sind, PRÜFE zwingend, ob die Promotoren Führerschein und Auto haben, und schlage BEVORZUGT diese vor.
-
-PLZ-zu-Cluster-Regeln (Österreich – Zuordnung für Bundesland/Cluster):
-- W/NÖ/BGL: PLZ 1000–1610 (Wien) sowie 2000–3999 grundsätzlich W/NÖ/BGL. In 7000–7999 ist Burgenland ebenfalls W/NÖ/BGL (Ausnahme: 7421 → ST).
-- OÖ: PLZ 4000–4999 (Ausnahmen, die zu W/NÖ/BGL gehören: 4300, 4303, 4431–4432, 4441, 4482, 4392). Zusätzlich OÖ-Inseln im 5xxx-Bereich: 5120–5145, 5166, 5211–5283, 5310, 5311, 5360.
-- S (Salzburg): PLZ 5000–5999 abzüglich der oben genannten OÖ-Inseln in 5xxx.
-- T (Tirol): PLZ 6000–6699 sowie 9782 und 9900–9999.
-- V (Vorarlberg): PLZ 6700–6999.
-- ST (Steiermark): PLZ 8000–8999 (Ausnahme: 8380–8385 → W/NÖ/BGL) sowie 7421 (aus 7xxx) und 9323 (aus 9xxx) → ST.
-- K (Kärnten): PLZ 9000–9999 (Ausnahmen: 9323 → ST; 9782 und 9900–9999 → T).
 
 AUSGABEFORMAT:
 Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} Einträgen. Falls weniger als ${maxRecommendations} geeignete Promotor:innen gefunden werden, ist es völlig in Ordnung, weniger Empfehlungen zurückzugeben:
@@ -485,14 +592,22 @@ Antworte ausschließlich mit einem JSON-Array mit maximal ${maxRecommendations} 
     "phone": "string", 
     "confidence": number zwischen 0.0 und 1.0,
     "rank": number von 1 bis zur Anzahl der tatsächlichen Empfehlungen,
-    "reasoning": "Standardisierte Begründung in genau dieser Reihenfolge: 1) Cluster-Match (Einsatz-Cluster vs. Promotor-Cluster), 2) Wochenstunden (geplant vs. gearbeitet), 3) Stammmarkt-Match falls vorhanden (höchste Priorität!), 4) weitere Eignung."
+    "reasoning": "Standardisierte Begründung: 1) Stammpromotor-Check (falls zutreffend), 2) Cluster-Match (vorgeprüft), 3) Verfügbarkeit (vorgeprüft), 4) Wochenstunden, 5) weitere Eignung."
   }
 ]
 
 EINSATZ (KW ${currentKW}):
 ${JSON.stringify(assignmentData, null, 2)}
 
-VERFÜGBARE PROMOTOR:INNEN:
+${matchedMarket ? `
+MATCHED MARKET INFO:
+Market Name: ${matchedMarket.name}
+Market PLZ: ${matchedMarket.plz}
+Market Cluster: ${matchedMarket.cluster}
+${stammPromotorId ? `Stammpromotor ID: ${stammPromotorId} (MUSS auf Rank 1 wenn in Liste!)` : 'Kein Stammpromotor definiert'}
+` : 'Kein Market Match für diesen Einsatz'}
+
+VERFÜGBARE PROMOTOR:INNEN (bereits hart gefiltert nach Cluster, Verfügbarkeit, Wochenstunden):
 ${JSON.stringify(promotorData, null, 2)}
 
 ASSIGNMENT RESTRICTIONS:
@@ -502,18 +617,21 @@ ASSIGNMENT CONTEXT (4 Wochen vorher/nachher):
 ${JSON.stringify(assignmentContext, null, 2)}
 
 WICHTIGE PRÜFKRITERIEN:
-1. HARTE EIGNUNG:
-   - EXAKTE CLUSTER-/BUNDESLAND-ÜBEREINSTIMMUNG (AUSSCHLUSSKRITERIUM): Wenn das Cluster des/der Promotor:in nicht exakt dem Einsatz-Cluster entspricht → Kandidat strikt ausschließen. Beispiel: "Wien/NÖ/BGL" darf NUR Einsätze in "Wien/NÖ/BGL".
-   - Verfügbarkeit an working_days prüfen
-   - Verbleibende Wochenstunden (remaining_hours_this_week) ausreichend
-   - Keine Sperren in assignment restrictions
+1. STAMMPROMOTOR:
+   - Falls ein Promotor is_stammpromotor=true hat → ZWINGEND auf Rank 1 setzen
+   - Dies hat ABSOLUTEN VORRANG vor allen anderen Kriterien
    
-2. BEWERTUNGSKRITERIEN:
-   - Nähe/Anreise (postal_code Vergleich)
+2. HARTE EIGNUNG (bereits vorgeprüft):
+   - ✓ Cluster/Bundesland-Match (alle in der Liste sind im richtigen Cluster)
+   - ✓ Verfügbarkeit am Tag (alle in der Liste sind am Tag frei)
+   - ✓ Wochenstunden (alle in der Liste haben ausreichend Stunden, außer es gibt keine Alternative)
+   
+3. BEWERTUNGSKRITERIEN:
+   - Nähe/Anreise (postal_code, address Vergleich)
    - Faire Stundenverteilung (weniger Assignments diese Woche bevorzugen)
    - Erfahrung in ähnlichen Märkten (assignment context berücksichtigen)
    
-3. DETERMINISTISCHE RANGFOLGE:
+4. DETERMINISTISCHE RANGFOLGE:
    - Bei Gleichstand: alphabetische Reihenfolge nach Name
    
 Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum: ${maxRecommendations} Empfehlungen. Falls weniger geeignete Kandidaten verfügbar sind, gib entsprechend weniger zurück.`,
@@ -602,7 +720,7 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
 
       // Validate and sanitize recommendations
       console.log('🔍 Validating and sanitizing recommendations...')
-      const validRecommendations = recommendations
+      let validRecommendations = recommendations
         .slice(0, maxRecommendations)
         .map((rec: any, index: number) => {
           const validated = {
@@ -626,6 +744,27 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
           
           return validated
         })
+
+      // ENFORCE STAMMPROMOTOR PRIORITY: If stammpromotor is in recommendations but not rank 1, move to rank 1
+      if (stammpromotorData) {
+        const stammIndex = validRecommendations.findIndex((r: any) => r.promotorId === stammPromotorId)
+        if (stammIndex > 0) {
+          console.log(`⚠️ Stammpromotor found at rank ${stammIndex + 1}, moving to rank 1`)
+          const stammRec = validRecommendations[stammIndex]
+          validRecommendations.splice(stammIndex, 1)
+          validRecommendations.unshift(stammRec)
+          // Re-rank all recommendations
+          validRecommendations = validRecommendations.map((r: any, idx: number) => ({
+            ...r,
+            rank: idx + 1
+          }))
+          console.log(`✅ Stammpromotor now at rank 1: ${stammRec.promotorName}`)
+        } else if (stammIndex === 0) {
+          console.log(`✅ Stammpromotor already at rank 1: ${stammpromotorData.display_name}`)
+        } else {
+          console.log(`ℹ️ Stammpromotor not in AI recommendations (might not be best match based on other criteria)`)
+        }
+      }
 
       console.log(`✅ Final recommendations count: ${validRecommendations.length}`)
       console.log('🎯 AI recommendation process completed successfully')
@@ -691,4 +830,65 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
       timestamp: new Date().toISOString()
     }, { status: 500 })
   }
+}
+
+// Helper function to map PLZ to cluster (same logic as in einsatzplan page)
+function getClusterFromPLZ(plz: string): string {
+  const plzNum = parseInt(plz);
+  if (isNaN(plzNum)) return 'wien-noe-bgl';
+  
+  // W/NÖ/BGL cluster (W, N, B initials)
+  if (plzNum >= 1000 && plzNum <= 1610) return 'wien-noe-bgl'; // Vienna
+  if (plzNum >= 2000 && plzNum <= 3999) {
+    // Special Burgenland ranges within this area
+    if ((plzNum >= 2421 && plzNum <= 2425) || (plzNum >= 2473 && plzNum <= 2475) || plzNum === 2491) return 'wien-noe-bgl';
+    // Special OÖ ranges
+    if (plzNum >= 3334 && plzNum <= 3335) return 'oberoesterreich';
+    return 'wien-noe-bgl'; // Most is Niederösterreich
+  }
+  
+  // OÖ (O initial)
+  if (plzNum >= 4000 && plzNum <= 4999) {
+    // Special Niederösterreich codes in this range
+    if (plzNum === 4300 || plzNum === 4303 || (plzNum >= 4431 && plzNum <= 4432) || 
+        plzNum === 4441 || plzNum === 4482 || plzNum === 4392) return 'wien-noe-bgl';
+    return 'oberoesterreich';
+  }
+  
+  // Mixed Salzburg (Sa) and OÖ (O)
+  if (plzNum >= 5000 && plzNum <= 5999) {
+    // OÖ ranges in 5xxx area
+    if ((plzNum >= 5120 && plzNum <= 5145) || plzNum === 5166 || 
+        (plzNum >= 5211 && plzNum <= 5283) || plzNum === 5310 || 
+        plzNum === 5311 || plzNum === 5360) return 'oberoesterreich';
+    return 'salzburg'; // Salzburg
+  }
+  
+  // Tirol (T) and Vorarlberg (V)
+  if (plzNum >= 6000 && plzNum <= 6999) {
+    if (plzNum >= 6700) return 'vorarlberg'; // Vorarlberg
+    return 'tirol'; // Tirol
+  }
+  
+  // Burgenland (B) range
+  if (plzNum >= 7000 && plzNum <= 7999) {
+    if (plzNum === 7421) return 'steiermark'; // Special Steiermark code
+    return 'wien-noe-bgl'; // Burgenland
+  }
+  
+  // Steiermark (St)
+  if (plzNum >= 8000 && plzNum <= 8999) {
+    // Special Burgenland ranges in this area
+    if (plzNum >= 8380 && plzNum <= 8385) return 'wien-noe-bgl';
+    return 'steiermark'; // Steiermark
+  }
+  
+  // Kärnten (K) and some Tirol (T)
+  if (plzNum >= 9000 && plzNum <= 9999) {
+    if (plzNum === 9323) return 'steiermark'; // Special Steiermark
+    if (plzNum === 9782 || plzNum >= 9900) return 'tirol'; // Tirol codes
+    return 'kaernten'; // Kärnten
+  }
+  
+  return 'wien-noe-bgl';
 }
