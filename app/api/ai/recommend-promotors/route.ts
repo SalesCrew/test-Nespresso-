@@ -133,6 +133,13 @@ export async function POST(req: Request) {
     if (targetCluster) {
       clusterFilteredProfiles = (profiles || []).filter((p: any) => p.region === targetCluster)
       console.log(`🔍 FILTER #1 - Cluster Match: ${profiles?.length || 0} → ${clusterFilteredProfiles.length} (cluster: ${targetCluster})`)
+      
+      // Log which promotors survived cluster filter
+      const clusterSurvivors = clusterFilteredProfiles.map((p: any) => {
+        const user = (users || []).find((u: any) => u.user_id === p.user_id)
+        return user?.display_name || 'Unknown'
+      })
+      console.log('✅ Cluster filter survivors:', clusterSurvivors.join(', '))
     } else {
       console.log('⚠️ No target cluster determined, skipping cluster filter')
     }
@@ -242,9 +249,27 @@ export async function POST(req: Request) {
     
     console.log(`🔍 FILTER #2 - Same-Day Availability: ${busyUserIds.size} promotors busy on this day`)
     
+    // Log who is busy
+    if (busyUserIds.size > 0) {
+      const busyNames = Array.from(busyUserIds).map(id => {
+        const user = (users || []).find((u: any) => u.user_id === id)
+        return user?.display_name || 'Unknown'
+      })
+      console.log('🚫 Busy promotors:', busyNames.join(', '))
+    }
+    
     // Filter cluster-filtered users to only available ones
     const availableUserIds = clusterFilteredUserIds.filter((id: string) => !busyUserIds.has(id))
     console.log(`✅ After same-day filter: ${clusterFilteredUserIds.length} → ${availableUserIds.length} available`)
+    
+    // Log who is available
+    if (availableUserIds.length > 0) {
+      const availableNames = availableUserIds.map(id => {
+        const user = (users || []).find((u: any) => u.user_id === id)
+        return user?.display_name || 'Unknown'
+      })
+      console.log('✅ Available promotors:', availableNames.join(', '))
+    }
 
     // HARD FILTER #3: Weekly Hours - Filter out promotors who have completed their weekly hours
     console.log('⏱️ Fetching current week assignments for workload calculation...')
@@ -311,17 +336,54 @@ export async function POST(req: Request) {
     console.log(`🔍 FILTER #3 - Weekly Hours: ${availableUserIds.length} → ${weeklyHoursFilteredUserIds.length} with available hours`)
     console.log(`⏱️ ${weeklyHoursFullUserIds.length} promotors have full weekly hours`)
     
+    // Log who has available hours
+    if (weeklyHoursFilteredUserIds.length > 0) {
+      const availableHoursNames = weeklyHoursFilteredUserIds.map(id => {
+        const user = (users || []).find((u: any) => u.user_id === id)
+        const contract = contractByUser.get(id)
+        const weekAssignments = weekAssignmentsByUser.get(id) || []
+        const worked = calculateWorkedHours(weekAssignments)
+        const remaining = Math.max(0, (contract?.hours_per_week || 0) - worked)
+        return `${user?.display_name || 'Unknown'} (${remaining}h free)`
+      })
+      console.log('✅ Promotors with available hours:', availableHoursNames.join(', '))
+    }
+    
+    // Log who has full hours
+    if (weeklyHoursFullUserIds.length > 0) {
+      const fullHoursNames = weeklyHoursFullUserIds.map(id => {
+        const user = (users || []).find((u: any) => u.user_id === id)
+        const contract = contractByUser.get(id)
+        const weekAssignments = weekAssignmentsByUser.get(id) || []
+        const worked = calculateWorkedHours(weekAssignments)
+        const remaining = Math.max(0, (contract?.hours_per_week || 0) - worked)
+        return `${user?.display_name || 'Unknown'} (${remaining}h free)`
+      })
+      console.log('⏱️ Promotors with full hours:', fullHoursNames.join(', '))
+    }
+    
     // BACKUP: If ALL promotors are filtered out due to weekly hours, disable this filter
     let finalFilteredUserIds = weeklyHoursFilteredUserIds
     if (weeklyHoursFilteredUserIds.length === 0 && availableUserIds.length > 0) {
       console.log('⚠️ BACKUP ACTIVATED: All promotors filtered by weekly hours, disabling this filter')
       finalFilteredUserIds = availableUserIds
+      
+      // Log backup survivors
+      const backupNames = finalFilteredUserIds.map(id => {
+        const user = (users || []).find((u: any) => u.user_id === id)
+        return user?.display_name || 'Unknown'
+      })
+      console.log('🆘 Backup mode - including all available promotors:', backupNames.join(', '))
     }
     
     console.log(`✅ Final filtered promotors: ${finalFilteredUserIds.length}`)
     
     // Filter users to only those who passed all hard filters
     const filteredUsers = (users || []).filter((u: any) => finalFilteredUserIds.includes(u.user_id))
+    
+    // Final summary of who will be sent to AI
+    const finalNames = filteredUsers.map(u => u.display_name).join(', ')
+    console.log(`🎯 Promotors being sent to AI for evaluation: ${finalNames}`)
     
     console.log(`👥 Building comprehensive promotor data for ${filteredUsers.length} promotors...`)
     const promotors = filteredUsers.map((u: any, index: number) => {
@@ -523,29 +585,33 @@ export async function POST(req: Request) {
       return restrictions
     }
 
-    // Call GPT-5 nano for recommendations
-    console.log('🤖 Calling GPT-5 nano for AI analysis...')
+    // Call GPT-5 chat-latest for recommendations
+    console.log('🤖 Calling GPT-5 chat-latest for AI analysis...')
     console.log('📤 AI request parameters:', {
-      model: 'gpt-5-nano',
-      temperature: '1 (default, only supported value)',
-      max_completion_tokens: 2000,
+      model: 'gpt-5-chat-latest',
+      temperature: 0.6,
       promotorCount: promotorData.length,
       assignmentKW: currentKW,
+      hasStammpromotor: !!stammpromotorData,
       hasRestrictions: assignmentRestrictions.length > 0,
       contextAssignments: assignmentContext.length
     })
     
     try {
-      // GPT-5 uses the new Responses API, not Chat Completions
-      const response = await fetch('https://api.openai.com/v1/responses', {
+      // GPT-5 chat-latest uses Chat Completions API (like Eddie)
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "gpt-5-nano",
-          input: `Du bist GPT-5 nano und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
+          model: 'gpt-5-chat-latest',
+          temperature: 0.6,
+          messages: [
+            {
+              role: 'system',
+              content: `Du bist GPT-5 und wirkst in diesem System als deterministischer Einsatz-Matcher für Nespresso-Promotions. Pro Aufruf erhältst du strukturierte Informationen zu genau einem Einsatz sowie eine Liste von Promotor:innen mit aktuellen Daten der Kalenderwoche. 
 
 WICHTIG: Die Liste der Promotor:innen wurde bereits hart gefiltert und enthält NUR Personen, die:
 1. Im EXAKT GLEICHEN Cluster/Bundesland wie der Einsatz sind (harte Vorfilterung)
@@ -634,14 +700,13 @@ WICHTIGE PRÜFKRITERIEN:
 4. DETERMINISTISCHE RANGFOLGE:
    - Bei Gleichstand: alphabetische Reihenfolge nach Name
    
-Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum: ${maxRecommendations} Empfehlungen. Falls weniger geeignete Kandidaten verfügbar sind, gib entsprechend weniger zurück.`,
-          reasoning: {
-            effort: "minimal" // For fast response times with GPT-5-nano
-          },
-          text: {
-            verbosity: "low" // Keep responses concise
-          },
-          // response_format is not mentioned in GPT-5 docs, might not be supported
+Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum: ${maxRecommendations} Empfehlungen. Falls weniger geeignete Kandidaten verfügbar sind, gib entsprechend weniger zurück.`
+            },
+            {
+              role: 'user',
+              content: `Bitte analysiere die Promotor:innen für diesen Einsatz und gib JSON-Empfehlungen zurück.`
+            }
+          ]
         })
       })
 
@@ -655,46 +720,17 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
 
       const result = await response.json()
       console.log('📥 GPT-5 Response structure:', {
-        hasOutputText: typeof result.output_text === 'string',
-        outputType: Array.isArray(result.output) ? 'array' : typeof result.output,
-        responseId: result.response_id,
-        reasoningTokens: result.reasoning_tokens,
-        outputTokens: result.output_tokens
+        hasChoices: Array.isArray(result?.choices),
+        choiceCount: result?.choices?.length || 0,
+        responseId: result?.id
       })
 
-      // Helper to robustly extract text from GPT-5 Responses API
-      const extractTextFromResponse = (res: any): string => {
-        if (typeof res?.output_text === 'string') return res.output_text
-        let text = ''
-        const out = res?.output
-        if (Array.isArray(out)) {
-          for (const item of out) {
-            // item.content can be string or array of segments
-            const content = (item && item.content) || []
-            if (typeof content === 'string') {
-              text += content + '\n'
-            } else if (Array.isArray(content)) {
-              for (const seg of content) {
-                if (typeof seg?.text === 'string') text += seg.text + '\n'
-                else if (typeof seg === 'string') text += seg + '\n'
-              }
-            }
-          }
-        }
-        if (!text && typeof res === 'string') return res
-        return text.trim()
-      }
-
-      const aiResponseRaw: any = result
-      const aiResponseText: string = extractTextFromResponse(aiResponseRaw)
+      // Extract AI response from Chat Completions format
+      const aiResponseText: string = result?.choices?.[0]?.message?.content || ''
 
       console.log('📥 Raw AI response received:', {
         hasResponse: !!aiResponseText,
-        responseLength: aiResponseText.length,
-        usedOutputText: typeof result.output_text === 'string',
-        usedOutputArray: Array.isArray(result.output),
-        reasoningTokens: result.reasoning_tokens || 0,
-        outputTokens: result.output_tokens || 0
+        responseLength: aiResponseText.length
       })
       
       if (!aiResponseText) {
@@ -702,7 +738,7 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
         throw new Error('No response from GPT-5')
       }
 
-      const preview = (typeof aiResponseText === 'string' ? aiResponseText : JSON.stringify(aiResponseText)).slice(0, 200)
+      const preview = aiResponseText.slice(0, 200)
       console.log('🔍 AI Response Preview:', preview + '...')
 
       // Parse AI response
@@ -774,15 +810,14 @@ Analysiere und empfehle die besten Promotor:innen für KW ${currentKW}. Maximum:
         assignmentId,
         recommendations: validRecommendations,
         timestamp: new Date().toISOString(),
-        source: 'gpt-5-nano',
+        source: 'gpt-5-chat-latest',
         debug: {
           totalPromotors: promotors.length,
           calendarWeek: currentKW,
           restrictionsFound: assignmentRestrictions.length,
           contextAssignments: assignmentContext.length,
-          reasoningTokens: result.reasoning_tokens || 0,
-          outputTokens: result.output_tokens || 0,
-          responseId: result.response_id
+          hasStammpromotor: !!stammpromotorData,
+          stammpromotorInResults: !!stammpromotorData && validRecommendations.some((r: any) => r.promotorId === stammPromotorId)
         }
       })
 
