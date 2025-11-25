@@ -125,28 +125,71 @@ export async function POST(req: Request) {
     console.log('🔍 User IDs:', userIds.slice(0, 3), userIds.length > 3 ? `... (${userIds.length} total)` : '')
     
     // Get promotor profiles with detailed info
-    console.log('📋 Fetching promotor profiles...')
+    console.log('📋 Fetching promotor profiles for', userIds.length, 'users...')
+    console.log('📋 Sample userIds:', userIds.slice(0, 3))
+    
+    // Fetch ALL profiles first to check if table has data
+    const { data: allProfiles, error: allProfilesError } = await svc
+      .from('promotor_profiles')
+      .select('user_id, region')
+    
+    console.log('📊 Total profiles in database:', allProfiles?.length || 0)
+    if (allProfilesError) {
+      console.log('⚠️ All profiles fetch error:', allProfilesError.message)
+    }
+    
+    // Now fetch filtered profiles
     const { data: profiles, error: profilesError } = await svc
       .from('promotor_profiles')
       .select('user_id, phone, region, postal_code, city, address, working_days, stammmarkt, has_driving_license, has_car')
       .in('user_id', userIds)
 
     if (profilesError) {
-      console.log('⚠️ Profiles fetch error:', profilesError.message)
+      console.log('⚠️ Profiles fetch error:', profilesError.message, profilesError)
     }
-    console.log(`✅ Found ${profiles?.length || 0} promotor profiles`)
+    console.log(`✅ Found ${profiles?.length || 0} promotor profiles matching user IDs`)
+    
+    // Debug: Check if any profile user_ids match our userIds
+    if (allProfiles && allProfiles.length > 0) {
+      const profileUserIds = allProfiles.map((p: any) => p.user_id)
+      const matchingIds = userIds.filter((id: string) => profileUserIds.includes(id))
+      console.log(`🔍 Matching IDs: ${matchingIds.length} of ${userIds.length} users have profiles`)
+      if (matchingIds.length === 0 && userIds.length > 0) {
+        console.log('⚠️ NO MATCH! Sample profile user_ids:', profileUserIds.slice(0, 3))
+        console.log('⚠️ Sample requested user_ids:', userIds.slice(0, 3))
+      }
+    }
+    
+    // FALLBACK: If no profiles found, create synthetic profiles from users with default region
+    let workingProfiles = profiles || []
+    if (workingProfiles.length === 0 && users && users.length > 0) {
+      console.log('⚠️ NO PROFILES FOUND! Creating synthetic profiles with default region...')
+      workingProfiles = users.map((u: any) => ({
+        user_id: u.user_id,
+        phone: u.phone || '',
+        region: 'wien-noe-bgl', // Default to Wien cluster
+        postal_code: '',
+        city: '',
+        address: '',
+        working_days: [],
+        stammmarkt: null,
+        has_driving_license: false,
+        has_car: false
+      }))
+      console.log(`✅ Created ${workingProfiles.length} synthetic profiles with region="wien-noe-bgl"`)
+    }
     
     // DEBUG: Log all promotor regions to see what values are stored
-    if (profiles && profiles.length > 0) {
+    if (workingProfiles && workingProfiles.length > 0) {
       const regionCounts: { [key: string]: number } = {}
-      profiles.forEach((p: any) => {
+      workingProfiles.forEach((p: any) => {
         const region = p.region || 'NULL/UNDEFINED'
         regionCounts[region] = (regionCounts[region] || 0) + 1
       })
       console.log('📊 Promotor regions breakdown:', regionCounts)
       
       // Log first 5 profiles with their regions
-      const sampleProfiles = profiles.slice(0, 5).map((p: any) => {
+      const sampleProfiles = workingProfiles.slice(0, 5).map((p: any) => {
         const user = (users || []).find((u: any) => u.user_id === p.user_id)
         return `${user?.display_name || 'Unknown'}: region="${p.region || 'NULL'}"`
       })
@@ -154,7 +197,7 @@ export async function POST(req: Request) {
     }
 
     // HARD FILTER #1: Cluster Match - Filter promotors by target cluster
-    let clusterFilteredProfiles = profiles || []
+    let clusterFilteredProfiles = workingProfiles || []
     console.log(`🎯 Target cluster for filtering: "${targetCluster}"`)
     
     if (targetCluster) {
